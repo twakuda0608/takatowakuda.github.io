@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>麻雀ツール（統合版）</title>
+  <style>
+    :root { --max: 480px; }
+    body{font-family: system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic ProN","Meiryo",sans-serif; margin: 24px;}
+    h1{font-size: 20px;margin:0 0 12px;text-align:center}
+    .wrap{max-width: var(--max); margin: 0 auto;}
+
+    fieldset{border:1px solid #ddd;border-radius:12px;padding:16px;margin:12px 0}
+    legend{padding:0 6px}
+    label{font-size:14px;color:#333;display:block;margin-bottom:8px}
+    input, select{width:100%;font-size:18px;padding:10px;border:1px solid #ccc;border-radius:10px;box-sizing:border-box;margin-top:4px}
+    input[readonly]{background:#fafafa}
+    .note{font-size:12px;color:#666;margin-top:4px}
+    .results{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+    .card{border:1px solid #e4e4e4;border-radius:12px;padding:12px}
+    .rank{font-weight:600;margin-bottom:4px}
+    .sumline{font-variant-numeric: tabular-nums}
+    .muted{color:#666}
+    .footer{font-size:12px;color:#666;margin-top:16px;text-align:center}
+
+    /* タブ */
+    .tabs{display:flex;gap:8px;justify-content:center;margin:0 0 12px}
+    .tabbtn{padding:8px 14px;border:1px solid #ddd;border-radius:999px;background:#fafafa;font-size:14px;cursor:pointer}
+    .tabbtn.active{background:#eef6ff;border-color:#bcd7ff}
+    .tab{display:none}
+    .tab.active{display:block}
+
+    /* ポイント精算の2列フォーム（名前/ポイントを横並び） */
+    .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .grid2 label { margin:0 } /* 余白詰め */
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>麻雀ツール（統合版）</h1>
+
+    <div class="tabs">
+      <button class="tabbtn active" data-tab="t1">ウマ/オカ 精算</button>
+      <button class="tabbtn" data-tab="t2">総合ポイント精算</button>
+    </div>
+
+    <!-- タブ1：ウマ/オカ 精算ツール -->
+    <div id="t1" class="tab active">
+      <fieldset>
+        <legend>設定</legend>
+        <!-- ご要望に合わせて縦並び -->
+        <label>初期点（例: 250）<input id="init1" type="number" value="250" /></label>
+        <label>オカ（点返し、例: 300）<input id="oka1" type="number" value="300" /></label>
+        <label>ウマ
+          <select id="uma1">
+            <option value="510">5-10（ゴットー）</option>
+            <option value="1020">10-20（ワンツー）</option>
+            <option value="1030" selected>10-30（ワンスリー）</option>
+            <option value="2030">20-30（ツースリー）</option>
+          </select>
+        </label>
+        <label>レート
+          <select id="rate1">
+            <option value="10">10（テンイチ）</option>
+            <option value="20">20（テンニ）</option>
+            <option value="30" selected>30（テンサン）</option>
+            <option value="50">50（テンゴ）</option>
+            <option value="100">100（テンピン）</option>
+          </select>
+        </label>
+        <div class="note">※ オカ・点数は「百点単位」で入力してください（31000点→310）。</div>
+      </fieldset>
+
+      <fieldset>
+        <legend>点数（百点単位で入力）</legend>
+        <label>1位（自動計算）<input id="s1_1" type="number" readonly /></label>
+        <label>2位<input id="s2_1" type="number" value="300" /></label>
+        <label>3位<input id="s3_1" type="number" value="200" /></label>
+        <label>4位<input id="s4_1" type="number" value="100" /></label>
+        <div class="note">1位は「初期点×4 −（2位+3位+4位）」で自動計算。</div>
+      </fieldset>
+
+      <fieldset>
+        <legend>計算結果</legend>
+        <div class="results">
+          <div class="card"><div class="rank">1位</div><div id="r1_1" class="sumline">—</div></div>
+          <div class="card"><div class="rank">2位</div><div id="r2_1" class="sumline">—</div></div>
+          <div class="card"><div class="rank">3位</div><div id="r3_1" class="sumline">—</div></div>
+          <div class="card"><div class="rank">4位</div><div id="r4_1" class="sumline">—</div></div>
+        </div>
+        <div class="footer muted">出目（pt）の合計は常に0になります。</div>
+      </fieldset>
+    </div>
+
+    <!-- タブ2：総合ポイント精算ツール -->
+    <div id="t2" class="tab">
+      <fieldset>
+        <legend>設定</legend>
+        <label>レート
+          <select id="rate2">
+            <option value="10">10（テンイチ）</option>
+            <option value="20">20（テンニ）</option>
+            <option value="30" selected>30（テンサン）</option>
+            <option value="50">50（テンゴ）</option>
+            <option value="100">100（テンピン）</option>
+          </select>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>プレイヤーの総合ポイント</legend>
+        <div class="grid2">
+          <label>名前1 <input id="n1_2" placeholder="1" /><input id="p1_2" type="number" value="0" /></label>
+          <label>名前2 <input id="n2_2" placeholder="2" /><input id="p2_2" type="number" value="0" /></label>
+          <label>名前3 <input id="n3_2" placeholder="3" /><input id="p3_2" type="number" value="0" /></label>
+          <label>名前4 <input id="n4_2" placeholder="4" /><input id="p4_2" type="number" value="0" /></label>
+        </div>
+        <div class="note">※ ポイント合計は ±0 にしてください。合計が0以外の時は結果を表示しません。</div>
+      </fieldset>
+
+      <fieldset>
+        <legend>精算結果</legend>
+        <ul id="resultList2"></ul>
+        <div id="check2" class="note"></div>
+      </fieldset>
+    </div>
+  </div>
+
+<script>
+  // ====== 共通：タブ切り替え ======
+  document.querySelectorAll('.tabbtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ====== タブ1：ウマ/オカ精算 ======
+  const el = id => document.getElementById(id);
+  const init1 = el('init1'), oka1 = el('oka1'), uma1 = el('uma1'), rate1 = el('rate1');
+  const s1_1 = el('s1_1'), s2_1 = el('s2_1'), s3_1 = el('s3_1'), s4_1 = el('s4_1');
+  const r1_1 = el('r1_1'), r2_1 = el('r2_1'), r3_1 = el('r3_1'), r4_1 = el('r4_1');
+
+  function thousandRoundPt1(realScore){
+    // realScore は実点（例: 31000）
+    return Math.round((Number(realScore) - 100) / 1000);
+  }
+  function parseUma1(val){
+    const v = Number(val);
+    const x = Math.round(v/100);
+    const y = v - x*100;
+    return {x, y};
+  }
+  function computeTab1(){
+    const I = Number(init1.value || 0);   // 百点単位入力
+    const O = Number(oka1.value || 0);    // 百点単位入力
+    const R = Number(rate1.value || 0);
+    const {x:UX, y:UY} = parseUma1(uma1.value);
+
+    const S2 = Number(s2_1.value || 0);
+    const S3 = Number(s3_1.value || 0);
+    const S4 = Number(s4_1.value || 0);
+
+    // 1位（百点単位で表示）
+    const S1 = I*4 - S2 - S3 - S4;
+    s1_1.value = S1;
+
+    // 実点（×100）に変換
+    const RS2 = S2 * 100, RS3 = S3 * 100, RS4 = S4 * 100;
+    const ROka = O * 100; // 実点のオカ
+
+    // pt計算（原式通り）
+    const okaPt = ROka / 1000; // (= O/10)
+    const p2 = thousandRoundPt1(RS2) + UX - okaPt;
+    const p3 = thousandRoundPt1(RS3) - UX - okaPt;
+    const p4 = thousandRoundPt1(RS4) - UY - okaPt;
+    const p1 = -(p2 + p3 + p4);
+
+    function line(pt){
+      const money = Math.round(pt * R);
+      return `${pt}pt × ${R} = ${money}`;
+    }
+
+    r1_1.textContent = line(p1);
+    r2_1.textContent = line(p2);
+    r3_1.textContent = line(p3);
+    r4_1.textContent = line(p4);
+  }
+  ['input','change'].forEach(ev => {
+    [init1,oka1,uma1,rate1,s2_1,s3_1,s4_1].forEach(e => e.addEventListener(ev, computeTab1));
+  });
+  computeTab1();
+
+  // ====== タブ2：総合ポイント精算 ======
+  const rate2 = el('rate2');
+  const n1_2 = el('n1_2'), n2_2 = el('n2_2'), n3_2 = el('n3_2'), n4_2 = el('n4_2');
+  const p1_2 = el('p1_2'), p2_2 = el('p2_2'), p3_2 = el('p3_2'), p4_2 = el('p4_2');
+  const resultList2 = el('resultList2');
+  const check2 = el('check2');
+
+  function settle2(names, amounts) {
+    // amounts: 正=受け取り, 負=支払い（円）
+    const creditors = [], debtors = [];
+    names.forEach((nm, i) => {
+      const a = Math.round(amounts[i]);
+      if (a > 0) creditors.push({ name: nm, amt: a });
+      else if (a < 0) debtors.push({ name: nm, amt: -a });
+    });
+
+    // 金額の大きい順で優先マッチング（実戦上 取引本数を最小化）
+    creditors.sort((a, b) => b.amt - a.amt);
+    debtors.sort((a, b) => b.amt - a.amt);
+
+    const res = [];
+    let ci = 0, di = 0;
+    while (ci < creditors.length && di < debtors.length) {
+      const pay = Math.min(creditors[ci].amt, debtors[di].amt);
+      res.push({ from: debtors[di].name, to: creditors[ci].name, amount: pay });
+      creditors[ci].amt -= pay;
+      debtors[di].amt -= pay;
+      if (creditors[ci].amt === 0) ci++;
+      if (debtors[di].amt === 0) di++;
+      // 万一順序が崩れたら並び替え（保守的）
+      if (ci+1 < creditors.length && creditors[ci]?.amt < creditors[ci+1]?.amt) creditors.sort((a,b)=>b.amt-a.amt);
+      if (di+1 < debtors.length && debtors[di]?.amt < debtors[di+1]?.amt) debtors.sort((a,b)=>b.amt-a.amt);
+    }
+    return res;
+  }
+
+  function computeTab2(){
+    const R = Number(rate2.value);
+    const names = [n1_2.value||'1', n2_2.value||'2', n3_2.value||'3', n4_2.value||'4'];
+    const pts = [p1_2.value, p2_2.value, p3_2.value, p4_2.value].map(Number);
+    const amounts = pts.map(pt => pt * R);
+
+    const sum = amounts.reduce((a,b)=>a+b,0);
+    check2.textContent = `チェック: 合計 = ${sum} （0ならOK）`;
+
+    resultList2.innerHTML = '';
+    if (sum === 0) {
+      const transfers = settle2(names, amounts);
+      transfers.forEach(t=>{
+        const li=document.createElement('li');
+        li.textContent = `${t.from} → ${t.to}: ${t.amount}円`;
+        resultList2.appendChild(li);
+      });
+    }
+  }
+  ['input','change'].forEach(ev=>{
+    [rate2,n1_2,n2_2,n3_2,n4_2,p1_2,p2_2,p3_2,p4_2].forEach(e=>e.addEventListener(ev,computeTab2));
+  });
+  computeTab2();
+</script>
+</body>
+</html>
+
