@@ -3,24 +3,199 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>test: 数字入力だけ</title>
+  <title>test: 練習用プレイグラウンド</title>
   <style>
+    :root { --w: 720px; }
     body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
-         max-width:520px;margin:40px auto;padding:0 16px;line-height:1.7}
-    label{display:block;font-size:14px;margin-bottom:8px;color:#333}
-    input[type="number"]{width:100%;padding:10px;font-size:18px;border:1px solid #ccc;border-radius:10px}
-    .note{font-size:12px;color:#666;margin-top:8px}
+         max-width:var(--w);margin:36px auto;padding:0 16px;line-height:1.7}
+    h1{margin:0 0 12px}
+    section{border:1px solid #e5e5e5;border-radius:12px;padding:16px;margin:16px 0}
+    section>h2{font-size:16px;margin:0 0 12px;color:#333}
+    label{display:block;font-size:14px;margin:8px 0 4px}
+    input,select,textarea,button{font-size:16px}
+    input[type="text"],input[type="number"],select,textarea{
+      width:100%;padding:10px;border:1px solid #ccc;border-radius:10px;box-sizing:border-box
+    }
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .row>*{flex:1 1 220px}
+    .note{font-size:12px;color:#666}
+    .pill{display:inline-block;background:#f6f7fb;border:1px solid #e5e7f0;border-radius:999px;padding:2px 8px}
+    #colorBox{height:40px;border-radius:10px;border:1px solid #ddd}
+    #preview{max-width:100%;display:block;border:1px dashed #bbb;border-radius:8px;margin-top:8px}
+    #result{font-weight:600}
+    ul{margin:8px 0 0 20px}
+    code{background:#f5f5f5;padding:2px 6px;border-radius:6px}
   </style>
 </head>
 <body>
-  <h1>数字の入力テスト</h1>
+  <h1>HTML / JS 練習用プレイグラウンド</h1>
+  <p class="note">いろいろ触って動作を確認できます。最低限のJSで実装。</p>
 
-  <label for="num">数字を入力：</label>
-  <input id="num" type="number" placeholder="例: 123" inputmode="numeric" />
+  <!-- 数字入力 × 2倍表示 -->
+  <section>
+    <h2>1) 数字入力 → 2倍表示</h2>
+    <div class="row">
+      <div>
+        <label for="num">数字を入力：</label>
+        <input id="num" type="number" placeholder="例: 123" inputmode="numeric" />
+      </div>
+      <div>
+        <label>結果</label>
+        <p id="result" class="pill">結果：—</p>
+      </div>
+    </div>
+  </section>
 
-  <p class="note">このページは練習用です。入力値はどこにも送信されません。</p>
-  <p id="result" class="note">結果：—</p>
-  
+  <!-- ボタン、クリック回数、無効化/有効化 -->
+  <section>
+    <h2>2) ボタンの基本</h2>
+    <div class="row">
+      <div>
+        <button id="countBtn">クリックしてカウント</button>
+        <p>回数：<strong id="count">0</strong></p>
+      </div>
+      <div>
+        <button id="toggleBtn">ボタンの有効/無効 切替</button>
+        <p>対象：<code id="targetState">有効</code></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- セレクト、ラジオ、チェックボックス -->
+  <section>
+    <h2>3) 選択UI（select / radio / checkbox）</h2>
+    <div class="row">
+      <div>
+        <label for="sel">言語を選択：</label>
+        <select id="sel">
+          <option value="">— 選択 —</option>
+          <option>JavaScript</option>
+          <option>HTML</option>
+          <option>CSS</option>
+        </select>
+        <p class="note">選択：<strong id="selOut">—</strong></p>
+      </div>
+      <div>
+        <label>テーマ（radio）：</label>
+        <label><input type="radio" name="theme" value="ライト" checked> ライト</label>
+        <label><input type="radio" name="theme" value="ダーク"> ダーク</label>
+        <p class="note">現在：<strong id="themeOut">ライト</strong></p>
+      </div>
+      <div>
+        <label><input id="agree" type="checkbox"> 規約に同意</label>
+        <p class="note">状態：<strong id="agreeOut">未同意</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- テキスト入力、文字数、スライダー、色、日付 -->
+  <section>
+    <h2>4) 入力いろいろ（テキスト、スライダー、色、日付）</h2>
+    <div class="row">
+      <div>
+        <label for="text">テキスト：</label>
+        <input id="text" type="text" placeholder="自由入力" />
+        <p class="note">文字数：<span id="len">0</span></p>
+      </div>
+      <div>
+        <label for="range">スライダー：<span id="rangeVal">50</span></label>
+        <input id="range" type="range" min="0" max="100" value="50" />
+      </div>
+      <div>
+        <label for="color">色：</label>
+        <input id="color" type="color" value="#4e8ef7" />
+        <div id="colorBox"></div>
+      </div>
+      <div>
+        <label for="date">日付：</label>
+        <input id="date" type="date" />
+        <p class="note">選択：<span id="dateOut">—</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 画像：URL指定 / ファイル選択 プレビュー -->
+  <section>
+    <h2>5) 画像プレビュー（URL / ファイル）</h2>
+    <div class="row">
+      <div>
+        <label for="imgUrl">画像URL：</label>
+        <input id="imgUrl" type="text" placeholder="https://example.com/image.png" />
+        <button id="loadImgBtn">読み込む</button>
+      </div>
+      <div>
+        <label for="imgFile">画像ファイル：</label>
+        <input id="imgFile" type="file" accept="image/*" />
+      </div>
+    </div>
+    <img id="preview" alt="画像プレビュー（ここに表示）" />
+    <p class="note">URLがCORSでブロックされる場合は、ファイル選択で試してください。</p>
+  </section>
+
+  <!-- フォーム送信の基本（送信抑止） -->
+  <section>
+    <h2>6) フォーム送信（preventDefaultの練習）</h2>
+    <form id="demoForm">
+      <div class="row">
+        <div>
+          <label for="fName">お名前：</label>
+          <input id="fName" required placeholder="山田 太郎" />
+        </div>
+        <div>
+          <label for="fEmail">メール：</label>
+          <input id="fEmail" type="email" required placeholder="you@example.com" />
+        </div>
+      </div>
+      <p class="note">送信しても実際にはネットワーク送信しません（学習用）。</p>
+      <button type="submit">送信</button>
+      <span id="formMsg" class="pill"></span>
+    </form>
+  </section>
+  <!-- 7) ドラッグ＆ドロップ -->
+<section>
+  <h2>7) ドラッグ＆ドロップ</h2>
+
+  <div class="row">
+    <!-- a) ファイル(DnD)で画像プレビュー -->
+    <div>
+      <label>ファイルをドロップして画像プレビュー：</label>
+      <div id="dz" class="dropzone">ここに画像ファイルをドラッグ＆ドロップ</div>
+      <img id="dropPreview" alt="DnD画像プレビュー" style="max-width:100%;display:block;margin-top:8px;border:1px dashed #bbb;border-radius:8px" />
+      <p class="note">※ URLで読み込めない場合でも、ローカルの画像ならここにドロップで表示できます。</p>
+    </div>
+
+    <!-- b) 要素のドラッグ＆ドロップ（箱→ターゲット） -->
+    <div>
+      <label>要素をドラッグ → ターゲットにドロップ：</label>
+      <div id="dragArea">
+        <div id="dragItem" draggable="true">ドラッグ</div>
+        <div id="dropTarget">ここにドロップ（<span id="dropCount">0</span>回）</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8) キーボード入力 -->
+<section>
+  <h2>8) キーボード入力</h2>
+
+  <div class="row">
+    <div>
+      <label>キー情報（最後に押したキー）：</label>
+      <p class="pill" id="keyInfo">—</p>
+      <p class="note">例：<code>Ctrl+S</code> はページ保存を無効化して通知、<code>←↑→↓</code> / <code>WASD</code> でプレイヤー移動</p>
+    </div>
+    <div>
+      <label for="focusHere">ここに文字入力してもOK：</label>
+      <input id="focusHere" type="text" placeholder="タイプしてみてください" />
+    </div>
+  </div>
+
+  <div id="board">
+    <div id="player" aria-label="プレイヤー" title="矢印/WASDで動きます"></div>
+  </div>
+</section>
+
   <script src="app.js" defer></script>
 </body>
 </html>
