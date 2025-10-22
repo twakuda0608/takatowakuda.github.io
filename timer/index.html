@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>勤務ダッシュタイマー</title>
+  <title>タイマー</title>
   <style>
     :root {
       --bg: #ffffff;   /* 白背景 */
@@ -24,12 +24,11 @@
     }
     .clock {
       font-weight: 800;
-      letter-spacing: 0.04em;
-      font-size: clamp(48px, 10vw, 80px);
+      letter-spacing: 0.03em;
+      font-size: clamp(72px, 18vw, 140px);
       line-height: 1;
       font-variant-numeric: tabular-nums;
     }
-    .clock #colon { opacity: 0.9; }
     .clock #sec { font-size: 0.5em; margin-left: 4px; }
     .earned {
       font-variant-numeric: tabular-nums;
@@ -53,19 +52,25 @@
     const COLOR_NEUTRAL = '#000000';// それ以外/未開始
 
     // 当日のレートスケジュール（24h内）
+    const main_kyu = 2000;  // メイン業務
+    const jimu_kyu = 1226;
     const WAGE_SCHEDULE = [
-      { start: '14:45:01', end: '15:00:00', rate: 1164 },
-      { start: '15:00:01', end: '16:30:00', rate: 2000 },
-      { start: '16:30:01', end: '17:00:00', rate: 1164 },
-      { start: '17:00:01', end: '18:30:00', rate: 2000 },
-      { start: '18:30:01', end: '19:00:00', rate: 1164 },
-      { start: '19:00:01', end: '20:30:00', rate: 2000 },
-      { start: '20:30:01', end: '23:59:59', rate: 1164 },
+      { start: '14:45:01', end: '15:00:00', rate: jimu_kyu },
+      { start: '15:00:01', end: '16:30:00', rate: main_kyu },
+      { start: '16:30:01', end: '17:00:00', rate: jimu_kyu },
+      { start: '17:00:01', end: '18:30:00', rate: main_kyu },
+      { start: '18:30:01', end: '19:00:00', rate: jimu_kyu },
+      { start: '19:00:01', end: '20:30:00', rate: main_kyu },
+      { start: '20:30:01', end: '23:59:59', rate: jimu_kyu },
     ];
 
     // ===== ユーティリティ =====
     const fmtTime = new Intl.DateTimeFormat('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: TIMEZONE });
-    const fmtNum  = new Intl.NumberFormat('ja-JP', { style: 'decimal', maximumFractionDigits: 0 });
+    const fmtNum  = new Intl.NumberFormat('ja-JP', {
+        style: 'decimal',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
 
     const asToday = (hhmmss, baseDate) => {
       const [HH, MM, SS] = hhmmss.split(':').map(Number);
@@ -104,7 +109,7 @@
       const blocks = buildBlocks(today);
       const earningNow = calculateEarnings(today, blocks);
       const earnedEl = document.getElementById('earned');
-      earnedEl.textContent = fmtNum.format(Math.floor(earningNow));
+      earnedEl.textContent = fmtNum.format(earningNow);
 
       // 現在の区分レートに応じて色を変更（数字のみ表示なのでバレにくい）
       const current = findCurrentBlock(today, blocks);
