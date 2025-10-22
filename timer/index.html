@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>勤務ダッシュタイマー</title>
+  <style>
+    :root {
+      --bg: #ffffff;   /* 白背景 */
+      --text: #000000; /* 黒テキスト */
+      --accent: #7cc0ff; /* 既定アクセント（未使用時も可） */
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans JP", Meiryo, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .clock {
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      font-size: clamp(48px, 10vw, 80px);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .clock #colon { opacity: 0.9; }
+    .clock #sec { font-size: 0.5em; margin-left: 4px; }
+    .earned {
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(36px, 8vw, 60px);
+      font-weight: 800;
+      margin-top: 20px;
+      /* 既定は黒。動的にレートごとに書き換える */
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <div class="clock" id="clock">--:--<span id="sec">--</span></div>
+  <div class="earned" id="earned">0</div>
+
+  <script>
+    // ===== 基本設定（色はここで統一管理） =====
+    const TIMEZONE = 'Asia/Tokyo';
+    const COLOR_HIGH = '#007700';   // 2000円帯の色（緑）
+    const COLOR_LOW  = 'goldenrod'; // 1164円帯の色（黄味）
+    const COLOR_NEUTRAL = '#000000';// それ以外/未開始
+
+    // 当日のレートスケジュール（24h内）
+    const WAGE_SCHEDULE = [
+      { start: '14:45:01', end: '15:00:00', rate: 1164 },
+      { start: '15:00:01', end: '16:30:00', rate: 2000 },
+      { start: '16:30:01', end: '17:00:00', rate: 1164 },
+      { start: '17:00:01', end: '18:30:00', rate: 2000 },
+      { start: '18:30:01', end: '19:00:00', rate: 1164 },
+      { start: '19:00:01', end: '20:30:00', rate: 2000 },
+      { start: '20:30:01', end: '23:59:59', rate: 1164 },
+    ];
+
+    // ===== ユーティリティ =====
+    const fmtTime = new Intl.DateTimeFormat('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: TIMEZONE });
+    const fmtNum  = new Intl.NumberFormat('ja-JP', { style: 'decimal', maximumFractionDigits: 0 });
+
+    const asToday = (hhmmss, baseDate) => {
+      const [HH, MM, SS] = hhmmss.split(':').map(Number);
+      const d = new Date(baseDate.getTime());
+      d.setHours(HH, MM, SS, 0);
+      return d;
+    };
+
+    const buildBlocks = (baseDate) => WAGE_SCHEDULE.map(p => ({
+      start: asToday(p.start, baseDate),
+      end: asToday(p.end, baseDate),
+      rate: p.rate
+    }));
+
+    const secsBetween = (a, b) => Math.max(0, Math.floor((b - a) / 1000));
+
+    function calculateEarnings(now, blocks) {
+      let total = 0;
+      for (const blk of blocks) {
+        if (now <= blk.start) continue;
+        const effectiveEnd = now < blk.end ? now : blk.end;
+        const secs = secsBetween(blk.start, effectiveEnd);
+        if (secs > 0) total += (blk.rate / 3600) * secs;
+      }
+      return total;
+    }
+
+    const findCurrentBlock = (now, blocks) => blocks.find(b => now >= b.start && now < b.end) || null;
+
+    function tick() {
+      const now = new Date();
+      const today = new Date(now.toLocaleString('en-US', { timeZone: TIMEZONE }));
+      const parts = fmtTime.formatToParts(today).reduce((acc, p) => (acc[p.type] = p.value, acc), {});
+      document.getElementById('clock').innerHTML = `${parts.hour}<span id="colon">:</span>${parts.minute}<span id="sec">${parts.second}</span>`;
+
+      const blocks = buildBlocks(today);
+      const earningNow = calculateEarnings(today, blocks);
+      const earnedEl = document.getElementById('earned');
+      earnedEl.textContent = fmtNum.format(Math.floor(earningNow));
+
+      // 現在の区分レートに応じて色を変更（数字のみ表示なのでバレにくい）
+      const current = findCurrentBlock(today, blocks);
+      if (!current) {
+        earnedEl.style.color = COLOR_NEUTRAL; // 未開始/終了後
+      } else {
+        earnedEl.style.color = (current.rate >= 2000) ? COLOR_HIGH : COLOR_LOW;
+      }
+    }
+
+    tick();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>
