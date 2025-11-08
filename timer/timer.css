@@ -13,9 +13,9 @@
       text-align: center;
     }
     .clock {
-      font-weight: 500;
+      font-weight: 800;
       letter-spacing: 0.04em;
-      font-size: clamp(48px, 10vw, 80px);
+      font-size: clamp(48px, 10vw, 140px);
       line-height: 1;
       font-variant-numeric: tabular-nums;
     }
@@ -24,6 +24,6 @@
     .earned {
       font-variant-numeric: tabular-nums;
       font-size: clamp(36px, 8vw, 60px);
-      font-weight: 500;
+      font-weight: 800;
       margin-top: 20px;
     }
