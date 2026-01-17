@@ -101,12 +101,26 @@
       color:var(--muted);
       line-height:1.6;
     }
+
     .code{
       font-size:12px;
       font-weight:700;
       color:var(--muted);
       white-space:nowrap;
       padding-top:2px;
+    }
+    /* 右上：コード＋アイコン用ラッパ */
+    .code-wrap{
+      display:flex;
+      align-items:center;
+      gap:4px;
+    }
+    .code-icon{
+      width:35px;
+      height:35px;
+      object-fit:contain;
+      flex-shrink:0;
+      opacity:0.9;
     }
 
     .part{
@@ -374,7 +388,6 @@
             </span>
           </div>
         </div>
-
       </div>
     </section>
 
@@ -405,7 +418,11 @@
   </div>
 
   <script>
-    // ===== スコア計算（あなたの最新版そのまま） =====
+    // noEquip アイコンを載せるミッション
+    const NO_EQUIP_MISSIONS = new Set([
+      "M01","M04","M05","M09","M11","M12","M13","M14"
+    ]);
+
     const missions = [
       {
         code: "CHECK",
@@ -423,10 +440,18 @@
         title: "ミッション01：表面清掃",
         subtitle: "土層（各10点）＋発掘ブラシ（10点）",
         parts: [
-          { key:"soil", label:"土層（完全に取り除かれ，マットに接触）各10点：0〜2個",
-            options:[{label:"0",value:0},{label:"10",value:10},{label:"20",value:20}], defaultValue:0 },
-          { key:"brush", label:"発掘ブラシが発掘現場に接触していない：10点",
-            options:[{label:"0",value:0},{label:"10",value:10}], defaultValue:0 }
+          {
+            key:"soil",
+            label:"土層（完全に取り除かれ，マットに接触）各10点：0〜2個",
+            options:[{label:"0",value:0},{label:"10",value:10},{label:"20",value:20}],
+            defaultValue:0
+          },
+          {
+            key:"brush",
+            label:"発掘ブラシが発掘現場に接触していない：10点",
+            options:[{label:"0",value:0},{label:"10",value:10}],
+            defaultValue:0
+          }
         ]
       },
       {
@@ -445,10 +470,18 @@
         title: "ミッション03：鉱坑の探査",
         subtitle: "自チームのトロッコ：30点 / 追加点：+10点",
         parts: [
-          { key:"cart30", label:"自チームのトロッコが相手チームのフィールド上にある：30点",
-            options:[{label:"0",value:0},{label:"30",value:30}], defaultValue:0 },
-          { key:"bonus10", label:"追加点：相手チームのトロッコが自チームのフィールド上にある：+10点（相手がいる場合）",
-            options:[{label:"0",value:0},{label:"+10",value:10}], defaultValue:0 }
+          {
+            key:"cart30",
+            label:"自チームのトロッコが相手チームのフィールド上にある：30点",
+            options:[{label:"0",value:0},{label:"30",value:30}],
+            defaultValue:0
+          },
+          {
+            key:"bonus10",
+            label:"追加点：相手チームのトロッコが自チームのフィールド上にある：+10点（相手がいる場合）",
+            options:[{label:"0",value:0},{label:"+10",value:10}],
+            defaultValue:0
+          }
         ]
       },
       {
@@ -456,59 +489,191 @@
         title: "ミッション04：慎重な回収",
         subtitle: "貴重な遺物 / 支柱",
         parts: [
-          { key:"artifact", label:"貴重な遺物が鉱山に接触していない：30点",
-            options:[{label:"0",value:0},{label:"30",value:30}], defaultValue:0 },
-          { key:"pillars", label:"両方の支柱が立っている：10点",
-            options:[{label:"0",value:0},{label:"10",value:10}], defaultValue:10 }
+          {
+            key:"artifact",
+            label:"貴重な遺物が鉱山に接触していない：30点",
+            options:[{label:"0",value:0},{label:"30",value:30}],
+            defaultValue:0
+          },
+          {
+            key:"pillars",
+            label:"両方の支柱が立っている：10点",
+            options:[{label:"0",value:0},{label:"10",value:10}],
+            defaultValue:10
+          }
         ]
       },
-      { code:"M05", title:"ミッション05：誰が住んでいた？", subtitle:"床がまっすぐ上を向いている：30点",
-        parts:[{key:"main",label:"達成",options:[{label:"0",value:0},{label:"30",value:30}],defaultValue:0}] },
-      { code:"M06", title:"ミッション06：鍛冶場", subtitle:"達成度に応じて各10点（0〜30点）",
-        parts:[{key:"main",label:"各10点（最大30点）",options:[{label:"0",value:0},{label:"10",value:10},{label:"20",value:20},{label:"30",value:30}],defaultValue:0}] },
-      { code:"M07", title:"ミッション07：力仕事", subtitle:"石臼が台座に接触していない：30点",
-        parts:[{key:"main",label:"達成",options:[{label:"0",value:0},{label:"30",value:30}],defaultValue:0}] },
-      { code:"M08", title:"ミッション08：サイロ", subtitle:"サイロ：最大3つまで（各10点）",
-        parts:[{key:"silo",label:"各10点（0〜3つ）",options:[{label:"0",value:0},{label:"10",value:10},{label:"20",value:20},{label:"30",value:30}],defaultValue:0}] },
-      { code:"M09", title:"ミッション09：何を売っていた？", subtitle:"屋根 / 交易品",
+      {
+        code:"M05",
+        title:"ミッション05：誰が住んでいた？",
+        subtitle:"床がまっすぐ上を向いている：30点",
+        parts:[{
+          key:"main",
+          label:"達成",
+          options:[{label:"0",value:0},{label:"30",value:30}],
+          defaultValue:0
+        }]
+      },
+      {
+        code:"M06",
+        title:"ミッション06：鍛冶場",
+        subtitle:"達成度に応じて各10点（0〜30点）",
+        parts:[{
+          key:"main",
+          label:"各10点（最大30点）",
+          options:[{label:"0",value:0},{label:"10",value:10},{label:"20",value:20},{label:"30",value:30}],
+          defaultValue:0
+        }]
+      },
+      {
+        code:"M07",
+        title:"ミッション07：力仕事",
+        subtitle:"石臼が台座に接触していない：30点",
+        parts:[{
+          key:"main",
+          label:"達成",
+          options:[{label:"0",value:0},{label:"30",value:30}],
+          defaultValue:0
+        }]
+      },
+      {
+        code:"M08",
+        title:"ミッション08：サイロ",
+        subtitle:"サイロ：最大3つまで（各10点）",
+        parts:[{
+          key:"silo",
+          label:"各10点（0〜3つ）",
+          options:[{label:"0",value:0},{label:"10",value:10},{label:"20",value:20},{label:"30",value:30}],
+          defaultValue:0
+        }]
+      },
+      {
+        code:"M09",
+        title:"ミッション09：何を売っていた？",
+        subtitle:"屋根 / 交易品",
         parts:[
-          {key:"roof",label:"屋根が完全に持ち上がっている：20点",options:[{label:"0",value:0},{label:"20",value:20}],defaultValue:0},
-          {key:"goods",label:"市場の交易品が持ち上がっている：10点",options:[{label:"0",value:0},{label:"10",value:10}],defaultValue:0}
-        ]},
-      { code:"M10", title:"ミッション10：はかり", subtitle:"はかりの傾き / 皿",
+          {
+            key:"roof",
+            label:"屋根が完全に持ち上がっている：20点",
+            options:[{label:"0",value:0},{label:"20",value:20}],
+            defaultValue:0
+          },
+          {
+            key:"goods",
+            label:"市場の交易品が持ち上がっている：10点",
+            options:[{label:"0",value:0},{label:"10",value:10}],
+            defaultValue:0
+          }
+        ]
+      },
+      {
+        code:"M10",
+        title:"ミッション10：はかり",
+        subtitle:"はかりの傾き / 皿",
         parts:[
-          {key:"tilt",label:"はかりが傾き，マットに接触している：20点",options:[{label:"0",value:0},{label:"20",value:20}],defaultValue:0},
-          {key:"pan",label:"はかりの皿が完全に取り除かれている：10点",options:[{label:"0",value:0},{label:"10",value:10}],defaultValue:0}
-        ]},
-      { code:"M11", title:"ミッション11：港の遺物", subtitle:"遺物 / 追加点（旗）",
+          {
+            key:"tilt",
+            label:"はかりが傾き，マットに接触している：20点",
+            options:[{label:"0",value:0},{label:"20",value:20}],
+            defaultValue:0
+          },
+          {
+            key:"pan",
+            label:"はかりの皿が完全に取り除かれている：10点",
+            options:[{label:"0",value:0},{label:"10",value:10}],
+            defaultValue:0
+          }
+        ]
+      },
+      {
+        code:"M11",
+        title:"ミッション11：港の遺物",
+        subtitle:"遺物 / 追加点（旗）",
         parts:[
-          {key:"artifact",label:"遺物が地表の上に持ち上がっている：20点",options:[{label:"0",value:0},{label:"20",value:20}],defaultValue:0},
-          {key:"bonus",label:"追加点：クレーンの旗が少しでも下がっている：+10点",options:[{label:"0",value:0},{label:"+10",value:10}],defaultValue:0}
-        ]},
-      { code:"M12", title:"ミッション12：船の救出", subtitle:"船 / 砂",
+          {
+            key:"artifact",
+            label:"遺物が地表の上に持ち上がっている：20点",
+            options:[{label:"0",value:0},{label:"20",value:20}],
+            defaultValue:0
+          },
+          {
+            key:"bonus",
+            label:"追加点：クレーンの旗が少しでも下がっている：+10点",
+            options:[{label:"0",value:0},{label:"+10",value:10}],
+            defaultValue:0
+          }
+        ]
+      },
+      {
+        code:"M12",
+        title:"ミッション12：船の救出",
+        subtitle:"船 / 砂",
         parts:[
-          {key:"ship",label:"船が完全に持ち上がっている：20点",options:[{label:"0",value:0},{label:"20",value:20}],defaultValue:0},
-          {key:"sand",label:"砂が完全に取り除かれている：10点",options:[{label:"0",value:0},{label:"10",value:10}],defaultValue:0}
-        ]},
-      { code:"M13", title:"ミッション13：像の復元", subtitle:"像が完全に持ち上がっている：30点",
-        parts:[{key:"main",label:"達成",options:[{label:"0",value:0},{label:"30",value:30}],defaultValue:0}] },
-      { code:"M14", title:"ミッション14：フォーラム", subtitle:"フォーラムに置いた対象物：すべて各5点（最大7個）",
-        parts:[{key:"items",label:"各5点（0〜7個）",options:[
-          {label:"0",value:0},{label:"5",value:5},{label:"10",value:10},{label:"15",value:15},
-          {label:"20",value:20},{label:"25",value:25},{label:"30",value:30},{label:"35",value:35}
-        ],defaultValue:0}] },
-      { code:"M15", title:"ミッション15：発掘現場のマーキング", subtitle:"マーキング：各10点（最大3つ）",
-        parts:[{key:"marks",label:"各10点（0〜3つ）",options:[
-          {label:"0",value:0},{label:"10",value:10},{label:"20",value:20},{label:"30",value:30}
-        ],defaultValue:0}] },
+          {
+            key:"ship",
+            label:"船が完全に持ち上がっている：20点",
+            options:[{label:"0",value:0},{label:"20",value:20}],
+            defaultValue:0
+          },
+          {
+            key:"sand",
+            label:"砂が完全に取り除かれている：10点",
+            options:[{label:"0",value:0},{label:"10",value:10}],
+            defaultValue:0
+          }
+        ]
+      },
+      {
+        code:"M13",
+        title:"ミッション13：像の復元",
+        subtitle:"像が完全に持ち上がっている：30点",
+        parts:[{
+          key:"main",
+          label:"達成",
+          options:[{label:"0",value:0},{label:"30",value:30}],
+          defaultValue:0
+        }]
+      },
+      {
+        code:"M14",
+        title:"ミッション14：フォーラム",
+        subtitle:"フォーラムに置いた対象物：すべて各5点（最大7個）",
+        parts:[{
+          key:"items",
+          label:"各5点（0〜7個）",
+          options:[
+            {label:"0個: 0",value:0},{label:"1個: 5",value:5},{label:"2個: 10",value:10},{label:"3個: 15",value:15},
+            {label:"4個: 20",value:20},{label:"5個: 25",value:25},{label:"6個: 30",value:30},{label:"7個: 35",value:35}
+          ],
+          defaultValue:0
+        }]
+      },
+      {
+        code:"M15",
+        title:"ミッション15：発掘現場のマーキング",
+        subtitle:"マーキング：各10点（最大3つ）",
+        parts:[{
+          key:"marks",
+          label:"各10点（0〜3つ）",
+          options:[
+            {label:"0",value:0},{label:"10",value:10},{label:"20",value:20},{label:"30",value:30}
+          ],
+          defaultValue:0
+        }]
+      },
       {
         code:"PRECISION",
         title:"精密トークン",
         subtitle:"競技終了時に残っている数に応じた得点",
-        parts:[{key:"left",label:"残数",options:[
-          {label:"0個: 0",value:0},{label:"1個: 10",value:10},{label:"2個: 15",value:15},
-          {label:"3個: 25",value:25},{label:"4個: 35",value:35},{label:"5個: 50",value:50},{label:"6個: 50",value:50}
-        ],defaultValue:50}]
+        parts:[{
+          key:"left",
+          label:"残数",
+          options:[
+            {label:"0個: 0",value:0},{label:"1個: 10",value:10},{label:"2個: 15",value:15},
+            {label:"3個: 25",value:25},{label:"4個: 35",value:35},{label:"5個: 50",value:50},{label:"6個: 50",value:50}
+          ],
+          defaultValue:50
+        }]
       }
     ];
 
@@ -535,12 +700,25 @@
         left.appendChild(t);
         left.appendChild(sub);
 
+        // 右上：コード＆アイコン
+        const codeWrap = document.createElement("div");
+        codeWrap.className = "code-wrap";
+
+        if (NO_EQUIP_MISSIONS.has(m.code)) {
+          const icon = document.createElement("img");
+          icon.src = "noEquip.png";
+          icon.alt = "no equip icon";
+          icon.className = "code-icon";
+          codeWrap.appendChild(icon);
+        }
+
         const code = document.createElement("div");
         code.className = "code";
         code.textContent = m.code;
+        codeWrap.appendChild(code);
 
         top.appendChild(left);
-        top.appendChild(code);
+        top.appendChild(codeWrap);
         card.appendChild(top);
 
         (m.parts || []).forEach((p) => {
@@ -672,11 +850,9 @@
     const timerStartStop = document.getElementById("timerStartStop");
     const timerReset = document.getElementById("timerReset");
 
-    // circle geometry (must match r=96 in SVG)
     const R = 96;
     const C = 2 * Math.PI * R;
 
-    // set up stroke dash
     ringProgress.style.strokeDasharray = `${C} ${C}`;
     ringProgress.style.strokeDashoffset = `0`;
 
@@ -687,7 +863,6 @@
     }
 
     function setRingByRatio(ratio) {
-      // ratio: 1 -> full ring, 0 -> empty
       const offset = C * (1 - ratio);
       ringProgress.style.strokeDashoffset = String(offset);
     }
@@ -749,7 +924,6 @@
     renderScoreUI();
     calcTotal();
     document.addEventListener("change", calcTotal);
-
     updateTimerUI();
   </script>
 </body>
