@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>UNEARTHED ロボットゲーム 点数計算</title>
+  <title>UNEARTHED ロボットゲーム 点数計算 & タイマー</title>
   <style>
     :root{
       --bg:#ffffff;
@@ -41,11 +41,40 @@
       font-size:13px;
       line-height:1.7;
     }
+
+    /* tabs */
+    .tabs{
+      display:flex;
+      gap:8px;
+      margin-top:16px;
+      margin-bottom:4px;
+      border-bottom:1px solid var(--border);
+      padding-bottom:4px;
+    }
+    .tab{
+      border:none;
+      background:transparent;
+      padding:6px 10px;
+      font-size:13px;
+      font-weight:700;
+      color:var(--muted);
+      cursor:pointer;
+      border-radius:999px;
+      transition:background .12s ease,color .12s ease;
+    }
+    .tab.active{
+      background:#e0edff;
+      color:var(--blue);
+    }
+
+    .view{ margin-top:8px; }
+    .view.hidden{ display:none; }
+
     .grid{
       display:flex;
       flex-direction:column;
       gap:12px;
-      margin-top:16px;
+      margin-top:8px;
     }
     .card{
       background:var(--card);
@@ -226,50 +255,165 @@
       color:var(--muted);
       line-height:1.6;
     }
+
+    /* ===== Timer ring UI ===== */
+    .timer-card{
+      margin-top:12px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:20px 18px 18px;
+      text-align:center;
+    }
+    .timer-title{
+      font-size:14px;
+      font-weight:700;
+      margin-bottom:4px;
+    }
+    .timer-sub{
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:14px;
+      line-height:1.6;
+    }
+
+    .ring-wrap{
+      display:flex;
+      justify-content:center;
+      margin:10px 0 14px;
+    }
+
+    .ring{
+      width:220px;
+      height:220px;
+      position:relative;
+      display:grid;
+      place-items:center;
+    }
+
+    .ring svg{
+      width:220px;
+      height:220px;
+      transform:rotate(-90deg);
+      overflow:visible;
+    }
+
+    .ring .track{
+      stroke:var(--border);
+      stroke-width:12;
+      fill:none;
+    }
+
+    .ring .progress{
+      stroke:var(--blue);
+      stroke-width:12;
+      fill:none;
+      stroke-linecap:round;
+      transition:stroke-dashoffset .3s linear, stroke .2s linear;
+    }
+
+    .ring-center{
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      pointer-events:none;
+    }
+
+    .time{
+      font-size:34px;
+      font-weight:900;
+      letter-spacing:0.08em;
+    }
+    .time.warning{ color:#f97316; }
+    .time.danger{ color:#dc2626; }
+
+    .timer-controls{
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      margin-top:6px;
+      margin-bottom:4px;
+    }
+
+    @media (max-width:420px){
+      .ring, .ring svg{ width:190px; height:190px; }
+      .time{ font-size:30px; }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>UNEARTHED ロボットゲーム 点数計算</h1>
-      <p class="desc">
-        各項目の点数を選ぶと合計が自動更新されます．
-        「同一ミッション内で点数項目が分かれているもの」は，同じカード内で行を分けて選べます．
-      </p>
+      <h1>UNEARTHED ロボットゲーム</h1>
+      <p class="desc">「スコア計算」と「タイマー」をタブで切り替えて使えます．</p>
     </header>
 
-    <main id="missionList" class="grid"></main>
-
-    <div class="totalbar">
-      <div class="total">
-        <div class="total-left">
-          <div class="label">合計点</div>
-          <div class="score"><span id="totalScore">0</span> 点</div>
-        </div>
-
-        <div class="total-right" id="resetArea">
-          <button class="ghost" id="resetBtn" type="button">リセット</button>
-          <!-- 確認UI（最初は非表示） -->
-          <span id="resetConfirm" style="display:none; gap:8px; align-items:center;">
-            <span style="font-size:12px; color:var(--muted); font-weight:700;">デフォルトに戻しますか</span>
-            <button class="primary" id="resetDo" type="button">実行</button>
-            <button class="ghost" id="resetCancel" type="button">やめる</button>
-          </span>
-        </div>
-      </div>
-
-      <div class="note">
-        ※相手チームがいない場合の追加点など，ルールの条件に合わせて運用してください．
-      </div>
+    <div class="tabs">
+      <button class="tab active" data-target="scoreView">スコア計算</button>
+      <button class="tab" data-target="timerView">タイマー</button>
     </div>
+
+    <!-- スコア計算ビュー -->
+    <section id="scoreView" class="view">
+      <main id="missionList" class="grid"></main>
+
+      <div class="totalbar">
+        <div class="total">
+          <div class="total-left">
+            <div class="label">合計点</div>
+            <div class="score"><span id="totalScore">0</span> 点</div>
+          </div>
+
+          <div class="total-right" id="resetArea">
+            <button class="ghost" id="resetBtn" type="button">リセット</button>
+            <span id="resetConfirm" style="display:none; gap:8px; align-items:center;">
+              <span style="font-size:12px; color:var(--muted); font-weight:700;">デフォルトに戻しますか</span>
+              <button class="primary" id="resetDo" type="button">実行</button>
+              <button class="ghost" id="resetCancel" type="button">やめる</button>
+            </span>
+          </div>
+        </div>
+
+        <div class="note">※相手チームがいない場合の追加点など，ルールの条件に合わせて運用してください．</div>
+      </div>
+    </section>
+
+    <!-- タイマービュー -->
+    <section id="timerView" class="view hidden">
+      <div class="timer-card">
+        <div class="timer-title">試合タイマー</div>
+        <div class="timer-sub">2分30秒（150秒）からカウントダウンします．リングが残り時間に合わせて短くなります．</div>
+
+        <div class="ring-wrap">
+          <div class="ring" aria-label="タイマー残り時間">
+            <svg viewBox="0 0 220 220" role="img" aria-hidden="true">
+              <!-- 半径 r=96, 中心(110,110) -->
+              <circle class="track" cx="110" cy="110" r="96"></circle>
+              <circle class="progress" id="ringProgress" cx="110" cy="110" r="96"></circle>
+            </svg>
+            <div class="ring-center">
+              <div id="timeDisplay" class="time">02:30</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="timer-controls">
+          <button id="timerStartStop" class="primary" type="button">スタート</button>
+          <button id="timerReset" class="ghost" type="button">リセット</button>
+        </div>
+
+        <p class="note">
+          ・スタートでもう一度押すと一時停止します．<br>
+          ・残り30秒でオレンジ，残り10秒で赤に変わります．
+        </p>
+      </div>
+    </section>
   </div>
 
   <script>
-    /**
-     * ✅ デフォルト方針
-     *  - 基本は 0点
-     *  - 例外：CHECK=20, M04 pillars=10, PRECISION=6個(=50点)
-     */
+    // ===== スコア計算（あなたの最新版そのまま） =====
     const missions = [
       {
         code: "CHECK",
@@ -282,221 +426,103 @@
           defaultValue: 20
         }]
       },
-
       {
         code: "M01",
         title: "ミッション01：表面清掃",
         subtitle: "土層（各10点）＋発掘ブラシ（10点）",
         parts: [
-          {
-            key: "soil",
-            label: "土層（完全に取り除かれ，マットに接触）各10点：0〜2個",
-            options: [{label:"0",value:0},{label:"10",value:10},{label:"20",value:20}],
-            defaultValue: 0
-          },
-          {
-            key: "brush",
-            label: "発掘ブラシが発掘現場に接触していない：10点",
-            options: [{label:"0",value:0},{label:"10",value:10}],
-            defaultValue: 0
-          }
+          { key:"soil", label:"土層（完全に取り除かれ，マットに接触）各10点：0〜2個",
+            options:[{label:"0",value:0},{label:"10",value:10},{label:"20",value:20}], defaultValue:0 },
+          { key:"brush", label:"発掘ブラシが発掘現場に接触していない：10点",
+            options:[{label:"0",value:0},{label:"10",value:10}], defaultValue:0 }
         ]
       },
-
       {
         code: "M02",
         title: "ミッション02：地図の露出",
         subtitle: "表土のセクション（各10点）",
         parts: [{
-          key: "topsoil",
-          label: "表土のセクションが完全に取り除かれている：各10点（0〜3個）",
-          options: [{label:"0",value:0},{label:"10",value:10},{label:"20",value:20},{label:"30",value:30}],
-          defaultValue: 0
+          key:"topsoil",
+          label:"表土のセクションが完全に取り除かれている：各10点（0〜3個）",
+          options:[{label:"0",value:0},{label:"10",value:10},{label:"20",value:20},{label:"30",value:30}],
+          defaultValue:0
         }]
       },
-
       {
         code: "M03",
         title: "ミッション03：鉱坑の探査",
         subtitle: "自チームのトロッコ：30点 / 追加点：+10点",
         parts: [
-          {
-            key: "cart30",
-            label: "自チームのトロッコが相手チームのフィールド上にある：30点",
-            options: [{label:"0",value:0},{label:"30",value:30}],
-            defaultValue: 0
-          },
-          {
-            key: "bonus10",
-            label: "追加点：相手チームのトロッコが自チームのフィールド上にある：+10点（相手がいる場合）",
-            options: [{label:"0",value:0},{label:"+10",value:10}],
-            defaultValue: 0
-          }
+          { key:"cart30", label:"自チームのトロッコが相手チームのフィールド上にある：30点",
+            options:[{label:"0",value:0},{label:"30",value:30}], defaultValue:0 },
+          { key:"bonus10", label:"追加点：相手チームのトロッコが自チームのフィールド上にある：+10点（相手がいる場合）",
+            options:[{label:"0",value:0},{label:"+10",value:10}], defaultValue:0 }
         ]
       },
-
       {
         code: "M04",
         title: "ミッション04：慎重な回収",
         subtitle: "貴重な遺物 / 支柱",
         parts: [
-          {
-            key: "artifact",
-            label: "貴重な遺物が鉱山に接触していない：30点",
-            options: [{label:"0",value:0},{label:"30",value:30}],
-            defaultValue: 0
-          },
-          {
-            key: "pillars",
-            label: "両方の支柱が立っている：10点",
-            options: [{label:"0",value:0},{label:"10",value:10}],
-            defaultValue: 10   // ✅ 例外：M04支柱は10点がデフォルト
-          }
+          { key:"artifact", label:"貴重な遺物が鉱山に接触していない：30点",
+            options:[{label:"0",value:0},{label:"30",value:30}], defaultValue:0 },
+          { key:"pillars", label:"両方の支柱が立っている：10点",
+            options:[{label:"0",value:0},{label:"10",value:10}], defaultValue:10 }
         ]
       },
-
+      { code:"M05", title:"ミッション05：誰が住んでいた？", subtitle:"床がまっすぐ上を向いている：30点",
+        parts:[{key:"main",label:"達成",options:[{label:"0",value:0},{label:"30",value:30}],defaultValue:0}] },
+      { code:"M06", title:"ミッション06：鍛冶場", subtitle:"達成度に応じて各10点（0〜30点）",
+        parts:[{key:"main",label:"各10点（最大30点）",options:[{label:"0",value:0},{label:"10",value:10},{label:"20",value:20},{label:"30",value:30}],defaultValue:0}] },
+      { code:"M07", title:"ミッション07：力仕事", subtitle:"石臼が台座に接触していない：30点",
+        parts:[{key:"main",label:"達成",options:[{label:"0",value:0},{label:"30",value:30}],defaultValue:0}] },
+      { code:"M08", title:"ミッション08：サイロ", subtitle:"サイロ：最大3つまで（各10点）",
+        parts:[{key:"silo",label:"各10点（0〜3つ）",options:[{label:"0",value:0},{label:"10",value:10},{label:"20",value:20},{label:"30",value:30}],defaultValue:0}] },
+      { code:"M09", title:"ミッション09：何を売っていた？", subtitle:"屋根 / 交易品",
+        parts:[
+          {key:"roof",label:"屋根が完全に持ち上がっている：20点",options:[{label:"0",value:0},{label:"20",value:20}],defaultValue:0},
+          {key:"goods",label:"市場の交易品が持ち上がっている：10点",options:[{label:"0",value:0},{label:"10",value:10}],defaultValue:0}
+        ]},
+      { code:"M10", title:"ミッション10：はかり", subtitle:"はかりの傾き / 皿",
+        parts:[
+          {key:"tilt",label:"はかりが傾き，マットに接触している：20点",options:[{label:"0",value:0},{label:"20",value:20}],defaultValue:0},
+          {key:"pan",label:"はかりの皿が完全に取り除かれている：10点",options:[{label:"0",value:0},{label:"10",value:10}],defaultValue:0}
+        ]},
+      { code:"M11", title:"ミッション11：港の遺物", subtitle:"遺物 / 追加点（旗）",
+        parts:[
+          {key:"artifact",label:"遺物が地表の上に持ち上がっている：20点",options:[{label:"0",value:0},{label:"20",value:20}],defaultValue:0},
+          {key:"bonus",label:"追加点：クレーンの旗が少しでも下がっている：+10点",options:[{label:"0",value:0},{label:"+10",value:10}],defaultValue:0}
+        ]},
+      { code:"M12", title:"ミッション12：船の救出", subtitle:"船 / 砂",
+        parts:[
+          {key:"ship",label:"船が完全に持ち上がっている：20点",options:[{label:"0",value:0},{label:"20",value:20}],defaultValue:0},
+          {key:"sand",label:"砂が完全に取り除かれている：10点",options:[{label:"0",value:0},{label:"10",value:10}],defaultValue:0}
+        ]},
+      { code:"M13", title:"ミッション13：像の復元", subtitle:"像が完全に持ち上がっている：30点",
+        parts:[{key:"main",label:"達成",options:[{label:"0",value:0},{label:"30",value:30}],defaultValue:0}] },
+      { code:"M14", title:"ミッション14：フォーラム", subtitle:"フォーラムに置いた対象物：すべて各5点（最大7個）",
+        parts:[{key:"items",label:"各5点（0〜7個）",options:[
+          {label:"0",value:0},{label:"5",value:5},{label:"10",value:10},{label:"15",value:15},
+          {label:"20",value:20},{label:"25",value:25},{label:"30",value:30},{label:"35",value:35}
+        ],defaultValue:0}] },
+      { code:"M15", title:"ミッション15：発掘現場のマーキング", subtitle:"マーキング：各10点（最大3つ）",
+        parts:[{key:"marks",label:"各10点（0〜3つ）",options:[
+          {label:"0",value:0},{label:"10",value:10},{label:"20",value:20},{label:"30",value:30}
+        ],defaultValue:0}] },
       {
-        code: "M05",
-        title: "ミッション05：誰が住んでいた？",
-        subtitle: "床がまっすぐ上を向いている：30点",
-        parts: [{ key:"main", label:"達成", options:[{label:"0",value:0},{label:"30",value:30}], defaultValue:0 }]
-      },
-
-      {
-        code: "M06",
-        title: "ミッション06：鍛冶場",
-        subtitle: "達成度に応じて各10点（0〜30点）",
-        parts: [{
-          key: "main",
-          label: "各10点（最大30点）",
-          options: [{label:"0",value:0},{label:"10",value:10},{label:"20",value:20},{label:"30",value:30}],
-          defaultValue: 0
-        }]
-      },
-
-      {
-        code: "M07",
-        title: "ミッション07：力仕事",
-        subtitle: "石臼が台座に接触していない：30点",
-        parts: [{ key:"main", label:"達成", options:[{label:"0",value:0},{label:"30",value:30}], defaultValue:0 }]
-      },
-
-      {
-        code: "M08",
-        title: "ミッション08：サイロ",
-        subtitle: "サイロ：最大3つまで（各10点）",
-        parts: [{
-          key: "silo",
-          label: "各10点（0〜3つ）",
-          options: [{label:"0",value:0},{label:"10",value:10},{label:"20",value:20},{label:"30",value:30}],
-          defaultValue: 0
-        }]
-      },
-
-      {
-        code: "M09",
-        title: "ミッション09：何を売っていた？",
-        subtitle: "屋根 / 交易品",
-        parts: [
-          { key:"roof", label:"屋根が完全に持ち上がっている：20点", options:[{label:"0",value:0},{label:"20",value:20}], defaultValue:0 },
-          { key:"goods", label:"市場の交易品が持ち上がっている：10点", options:[{label:"0",value:0},{label:"10",value:10}], defaultValue:0 }
-        ]
-      },
-
-      {
-        code: "M10",
-        title: "ミッション10：はかり",
-        subtitle: "はかりの傾き / 皿",
-        parts: [
-          { key:"tilt", label:"はかりが傾き，マットに接触している：20点", options:[{label:"0",value:0},{label:"20",value:20}], defaultValue:0 },
-          { key:"pan", label:"はかりの皿が完全に取り除かれている：10点", options:[{label:"0",value:0},{label:"10",value:10}], defaultValue:0 }
-        ]
-      },
-
-      {
-        code: "M11",
-        title: "ミッション11：港の遺物",
-        subtitle: "遺物 / 追加点（旗）",
-        parts: [
-          { key:"artifact", label:"遺物が地表の上に持ち上がっている：20点", options:[{label:"0",value:0},{label:"20",value:20}], defaultValue:0 },
-          { key:"bonus", label:"追加点：クレーンの旗が少しでも下がっている：+10点", options:[{label:"0",value:0},{label:"+10",value:10}], defaultValue:0 }
-        ]
-      },
-
-      {
-        code: "M12",
-        title: "ミッション12：船の救出",
-        subtitle: "船 / 砂",
-        parts: [
-          { key:"ship", label:"船が完全に持ち上がっている：20点", options:[{label:"0",value:0},{label:"20",value:20}], defaultValue:0 },
-          { key:"sand", label:"砂が完全に取り除かれている：10点", options:[{label:"0",value:0},{label:"10",value:10}], defaultValue:0 }
-        ]
-      },
-
-      {
-        code: "M13",
-        title: "ミッション13：像の復元",
-        subtitle: "像が完全に持ち上がっている：30点",
-        parts: [{ key:"main", label:"達成", options:[{label:"0",value:0},{label:"30",value:30}], defaultValue:0 }]
-      },
-
-      {
-        code: "M14",
-        title: "ミッション14：フォーラム",
-        subtitle: "フォーラムに置いた対象物：すべて各5点（最大7個）",
-        parts: [{
-          key: "items",
-          label: "各5点（0〜7個）",
-          options: [
-            { label: "0", value: 0 },
-            { label: "5", value: 5 },
-            { label: "10", value: 10 },
-            { label: "15", value: 15 },
-            { label: "20", value: 20 },
-            { label: "25", value: 25 },
-            { label: "30", value: 30 },
-            { label: "35", value: 35 }
-          ],
-          defaultValue: 0
-        }]
-      },
-
-      {
-        code: "M15",
-        title: "ミッション15：発掘現場のマーキング",
-        subtitle: "マーキング：各10点（最大3つ）",
-        parts: [{
-          key: "marks",
-          label: "各10点（0〜3つ）",
-          options: [{ label: "0", value: 0 },{ label: "10", value: 10 },{ label: "20", value: 20 },{ label: "30", value: 30 }],
-          defaultValue: 0
-        }]
-      },
-
-      {
-        code: "PRECISION",
-        title: "精密トークン",
-        subtitle: "競技終了時に残っている数に応じた得点",
-        parts: [{
-          key:"left",
-          label:"残数",
-          options: [
-            { label: "0個: 0", value: 0 },
-            { label: "1個: 10", value: 10 },
-            { label: "2個: 15", value: 15 },
-            { label: "3個: 25", value: 25 },
-            { label: "4個: 35", value: 35 },
-            { label: "5個: 50", value: 50 },
-            { label: "6個: 50", value: 50 }
-          ],
-          defaultValue: 50   // ✅ 例外：精密トークンは6個がデフォルト（=50点）
-        }]
+        code:"PRECISION",
+        title:"精密トークン",
+        subtitle:"競技終了時に残っている数に応じた得点",
+        parts:[{key:"left",label:"残数",options:[
+          {label:"0個: 0",value:0},{label:"1個: 10",value:10},{label:"2個: 15",value:15},
+          {label:"3個: 25",value:25},{label:"4個: 35",value:35},{label:"5個: 50",value:50},{label:"6個: 50",value:50}
+        ],defaultValue:50}]
       }
     ];
 
     const missionList = document.getElementById("missionList");
 
-    function render() {
+    function renderScoreUI() {
       missions.forEach((m) => {
         const card = document.createElement("section");
         card.className = "card";
@@ -523,7 +549,6 @@
 
         top.appendChild(left);
         top.appendChild(code);
-
         card.appendChild(top);
 
         (m.parts || []).forEach((p) => {
@@ -553,7 +578,6 @@
             label.setAttribute("for", id);
             label.textContent = opt.label;
 
-            // ✅ デフォルト選択：p.defaultValue があればそれ，なければ先頭（=0点）
             const def = (p.defaultValue != null) ? p.defaultValue : null;
             if (def != null) {
               if (opt.value === def) input.checked = true;
@@ -581,7 +605,6 @@
       document.getElementById("totalScore").textContent = String(total);
     }
 
-    // ✅ デフォルトへ戻す（例外含む）
     function resetToDefaults() {
       missions.forEach(m => {
         (m.parts || []).forEach(p => {
@@ -599,14 +622,13 @@
             }
           });
 
-          // def が候補にない場合は先頭にフォールバック
           if (!set) radios[0].checked = true;
         });
       });
       calcTotal();
     }
 
-    // リセット確認UI（ミスタップ対策）
+    // リセット確認UI
     const resetBtn = document.getElementById("resetBtn");
     const resetConfirm = document.getElementById("resetConfirm");
     const resetDo = document.getElementById("resetDo");
@@ -624,17 +646,119 @@
       showConfirm(false);
     });
 
-    // 画面外クリックで確認を閉じる（任意：誤操作対策）
     document.addEventListener("click", (e) => {
       if (resetConfirm.style.display === "none") return;
       const area = document.getElementById("resetArea");
       if (!area.contains(e.target)) showConfirm(false);
     });
 
-    // 初期描画と計算
-    render();
+    // タブ切り替え
+    const tabs = document.querySelectorAll(".tab");
+    const views = {
+      scoreView: document.getElementById("scoreView"),
+      timerView: document.getElementById("timerView")
+    };
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        tabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        const target = tab.dataset.target;
+        Object.keys(views).forEach(id => {
+          views[id].classList.toggle("hidden", id !== target);
+        });
+      });
+    });
+
+    // ===== Timer ring logic =====
+    const TOTAL_SECONDS = 150; // 2:30
+    let remainingSeconds = TOTAL_SECONDS;
+    let timerId = null;
+    let running = false;
+
+    const timeDisplay = document.getElementById("timeDisplay");
+    const ringProgress = document.getElementById("ringProgress");
+    const timerStartStop = document.getElementById("timerStartStop");
+    const timerReset = document.getElementById("timerReset");
+
+    // circle geometry (must match r=96 in SVG)
+    const R = 96;
+    const C = 2 * Math.PI * R;
+
+    // set up stroke dash
+    ringProgress.style.strokeDasharray = `${C} ${C}`;
+    ringProgress.style.strokeDashoffset = `0`;
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+    }
+
+    function setRingByRatio(ratio) {
+      // ratio: 1 -> full ring, 0 -> empty
+      const offset = C * (1 - ratio);
+      ringProgress.style.strokeDashoffset = String(offset);
+    }
+
+    function updateTimerUI() {
+      timeDisplay.textContent = formatTime(remainingSeconds);
+      timeDisplay.classList.remove("warning","danger");
+      ringProgress.style.stroke = getComputedStyle(document.documentElement).getPropertyValue("--blue");
+
+      if (remainingSeconds <= 30 && remainingSeconds > 10) {
+        timeDisplay.classList.add("warning");
+        ringProgress.style.stroke = "#f97316";
+      } else if (remainingSeconds <= 10) {
+        timeDisplay.classList.add("danger");
+        ringProgress.style.stroke = "#dc2626";
+      }
+
+      const ratio = remainingSeconds / TOTAL_SECONDS;
+      setRingByRatio(Math.max(0, Math.min(1, ratio)));
+    }
+
+    function startTimer() {
+      if (running) return;
+      if (remainingSeconds <= 0) remainingSeconds = TOTAL_SECONDS;
+      running = true;
+      timerStartStop.textContent = "一時停止";
+      timerId = setInterval(() => {
+        remainingSeconds -= 1;
+        if (remainingSeconds <= 0) {
+          remainingSeconds = 0;
+          stopTimer();
+        }
+        updateTimerUI();
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerId != null) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+      running = false;
+      timerStartStop.textContent = "スタート";
+    }
+
+    function resetTimer() {
+      stopTimer();
+      remainingSeconds = TOTAL_SECONDS;
+      updateTimerUI();
+    }
+
+    timerStartStop.addEventListener("click", () => {
+      if (running) stopTimer();
+      else startTimer();
+    });
+    timerReset.addEventListener("click", resetTimer);
+
+    // 初期化
+    renderScoreUI();
     calcTotal();
     document.addEventListener("change", calcTotal);
+
+    updateTimerUI();
   </script>
 </body>
 </html>
