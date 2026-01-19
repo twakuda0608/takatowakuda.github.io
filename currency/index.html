@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>為替変換</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { margin:0; padding:16px; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f5f5f7; }
+    .container { max-width:720px; margin:0 auto; }
+    h1 { font-size:20px; margin:0 0 16px; text-align:center; }
+    .card { background:#fff; border-radius:10px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.06); }
+
+    .row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+    .field { flex:1 1 180px; display:flex; flex-direction:column; gap:4px; }
+    .label { font-size:12px; color:#555; }
+
+    input[type="number"], input[type="text"] {
+      width:100%; padding:6px 8px; font-size:14px;
+      border-radius:6px; border:1px solid #ccc; box-sizing:border-box;
+    }
+
+    button {
+      padding:6px 12px; font-size:14px; border-radius:6px;
+      border:1px solid #ccc; background:#fff; cursor:pointer;
+    }
+    button:hover { background:#f0f0f0; }
+
+    .inline { display:flex; align-items:center; gap:6px; font-size:13px; }
+    .note { font-size:12px; color:#555; min-height:1.2em; }
+    .note.error { color:#c00; }
+
+    /* ドロップダウン（検索＋スクロール）共通 */
+    .dd { position:relative; width:100%; }
+    .dd-toggle {
+      width:100%; padding:6px 8px; border-radius:6px; border:1px solid #ccc;
+      background:#fff; font-size:14px; display:flex; justify-content:space-between; align-items:center;
+      cursor:pointer; box-sizing:border-box;
+    }
+    .dd-toggle:focus { outline:2px solid #4a90e2; outline-offset:1px; }
+    .dd-text { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .dd-caret { margin-left:8px; font-size:10px; }
+
+    .dd-menu {
+      position:absolute; left:0; right:0; top:calc(100% + 2px);
+      background:#fff; border:1px solid #ccc; border-radius:8px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.10);
+      padding:6px; z-index:100; display:none; box-sizing:border-box;
+    }
+    .dd.open .dd-menu { display:block; }
+
+    .dd-search {
+      width:100%; padding:6px 8px; font-size:13px; border-radius:6px; border:1px solid #ddd;
+      margin-bottom:6px; box-sizing:border-box;
+    }
+
+    .dd-list { list-style:none; margin:0; padding:0; max-height:240px; overflow-y:auto; font-size:13px; }
+    .dd-item { padding:6px 8px; cursor:pointer; white-space:nowrap; border-radius:6px; }
+    .dd-item:hover { background:#f0f0f0; }
+    .dd-item.is-empty { color:#888; cursor:default; }
+
+    /* 複数選択（チェック） */
+    .dd-item-check { display:flex; align-items:center; gap:8px; }
+    .dd-item-check input[type="checkbox"] { width:auto; }
+    .dd-footer {
+      display:flex; gap:8px; justify-content:space-between; align-items:center;
+      padding-top:6px; margin-top:6px; border-top:1px solid #eee;
+      font-size:12px; color:#555;
+    }
+    .dd-footer .smallbtn { padding:4px 8px; font-size:12px; }
+
+    /* 結果テーブル */
+    table { width:100%; border-collapse:collapse; }
+    th, td { border-top:1px solid #eee; padding:8px 6px; font-size:14px; }
+    th { text-align:left; font-size:12px; color:#555; }
+    td.num { text-align:right; font-variant-numeric: tabular-nums; }
+    .muted { color:#777; font-size:12px; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header class="appbar">
+      <a href="/" class="back-fab" aria-label="ホームに戻る">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"/>
+        </svg>
+      </a>
+      <h1>為替比較</h1>
+    </header>
+
+    <div class="container">
+
+    <div class="card">
+      <div class="row">
+        <label class="field">
+          <span class="label">金額</span>
+          <input id="amount" type="number" value="100" step="0.01" min="0" />
+        </label>
+
+        <!-- From（単一選択：検索＋スクロール） -->
+        <div class="field">
+          <span class="label">From（基準通貨）</span>
+          <div class="dd" data-kind="single" data-target="from">
+            <button type="button" class="dd-toggle">
+              <span class="dd-text" id="fromLabel">JPY - 日本円</span>
+              <span class="dd-caret">▾</span>
+            </button>
+            <div class="dd-menu">
+              <input type="text" class="dd-search" placeholder="コード or 名称で検索" />
+              <ul class="dd-list"></ul>
+            </div>
+            <input type="hidden" id="from" value="JPY">
+          </div>
+        </div>
+
+        <!-- To（複数選択：検索＋スクロール＋チェック） -->
+        <div class="field">
+          <span class="label">To（比較したい通貨：複数OK）</span>
+          <div class="dd" data-kind="multi" data-target="to">
+            <button type="button" class="dd-toggle">
+              <span class="dd-text" id="toLabel"></span>
+              <span class="dd-caret">▾</span>
+            </button>
+            <div class="dd-menu">
+              <input type="text" class="dd-search" placeholder="コード or 名称で検索" />
+              <ul class="dd-list"></ul>
+              <div class="dd-footer">
+                <button type="button" class="smallbtn" id="toClear">クリア</button>
+                <span id="toCount">選択: 3</span>
+                <button type="button" class="smallbtn" id="toDone">閉じる</button>
+              </div>
+            </div>
+            <input type="hidden" id="to" value='["USD"]'>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <button id="swap">⇄ 入れ替え（FromとTo先頭）</button>
+        <button id="refresh">更新</button>
+        <label class="inline">
+          <input id="auto" type="checkbox" checked />
+          自動更新
+        </label>
+      </div>
+
+      <div class="note" id="meta"></div>
+      <div class="note error" id="err"></div>
+
+      <div style="margin-top:10px;">
+        <table>
+          <thead>
+            <tr>
+              <th>To</th>
+              <th class="num">換算結果</th>
+              <th class="num">1 あたり</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="3" class="muted">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const el = (id) => document.getElementById(id);
+
+      const amountEl = el("amount");
+      const fromHidden = el("from");
+      const toHidden = el("to");
+      const fromLabel = el("fromLabel");
+      const toLabel = el("toLabel");
+
+      const swapBtn = el("swap");
+      const refreshBtn = el("refresh");
+      const autoEl = el("auto");
+
+      const metaEl = el("meta");
+      const errEl = el("err");
+      const tbody = el("tbody");
+
+      const toClearBtn = el("toClear");
+      const toDoneBtn = el("toDone");
+      const toCountEl = el("toCount");
+
+      // 通貨一覧：必要なら増やしてOK
+      const CURRENCIES = [
+        { code:"JPY", name:"日本円" },
+        { code:"USD", name:"米ドル" },
+        { code:"EUR", name:"ユーロ" },
+        { code:"GBP", name:"英ポンド" },
+        { code:"AUD", name:"豪ドル" },
+        { code:"CAD", name:"カナダドル" },
+        { code:"CHF", name:"スイスフラン" },
+        { code:"CNY", name:"人民元" },
+        { code:"HKD", name:"香港ドル" },
+        { code:"SGD", name:"シンガポールドル" },
+        { code:"SEK", name:"スウェーデンクローナ" },
+        { code:"NOK", name:"ノルウェークローネ" },
+        { code:"DKK", name:"デンマーククローネ" },
+        { code:"NZD", name:"NZドル" }
+      ];
+
+      const fmt = (n, maxFrac=6) =>
+        new Intl.NumberFormat("ja-JP", { maximumFractionDigits: maxFrac }).format(n);
+
+      function getToArray() {
+        try {
+          const a = JSON.parse(toHidden.value || "[]");
+          return Array.isArray(a) ? a : [];
+        } catch {
+          return [];
+        }
+      }
+      function setToArray(arr) {
+        const uniq = Array.from(new Set(arr)).filter(x => typeof x === "string" && x.length === 3);
+        toHidden.value = JSON.stringify(uniq);
+      }
+
+      function setFrom(code) {
+        fromHidden.value = code;
+        const cur = CURRENCIES.find(c => c.code === code);
+        fromLabel.textContent = cur ? `${cur.code} - ${cur.name}` : code;
+      }
+
+      function refreshToLabel() {
+        const arr = getToArray();
+        const head = arr.slice(0, 3).join(", ");
+        const suffix = arr.length > 3 ? `, ...（${arr.length}件）` : `（${arr.length}件）`;
+        toLabel.textContent = (arr.length ? head + suffix : "未選択（0件）");
+        toCountEl.textContent = `選択: ${arr.length}`;
+      }
+
+      // ===== ドロップダウン（単一選択 / 複数選択） =====
+      function initDropdown(dd) {
+        const kind = dd.dataset.kind; // single | multi
+        const toggle = dd.querySelector(".dd-toggle");
+        const menu = dd.querySelector(".dd-menu");
+        const search = dd.querySelector(".dd-search");
+        const list = dd.querySelector(".dd-list");
+        const target = dd.dataset.target;
+
+        function open() {
+          dd.classList.add("open");
+          render(search.value);
+          search.focus();
+          search.select();
+        }
+        function close() {
+          dd.classList.remove("open");
+        }
+        function render(filter) {
+          const kw = (filter || "").trim().toLowerCase();
+          list.innerHTML = "";
+
+          const filtered = CURRENCIES.filter(c => {
+            if (!kw) return true;
+            return c.code.toLowerCase().includes(kw) || c.name.toLowerCase().includes(kw);
+          });
+
+          if (!filtered.length) {
+            const li = document.createElement("li");
+            li.className = "dd-item is-empty";
+            li.textContent = "該当なし";
+            list.appendChild(li);
+            return;
+          }
+
+          if (kind === "single") {
+            filtered.forEach(c => {
+              const li = document.createElement("li");
+              li.className = "dd-item";
+              li.dataset.code = c.code;
+              li.textContent = `${c.code} - ${c.name}`;
+              list.appendChild(li);
+            });
+          } else {
+            const selected = new Set(getToArray());
+            filtered.forEach(c => {
+              const li = document.createElement("li");
+              li.className = "dd-item";
+              li.dataset.code = c.code;
+
+              const wrap = document.createElement("div");
+              wrap.className = "dd-item-check";
+
+              const cb = document.createElement("input");
+              cb.type = "checkbox";
+              cb.checked = selected.has(c.code);
+              cb.addEventListener("click", (e) => e.stopPropagation());
+
+              const sp = document.createElement("span");
+              sp.textContent = `${c.code} - ${c.name}`;
+
+              wrap.appendChild(cb);
+              wrap.appendChild(sp);
+              li.appendChild(wrap);
+              list.appendChild(li);
+            });
+          }
+        }
+
+        toggle.addEventListener("click", () => {
+          dd.classList.contains("open") ? close() : open();
+        });
+
+        search.addEventListener("input", () => render(search.value));
+
+        list.addEventListener("click", (e) => {
+          const item = e.target.closest(".dd-item");
+          const code = item?.dataset?.code;
+          if (!code) return;
+
+          if (kind === "single") {
+            setFrom(code);
+            close();
+            if (autoEl.checked) convert();
+          } else {
+            // checkbox toggle
+            const cb = item.querySelector('input[type="checkbox"]');
+            if (!cb) return;
+            cb.checked = !cb.checked;
+
+            const arr = getToArray();
+            const set = new Set(arr);
+            if (cb.checked) set.add(code);
+            else set.delete(code);
+
+            setToArray(Array.from(set));
+            refreshToLabel();
+            if (autoEl.checked) convert();
+          }
+        });
+
+        document.addEventListener("click", (e) => {
+          if (!dd.contains(e.target)) close();
+        });
+
+        // 初期描画
+        render("");
+      }
+
+      document.querySelectorAll(".dd").forEach(initDropdown);
+
+      // To footer buttons
+      toClearBtn.addEventListener("click", () => {
+        setToArray([]);
+        refreshToLabel();
+          // 3) いま開いているリスト内のチェックボックスを全部オフにする
+        document
+          .querySelectorAll('.dd[data-target="to"] .dd-list input[type="checkbox"]')
+          .forEach(cb => {
+            cb.checked = false;
+          });
+
+        if (autoEl.checked) convert();
+      });
+      toDoneBtn.addEventListener("click", () => {
+        document.querySelector('.dd[data-target="to"]')?.classList.remove("open");
+      });
+
+      // 初期値ラベル反映
+      setFrom(fromHidden.value || "JPY");
+      refreshToLabel();
+
+      // ===== 換算（複数通貨） =====
+      let cache = { key:null, ts:0, data:null };
+      const CACHE_MS = 60_000;
+
+      async function convert() {
+        errEl.textContent = "";
+        metaEl.textContent = "";
+
+        const a = Number(amountEl.value);
+        const base = (fromHidden.value || "").toUpperCase();
+        const symbolsArr = getToArray().map(x => x.toUpperCase()).filter(x => x && x.length === 3);
+
+        if (!isFinite(a) || a < 0) {
+          errEl.textContent = "金額が不正です．";
+          return;
+        }
+        if (!base || base.length !== 3) {
+          errEl.textContent = "From が不正です（例：JPY）．";
+          return;
+        }
+        if (!symbolsArr.length) {
+          tbody.innerHTML = `<tr><td colspan="3" class="muted">To が未選択です．</td></tr>`;
+          return;
+        }
+
+        // base と同じ通貨が混ざってたら除外
+        const symbols = symbolsArr.filter(s => s !== base);
+        if (!symbols.length) {
+          tbody.innerHTML = `<tr><td colspan="3" class="muted">To が From と同じ通貨です．</td></tr>`;
+          return;
+        }
+
+        const key = `${a}|${base}|${symbols.join(",")}`;
+        const now = Date.now();
+        if (cache.key === key && (now - cache.ts) < CACHE_MS && cache.data) {
+          render(cache.data, a, base, symbols, true);
+          return;
+        }
+
+        // Frankfurter: latest?base=...&symbols=CHF,GBP,...
+        const url = new URL("https://api.frankfurter.dev/v1/latest");
+        url.searchParams.set("base", base);
+        url.searchParams.set("symbols", symbols.join(","));
+
+        try {
+          const res = await fetch(url.toString(), { cache: "no-store" });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          cache = { key, ts: now, data };
+          render(data, a, base, symbols, false);
+        } catch (e) {
+          errEl.textContent = `レート取得に失敗しました．（${String(e.message || e)}）`;
+        }
+      }
+
+      function render(data, amount, base, symbols, fromCache) {
+        const date = data?.date || "—";
+        const rates = data?.rates || {};
+
+        const rows = [];
+
+        // ★ ① 基準通貨（From → From）を一番上に追加
+        rows.push({
+          sym: base + "（基準）",
+          converted: amount,
+          r: 1
+        });
+
+        // ★ ② To 通貨
+        for (const sym of symbols) {
+          const r = rates[sym];
+          if (typeof r !== "number") continue;
+          rows.push({
+            sym,
+            converted: amount * r,
+            r
+          });
+        }
+
+        if (rows.length === 1) {
+          tbody.innerHTML =
+            `<tr><td colspan="3" class="muted">レートが取得できませんでした．</td></tr>`;
+          return;
+        }
+
+        // 基準行を除いて並び替え（好み）
+        const baseRow = rows.shift();
+        rows.sort((a, b) => b.converted - a.converted);
+        rows.unshift(baseRow);
+
+        tbody.innerHTML = rows.map(x => `
+          <tr>
+            <td>${x.sym}</td>
+            <td class="num">${fmt(x.converted, 6)}</td>
+            <td class="num">${fmt(x.r, 8)}</td>
+          </tr>
+        `).join("");
+
+        metaEl.textContent =
+          `基準: ${fmt(amount, 6)} ${base} ／ date: ${date}` +
+          (fromCache ? "（キャッシュ）" : "");
+      }
+
+
+      function maybeAuto() { if (autoEl.checked) convert(); }
+
+      amountEl.addEventListener("input", maybeAuto);
+      amountEl.addEventListener("change", maybeAuto);
+      refreshBtn.addEventListener("click", convert);
+
+      // 入れ替え：To の先頭を From にして，元の From を To に追加
+      swapBtn.addEventListener("click", () => {
+        const arr = getToArray();
+        if (!arr.length) return;
+
+        const newFrom = arr[0];
+        const oldFrom = fromHidden.value;
+
+        setFrom(newFrom);
+
+        const rest = arr.slice(1);
+        if (oldFrom && oldFrom.length === 3 && oldFrom !== newFrom) rest.unshift(oldFrom);
+
+        setToArray(rest);
+        refreshToLabel();
+        maybeAuto();
+      });
+
+      // 初回
+      convert();
+      // 外部から呼べるように（拡張時用）
+      window.convert = convert;
+    });
+  </script>
+</body>
+</html>
