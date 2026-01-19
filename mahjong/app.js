@@ -14,11 +14,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const init1 = el('init1'), oka1 = el('oka1'), uma1 = el('uma1'), rate1 = el('rate1');
   const s1_1 = el('s1_1'), s2_1 = el('s2_1'), s3_1 = el('s3_1'), s4_1 = el('s4_1');
   const r1_1 = el('r1_1'), r2_1 = el('r2_1'), r3_1 = el('r3_1'), r4_1 = el('r4_1');
+  const decimal1 = el('decimal1'); 
 
-  function thousandRoundPt1(realScore){
-    // realScore は実点（例: 31000）
-    return Math.round((Number(realScore) - 100) / 1000);
+// realScore: 実点（例: 40000）
+function thousandRoundPt1(realScore){
+  const score = Number(realScore) || 0;
+
+  // 小数点モード ON：純粋に 1000点＝1pt としてそのまま計算
+  // 40000 → 40.0, 30500 → 30.5
+  if (decimal1 && decimal1.checked) {
+    return score / 1000;
   }
+
+  // 小数点モード OFF：五捨六入で整数ptに丸める
+  // (score - 100)/1000 を四捨五入 → 五捨六入
+  return Math.round((score - 100) / 1000);
+}
+
   function parseUma1(val){
     const v = Number(val);
     const x = Math.round(v/100);
@@ -43,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const RS2 = S2 * 100, RS3 = S3 * 100, RS4 = S4 * 100;
     const ROka = O * 100; // 実点のオカ
 
-    // pt計算
+     // pt計算
     const okaPt = ROka / 1000; // (= O/10)
     const p2 = thousandRoundPt1(RS2) + UX - okaPt;
     const p3 = thousandRoundPt1(RS3) - UX - okaPt;
@@ -51,8 +63,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const p1 = -(p2 + p3 + p4);
 
     function line(pt){
-      const money = Math.round(pt * R);
-      return `${pt}pt × ${R} = ${money}`;
+      // 極小の誤差を 0 に丸める
+      let val = Math.abs(pt) < 1e-9 ? 0 : pt;
+
+      // 表示用pt（文字列）
+      const ptStr = (decimal1 && decimal1.checked)
+        ? val.toFixed(1)  // 小数点1桁表示
+        : String(Math.round(val)); // 整数表示（見た目用）
+
+      const money = Math.round(pt * R); // 計算自体は元の値を使用
+      return `${ptStr}pt × ${R} = ${money}`;
     }
 
     r1_1.textContent = line(p1);
@@ -60,9 +80,13 @@ document.addEventListener('DOMContentLoaded', () => {
     r3_1.textContent = line(p3);
     r4_1.textContent = line(p4);
   }
+
   ['input','change'].forEach(ev => {
-    [init1,oka1,uma1,rate1,s2_1,s3_1,s4_1].forEach(e => e.addEventListener(ev, computeTab1));
+    [init1,oka1,uma1,rate1,s2_1,s3_1,s4_1,decimal1].forEach(e => 
+      e.addEventListener(ev, computeTab1)
+    );
   });
+
   computeTab1();
 
   // ====== タブ2：総合ポイント精算 ======
