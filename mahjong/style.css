@@ -40,3 +40,15 @@ input[readonly]{background:#fafafa}
 /* ポイント精算の2列フォーム（名前/ポイントを横並び） */
 .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .grid2 label { margin:0 }
+
+input[type="checkbox"] {
+  width: auto;
+}
+
+.checklabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+}
