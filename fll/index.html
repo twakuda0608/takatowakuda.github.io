@@ -35,6 +35,14 @@
       font-weight:700;
       letter-spacing:.2px;
     }
+    .h1-sub{
+      display:block;
+      font-size:12px;
+      font-weight:600;
+      color:var(--muted);
+      margin-top:4px;
+      letter-spacing:0.3px;
+    }
     .desc{
       margin:0;
       color:var(--muted);
@@ -360,7 +368,11 @@
 <body>
   <div class="wrap">
     <header>
-      <h1>UNEARTHED ロボットゲーム</h1>
+      <h1>
+        UNEARTHED ロボットゲーム
+        <span class="h1-sub">for Team TKZES</span>
+      </h1>
+      
     </header>
 
     <div class="tabs">
@@ -416,8 +428,11 @@
       </div>
     </section>
   </div>
-
+  <p class="desc" style="text-align:center; margin-top:24px;">
+    This site was created for FLL Team Tkzes in Tokorozawa, Japan.
+  </p>
   <script>
+    
     // noEquip アイコンを載せるミッション
     const NO_EQUIP_MISSIONS = new Set([
       "M01","M04","M05","M09","M11","M12","M13","M14"
