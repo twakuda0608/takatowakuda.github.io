@@ -1,3 +1,6 @@
+/* =========================
+   Back button (floating)
+========================= */
 .back-fab{
   position:fixed; left:16px; top:16px; z-index:1000;
   width:40px; height:40px; border-radius:999px;
@@ -11,44 +14,152 @@
 .back-fab:active{ transform:scale(.97); }
 .back-fab:focus-visible{ outline:3px solid #66ccff; }
 
-
+/* =========================
+   Base
+========================= */
 :root { --max: 480px; }
-body{font-family: system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic ProN","Meiryo",sans-serif; margin: 24px;}
-h1{font-size: 20px;margin:0 0 12px;text-align:center}
-.wrap{max-width: var(--max); margin: 0 auto;}
 
-fieldset{border:1px solid #ddd;border-radius:12px;padding:16px;margin:12px 0}
-legend{padding:0 6px}
-label{font-size:14px;color:#333;display:block;margin-bottom:8px}
-input, select{width:100%;font-size:18px;padding:10px;border:1px solid #ccc;border-radius:10px;box-sizing:border-box;margin-top:4px}
-input[readonly]{background:#fafafa}
-.note{font-size:12px;color:#666;margin-top:4px}
-.results{display:flex;flex-direction:column;gap:12px;margin-top:8px}
-.card{border:1px solid #e4e4e4;border-radius:12px;padding:12px}
-.rank{font-weight:600;margin-bottom:4px}
-.sumline{font-variant-numeric: tabular-nums}
-.muted{color:#666}
-.footer{font-size:12px;color:#666;margin-top:16px;text-align:center}
+body{
+  font-family: system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
+  margin: 24px;
+}
+h1{ font-size: 20px; margin:0 0 12px; text-align:center; }
+.wrap{ max-width: var(--max); margin: 0 auto; }
 
-/* タブ */
-.tabs{display:flex;gap:8px;justify-content:center;margin:0 0 12px}
-.tabbtn{padding:8px 14px;border:1px solid #ddd;border-radius:999px;background:#fafafa;font-size:14px;cursor:pointer}
-.tabbtn.active{background:#eef6ff;border-color:#bcd7ff}
-.tab{display:none}
-.tab.active{display:block}
+/* =========================
+   Fieldset / form controls
+========================= */
+fieldset{
+  border:1px solid #ddd;
+  border-radius:12px;
+  padding:16px;
+  margin:12px 0;
+}
+legend{ padding:0 6px; }
 
-/* ポイント精算の2列フォーム（名前/ポイントを横並び） */
-.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.grid2 label { margin:0 }
-
-input[type="checkbox"] {
-  width: auto;
+/* デフォルト（狭い画面）は従来どおり縦 */
+label{
+  font-size:14px;
+  color:#333;
+  display:block;
+  margin-bottom:8px;
 }
 
-.checklabel {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-  font-size: 13px;
+input, select{
+  width:100%;
+  font-size:18px;
+  padding:10px;
+  border:1px solid #ccc;
+  border-radius:10px;
+  box-sizing:border-box;
+  margin-top:4px;
+}
+
+input[readonly]{ background:#fafafa; }
+
+.note{ font-size:12px; color:#666; margin-top:4px; }
+
+/* =========================
+   Wide: make labels + inputs horizontal
+   （ここが要点）
+========================= */
+@media (min-width: 420px){
+  fieldset > label{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:10px;
+  }
+
+  /* 数字入力はコンパクト */
+  fieldset > label > input{
+    width:140px;
+    margin-top:0;
+    flex:0 0 auto;
+  }
+
+  /* selectは少し広めにする（ワンツー等が見切れにくい） */
+  fieldset > label > select{
+    width:220px;     /* ここを 180〜240 で好み調整 */
+    margin-top:0;
+    flex:0 0 auto;
+  }
+}
+
+/* =========================
+   Results cards (tab1)
+========================= */
+.results{ display:flex; flex-direction:column; gap:12px; margin-top:8px; }
+.card{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border:1px solid #e4e4e4;
+  border-radius:12px;
+  padding:12px;
+}
+
+.rank{
+  font-weight:600;
+}
+
+.sumline{
+  font-variant-numeric: tabular-nums;
+  text-align:right;
+  min-width:170px;  
+}
+.muted{ color:#666; }
+.footer{ font-size:12px; color:#666; margin-top:16px; text-align:center; }
+
+/* =========================
+   Tabs
+========================= */
+.tabs{ display:flex; gap:8px; justify-content:center; margin:0 0 12px; }
+.tabbtn{
+  padding:8px 14px;
+  border:1px solid #ddd;
+  border-radius:999px;
+  background:#fafafa;
+  font-size:14px;
+  cursor:pointer;
+}
+.tabbtn.active{ background:#eef6ff; border-color:#bcd7ff; }
+.tab{ display:none; }
+.tab.active{ display:block; }
+
+/* =========================
+   Tab2 grid: keep existing layout
+========================= */
+.grid2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.grid2 label{ margin:0; display:block; } /* ここは縦のまま */
+.grid2 label input{ width:100%; margin-top:4px; }
+
+/* =========================
+   Checkbox label
+========================= */
+input[type="checkbox"]{ width:auto; }
+
+.checklabel{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-top:8px;
+  font-size:13px;
+}
+
+/* 画面が広い時に fieldset > label が横並びになっても、
+   チェックラベルは左寄せで崩れないようにする */
+@media (min-width: 420px){
+  fieldset > label.checklabel{
+    justify-content:flex-start;
+  }
+  fieldset > label.checklabel > input[type="checkbox"]{
+    width:auto;
+    margin-top:0;
+  }
 }
