@@ -40,6 +40,8 @@ h1 {
   text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
 }
 
+
+
 /* ======================================
    説明文
 ====================================== */
@@ -59,7 +61,6 @@ p {
   width: min(1000px, 92%);
   display: grid;
   gap: 16px;
-  
   grid-template-columns: repeat(3, 1fr);
 }
 
@@ -69,12 +70,18 @@ p {
   }
 }
 
-
 .tool-grid li {
-  margin: 0;
+  position: relative;
+  z-index: 0;
+}
+
+.tool-grid li:hover,
+.tool-grid li:focus-within {
+  z-index: 20;
 }
 
 .tool-grid a {
+  position: relative;
   display: block;
   background: #0078d7;
   color: white;
@@ -82,7 +89,7 @@ p {
   border-radius: 12px;
   text-decoration: none;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .tool-grid a:hover {
@@ -95,27 +102,58 @@ p {
   transform: scale(0.97);
 }
 
-a {
-  display: inline-block;
-  background: #0078d7;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 6px;
-  text-decoration: none;
-  transition: background 0.2s, transform 0.1s;
+.tool-grid a:focus {
+  outline: 3px solid #66ccff;
+  outline-offset: 3px;
 }
 
-a:hover {
-  background: #005bb5; /* マウスを乗せたら濃く */
+/* ======================================
+   ツールチップ
+====================================== */
+.tool-grid a::after {
+  content: attr(data-desc);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%) translateY(6px);
+  background: rgba(30, 41, 59, 0.95);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85em;
+  font-weight: 400;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 100;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
 }
 
-a:active {
-  background: #003f88; /* 押した瞬間さらに濃く */
-  transform: scale(0.9); /* 少し凹む */
+.tool-grid a::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top: 0;
+  border-bottom-color: rgba(30, 41, 59, 0.95);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 100;
 }
 
-a:focus {
-  outline: 3px solid #66ccff; /* Tabで選択されたときに枠線表示 */
+.tool-grid a:hover::after,
+.tool-grid a:hover::before,
+.tool-grid a:focus::after,
+.tool-grid a:focus::before {
+  opacity: 1;
+}
+
+.tool-grid a:hover::after,
+.tool-grid a:focus::after {
+  transform: translateX(-50%) translateY(0);
 }
 
 
@@ -140,9 +178,12 @@ footer {
     font-size: 1.8em;
   }
 
-  a {
-    display: block;
-    margin: 10px auto;
-    width: 80%;
+  .tool-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tool-grid a {
+    width: 100%;
+    box-sizing: border-box;
   }
 }
