@@ -4,29 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/common.css">
+  <link rel="stylesheet" href="style.css">
   <title>test: 練習用プレイグラウンド</title>
-  <style>
-    :root { --w: 720px; }
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
-         max-width:var(--w);margin:36px auto;padding:0 16px;line-height:1.7}
-    h1{margin:0 0 12px}
-    section{border:1px solid #e5e5e5;border-radius:12px;padding:16px;margin:16px 0}
-    section>h2{font-size:16px;margin:0 0 12px;color:#333}
-    label{display:block;font-size:14px;margin:8px 0 4px}
-    input,select,textarea,button{font-size:16px}
-    input[type="text"],input[type="number"],select,textarea{
-      width:100%;padding:10px;border:1px solid #ccc;border-radius:10px;box-sizing:border-box
-    }
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .row>*{flex:1 1 220px}
-    .note{font-size:12px;color:#666}
-    .pill{display:inline-block;background:#f6f7fb;border:1px solid #e5e7f0;border-radius:999px;padding:2px 8px}
-    #colorBox{height:40px;border-radius:10px;border:1px solid #ddd}
-    #preview{max-width:100%;display:block;border:1px dashed #bbb;border-radius:8px;margin-top:8px}
-    #result{font-weight:600}
-    ul{margin:8px 0 0 20px}
-    code{background:#f5f5f5;padding:2px 6px;border-radius:6px}
-  </style>
 </head>
 <body>
   <h1>HTML / JS 練習用プレイグラウンド</h1>
@@ -152,50 +131,45 @@
       <span id="formMsg" class="pill"></span>
     </form>
   </section>
+
   <!-- 7) ドラッグ＆ドロップ -->
-<section>
-  <h2>7) ドラッグ＆ドロップ</h2>
-
-  <div class="row">
-    <!-- a) ファイル(DnD)で画像プレビュー -->
-    <div>
-      <label>ファイルをドロップして画像プレビュー：</label>
-      <div id="dz" class="dropzone">ここに画像ファイルをドラッグ＆ドロップ</div>
-      <img id="dropPreview" alt="DnD画像プレビュー" style="max-width:100%;display:block;margin-top:8px;border:1px dashed #bbb;border-radius:8px" />
-      <p class="note">※ URLで読み込めない場合でも、ローカルの画像ならここにドロップで表示できます。</p>
-    </div>
-
-    <!-- b) 要素のドラッグ＆ドロップ（箱→ターゲット） -->
-    <div>
-      <label>要素をドラッグ → ターゲットにドロップ：</label>
-      <div id="dragArea">
-        <div id="dragItem" draggable="true">ドラッグ</div>
-        <div id="dropTarget">ここにドロップ（<span id="dropCount">0</span>回）</div>
+  <section>
+    <h2>7) ドラッグ＆ドロップ</h2>
+    <div class="row">
+      <div>
+        <label>ファイルをドロップして画像プレビュー：</label>
+        <div id="dz" class="dropzone">ここに画像ファイルをドラッグ＆ドロップ</div>
+        <img id="dropPreview" alt="DnD画像プレビュー" style="max-width:100%;display:block;margin-top:8px;border:1px dashed #bbb;border-radius:8px" />
+        <p class="note">※ URLで読み込めない場合でも、ローカルの画像ならここにドロップで表示できます。</p>
+      </div>
+      <div>
+        <label>要素をドラッグ → ターゲットにドロップ：</label>
+        <div id="dragArea">
+          <div id="dragItem" draggable="true">ドラッグ</div>
+          <div id="dropTarget">ここにドロップ（<span id="dropCount">0</span>回）</div>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- 8) キーボード入力 -->
-<section>
-  <h2>8) キーボード入力</h2>
-
-  <div class="row">
-    <div>
-      <label>キー情報（最後に押したキー）：</label>
-      <p class="pill" id="keyInfo">—</p>
-      <p class="note">例：<code>Ctrl+S</code> はページ保存を無効化して通知、<code>←↑→↓</code> / <code>WASD</code> でプレイヤー移動</p>
+  <!-- 8) キーボード入力 -->
+  <section>
+    <h2>8) キーボード入力</h2>
+    <div class="row">
+      <div>
+        <label>キー情報（最後に押したキー）：</label>
+        <p class="pill" id="keyInfo">—</p>
+        <p class="note">例：<code>Ctrl+S</code> はページ保存を無効化して通知、<code>←↑→↓</code> / <code>WASD</code> でプレイヤー移動</p>
+      </div>
+      <div>
+        <label for="focusHere">ここに文字入力してもOK：</label>
+        <input id="focusHere" type="text" placeholder="タイプしてみてください" />
+      </div>
     </div>
-    <div>
-      <label for="focusHere">ここに文字入力してもOK：</label>
-      <input id="focusHere" type="text" placeholder="タイプしてみてください" />
+    <div id="board">
+      <div id="player" aria-label="プレイヤー" title="矢印/WASDで動きます"></div>
     </div>
-  </div>
-
-  <div id="board">
-    <div id="player" aria-label="プレイヤー" title="矢印/WASDで動きます"></div>
-  </div>
-</section>
+  </section>
 
   <script src="app.js" defer></script>
   <script src="/common.js"></script>

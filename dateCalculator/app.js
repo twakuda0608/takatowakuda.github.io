@@ -1,0 +1,134 @@
+function formatDate(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}年${m}月${d}日`;
+}
+
+function formatWareki(date) {
+  return new Intl.DateTimeFormat(
+    "ja-JP-u-ca-japanese",
+    {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    }
+  ).format(date);
+}
+
+function addDays(baseDate, days) {
+  const d = new Date(baseDate);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function calculate() {
+  const input = document.getElementById("inputDate").value;
+  const resultDiv = document.getElementById("result");
+
+  if (!input) {
+    resultDiv.textContent = "日付を入力してください．";
+    return;
+  }
+
+  const startDate = new Date(input);
+  const wareki = formatWareki(startDate);
+  const today = new Date();
+
+  startDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const diffMs = today - startDate;
+  const totalDays = Math.floor(diffMs / msPerDay);
+
+  if (totalDays < 0) {
+    resultDiv.textContent = "未来の日付です．";
+    return;
+  }
+
+  const weeks = Math.floor(totalDays / 7);
+  const daysAfterWeeks = totalDays % 7;
+
+  // ===== 年・月・日 計算 =====
+  let years = 0;
+  let months = 0;
+  let tempDate = new Date(startDate);
+
+  // 年
+  while (true) {
+    const nextYear = new Date(tempDate);
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+
+    if (nextYear <= today) {
+      years++;
+      tempDate = nextYear;
+    } else {
+      break;
+    }
+  }
+
+  // 月
+  while (true) {
+    const nextMonth = new Date(tempDate);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+    if (nextMonth <= today) {
+      months++;
+      tempDate = nextMonth;
+    } else {
+      break;
+    }
+  }
+
+  // 日
+  const remainingDays = Math.floor((today - tempDate) / msPerDay);
+
+  // ===== 記念日 =====
+  const milestones = [1000, 5000, 10000, 15000, 20000];
+  let milestoneHtml = "<h2>記念日</h2><ul>";
+
+  milestones.forEach((m) => {
+    const milestoneDate = addDays(startDate, m);
+    const diffFromToday = Math.floor((milestoneDate - today) / msPerDay);
+
+    let statusText = "";
+    if (diffFromToday > 0) {
+      statusText = `（あと ${diffFromToday} 日）`;
+    } else if (diffFromToday === 0) {
+      statusText = "（ちょうど今日）";
+    } else {
+      statusText = `（${-diffFromToday} 日前に到達）`;
+    }
+
+    milestoneHtml += `<li>${m} 日目：${formatDate(milestoneDate)} ${statusText}</li>`;
+  });
+
+  milestoneHtml += "</ul>";
+
+  // ===== 表示 =====
+  resultDiv.innerHTML = `
+    <div class="result-card">
+      <div class="result-title">入力した日付</div>
+      <div class="result-body">
+        <p>${formatDate(startDate)}</p>
+        <p>（${wareki}）</p>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <div class="result-title">経過期間</div>
+      <div class="result-body">
+        <p class="sumline">合計：${totalDays} 日</p>
+        <p>${weeks} 週間 ${daysAfterWeeks} 日</p>
+        <p>${years} 年 ${months} ヶ月 ${remainingDays} 日</p>
+      </div>
+    </div>
+
+    ${milestoneHtml}
+  `;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  calculate();
+});
