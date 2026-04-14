@@ -287,6 +287,22 @@
       }
     }
 
+    input.sumline {
+      border: none;
+      background: transparent;
+      font: inherit;
+      color: inherit;
+      width: 100%;
+      text-align: right;
+      padding: 0;
+      outline: none;
+      min-width: 0;
+    }
+
+    input.sumline:focus {
+      color: var(--accent-strong);
+    }
+
     @media (max-width: 520px) {
       body {
         padding: 14px;
@@ -354,9 +370,9 @@
         <div class="card">
           <div>
             <div class="rank">10進数</div>
-            <div class="muted">変換結果</div>
+            <div class="muted">編集可能</div>
           </div>
-          <div class="sumline" id="decimalDisplay"></div>
+          <input type="text" inputmode="decimal" autocomplete="off" class="sumline" id="decimalDisplay">
         </div>
       </div>
 
@@ -382,6 +398,8 @@
     const addFractionBitBtn = document.getElementById("addFractionBit");
     const removeFractionBitBtn = document.getElementById("removeFractionBit");
     const resetButton = document.getElementById("resetButton");
+
+    let isApplyingDecimal = false;
 
     function formatLabel(v) {
       if (v >= 1) return String(v);
@@ -477,7 +495,9 @@
       }, 0);
 
       const total = integerSum + fractionSum;
-      decimalDisplay.textContent = Number(total.toFixed(10)).toString();
+      if (!isApplyingDecimal) {
+        decimalDisplay.value = Number(total.toFixed(10)).toString();
+      }
     }
 
     function updateControlButtons() {
@@ -529,6 +549,51 @@
       fractionStates = new Array(fractionBits.length).fill(false);
       updateDisplays();
       renderBoxes();
+    });
+
+    function applyDecimalInput(raw) {
+      const num = parseFloat(raw);
+      if (isNaN(num) || num < 0) return;
+
+      const intPart = Math.floor(num);
+      const fracPart = num - intPart;
+
+      // 桁が足りなければ上位ビットを自動追加
+      while (intPart > integerBits.reduce((s, b) => s + b, 0)) {
+        integerBits.unshift(integerBits[0] * 2);
+        integerStates.unshift(false);
+      }
+
+      // 整数部分を貪欲法でビットに変換
+      let rem = intPart;
+      integerStates = integerBits.map(bit => {
+        if (rem >= bit) { rem -= bit; return true; }
+        return false;
+      });
+
+      // 小数部分を貪欲法でビットに変換
+      let fracRem = fracPart;
+      fractionStates = fractionBits.map(bit => {
+        if (fracRem >= bit - 1e-12) { fracRem -= bit; return true; }
+        return false;
+      });
+
+      isApplyingDecimal = true;
+      updateDisplays();
+      renderBoxes();
+      isApplyingDecimal = false;
+    }
+
+    decimalDisplay.addEventListener("input", () => {
+      // 数字と小数点のみ許可、小数点は1つまで
+      const cleaned = decimalDisplay.value
+        .replace(/[^0-9.]/g, "")
+        .replace(/^(\d*\.?\d*).*$/, "$1");
+      if (cleaned !== decimalDisplay.value) decimalDisplay.value = cleaned;
+
+      if (cleaned !== "" && cleaned !== ".") {
+        applyDecimalInput(cleaned);
+      }
     });
 
     updateDisplays();
