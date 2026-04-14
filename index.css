@@ -41,7 +41,30 @@ h1 {
 }
 
 
+/* プロフィール画像 */
+.profile {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
 
+.profile img {
+  width: 160px;
+  height: 160px;
+  object-fit: cover;       /* ← 正方形トリミングの核心 */
+  border-radius: 20px;     /* ← 角丸（円にしたいなら50%） */
+
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  border: 4px solid white;
+
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* ホバーで浮く */
+.profile img:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 20px 40px rgba(0, 120, 215, 0.25);
+}
 /* ======================================
    説明文
 ====================================== */
