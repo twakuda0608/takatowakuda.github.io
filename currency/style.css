@@ -1,0 +1,69 @@
+body { margin:0; padding:16px; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f5f5f7; }
+.container { max-width:720px; margin:0 auto; }
+h1 { font-size:20px; margin:0 0 16px; text-align:center; }
+.card { background:#fff; border-radius:10px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.06); }
+
+.row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+.field { flex:1 1 180px; display:flex; flex-direction:column; gap:4px; }
+.label { font-size:12px; color:#555; }
+
+input[type="number"], input[type="text"] {
+  width:100%; padding:6px 8px; font-size:14px;
+  border-radius:6px; border:1px solid #ccc; box-sizing:border-box;
+}
+
+button {
+  padding:6px 12px; font-size:14px; border-radius:6px;
+  border:1px solid #ccc; background:#fff; cursor:pointer;
+}
+button:hover { background:#f0f0f0; }
+
+.inline { display:flex; align-items:center; gap:6px; font-size:13px; }
+.note { font-size:12px; color:#555; min-height:1.2em; }
+.note.error { color:#c00; }
+
+/* ドロップダウン（検索＋スクロール）共通 */
+.dd { position:relative; width:100%; }
+.dd-toggle {
+  width:100%; padding:6px 8px; border-radius:6px; border:1px solid #ccc;
+  background:#fff; font-size:14px; display:flex; justify-content:space-between; align-items:center;
+  cursor:pointer; box-sizing:border-box;
+}
+.dd-toggle:focus { outline:2px solid #4a90e2; outline-offset:1px; }
+.dd-text { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dd-caret { margin-left:8px; font-size:10px; }
+
+.dd-menu {
+  position:absolute; left:0; right:0; top:calc(100% + 2px);
+  background:#fff; border:1px solid #ccc; border-radius:8px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.10);
+  padding:6px; z-index:100; display:none; box-sizing:border-box;
+}
+.dd.open .dd-menu { display:block; }
+
+.dd-search {
+  width:100%; padding:6px 8px; font-size:13px; border-radius:6px; border:1px solid #ddd;
+  margin-bottom:6px; box-sizing:border-box;
+}
+
+.dd-list { list-style:none; margin:0; padding:0; max-height:240px; overflow-y:auto; font-size:13px; }
+.dd-item { padding:6px 8px; cursor:pointer; white-space:nowrap; border-radius:6px; }
+.dd-item:hover { background:#f0f0f0; }
+.dd-item.is-empty { color:#888; cursor:default; }
+
+/* 複数選択（チェック） */
+.dd-item-check { display:flex; align-items:center; gap:8px; }
+.dd-item-check input[type="checkbox"] { width:auto; }
+.dd-footer {
+  display:flex; gap:8px; justify-content:space-between; align-items:center;
+  padding-top:6px; margin-top:6px; border-top:1px solid #eee;
+  font-size:12px; color:#555;
+}
+.dd-footer .smallbtn { padding:4px 8px; font-size:12px; }
+
+/* 結果テーブル */
+table { width:100%; border-collapse:collapse; }
+th, td { border-top:1px solid #eee; padding:8px 6px; font-size:14px; }
+th { text-align:left; font-size:12px; color:#555; }
+td.num { text-align:right; font-variant-numeric: tabular-nums; }
+.muted { color:#777; font-size:12px; }
