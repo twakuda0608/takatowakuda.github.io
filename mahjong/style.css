@@ -1,41 +1,22 @@
 /* =========================
-   Back button (floating)
-========================= */
-.back-fab{
-  position:fixed; left:16px; top:16px; z-index:1000;
-  width:40px; height:40px; border-radius:999px;
-  display:flex; align-items:center; justify-content:center;
-  background:#ffffffcc; backdrop-filter:saturate(1.2) blur(4px);
-  border:1px solid #e4e4e4; color:#333; text-decoration:none;
-  box-shadow:0 4px 14px rgba(0,0,0,.08);
-  transition:transform .1s, background .2s;
-}
-.back-fab:hover{ background:#fff; }
-.back-fab:active{ transform:scale(.97); }
-.back-fab:focus-visible{ outline:3px solid #66ccff; }
-
-/* =========================
    Base
 ========================= */
 :root { --max: 480px; }
 
-body{
-  font-family: system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
-  margin: 24px;
-}
-h1{ font-size: 20px; margin:0 0 12px; text-align:center; }
+body{ padding: 0 20px 40px; }
 .wrap{ max-width: var(--max); margin: 0 auto; }
 
 /* =========================
    Fieldset / form controls
 ========================= */
 fieldset{
-  border:1px solid #ddd;
+  border:1px solid var(--border-soft);
   border-radius:12px;
   padding:16px;
   margin:12px 0;
+  background: transparent;
 }
-legend{ padding:0 6px; }
+legend{ padding:0 6px; font-weight:600; color:var(--brand); }
 
 /* デフォルト（狭い画面）は従来どおり縦 */
 label{
@@ -124,7 +105,7 @@ input[readonly]{ background:#fafafa; }
   font-size:14px;
   cursor:pointer;
 }
-.tabbtn.active{ background:#eef6ff; border-color:#bcd7ff; }
+.tabbtn.active{ background:#e8f3ff; border-color:var(--brand); color:var(--brand); }
 .tab{ display:none; }
 .tab.active{ display:block; }
 

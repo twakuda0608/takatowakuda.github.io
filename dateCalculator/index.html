@@ -5,20 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/common.css">
   <link rel="stylesheet" href="dateCalculator.css">
-  <title>Date Calculator</title>
+  <title>日付計算</title>
 </head>
 <body>
+  <div class="wrap">
+    <h1>日付計算</h1>
+    <div class="page-card">
 
-  <h1>日付計算</h1>
+      <label>
+        日付を入力：
+        <input type="date" id="inputDate" value="2022-09-24">
+      </label>
 
-  <label>
-    日付を入力：
-    <input type="date" id="inputDate" value="2022-09-24">
-  </label>
+      <button onclick="calculate()">計算</button>
 
-  <button onclick="calculate()">計算</button>
+      <div id="result"></div>
 
-  <div id="result"></div>
+    </div><!-- /.page-card -->
+  </div>
 
   <script src="app.js" defer></script>
   <script src="/common.js"></script>

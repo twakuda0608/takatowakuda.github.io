@@ -1,3 +1,50 @@
+/* =======================================================
+   デザイントークン & ベーススタイル  ―  全サブページ共通
+======================================================= */
+:root {
+  --brand:        #0078d7;
+  --brand-dark:   #005bb5;
+  --brand-darker: #003f88;
+  --border:       #ddd;
+  --border-soft:  #e4e4e4;
+  --muted-color:  #64748b;
+  --shadow:       0 4px 6px -1px rgba(0,0,0,.10), 0 2px 4px -1px rgba(0,0,0,.06);
+  --radius:       12px;
+  --font:         'Noto Sans JP', 'Helvetica Neue', system-ui, -apple-system,
+                  "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+}
+
+html {
+  background: radial-gradient(circle at top left, #ffffff, #e2e8f0);
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font);
+  color: #1a202c;
+  margin: 0;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin: 52px 0 20px;   /* 上部は fixed back-fab (56px) をかわす余白 */
+  color: var(--brand);
+  letter-spacing: 2px;
+  text-shadow: 1px 1px 3px rgba(0,0,0,.10);
+  text-align: center;
+}
+
+/* コンテンツをまとめる白いカード */
+.page-card {
+  background: #ffffff;
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+/* ======================================================= */
+
 .back-fab{
   position: fixed;
   left: 16px;

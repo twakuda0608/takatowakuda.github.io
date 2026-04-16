@@ -4,24 +4,182 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>クソUI選手権</title>
+  <link rel="stylesheet" href="/common.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
   <div class="ui-list">
+
+    <!-- 0. 基準の誕生日設定（親切なUI） -->
+    <div class="ui ui-base">
+      <div class="title">あなたの誕生日を入力してください<br><small>以降のNo.1〜は、この誕生日と一致するか照合されます</small></div>
+      <div class="row">
+        <input type="number" id="base-year"  placeholder="年（例：1990）" style="width:160px" min="1900" max="2100">
+        <input type="number" id="base-month" placeholder="月" style="width:65px" min="1" max="12">
+        <input type="number" id="base-day"   placeholder="日" style="width:65px" min="1" max="31">
+        <button id="base-submit">設定</button>
+      </div>
+      <div class="result" id="base-result"></div>
+    </div>
+
+    <!-- 1. シャッフル月・ランダム日スクロール -->
     <div class="ui">
       <div class="title">誕生日を入力してください</div>
-
       <div class="row">
         <select id="year"></select>
         <select id="month"></select>
         <input type="number" id="day" />
         <button id="submit" type="button">決定</button>
       </div>
-
       <div class="result" id="result"></div>
     </div>
+
+    <!-- 2. 逃げるボタン -->
+    <div class="ui">
+      <div class="title">誕生日を入力してください</div>
+      <div class="row">
+        <input type="text" id="esc-year"  placeholder="年" maxlength="4" style="width:70px">
+        <input type="text" id="esc-month" placeholder="月" maxlength="2" style="width:55px">
+        <input type="text" id="esc-day"   placeholder="日" maxlength="2" style="width:55px">
+      </div>
+      <div class="escape-arena" id="escape-arena">
+        <button id="esc-btn">決定</button>
+      </div>
+      <div class="result" id="esc-result"></div>
+    </div>
+
+    <!-- 3. シャッフルアンケート -->
+    <div class="ui">
+      <div class="title">好きな食べ物を選んでください</div>
+      <div id="shuffle-options" class="shuffle-options"></div>
+      <button id="shuffle-submit">決定</button>
+      <div class="result" id="shuffle-result"></div>
+    </div>
+
+    <!-- 4. テンキー（押すたびにシャッフル）年月日すべて入力 -->
+    <div class="ui">
+      <div class="title">誕生日をテンキーで入力してください<br><small>ボタンを押すたびにキーが並び替わります</small></div>
+      <div class="numpad-fields">
+        <div class="numpad-field-item" id="np-year-disp">年：--</div>
+        <div class="numpad-field-item" id="np-month-disp">月：--</div>
+        <div class="numpad-field-item" id="np-day-disp">日：--</div>
+      </div>
+      <div class="numpad-step" id="numpad-step">年を入力中（4桁）</div>
+      <div class="numpad-display" id="numpad-display">--</div>
+      <div class="numpad" id="numpad-grid"></div>
+      <div class="row" style="margin-top:8px;">
+        <button id="numpad-clear">クリア</button>
+        <button id="numpad-submit">決定</button>
+      </div>
+      <div class="result" id="numpad-result"></div>
+    </div>
+
+    <!-- 5. ドラッグ誕生日（年タイル追加・5秒ごとにシャッフル） -->
+    <div class="ui">
+      <div class="title">誕生日を入力してください<br><small>タイルをドラッグして枠に入れてください</small></div>
+      <div class="drag-slots">
+        <div class="drag-slot" id="drag-prefix-slot">上2桁：<span id="drag-prefix-val">??</span></div>
+        <div class="drag-slot" id="drag-yr3-slot">3桁目：<span id="drag-yr3-val">??</span></div>
+        <div class="drag-slot" id="drag-yr4-slot">4桁目：<span id="drag-yr4-val">??</span></div>
+        <div class="drag-slot" id="drag-month-slot">月：<span id="drag-month-val">??</span></div>
+        <div class="drag-slot" id="drag-day-slot">日：<span id="drag-day-val">??</span></div>
+      </div>
+      <p style="font-size:13px;color:#888;margin:4px 0 8px;">↓ タイルをドラッグしてください（5秒ごとに並び替わります）</p>
+      <div class="drag-pool" id="drag-pool"></div>
+      <button id="drag-submit" style="margin-top:12px;">決定</button>
+      <div class="result" id="drag-result"></div>
+    </div>
+
+    <!-- 6. 漢字入力（数字禁止・漢字のみ受付） -->
+    <div class="ui">
+      <div class="title">誕生日を入力してください<br><small>テキストで打ち込んでください（例：二〇〇〇年七月十五日）</small></div>
+      <div class="row">
+        <input type="text" id="kanji-input" placeholder="例：二〇〇〇年七月十五日" style="min-width:220px;" autocomplete="off">
+        <button id="kanji-submit">決定</button>
+      </div>
+      <div class="result" id="kanji-result"></div>
+    </div>
+
+    <!-- 7. 白文字入力（見えない） -->
+    <div class="ui">
+      <div class="title">お名前を入力してください</div>
+      <div class="row">
+        <div style="position:relative;">
+          <input type="text" id="invis-input" placeholder="名前を入力" autocomplete="off" class="invis-input">
+          <span class="invis-count"><span id="invis-len">0</span>文字</span>
+        </div>
+        <button id="invis-toggle">表示する</button>
+        <button id="invis-submit">決定</button>
+      </div>
+      <div class="result" id="invis-result"></div>
+    </div>
+
+    <!-- 8. OK と キャンセルが逆（見た目OKだが文字はキャンセル） -->
+    <div class="ui">
+      <div class="title">誕生日を確認してください</div>
+      <div class="row">
+        <input type="number" id="ok-year"  placeholder="年"  style="width:80px" min="1900" max="2025">
+        <input type="number" id="ok-month" placeholder="月"  style="width:65px" min="1" max="12">
+        <input type="number" id="ok-day"   placeholder="日"  style="width:65px" min="1" max="31">
+      </div>
+      <div class="ok-buttons">
+        <button id="ok-confirm-btn" class="ok-confirm-style">OK</button>
+        <button id="ok-cancel-btn"  class="ok-cancel-style">キャンセル</button>
+      </div>
+      <div class="result" id="ok-result"></div>
+    </div>
+
+    <!-- 9. 英語アルファベット順の月・年選択 -->
+    <div class="ui">
+      <div class="title">誕生日を入力してください</div>
+      <div class="row" style="flex-wrap:wrap;">
+        <select id="eng-year"  style="min-width:240px;"></select>
+        <select id="eng-month" style="min-width:130px;"></select>
+        <input  type="number" id="eng-day" placeholder="日" style="width:65px" min="1" max="31">
+        <button id="eng-submit">決定</button>
+      </div>
+      <div class="result" id="eng-result"></div>
+    </div>
+
+    <!-- 10. 偽プレースホルダー -->
+    <div class="ui">
+      <div class="title">お名前を入力してください</div>
+      <div class="row" style="flex-direction:column;align-items:center;gap:8px;">
+        <input type="text" id="ghost-input"   class="ghost-input" value="お名前を入力してください"   autocomplete="off">
+        <div class="phone-split" id="ghost-phone-wrap">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
+          <span class="phone-hyphen">-</span>
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
+          <span class="phone-hyphen">-</span>
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
+        </div>
+        <input type="text" id="ghost-address" class="ghost-input" value="住所を入力してください"     autocomplete="off">
+        <button id="ghost-submit">登録</button>
+      </div>
+      <div class="result" id="ghost-result"></div>
+    </div>
+
+    <!-- 11. スライダー誕生日（全日程1本） -->
+    <div class="ui">
+      <div class="title">誕生日をスライダーで入力してください</div>
+      <div class="sl-date-display" id="sl-date-display">1940年1月1日</div>
+      <input type="range" id="sl-single" min="0" value="0" style="width:100%">
+      <button id="sl-submit" style="margin-top:16px;">決定</button>
+      <div class="result" id="sl-result"></div>
+    </div>
+
   </div>
 
   <script src="app.js" defer></script>
+  <script src="/common.js"></script>
 </body>
 </html>

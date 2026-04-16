@@ -5,19 +5,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>麻雀ツール（統合版）</title>
+  <link rel="stylesheet" href="/common.css">
   <link rel="stylesheet" href="style.css">
-  
 </head>
 <body>
   <div class="wrap">
-    <header class="appbar">
-  <a href="/" class="back-fab" aria-label="ホームに戻る">
-  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-    <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
-</a>
-  <h1>麻雀ツール</h1>
-</header>
+    <h1>麻雀ツール</h1>
+    <div class="page-card">
     <div class="tabs">
       <button class="tabbtn active" data-tab="t1">ウマ/オカ 精算</button>
       <button class="tabbtn" data-tab="t2">総合ポイント精算</button>
@@ -105,9 +99,11 @@
         <div id="check2" class="note"></div>
       </fieldset>
     </div>
+    </div><!-- /.page-card -->
   </div>
 
   <!-- JS は defer で遅延読込（DOM構築後に実行） -->
   <script src="./app.js" defer></script>
+  <script src="/common.js"></script>
 </body>
 </html>

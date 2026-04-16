@@ -4,43 +4,41 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>漢字習得学年チェッカー</title>
-  <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="/common.css">
-  
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
+  <div class="wrap">
     <h1>漢字の学習年</h1>
 
+    <div class="page-card">
+      <fieldset>
+        <legend>テキスト入力</legend>
+        <textarea id="inputText" rows="4"
+          placeholder="ここに漢字を入力"></textarea>
+        <div id="emptyMessage" class="muted">
+          漢字を入力するとここに結果が表示されます。
+        </div>
+      </fieldset>
 
-  <div class="wrap">
-
-    <fieldset>
-      <legend>テキスト入力</legend>
-      <textarea id="inputText" rows="4"
-        placeholder="ここに漢字を入力"></textarea>
-      <div id="emptyMessage" class="muted">
-        漢字を入力するとここに結果が表示されます。
-      </div>
-    </fieldset>
-
-    <fieldset>
-      <legend>判定結果</legend>
-      <table class="result-table">
-        <thead>
-          <tr>
-            <th>漢字</th>
-            <th>学年</th>
-            <th>補足</th>
-          </tr>
-        </thead>
-        <tbody id="resultBody"></tbody>
-      </table>
-    </fieldset>
+      <fieldset>
+        <legend>判定結果</legend>
+        <table class="result-table">
+          <thead>
+            <tr>
+              <th>漢字</th>
+              <th>学年</th>
+              <th>補足</th>
+            </tr>
+          </thead>
+          <tbody id="resultBody"></tbody>
+        </table>
+      </fieldset>
+    </div><!-- /.page-card -->
 
   </div>
 
   <script src="app.js" defer></script>
-<script src="/common.js"></script>
+  <script src="/common.js"></script>
 </body>
 </html>

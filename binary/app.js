@@ -12,6 +12,8 @@ const removeIntegerBitBtn = document.getElementById("removeIntegerBit");
 const addFractionBitBtn = document.getElementById("addFractionBit");
 const removeFractionBitBtn = document.getElementById("removeFractionBit");
 const resetButton = document.getElementById("resetButton");
+const incrementBtn = document.getElementById("incrementBtn");
+const decrementBtn = document.getElementById("decrementBtn");
 
 let isApplyingDecimal = false;
 
@@ -159,10 +161,27 @@ addFractionBitBtn.addEventListener("click", addFractionBit);
 removeFractionBitBtn.addEventListener("click", removeFractionBit);
 
 resetButton.addEventListener("click", () => {
+  integerBits   = [16, 8, 4, 2, 1];
+  fractionBits  = [1 / 2, 1 / 4, 1 / 8, 1 / 16];
   integerStates = new Array(integerBits.length).fill(false);
   fractionStates = new Array(fractionBits.length).fill(false);
   updateDisplays();
   renderBoxes();
+});
+
+incrementBtn.addEventListener("click", () => {
+  const current = parseFloat(decimalDisplay.value) || 0;
+  const next = current + 1;
+  applyDecimalInput(String(next));
+  decimalDisplay.value = Number(next.toFixed(10)).toString();
+});
+
+decrementBtn.addEventListener("click", () => {
+  const current = parseFloat(decimalDisplay.value) || 0;
+  const next = current - 1;
+  if (next < 0) return;
+  applyDecimalInput(String(next));
+  decimalDisplay.value = Number(next.toFixed(10)).toString();
 });
 
 function applyDecimalInput(raw) {
