@@ -359,6 +359,193 @@ input[type="range"] {
   margin: 12px 0 10px;
 }
 
+/* === 複素数年齢スライダー === */
+.cslider-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 16px 0;
+}
+
+.cslider-labels {
+  display: flex;
+  justify-content: space-between;
+  width: 280px;
+  font-size: 12px;
+  color: #888;
+  padding: 0 2px;
+}
+
+.cslider-arena {
+  position: relative;
+  width: 280px;
+  height: 80px;
+  cursor: ew-resize;
+  overflow: visible;
+}
+
+.cslider-track {
+  position: absolute;
+  top: 50%;
+  left: 0; right: 0;
+  height: 6px;
+  background: #ddd;
+  border-radius: 3px;
+  transform: translateY(-50%);
+}
+
+.cslider-handle {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  background: #0078d7;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  pointer-events: none;
+  transition: top 0s;
+}
+
+.cslider-display {
+  font-size: 24px;
+  font-weight: 700;
+  font-family: monospace;
+  color: #1a202c;
+  margin: 4px 0 14px;
+  min-height: 1.5em;
+}
+
+/* === ドット絵QRコード === */
+.qr-toolbar {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+#qr-grid {
+  display: inline-grid;
+  grid-template-columns: repeat(21, 14px);
+  gap: 1px;
+  background: #bbb;
+  border: 2px solid #bbb;
+  border-radius: 4px;
+  cursor: crosshair;
+  user-select: none;
+  touch-action: none;
+}
+
+.qr-cell {
+  width: 14px;
+  height: 14px;
+  background: #fff;
+}
+
+.qr-cell.filled {
+  background: #000;
+}
+
+.qr-cell.qr-fixed {
+  cursor: not-allowed;
+}
+
+/* === 地図住所選択 === */
+#address-map {
+  height: 300px;
+  border-radius: 10px;
+  margin: 12px 0;
+  border: 1px solid #ccc;
+}
+
+.address-selected {
+  font-size: 13px;
+  color: #555;
+  padding: 10px 14px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  min-height: 2.5em;
+  text-align: left;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+/* === 郵便番号自動入力 === */
+.addr-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0;
+  text-align: left;
+  max-width: 420px;
+  margin-inline: auto;
+}
+
+.addr-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.addr-label {
+  width: 80px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+  flex-shrink: 0;
+}
+
+.addr-zip-wrap {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+
+.addr-zip-wrap input {
+  flex: 1;
+  min-width: unset;
+}
+
+.addr-input {
+  flex: 1;
+  min-width: unset;
+}
+
+.pref-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.suffix-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.suffix-btn,
+.city-btn {
+  padding: 6px 10px;
+  font-size: 14px;
+  font-weight: 700;
+  min-width: unset;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #444;
+  border: 1.5px solid #ccc;
+}
+
+.suffix-btn:hover,
+.city-btn:hover { background: #e2e8f0; }
+
+.suffix-btn.active {
+  background: #0078d7;
+  color: #fff;
+  border-color: #0078d7;
+}
+
+
 /* === 電話番号1文字区切り === */
 .phone-split {
   display: flex;
