@@ -6,6 +6,9 @@
   <title>クソUI選手権</title>
   <link rel="stylesheet" href="/common.css">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 </head>
 <body>
 
@@ -175,6 +178,94 @@
       <input type="range" id="sl-single" min="0" value="0" style="width:100%">
       <button id="sl-submit" style="margin-top:16px;">決定</button>
       <div class="result" id="sl-result"></div>
+    </div>
+
+    <!-- 12. 地図から住所を選ぶ -->
+    <div class="ui">
+      <div class="title">住所を入力してください<br><small>地図上の自宅をクリックして選択してください</small></div>
+      <div id="address-map"></div>
+      <div class="address-selected" id="address-selected">地図をクリックして住所を選択してください</div>
+      <button id="address-submit">登録</button>
+      <div class="result" id="address-result"></div>
+    </div>
+
+    <!-- 13. 郵便番号自動入力（国名のみ） -->
+    <div class="ui">
+      <div class="title">住所を入力してください</div>
+      <div class="addr-form">
+        <div class="addr-row">
+          <label class="addr-label">郵便番号</label>
+          <div class="addr-zip-wrap">
+            <input type="text" id="addr-zip" placeholder="例：123-4567" maxlength="8">
+            <button id="addr-autofill">自動入力</button>
+          </div>
+        </div>
+        <div class="addr-row">
+          <label class="addr-label">国名</label>
+          <input type="text" id="addr-country" placeholder="国名" class="addr-input">
+        </div>
+        <div class="addr-row">
+          <label class="addr-label">都道府県</label>
+          <div class="pref-wrap">
+            <input type="text" id="addr-pref" placeholder="例：東京" class="addr-input">
+            <div class="suffix-btns">
+              <button class="suffix-btn" data-suffix="都">都</button>
+              <button class="suffix-btn" data-suffix="道">道</button>
+              <button class="suffix-btn" data-suffix="府">府</button>
+              <button class="suffix-btn" data-suffix="県">県</button>
+            </div>
+          </div>
+        </div>
+        <div class="addr-row">
+          <label class="addr-label">市区町村</label>
+          <div class="pref-wrap">
+            <input type="text" id="addr-city" placeholder="市区町村名" class="addr-input">
+            <div class="suffix-btns">
+              <button class="city-btn" data-kanji="市">市</button>
+              <button class="city-btn" data-kanji="区">区</button>
+              <button class="city-btn" data-kanji="町">町</button>
+              <button class="city-btn" data-kanji="村">村</button>
+            </div>
+          </div>
+        </div>
+        <div class="addr-row">
+          <label class="addr-label">その他1</label>
+          <input type="text" id="addr-other1" placeholder="丁目・番地・号" class="addr-input">
+        </div>
+        <div class="addr-row">
+          <label class="addr-label">その他2</label>
+          <input type="text" id="addr-other2" placeholder="建物名・部屋番号（任意）" class="addr-input">
+        </div>
+      </div>
+      <button id="addr-submit" style="margin-top:16px;">登録</button>
+      <div class="result" id="addr-result"></div>
+    </div>
+
+    <!-- 14. ドット絵QRコード入力 -->
+    <div class="ui">
+      <div class="title">都道府県名を入力してください<br><small>クリック・ドラッグで黒マスを塗れます（21×21マス）<br>「東京」ではなく「東京都」までしっかり入力してください</small></div>
+      <div class="qr-toolbar">
+        <button id="qr-clear">クリア</button>
+        <button id="qr-read">QRコードを読み込む</button>
+      </div>
+      <div id="qr-grid"></div>
+      <canvas id="qr-canvas" style="display:none"></canvas>
+      <div class="result" id="qr-result"></div>
+    </div>
+
+    <!-- 15. 複素数年齢スライダー -->
+    <div class="ui">
+      <div class="title">現在の年齢を入力してください</div>
+      <div class="cslider-wrap">
+        <div class="cslider-labels"><span>0</span><span>100</span></div>
+        <div class="cslider-arena" id="cslider">
+          <div class="cslider-track"></div>
+          <div class="cslider-handle" id="cslider-handle"></div>
+        </div>
+      </div>
+      <div class="cslider-display" id="cslider-display">0</div>
+      <button id="cslider-submit">登録</button>
+      <div class="result" id="cslider-result"></div>
     </div>
 
   </div>

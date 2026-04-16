@@ -700,6 +700,320 @@ resetForm();
 
 
 /* ============================================================
+   12. 地図から住所を選ぶ
+============================================================ */
+(function () {
+  const selectedEl = document.getElementById("address-selected");
+  const submitBtn  = document.getElementById("address-submit");
+  const result     = document.getElementById("address-result");
+
+  const map = L.map("address-map").setView([35.6812, 139.7671], 11);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  }).addTo(map);
+
+  let marker = null;
+  let selectedAddress = "";
+
+  map.on("click", async (e) => {
+    const { lat, lng } = e.latlng;
+    if (marker) marker.remove();
+    marker = L.marker([lat, lng]).addTo(map);
+    selectedEl.textContent = "住所を取得中...";
+    selectedAddress = "";
+    try {
+      const res  = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ja`,
+        { headers: { "User-Agent": "takatowakuda.com/shXtUI" } }
+      );
+      const data = await res.json();
+      selectedAddress = data.display_name ?? "";
+      selectedEl.textContent = selectedAddress || "住所を取得できませんでした";
+    } catch {
+      selectedEl.textContent = "住所の取得に失敗しました";
+    }
+  });
+
+  submitBtn.addEventListener("click", () => {
+    if (!selectedAddress) { result.textContent = "地図から住所を選択してください"; return; }
+    result.textContent = `「${selectedAddress}」で登録しました`;
+  });
+})();
+
+
+/* ============================================================
+   13. 郵便番号自動入力（国名のみ）
+============================================================ */
+(function () {
+  const zipInput    = document.getElementById("addr-zip");
+  const autofillBtn = document.getElementById("addr-autofill");
+  const countryEl   = document.getElementById("addr-country");
+  const submit      = document.getElementById("addr-submit");
+  const result      = document.getElementById("addr-result");
+
+  autofillBtn.addEventListener("click", () => {
+    if (!zipInput.value.trim()) { result.textContent = "郵便番号を入力してください"; return; }
+    autofillBtn.textContent = "取得中...";
+    autofillBtn.disabled = true;
+    result.textContent = "郵便番号から住所を取得しています。しばらくお待ちください...";
+    setTimeout(() => {
+      countryEl.value = "日本";
+      autofillBtn.textContent = "自動入力";
+      autofillBtn.disabled = false;
+      result.textContent = "住所の自動入力が完了しました";
+    }, 4000);
+  });
+
+  // 都道府県サフィックスボタン（ラジオ式）
+  const suffixBtns = document.querySelectorAll(".suffix-btn");
+  let selectedSuffix = "";
+  suffixBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const s = btn.dataset.suffix;
+      if (selectedSuffix === s) {
+        selectedSuffix = "";
+        btn.classList.remove("active");
+      } else {
+        suffixBtns.forEach(b => b.classList.remove("active"));
+        selectedSuffix = s;
+        btn.classList.add("active");
+      }
+    });
+  });
+
+  // 市区町村ボタン（先頭に挿入）
+  const cityInput = document.getElementById("addr-city");
+  document.querySelectorAll(".city-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      cityInput.value = btn.dataset.kanji + cityInput.value;
+    });
+  });
+
+  submit.addEventListener("click", () => {
+    const prefText = document.getElementById("addr-pref").value.trim();
+    const pref     = prefText + selectedSuffix;
+    const city     = cityInput.value.trim();
+    const other1   = document.getElementById("addr-other1").value.trim();
+    const other2   = document.getElementById("addr-other2").value.trim();
+    if (!pref || !city || !other1) { result.textContent = "必須項目を入力してください"; return; }
+    result.textContent = `登録しました：${countryEl.value} ${pref}${city}${other1}${other2 ? " " + other2 : ""}`;
+  });
+})();
+
+
+/* ============================================================
+   14. ドット絵QRコード入力
+============================================================ */
+(function () {
+  const COLS = 21, ROWS = 21;
+  const gridEl   = document.getElementById("qr-grid");
+  const canvas   = document.getElementById("qr-canvas");
+  const readBtn  = document.getElementById("qr-read");
+  const clearBtn = document.getElementById("qr-clear");
+  const result   = document.getElementById("qr-result");
+
+  const FINDER = [
+    [1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,1],
+    [1,0,1,1,1,0,1],
+    [1,0,1,1,1,0,1],
+    [1,0,1,1,1,0,1],
+    [1,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1],
+  ];
+
+  const cells = [];
+  let isDrawing = false;
+  let drawFill  = true;
+
+  for (let r = 0; r < ROWS; r++) {
+    const row = [];
+    for (let c = 0; c < COLS; c++) {
+      const cell = document.createElement("div");
+      cell.className = "qr-cell";
+      cell.addEventListener("mousedown", e => {
+        e.preventDefault();
+        if (cell.classList.contains("qr-fixed")) return;
+        isDrawing = true;
+        cell.classList.toggle("filled");
+        drawFill = cell.classList.contains("filled");
+      });
+      cell.addEventListener("mouseenter", () => {
+        if (isDrawing && !cell.classList.contains("qr-fixed"))
+          cell.classList.toggle("filled", drawFill);
+      });
+      cell.addEventListener("touchmove", e => {
+        e.preventDefault();
+        const t = e.touches[0];
+        const el = document.elementFromPoint(t.clientX, t.clientY);
+        if (el && el.classList.contains("qr-cell") && !el.classList.contains("qr-fixed"))
+          el.classList.add("filled");
+      }, { passive: false });
+      gridEl.appendChild(cell);
+      row.push(cell);
+    }
+    cells.push(row);
+  }
+
+  function applyFinder(startRow, startCol) {
+    FINDER.forEach((row, dr) => {
+      row.forEach((val, dc) => {
+        const cell = cells[startRow + dr][startCol + dc];
+        cell.classList.toggle("filled", val === 1);
+        cell.classList.add("qr-fixed");
+      });
+    });
+  }
+
+  applyFinder(0, 0);   // 左上
+  applyFinder(0, 14);  // 右上
+  applyFinder(14, 0);  // 左下
+
+  document.addEventListener("mouseup", () => { isDrawing = false; });
+
+  clearBtn.addEventListener("click", () => {
+    cells.flat().forEach(c => {
+      if (!c.classList.contains("qr-fixed")) c.classList.remove("filled");
+    });
+    result.textContent = "";
+    result.style.color = "";
+  });
+
+  readBtn.addEventListener("click", () => {
+    const PX = 12;
+    canvas.width  = COLS * PX;
+    canvas.height = ROWS * PX;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#000";
+    cells.forEach((row, r) => {
+      row.forEach((cell, c) => {
+        if (cell.classList.contains("filled")) ctx.fillRect(c * PX, r * PX, PX, PX);
+      });
+    });
+
+    const PREFS = [
+      "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
+      "茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県",
+      "新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県",
+      "静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県",
+      "奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県",
+      "徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県",
+      "熊本県","大分県","宮崎県","鹿児島県","沖縄県",
+    ];
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, canvas.width, canvas.height);
+    if (!code) {
+      result.textContent = "QRコードを認識できませんでした";
+      result.style.color = "#dc2626";
+    } else if (!PREFS.includes(code.data.trim())) {
+      result.textContent = "エラー：都道府県を入力してください";
+      result.style.color = "#dc2626";
+    } else {
+      result.textContent = `登録しました。${code.data.trim()}`;
+      result.style.color = "";
+    }
+  });
+})();
+
+
+/* ============================================================
+   15. 複素数年齢スライダー（見た目は普通の横バー）
+============================================================ */
+(function () {
+  const arena   = document.getElementById("cslider");
+  const handle  = document.getElementById("cslider-handle");
+  const display = document.getElementById("cslider-display");
+  const submit  = document.getElementById("cslider-submit");
+  const result  = document.getElementById("cslider-result");
+
+  let real = 0, imag = 0;
+  let dragging = false;
+
+  function updateDisplay() {
+    if (imag === 0) {
+      display.textContent = `${real}`;
+    } else if (imag > 0) {
+      display.textContent = `${real} + ${imag}i`;
+    } else {
+      display.textContent = `${real} - ${Math.abs(imag)}i`;
+    }
+  }
+
+  function applyPos(clientX, clientY) {
+    const rect = arena.getBoundingClientRect();
+    const centerY = rect.top + rect.height / 2;
+
+    const rx = Math.max(0, Math.min(clientX - rect.left, rect.width));
+    const dy = clientY - centerY; // pixels from center
+
+    handle.style.left = rx + "px";
+    handle.style.top  = (rect.height / 2 + dy) + "px";
+
+    real = Math.round(rx / rect.width * 100);
+    imag = -Math.round(dy / (rect.height / 2) * 50);
+
+    updateDisplay();
+  }
+
+  arena.addEventListener("mousedown", e => {
+    dragging = true; applyPos(e.clientX, e.clientY);
+  });
+  document.addEventListener("mousemove", e => {
+    if (dragging) applyPos(e.clientX, e.clientY);
+  });
+  document.addEventListener("mouseup", () => { dragging = false; });
+
+  arena.addEventListener("touchstart", e => {
+    dragging = true; applyPos(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  document.addEventListener("touchmove", e => {
+    if (dragging) applyPos(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  document.addEventListener("touchend", () => { dragging = false; });
+
+  function resetSlider() {
+    real = 0; imag = 0;
+    handle.style.left = "0px";
+    handle.style.top  = "50%";
+    updateDisplay();
+  }
+
+  submit.addEventListener("click", () => {
+    if (imag !== 0) {
+      result.textContent = "値が複素数です。実数で入力してください";
+      result.style.color = "#dc2626";
+      resetSlider();
+      return;
+    }
+    if (!targetDate) {
+      result.textContent = "先にNo.0で誕生日を設定してください";
+      result.style.color = "";
+      return;
+    }
+    const today = new Date();
+    let age = today.getFullYear() - targetDate.y;
+    if (today.getMonth() + 1 < targetDate.m ||
+       (today.getMonth() + 1 === targetDate.m && today.getDate() < targetDate.d)) age--;
+    if (real !== age) {
+      result.textContent = "一致しません";
+      result.style.color = "#dc2626";
+      resetSlider();
+    } else {
+      result.textContent = `登録しました。${real}歳`;
+      result.style.color = "";
+    }
+  });
+
+  // 初期位置：左端・中央
+  handle.style.left = "0px";
+  handle.style.top  = "50%";
+})();
+
+
+/* ============================================================
    10. 偽プレースホルダー（実際の値・グレーのまま）
 ============================================================ */
 (function () {
