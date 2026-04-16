@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>変数とリストを学ぼう</title>
+  <link rel="stylesheet" href="/common.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <h1>変数とリストを学ぼう</h1>
+    <p class="lead">プログラミングの基本：データを「覚える」仕組みを理解しよう</p>
+
+    <!-- ===== 変数 ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge var-badge">変数</span>
+        <h2>変数（へんすう）とは？</h2>
+      </div>
+      <p class="concept-desc">変数は、<strong>データを入れておく名前付きの箱</strong>です。</p>
+
+      <div class="demo-area">
+        <!-- 視覚 -->
+        <div class="var-visual">
+          <div class="var-box" id="varBox">
+            <div class="var-label" id="varLabel">score</div>
+            <div class="var-val" id="varVal">100</div>
+            <div class="var-type" id="varType">数値</div>
+          </div>
+        </div>
+
+        <!-- 操作 -->
+        <div class="demo-controls">
+          <div class="input-group">
+            <label class="input-label">変数の名前</label>
+            <input class="demo-input mono" id="varNameInput" value="score" maxlength="20" placeholder="例: score">
+          </div>
+          <div class="eq-sign">=</div>
+          <div class="input-group">
+            <label class="input-label">値（あたい）</label>
+            <input class="demo-input mono" id="varValueInput" value="100" maxlength="20" placeholder="例: 100">
+          </div>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">Python コード</div>
+        <pre><code id="varCode">score = 100</code></pre>
+      </div>
+
+      <div class="concept-note">
+        値はあとから変えられます。文字を入れるときは <code>" "</code> で囲みます。
+      </div>
+    </section>
+
+    <!-- ===== 代入 ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge assign-badge">代入</span>
+        <h2>= は「入れる」という意味</h2>
+      </div>
+      <p class="concept-desc">プログラムの <code>=</code> は <strong>「右側の値を左側の変数に入れる」</strong> 命令です。</p>
+
+      <div class="assign-demo">
+        <div class="assign-side">
+          <div class="assign-sublabel">変数（左辺）</div>
+          <div class="var-box assign-var-box" id="assignBox">
+            <div class="var-label">score</div>
+            <div class="var-val" id="assignBoxVal">0</div>
+          </div>
+        </div>
+
+        <div class="assign-center">
+          <div class="assign-eq">=</div>
+          <div class="assign-arrow" id="assignArrow">← 右から入れる</div>
+        </div>
+
+        <div class="assign-side">
+          <div class="assign-sublabel">値（右辺）</div>
+          <div class="assign-rhs" id="assignRhsBox">
+            <span id="assignRhsVal">100</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="assign-controls">
+        <div class="input-group">
+          <label class="input-label">代入する値</label>
+          <input class="demo-input mono" id="assignInput" type="number" value="100">
+        </div>
+        <button class="action-btn assign-btn" id="assignBtn">代入する →</button>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">Python コード</div>
+        <pre><code id="assignCode">score = 100</code></pre>
+      </div>
+
+      <div class="concept-note">
+        数学の <code>=</code> と意味が違います。次のセクションで確認しましょう。
+      </div>
+    </section>
+
+    <!-- ===== score = score + 1 ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge incr-badge">応用</span>
+        <h2>score = score + 1 を理解しよう</h2>
+      </div>
+      <p class="concept-desc"><strong>右辺を先に計算してから代入します。</strong> 3 ステップで確認しましょう。</p>
+
+      <div class="step-demo">
+        <!-- 変数の現在値 -->
+        <div class="step-var-area">
+          <div class="assign-sublabel">score の現在値</div>
+          <div class="var-box step-var-box" id="stepVarBox">
+            <div class="var-label">score</div>
+            <div class="var-val" id="stepVarVal">5</div>
+          </div>
+        </div>
+
+        <!-- ステップカード -->
+        <div class="step-cards">
+          <div class="step-card" id="step1">
+            <div class="step-num">STEP 1</div>
+            <div class="step-title">右辺の score を読む</div>
+            <div class="step-code">score = <mark class="hl-read">score</mark> + 1</div>
+            <div class="step-desc">変数 score の現在値（<span id="stepReadVal">5</span>）を取り出す</div>
+          </div>
+          <div class="step-card" id="step2">
+            <div class="step-num">STEP 2</div>
+            <div class="step-title">計算する</div>
+            <div class="step-code">score = <mark class="hl-calc"><span id="stepCalcExpr">5 + 1</span></mark></div>
+            <div class="step-desc">計算結果：<strong id="stepCalcResult">6</strong></div>
+          </div>
+          <div class="step-card" id="step3">
+            <div class="step-num">STEP 3</div>
+            <div class="step-title">結果を score に代入</div>
+            <div class="step-code"><mark class="hl-store">score</mark> = <span id="stepStoreVal">6</span></div>
+            <div class="step-desc"><span id="stepOldVal">5</span> → <strong id="stepNewVal">6</strong> に更新された！</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-controls">
+        <div class="input-group">
+          <label class="input-label">score の初期値</label>
+          <input class="demo-input mono" id="stepInitInput" type="number" value="5" min="0" max="9999">
+        </div>
+        <button class="action-btn step-run-btn" id="stepRunBtn">▶ 実行</button>
+        <button class="action-btn step-reset-btn" id="stepResetBtn">↩ リセット</button>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">Python コード</div>
+        <pre><code id="stepCode">score = 5
+score = score + 1
+print(score)  # → 6</code></pre>
+      </div>
+
+      <div class="concept-note"><code>score += 1</code> とも書けます。</div>
+    </section>
+
+    <!-- ===== リスト ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge list-badge">リスト</span>
+        <h2>リスト（配列）とは？</h2>
+      </div>
+      <p class="concept-desc">リストは <strong>複数のデータを並べた箱の列</strong>です。各箱に <strong>0 から始まるインデックス</strong> がつきます。</p>
+
+      <div class="demo-area column">
+        <!-- 視覚 -->
+        <div class="list-wrapper">
+          <div class="list-name-bar">
+            <code class="list-var-code">fruits</code>
+            <span class="list-name-desc">リスト名（変数名）</span>
+          </div>
+          <div class="list-visual" id="listVisual"></div>
+          <p class="list-hint" id="listHint">箱をクリックするとアクセス方法が見られます</p>
+        </div>
+
+        <!-- 操作 -->
+        <div class="list-action-bar">
+          <button class="list-btn add-btn" id="addItemBtn">＋ 追加</button>
+          <button class="list-btn remove-btn" id="removeItemBtn">－ 最後を削除</button>
+          <span class="list-count"><span id="listCount">4</span> 個</span>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">Python コード</div>
+        <pre><code id="listCode"></code></pre>
+      </div>
+
+      <div class="concept-note">
+        インデックスは <strong>0</strong> から始まります。追加：<code>fruits.append("もも")</code>、削除：<code>fruits.pop()</code>
+      </div>
+    </section>
+
+    <!-- ===== 二次元リスト ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge matrix-badge">応用</span>
+        <h2>二次元リスト（リストのリスト）</h2>
+      </div>
+      <p class="concept-desc">リストの中にリストを入れると、<strong>表のようなデータ</strong>を扱えます。</p>
+
+      <div class="matrix-area">
+        <div class="list-name-bar">
+          <code class="list-var-code">matrix</code>
+          <span class="list-name-desc">リスト名</span>
+        </div>
+        <div class="matrix-container">
+          <div class="matrix-col-labels">
+            <div class="matrix-corner"></div>
+            <div class="matrix-col-label">[0]</div>
+            <div class="matrix-col-label">[1]</div>
+            <div class="matrix-col-label">[2]</div>
+          </div>
+          <div class="matrix-row">
+            <div class="matrix-row-label">[0]</div>
+            <div class="matrix-cell" data-row="0" data-col="0">1</div>
+            <div class="matrix-cell" data-row="0" data-col="1">2</div>
+            <div class="matrix-cell" data-row="0" data-col="2">3</div>
+          </div>
+          <div class="matrix-row">
+            <div class="matrix-row-label">[1]</div>
+            <div class="matrix-cell" data-row="1" data-col="0">4</div>
+            <div class="matrix-cell" data-row="1" data-col="1">5</div>
+            <div class="matrix-cell" data-row="1" data-col="2">6</div>
+          </div>
+          <div class="matrix-row">
+            <div class="matrix-row-label">[2]</div>
+            <div class="matrix-cell" data-row="2" data-col="0">7</div>
+            <div class="matrix-cell" data-row="2" data-col="1">8</div>
+            <div class="matrix-cell" data-row="2" data-col="2">9</div>
+          </div>
+        </div>
+        <p class="list-hint" id="matrixHint">セルをクリックするとアクセス方法が見られます</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">Python コード</div>
+        <pre><code id="matrixCode">matrix = [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9],
+]</code></pre>
+      </div>
+
+      <div class="concept-note">
+        <code>matrix[行][列]</code> でアクセスします。例：<code>matrix[0][2]</code> → <code>3</code>
+      </div>
+    </section>
+
+    <!-- ===== 比較 ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <h2>変数 と リスト のちがい</h2>
+      </div>
+      <div class="compare-grid">
+        <div class="compare-card var-theme">
+          <div class="compare-title">変数</div>
+          <div class="compare-visual">
+            <div class="var-box mini">
+              <div class="var-label">score</div>
+              <div class="var-val">100</div>
+            </div>
+          </div>
+          <ul class="compare-list">
+            <li>1つの値を保存</li>
+            <li>名前でアクセス：<code>score</code></li>
+            <li>= で値を書き換え可能</li>
+          </ul>
+        </div>
+        <div class="compare-card list-theme">
+          <div class="compare-title">リスト</div>
+          <div class="compare-visual">
+            <div class="mini-list">
+              <div class="mini-item"><span class="mini-idx">0</span><span class="mini-val">りんご</span></div>
+              <div class="mini-item"><span class="mini-idx">1</span><span class="mini-val">バナナ</span></div>
+              <div class="mini-item"><span class="mini-idx">2</span><span class="mini-val">みかん</span></div>
+            </div>
+          </div>
+          <ul class="compare-list">
+            <li>複数の値を保存</li>
+            <li>番号でアクセス：<code>fruits[0]</code></li>
+            <li>追加・削除が可能</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="app.js" defer></script>
+  <script src="/common.js"></script>
+</body>
+</html>

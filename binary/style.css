@@ -1,25 +1,19 @@
 :root {
   --max: 960px;
-  --bg: #f7f9fc;
   --panel: #ffffff;
   --panel-soft: #fafcff;
   --border: #dfe5ee;
-  --text: #222;
   --muted: #666;
-  --accent: #eef6ff;
-  --accent-border: #bcd7ff;
-  --accent-strong: #4f8cff;
+  --accent: #e8f3ff;
+  --accent-border: #99cbff;
+  --accent-strong: var(--brand);
   --shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
 }
 
 * { box-sizing: border-box; }
 
 body {
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
-  margin: 0;
   padding: 24px;
-  background: var(--bg);
-  color: var(--text);
 }
 
 .wrap {
@@ -27,19 +21,6 @@ body {
   margin: 0 auto;
 }
 
-.container {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 28px;
-  box-shadow: var(--shadow);
-}
-
-h1 {
-  font-size: 24px;
-  margin: 0 0 12px;
-  text-align: center;
-}
 
 .lead {
   text-align: center;
@@ -56,16 +37,17 @@ h1 {
 }
 
 fieldset {
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-soft);
   border-radius: 12px;
   padding: 16px;
   margin: 0;
-  background: var(--panel-soft);
+  background: transparent;
 }
 
 legend {
   padding: 0 6px;
   font-weight: 600;
+  color: var(--brand);
 }
 
 .control-row {
@@ -248,8 +230,15 @@ button:disabled {
 }
 
 .reset-button {
-  padding: 10px 16px;
+  padding: 10px 24px;
   font-size: 14px;
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+}
+.reset-button:hover {
+  background: var(--brand-dark);
+  border-color: var(--brand-dark);
 }
 
 .footer {
@@ -294,6 +283,39 @@ input.sumline {
 input.sumline:focus {
   color: var(--accent-strong);
 }
+
+/* 10進数スピナー */
+.decimal-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.spin-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+
+.spin-btn {
+  width: 30px;
+  height: 22px;
+  padding: 0;
+  font-size: 10px;
+  border-radius: 6px;
+  background: #f4f6fb;
+  color: #444;
+  border: 1px solid var(--border);
+  line-height: 1;
+  cursor: pointer;
+  transition: background .1s, transform .1s;
+}
+
+.spin-btn:hover  { background: #e8f3ff; border-color: var(--brand); color: var(--brand); }
+.spin-btn:active { transform: scale(.94); }
 
 @media (max-width: 520px) {
   body {

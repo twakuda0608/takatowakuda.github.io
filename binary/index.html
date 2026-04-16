@@ -9,8 +9,8 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="container">
-      <h1>2進数変換器</h1>
+    <h1>2進数変換器</h1>
+    <div class="page-card">
 
       <div class="controls">
         <fieldset>
@@ -53,7 +53,13 @@
           <div>
             <div class="rank">10進数</div>
           </div>
-          <input type="text" inputmode="decimal" autocomplete="off" class="sumline" id="decimalDisplay">
+          <div class="decimal-control">
+            <div class="spin-buttons">
+              <button class="spin-btn" id="incrementBtn" aria-label="+1">▲</button>
+              <button class="spin-btn" id="decrementBtn" aria-label="-1">▼</button>
+            </div>
+            <input type="text" inputmode="decimal" autocomplete="off" class="sumline" id="decimalDisplay">
+          </div>
         </div>
       </div>
 
