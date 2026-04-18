@@ -78,7 +78,8 @@ body {
 select,
 input[type="number"],
 input[type="text"],
-input[type="password"] {
+input[type="password"],
+input[type="email"] {
   padding: 10px 12px;
   font-size: 16px;
   border-radius: 10px;
@@ -128,8 +129,10 @@ button:disabled { background: #ccc; cursor: not-allowed; }
 /* === シャッフルラジオ === */
 .shuffle-options {
   text-align: left;
-  display: inline-block;
-  min-width: 160px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(100px, 1fr));
+  gap: 2px 8px;
+  width: 100%;
   margin: 8px 0 12px;
 }
 
@@ -185,7 +188,13 @@ button:disabled { background: #ccc; cursor: not-allowed; }
   display: grid;
   grid-template-columns: repeat(3, 64px);
   gap: 6px;
-  justify-content: center;
+  width: fit-content;
+  margin-inline: auto;
+}
+
+.numpad .numpad-btn:last-child {
+  grid-column: 1 / -1;
+  justify-self: center;
 }
 
 .numpad-zero {
@@ -586,4 +595,213 @@ input[type="range"] {
   color: #aaa;
   font-style: normal;
   min-width: 230px;
+}
+
+.hint { font-size: 0.8em; color: #888; margin-top: 4px; }
+
+/* === 偽オートコンプリート === */
+.fake-ac {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 100;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #bbb;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 4px 8px rgba(0,0,0,.15);
+  min-width: 160px;
+  font-size: 0.9em;
+  color: #1a202c;
+}
+.fake-ac.open { display: block; }
+.fake-ac li {
+  padding: 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.fake-ac li:hover { background: #e8f0fe; }
+.fake-ac li .ac-sub { font-size: 0.75em; color: #888; margin-left: 6px; }
+
+/* === 住所入力ふりがな === */
+.furi-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0;
+  text-align: left;
+  max-width: 440px;
+  margin-inline: auto;
+}
+
+.furi-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.furi-label {
+  width: 90px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+  flex-shrink: 0;
+  padding-top: 8px;
+}
+
+.furi-req {
+  color: #dc2626;
+}
+
+.furi-note {
+  font-size: 11px;
+  color: #888;
+  font-weight: normal;
+  display: block;
+  margin-top: 2px;
+}
+
+.furi-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.furi-input {
+  flex: 1;
+  min-width: unset;
+}
+
+.furi-kana {
+  font-size: 13px;
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+/* === 電話番号目押し === */
+.tel-num-display {
+  font-size: 26px;
+  font-weight: 900;
+  font-family: monospace;
+  letter-spacing: 2px;
+  margin: 12px 0 4px;
+  color: #1a202c;
+}
+
+.tel-hyphen {
+  margin: 0 3px;
+  color: #94a3b8;
+}
+
+.tel-phase-label {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.tel-reel-window {
+  width: 120px;
+  margin: 0 auto;
+  border: 3px solid #0078d7;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #eff6ff;
+  display: flex;
+  flex-direction: column;
+}
+
+.tel-reel-prev,
+.tel-reel-next {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-family: monospace;
+  font-weight: 700;
+  color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.tel-reel-cur {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38px;
+  font-family: monospace;
+  font-weight: 900;
+  color: #0078d7;
+  background: #fff;
+  border-top: 2px solid #bfdbfe;
+  border-bottom: 2px solid #bfdbfe;
+}
+
+/* === 新規登録フォーム === */
+.reg-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 12px 0;
+  text-align: left;
+  max-width: 400px;
+  margin-inline: auto;
+}
+
+.reg-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reg-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}
+
+.reg-input {
+  width: 100%;
+  min-width: unset;
+  box-sizing: border-box;
+}
+
+
+/* === 性別選択 === */
+.gender-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px auto;
+  width: fit-content;
+}
+
+.gender-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  min-width: 180px;
+  transition: background 0.1s;
+}
+
+.gender-label:hover {
+  background: #e2e8f0;
+}
+
+.gender-label input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #0078d7;
+  min-width: unset;
 }

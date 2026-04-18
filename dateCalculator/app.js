@@ -68,6 +68,8 @@ function calculate() {
     }
   }
 
+  const daysAfterYears = Math.floor((today - tempDate) / msPerDay);
+
   // 月
   while (true) {
     const nextMonth = new Date(tempDate);
@@ -122,6 +124,7 @@ function calculate() {
         <p class="sumline">合計：${totalDays} 日</p>
         <p>${weeks} 週間 ${daysAfterWeeks} 日</p>
         <p>${years} 年 ${months} ヶ月 ${remainingDays} 日</p>
+        <p>${years} 年 + ${daysAfterYears} 日</p>
       </div>
     </div>
 
@@ -130,5 +133,14 @@ function calculate() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  const param = new URLSearchParams(location.search).get("date");
+  if (param) {
+    // 2020-1-1 のようなゼロ埋めなし形式も受け付ける
+    const parts = param.split("-");
+    if (parts.length === 3) {
+      const normalized = `${parts[0]}-${parts[1].padStart(2,"0")}-${parts[2].padStart(2,"0")}`;
+      document.getElementById("inputDate").value = normalized;
+    }
+  }
   calculate();
 });

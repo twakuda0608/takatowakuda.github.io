@@ -16,11 +16,17 @@
 
     <!-- 0. 基準の誕生日設定（親切なUI） -->
     <div class="ui ui-base">
-      <div class="title">あなたの誕生日を入力してください<br><small>以降のNo.1〜は、この誕生日と一致するか照合されます</small></div>
+      <div class="title">あなたの誕生日と都道府県を入力してください<br><small>以降のNo.1〜は、この誕生日・都道府県と一致するか照合されます</small></div>
       <div class="row">
-        <input type="number" id="base-year"  placeholder="年（例：1990）" style="width:160px" min="1900" max="2100">
-        <input type="number" id="base-month" placeholder="月" style="width:65px" min="1" max="12">
-        <input type="number" id="base-day"   placeholder="日" style="width:65px" min="1" max="31">
+        <input type="number" id="base-year"  placeholder="年（例：1990）" style="width:160px" min="1900" max="2100" autocomplete="off">
+        <input type="number" id="base-month" placeholder="月" style="width:65px" min="1" max="12" autocomplete="off">
+        <input type="number" id="base-day"   placeholder="日" style="width:65px" min="1" max="31" autocomplete="off">
+      </div>
+      <div class="row">
+        <select id="base-pref">
+          <option value="">都道府県を選択</option>
+          <option>北海道</option><option>青森県</option><option>岩手県</option><option>宮城県</option><option>秋田県</option><option>山形県</option><option>福島県</option><option>茨城県</option><option>栃木県</option><option>群馬県</option><option>埼玉県</option><option>千葉県</option><option>東京都</option><option>神奈川県</option><option>新潟県</option><option>富山県</option><option>石川県</option><option>福井県</option><option>山梨県</option><option>長野県</option><option>岐阜県</option><option>静岡県</option><option>愛知県</option><option>三重県</option><option>滋賀県</option><option>京都府</option><option>大阪府</option><option>兵庫県</option><option>奈良県</option><option>和歌山県</option><option>鳥取県</option><option>島根県</option><option>岡山県</option><option>広島県</option><option>山口県</option><option>徳島県</option><option>香川県</option><option>愛媛県</option><option>高知県</option><option>福岡県</option><option>佐賀県</option><option>長崎県</option><option>熊本県</option><option>大分県</option><option>宮崎県</option><option>鹿児島県</option><option>沖縄県</option>
+        </select>
         <button id="base-submit">設定</button>
       </div>
       <div class="result" id="base-result"></div>
@@ -32,19 +38,29 @@
       <div class="row">
         <select id="year"></select>
         <select id="month"></select>
-        <input type="number" id="day" />
+        <input type="number" id="day" autocomplete="off" />
         <button id="submit" type="button">決定</button>
       </div>
+      <div class="hint">※ 日は上下キーで入力してください</div>
       <div class="result" id="result"></div>
     </div>
 
     <!-- 2. 逃げるボタン -->
     <div class="ui">
       <div class="title">誕生日を入力してください</div>
-      <div class="row">
-        <input type="text" id="esc-year"  placeholder="年" maxlength="4" style="width:70px">
-        <input type="text" id="esc-month" placeholder="月" maxlength="2" style="width:55px">
-        <input type="text" id="esc-day"   placeholder="日" maxlength="2" style="width:55px">
+      <div class="row" style="position:relative;">
+        <div style="position:relative;">
+          <input type="text" id="esc-year"  placeholder="年" maxlength="4" style="width:70px" autocomplete="off">
+          <ul class="fake-ac" id="esc-year-ac"></ul>
+        </div>
+        <div style="position:relative;">
+          <input type="text" id="esc-month" placeholder="月" maxlength="2" style="width:55px" autocomplete="off">
+          <ul class="fake-ac" id="esc-month-ac"></ul>
+        </div>
+        <div style="position:relative;">
+          <input type="text" id="esc-day"   placeholder="日" maxlength="2" style="width:55px" autocomplete="off">
+          <ul class="fake-ac" id="esc-day-ac"></ul>
+        </div>
       </div>
       <div class="escape-arena" id="escape-arena">
         <button id="esc-btn">決定</button>
@@ -54,7 +70,7 @@
 
     <!-- 3. シャッフルアンケート -->
     <div class="ui">
-      <div class="title">好きな食べ物を選んでください</div>
+      <div class="title">お住まいの都道府県を選んでください</div>
       <div id="shuffle-options" class="shuffle-options"></div>
       <button id="shuffle-submit">決定</button>
       <div class="result" id="shuffle-result"></div>
@@ -62,7 +78,7 @@
 
     <!-- 4. テンキー（押すたびにシャッフル）年月日すべて入力 -->
     <div class="ui">
-      <div class="title">誕生日をテンキーで入力してください<br><small>ボタンを押すたびにキーが並び替わります</small></div>
+      <div class="title">誕生日を入力してください</div>
       <div class="numpad-fields">
         <div class="numpad-field-item" id="np-year-disp">年：--</div>
         <div class="numpad-field-item" id="np-month-disp">月：--</div>
@@ -106,10 +122,10 @@
 
     <!-- 7. 白文字入力（見えない） -->
     <div class="ui">
-      <div class="title">お名前を入力してください</div>
+      <div class="title">お住まいの都道府県を入力してください</div>
       <div class="row">
         <div style="position:relative;">
-          <input type="text" id="invis-input" placeholder="名前を入力" autocomplete="off" class="invis-input">
+          <input type="text" id="invis-input" placeholder="都道府県を入力" autocomplete="off" class="invis-input">
           <span class="invis-count"><span id="invis-len">0</span>文字</span>
         </div>
         <button id="invis-toggle">表示する</button>
@@ -121,10 +137,16 @@
     <!-- 8. OK と キャンセルが逆（見た目OKだが文字はキャンセル） -->
     <div class="ui">
       <div class="title">誕生日を確認してください</div>
-      <div class="row">
-        <input type="number" id="ok-year"  placeholder="年"  style="width:80px" min="1900" max="2025">
-        <input type="number" id="ok-month" placeholder="月"  style="width:65px" min="1" max="12">
-        <input type="number" id="ok-day"   placeholder="日"  style="width:65px" min="1" max="31">
+      <div class="row" style="flex-wrap:wrap; gap:8px;">
+        <select id="ok-age" style="min-width:140px;">
+          <option value="">年齢を選択してください</option>
+        </select>
+        <select id="ok-dayoffset" style="min-width:170px;" disabled>
+          <option value="">先に年齢を選択してください</option>
+        </select>
+      </div>
+      <div class="hint" style="margin-top:6px;">
+        ヒント：<a id="ok-hint-link" href="/dateCalculator/" target="_blank">日付計算ツールで確認する →</a>
       </div>
       <div class="ok-buttons">
         <button id="ok-confirm-btn" class="ok-confirm-style">OK</button>
@@ -139,7 +161,7 @@
       <div class="row" style="flex-wrap:wrap;">
         <select id="eng-year"  style="min-width:240px;"></select>
         <select id="eng-month" style="min-width:130px;"></select>
-        <input  type="number" id="eng-day" placeholder="日" style="width:65px" min="1" max="31">
+        <input  type="number" id="eng-day" placeholder="日" style="width:65px" min="1" max="31" autocomplete="off">
         <button id="eng-submit">決定</button>
       </div>
       <div class="result" id="eng-result"></div>
@@ -196,18 +218,18 @@
         <div class="addr-row">
           <label class="addr-label">郵便番号</label>
           <div class="addr-zip-wrap">
-            <input type="text" id="addr-zip" placeholder="例：123-4567" maxlength="8">
+            <input type="text" id="addr-zip" placeholder="例：123-4567" maxlength="8" autocomplete="off">
             <button id="addr-autofill">自動入力</button>
           </div>
         </div>
         <div class="addr-row">
           <label class="addr-label">国名</label>
-          <input type="text" id="addr-country" placeholder="国名" class="addr-input">
+          <input type="text" id="addr-country" placeholder="国名" class="addr-input" autocomplete="off">
         </div>
         <div class="addr-row">
           <label class="addr-label">都道府県</label>
           <div class="pref-wrap">
-            <input type="text" id="addr-pref" placeholder="例：東京" class="addr-input">
+            <input type="text" id="addr-pref" placeholder="都道府県名" class="addr-input" autocomplete="off">
             <div class="suffix-btns">
               <button class="suffix-btn" data-suffix="都">都</button>
               <button class="suffix-btn" data-suffix="道">道</button>
@@ -219,7 +241,7 @@
         <div class="addr-row">
           <label class="addr-label">市区町村</label>
           <div class="pref-wrap">
-            <input type="text" id="addr-city" placeholder="市区町村名" class="addr-input">
+            <input type="text" id="addr-city" placeholder="市区町村名" class="addr-input" autocomplete="off">
             <div class="suffix-btns">
               <button class="city-btn" data-kanji="市">市</button>
               <button class="city-btn" data-kanji="区">区</button>
@@ -230,11 +252,11 @@
         </div>
         <div class="addr-row">
           <label class="addr-label">その他1</label>
-          <input type="text" id="addr-other1" placeholder="丁目・番地・号" class="addr-input">
+          <input type="text" id="addr-other1" placeholder="丁目・番地・号" class="addr-input" autocomplete="off">
         </div>
         <div class="addr-row">
           <label class="addr-label">その他2</label>
-          <input type="text" id="addr-other2" placeholder="建物名・部屋番号（任意）" class="addr-input">
+          <input type="text" id="addr-other2" placeholder="建物名・部屋番号（任意）" class="addr-input" autocomplete="off">
         </div>
       </div>
       <button id="addr-submit" style="margin-top:16px;">登録</button>
@@ -266,6 +288,116 @@
       <div class="cslider-display" id="cslider-display">0</div>
       <button id="cslider-submit">登録</button>
       <div class="result" id="cslider-result"></div>
+    </div>
+
+    <!-- 16. 住所入力（国名・都道府県名は半角カタカナでふりがな必要） -->
+    <div class="ui">
+      <div class="title">住所を入力してください</div>
+      <div class="furi-form">
+        <div class="furi-row">
+          <label class="furi-label">国名 <span class="furi-req">*</span></label>
+          <div class="furi-inputs">
+            <input type="text" id="furi-country" placeholder="例：日本" class="furi-input" autocomplete="off">
+            <input type="text" id="furi-country-kana" placeholder="ふりがな（半角カタカナ）例：ﾆﾎﾝ" class="furi-input furi-kana" autocomplete="off">
+          </div>
+        </div>
+        <div class="furi-row">
+          <label class="furi-label">都道府県 <span class="furi-req">*</span></label>
+          <div class="furi-inputs">
+            <input type="text" id="furi-pref" placeholder="例：東京都" class="furi-input" autocomplete="off">
+            <input type="text" id="furi-pref-kana" placeholder="ふりがな（半角カタカナ）例：ﾄｳｷｮｳﾄ" class="furi-input furi-kana" autocomplete="off">
+          </div>
+        </div>
+        <div class="furi-row">
+          <label class="furi-label">市区町村<span class="furi-note">※フリガナ不要</span></label>
+          <input type="text" id="furi-city" placeholder="例：渋谷区" class="furi-input" autocomplete="off">
+        </div>
+        <div class="furi-row">
+          <label class="furi-label">番地<span class="furi-note">※フリガナ不要</span></label>
+          <input type="text" id="furi-street" placeholder="例：1-2-3" class="furi-input" autocomplete="off">
+        </div>
+        <div class="furi-row">
+          <label class="furi-label">建物名<span class="furi-note">※フリガナ不要</span></label>
+          <input type="text" id="furi-building" placeholder="建物名（任意）" class="furi-input" autocomplete="off">
+        </div>
+      </div>
+      <button id="furi-submit" style="margin-top:16px;">登録</button>
+      <div class="result" id="furi-result"></div>
+    </div>
+
+    <!-- 17. 登録フォーム（パスワードが常に使用済み） -->
+    <div class="ui">
+      <div class="title">新規登録</div>
+      <div class="reg-form">
+        <div class="reg-row">
+          <label class="reg-label">メールアドレス</label>
+          <input type="email" id="reg-email" placeholder="例：taro@example.com" class="reg-input" autocomplete="off">
+        </div>
+        <div class="reg-row">
+          <label class="reg-label">パスワード</label>
+          <input type="password" id="reg-password" placeholder="パスワードを入力" class="reg-input" autocomplete="off">
+        </div>
+        <div class="reg-row">
+          <label class="reg-label">パスワード（確認）</label>
+          <input type="password" id="reg-password2" placeholder="パスワードを再入力" class="reg-input" autocomplete="off">
+        </div>
+      </div>
+      <button id="reg-submit" style="margin-top:16px;">登録</button>
+      <div class="result" id="reg-result"></div>
+    </div>
+
+    <!-- 18. 性別選択（どれを選んでも「既に存在します」） -->
+    <div class="ui">
+      <div class="title">性別を選択してください</div>
+      <div class="gender-options">
+        <label class="gender-label"><input type="radio" name="gender" value="男性"> 男性</label>
+        <label class="gender-label"><input type="radio" name="gender" value="女性"> 女性</label>
+        <label class="gender-label"><input type="radio" name="gender" value="その他"> その他</label>
+        <label class="gender-label"><input type="radio" name="gender" value="回答しない"> 回答しない</label>
+      </div>
+      <button id="gender-submit" style="margin-top:16px;">登録</button>
+      <div class="result" id="gender-result"></div>
+    </div>
+
+    <!-- 19. 会員登録（メールを伏せてパスワードを表示） -->
+    <div class="ui">
+      <div class="title">会員登録</div>
+      <div class="reg-form">
+        <div class="reg-row">
+          <label class="reg-label">メールアドレス</label>
+          <input type="password" id="login-email" placeholder="メールアドレスを入力" class="reg-input" autocomplete="off">
+        </div>
+        <div class="reg-row">
+          <label class="reg-label">パスワード</label>
+          <input type="text" id="login-password" placeholder="パスワードを入力" class="reg-input" autocomplete="off">
+        </div>
+      </div>
+      <button id="login-submit" style="margin-top:16px;">登録</button>
+      <div class="result" id="login-result"></div>
+    </div>
+
+    <!-- 20. 電話番号目押し入力 -->
+    <div class="ui">
+      <div class="title">電話番号を入力してください<br><small>スロットを目押しで止めてください</small></div>
+      <div class="tel-num-display">
+        <span id="tel-seg-0">???</span><span class="tel-hyphen">-</span><span id="tel-seg-1">____</span><span class="tel-hyphen">-</span><span id="tel-seg-2">____</span>
+      </div>
+      <div class="tel-reel-window">
+        <div class="tel-reel-prev"  id="tel-reel-prev"></div>
+        <div class="tel-reel-cur"   id="tel-reel-cur">070</div>
+        <div class="tel-reel-next"  id="tel-reel-next"></div>
+      </div>
+      <div class="row" style="margin-top:16px; gap:12px; justify-content:center;">
+        <button id="tel-confirm-btn">確定</button>
+        <button id="tel-clear-btn">クリア</button>
+      </div>
+      <div id="tel-register-wrap" style="display:none; margin-top:16px;">
+        <div style="margin-bottom:10px;">これで登録しますか？</div>
+        <div class="row" style="gap:12px; justify-content:center;">
+          <button id="tel-register-btn">登録する</button>
+        </div>
+      </div>
+      <div class="result" id="tel-result"></div>
     </div>
 
   </div>
