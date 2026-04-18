@@ -74,6 +74,8 @@ function checkPref(pref, resultEl, resetFn) {
   const baseSubmit = document.getElementById("base-submit");
   const baseResult = document.getElementById("base-result");
 
+  targetPref = basePref.value;
+
   baseSubmit.addEventListener("click", () => {
     const y = Number(baseYear.value);
     const m = Number(baseMonth.value);
@@ -91,6 +93,7 @@ function checkPref(pref, resultEl, resetFn) {
     targetDate = { y, m, d };
     targetPref = p;
     baseResult.textContent = `${y}年${m}月${d}日・${p}を設定しました`;
+    document.dispatchEvent(new Event("targetDateChanged"));
   });
 })();
 
@@ -295,7 +298,7 @@ resetForm();
   const container = document.getElementById("shuffle-options");
   const res       = document.getElementById("shuffle-result");
   const submitBtn = document.getElementById("shuffle-submit");
-  let checked = new Set();
+  let checked = new Set(["島根県"]);
 
   function renderPrefs() {
     const order = [...PREFS].sort(() => Math.random() - 0.5);
@@ -304,7 +307,7 @@ resetForm();
       const label = document.createElement("label");
       label.style.cssText = "display:block;padding:5px 0;cursor:pointer;user-select:none;text-align:left;";
       const cb = document.createElement("input");
-      cb.type = "checkbox"; cb.name = "pref"; cb.value = pref;
+      cb.type = "checkbox"; cb.name = "pref"; cb.value = pref; cb.className = "shuffle-cb";
       cb.checked = checked.has(pref);
       cb.addEventListener("change", () => {
         if (cb.checked) checked.add(pref); else checked.delete(pref);
@@ -318,17 +321,26 @@ resetForm();
   renderPrefs();
   setInterval(renderPrefs, 4000);
 
+  function resetWithRandom() {
+    const random = PREFS[Math.floor(Math.random() * PREFS.length)];
+    checked = new Set([random]);
+    renderPrefs();
+  }
+
   submitBtn.addEventListener("click", () => {
     if (checked.size === 0) { res.textContent = "選択してください"; res.style.color = ""; return; }
     if (checked.size > 1) {
-      res.textContent = "エラー：複数選択されています。1つだけ選んでください";
+      const list = [...checked];
+      const joined = list.length === 2
+        ? `${list[0]}と${list[1]}`
+        : list.slice(0, -1).join("と") + `と${list[list.length - 1]}`;
+      res.textContent = `${joined}が選択されております。入力は一つにしてください。`;
       res.style.color = "#dc2626";
-      checked.clear();
-      renderPrefs();
+      resetWithRandom();
       return;
     }
     const selected = [...checked][0];
-    checkPref(selected, res, () => { checked.clear(); renderPrefs(); });
+    checkPref(selected, res, resetWithRandom);
   });
 })();
 
@@ -696,12 +708,37 @@ resetForm();
     ageSelect.appendChild(opt);
   }
 
+  const hintUrlDiv = document.getElementById("ok-hint-url");
+
+  function updateHintLink() {
+    let url = "takatowakuda.com/dateCalculator/";
+    if (targetDate) {
+      const m = String(targetDate.m).padStart(2, "0");
+      const d = String(targetDate.d).padStart(2, "0");
+      url = `takatowakuda.com/dateCalculator/?date=${targetDate.y}-${m}-${d}`;
+    }
+    hintUrlDiv.textContent = url;
+  }
+
+  const hintWarn = document.getElementById("ok-hint-warn");
+  let warnTimer = null;
+  function showWarn() {
+    hintWarn.style.visibility = "visible";
+    clearTimeout(warnTimer);
+    warnTimer = setTimeout(() => { hintWarn.style.visibility = "hidden"; }, 2000);
+  }
+  hintUrlDiv.addEventListener("click", showWarn);
+  hintUrlDiv.addEventListener("copy", e => { e.preventDefault(); showWarn(); });
+  hintUrlDiv.addEventListener("contextmenu", e => { e.preventDefault(); showWarn(); });
+  updateHintLink();
+
   ageSelect.addEventListener("change", () => {
     const age = ageSelect.value;
     daySelect.innerHTML = "";
     if (age === "") {
       daySelect.disabled = true;
       daySelect.innerHTML = "<option>先に年齢を選択してください</option>";
+      updateHintLink();
       return;
     }
     daySelect.disabled = false;
@@ -714,22 +751,18 @@ resetForm();
       opt.textContent = `${age}歳${d}日`;
       daySelect.appendChild(opt);
     }
+    updateHintLink();
   });
+
+  daySelect.addEventListener("change", updateHintLink);
+  document.addEventListener("targetDateChanged", updateHintLink);
 
   function resetSelects() {
     ageSelect.value = "";
     daySelect.disabled = true;
     daySelect.innerHTML = "<option>先に年齢を選択してください</option>";
+    updateHintLink();
   }
-
-  const hintLink = document.getElementById("ok-hint-link");
-  hintLink.addEventListener("click", () => {
-    if (targetDate) {
-      const m = String(targetDate.m).padStart(2, "0");
-      const d = String(targetDate.d).padStart(2, "0");
-      hintLink.href = `/dateCalculator/?date=${targetDate.y}-${m}-${d}`;
-    }
-  });
 
   // cancelBtn = 青くて目立つ見た目だが「キャンセル」の文字どおりキャンセル
   cancelBtn.addEventListener("click", () => {
@@ -741,7 +774,7 @@ resetForm();
   confirmBtn.addEventListener("click", () => {
     const age = ageSelect.value;
     const dayOffset = daySelect.value;
-    if (age === "" || dayOffset === "") { result.textContent = "すべて選択してください"; return; }
+    if (age === "" || dayOffset === "") return;
     const today = new Date();
     const birth = new Date(today);
     birth.setFullYear(birth.getFullYear() - Number(age));
@@ -1463,20 +1496,32 @@ resetForm();
 
   [input, address].forEach(el => {
     el.addEventListener("input", () => { el.style.color = "#aaa"; });
+    el.addEventListener("keydown", e => {
+      if (e.key === "a" && (e.ctrlKey || e.metaKey)) e.preventDefault();
+    });
+    el.addEventListener("select", () => {
+      el.setSelectionRange(el.selectionEnd, el.selectionEnd);
+    });
+    el.addEventListener("contextmenu", e => e.preventDefault());
   });
 
   phoneChars.forEach((el, i) => {
     el.addEventListener("input", () => { el.style.color = "#aaa"; });
     el.addEventListener("keydown", e => {
       if (e.key === "Tab") e.preventDefault();
+      if (e.key === "a" && (e.ctrlKey || e.metaKey)) e.preventDefault();
     });
+    el.addEventListener("select", () => {
+      el.setSelectionRange(el.value.length, el.value.length);
+    });
+    el.addEventListener("contextmenu", e => e.preventDefault());
   });
 
   submit.addEventListener("click", () => {
     const name = input.value;
     const addr = address.value;
     const ph   = phoneChars.map(el => el.value).join("");
-    if (name === "お名前を入力してください" || addr === "住所を入力してください" || ph.length < 11) {
+    if (name === "お名前を入力してください" || addr === "住所を入力してください" || ph.length < 11 || ph.includes("X")) {
       result.textContent = "すべて入力してください"; return;
     }
     result.textContent = `「${name}」さん、登録しました！`;

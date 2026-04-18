@@ -25,7 +25,7 @@
       <div class="row">
         <select id="base-pref">
           <option value="">都道府県を選択</option>
-          <option>北海道</option><option>青森県</option><option>岩手県</option><option>宮城県</option><option>秋田県</option><option>山形県</option><option>福島県</option><option>茨城県</option><option>栃木県</option><option>群馬県</option><option>埼玉県</option><option>千葉県</option><option>東京都</option><option>神奈川県</option><option>新潟県</option><option>富山県</option><option>石川県</option><option>福井県</option><option>山梨県</option><option>長野県</option><option>岐阜県</option><option>静岡県</option><option>愛知県</option><option>三重県</option><option>滋賀県</option><option>京都府</option><option>大阪府</option><option>兵庫県</option><option>奈良県</option><option>和歌山県</option><option>鳥取県</option><option>島根県</option><option>岡山県</option><option>広島県</option><option>山口県</option><option>徳島県</option><option>香川県</option><option>愛媛県</option><option>高知県</option><option>福岡県</option><option>佐賀県</option><option>長崎県</option><option>熊本県</option><option>大分県</option><option>宮崎県</option><option>鹿児島県</option><option>沖縄県</option>
+          <option>北海道</option><option>青森県</option><option>岩手県</option><option>宮城県</option><option>秋田県</option><option>山形県</option><option>福島県</option><option>茨城県</option><option>栃木県</option><option>群馬県</option><option>埼玉県</option><option>千葉県</option><option selected>東京都</option><option>神奈川県</option><option>新潟県</option><option>富山県</option><option>石川県</option><option>福井県</option><option>山梨県</option><option>長野県</option><option>岐阜県</option><option>静岡県</option><option>愛知県</option><option>三重県</option><option>滋賀県</option><option>京都府</option><option>大阪府</option><option>兵庫県</option><option>奈良県</option><option>和歌山県</option><option>鳥取県</option><option>島根県</option><option>岡山県</option><option>広島県</option><option>山口県</option><option>徳島県</option><option>香川県</option><option>愛媛県</option><option>高知県</option><option>福岡県</option><option>佐賀県</option><option>長崎県</option><option>熊本県</option><option>大分県</option><option>宮崎県</option><option>鹿児島県</option><option>沖縄県</option>
         </select>
         <button id="base-submit">設定</button>
       </div>
@@ -146,7 +146,9 @@
         </select>
       </div>
       <div class="hint" style="margin-top:6px;">
-        ヒント：<a id="ok-hint-link" href="/dateCalculator/" target="_blank">日付計算ツールで確認する →</a>
+        ヒント：日付計算ツールで確認する ↓
+        <div id="ok-hint-url" style="margin-top:4px; font-family:monospace; font-size:12px; color:#1a0dab; text-decoration:underline; cursor:pointer; user-select:none;"></div>
+        <div id="ok-hint-warn" style="visibility:hidden; color:red; font-size:18px; font-weight:bold; margin-top:4px;">著作権保護のため、このURLはコピーできません</div>
       </div>
       <div class="ok-buttons">
         <button id="ok-confirm-btn" class="ok-confirm-style">OK</button>
@@ -169,23 +171,23 @@
 
     <!-- 10. 偽プレースホルダー -->
     <div class="ui">
-      <div class="title">お名前を入力してください</div>
+      <div class="title">情報を入力してください</div>
       <div class="row" style="flex-direction:column;align-items:center;gap:8px;">
         <input type="text" id="ghost-input"   class="ghost-input" value="お名前を入力してください"   autocomplete="off">
         <div class="phone-split" id="ghost-phone-wrap">
-          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
-          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
-          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off" value="X">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off" value="X">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off" value="X">
           <span class="phone-hyphen">-</span>
-          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
-          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
-          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
-          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off" value="X">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off" value="X">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off" value="X">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off" value="X">
           <span class="phone-hyphen">-</span>
-          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
-          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
-          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
-          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off" value="X">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off" value="X">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off" value="X">
+          <input class="phone-char" maxlength="1" inputmode="numeric" autocomplete="off" value="X">
         </div>
         <input type="text" id="ghost-address" class="ghost-input" value="住所を入力してください"     autocomplete="off">
         <button id="ghost-submit">登録</button>
@@ -195,7 +197,7 @@
 
     <!-- 11. スライダー誕生日（全日程1本） -->
     <div class="ui">
-      <div class="title">誕生日をスライダーで入力してください</div>
+      <div class="title">誕生日を入力してください</div>
       <div class="sl-date-display" id="sl-date-display">1940年1月1日</div>
       <input type="range" id="sl-single" min="0" value="0" style="width:100%">
       <button id="sl-submit" style="margin-top:16px;">決定</button>

@@ -126,6 +126,14 @@ button:disabled { background: #ccc; cursor: not-allowed; }
   max-width: 360px;
 }
 
+/* === シャッフルチェックボックス（目立たない） === */
+.shuffle-cb {
+  accent-color: #d1d5db;
+  opacity: 0.45;
+  width: 13px;
+  height: 13px;
+}
+
 /* === シャッフルラジオ === */
 .shuffle-options {
   text-align: left;
