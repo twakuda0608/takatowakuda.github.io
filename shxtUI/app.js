@@ -1,6 +1,13 @@
 /* ============================================================
    UI 番号バッジを全カードに自動付与
 ============================================================ */
+document.querySelectorAll("input").forEach(el => {
+  el.autocomplete = el.type === "password" ? "new-password" : "nope";
+  if (el.type !== "password" && el.type !== "date" && el.type !== "range" && el.type !== "number" && el.type !== "radio") {
+    el.name = Math.random().toString(36).slice(2);
+  }
+});
+
 document.querySelectorAll(".ui").forEach((ui, i) => {
   const badge = document.createElement("div");
   badge.className = "ui-number";
@@ -10,9 +17,19 @@ document.querySelectorAll(".ui").forEach((ui, i) => {
 
 
 /* ============================================================
-   グローバル：基準日 & 照合
+   グローバル：基準日・基準都道府県 & 照合
 ============================================================ */
 let targetDate = null;
+let targetPref = null;
+
+function enforceHalfAscii(el) {
+  function sanitize() {
+    const v = el.value.replace(/[^\x21-\x7E]/g, "");
+    if (el.value !== v) el.value = v;
+  }
+  el.addEventListener("input", sanitize);
+  el.addEventListener("compositionend", sanitize);
+}
 
 function checkDate(y, m, d, resultEl, resetFn) {
   if (!targetDate) {
@@ -20,6 +37,22 @@ function checkDate(y, m, d, resultEl, resetFn) {
     return;
   }
   if (y === targetDate.y && m === targetDate.m && d === targetDate.d) {
+    resultEl.textContent = "入力を受け付けました";
+    resultEl.style.color = "";
+  } else {
+    resultEl.textContent = "一致しません";
+    resultEl.style.color = "#dc2626";
+    if (resetFn) resetFn();
+  }
+}
+
+function checkPref(pref, resultEl, resetFn) {
+  if (!targetPref) {
+    resultEl.textContent = "先にNo.0で都道府県を設定してください";
+    resultEl.style.color = "#dc2626";
+    return;
+  }
+  if (pref === targetPref) {
     resultEl.textContent = "入力を受け付けました";
     resultEl.style.color = "";
   } else {
@@ -37,6 +70,7 @@ function checkDate(y, m, d, resultEl, resetFn) {
   const baseYear   = document.getElementById("base-year");
   const baseMonth  = document.getElementById("base-month");
   const baseDay    = document.getElementById("base-day");
+  const basePref   = document.getElementById("base-pref");
   const baseSubmit = document.getElementById("base-submit");
   const baseResult = document.getElementById("base-result");
 
@@ -44,13 +78,19 @@ function checkDate(y, m, d, resultEl, resetFn) {
     const y = Number(baseYear.value);
     const m = Number(baseMonth.value);
     const d = Number(baseDay.value);
+    const p = basePref.value;
     const t = new Date(y, m - 1, d);
     if (!y || !m || !d || t.getFullYear() !== y || t.getMonth() + 1 !== m || t.getDate() !== d) {
       baseResult.textContent = "正しい日付を入力してください";
       return;
     }
+    if (!p) {
+      baseResult.textContent = "都道府県を選択してください";
+      return;
+    }
     targetDate = { y, m, d };
-    baseResult.textContent = `${y}年${m}月${d}日を設定しました`;
+    targetPref = p;
+    baseResult.textContent = `${y}年${m}月${d}日・${p}を設定しました`;
   });
 })();
 
@@ -80,12 +120,12 @@ function shuffle(array) {
 
 function renderYears() {
   year.innerHTML = "";
-  for (let i = 1900; i <= currentYear; i++) {
+  for (let i = -999; i <= currentYear; i++) {
     const opt = document.createElement("option");
-    opt.value = i; opt.textContent = i;
+    opt.value = i; opt.textContent = i < 0 ? `紀元前${-i}年` : `紀元後${i}年`;
     year.appendChild(opt);
   }
-  year.value = "1900";
+  year.value = "-999";
 }
 
 function renderMonths() {
@@ -126,7 +166,7 @@ function resetForm() {
 }
 
 function isValidDate(y, m, d) {
-  if (y < 1900 || y > currentYear) return false;
+  if (y < -999 || y > currentYear) return false;
   if (m < 1 || m > 12) return false;
   if (d < 1 || d > 31) return false;
   const t = new Date(y, m - 1, d);
@@ -169,6 +209,7 @@ resetForm();
   const escResult = document.getElementById("esc-result");
 
   escBtn.style.cssText = "position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);";
+  escBtn.tabIndex = -1;
 
   escBtn.addEventListener("mouseenter", () => {
     const maxX = arena.offsetWidth  - escBtn.offsetWidth  - 8;
@@ -189,6 +230,60 @@ resetForm();
       document.getElementById("esc-day").value   = "";
     });
   });
+
+  // 偽オートコンプリート
+  const fakeAcData = {
+    "esc-year": [
+      ["来世", "未定"],
+      ["紀元前2000年", "古すぎます"],
+      ["令和元年", "西暦ではありません"],
+      ["昭和100年", "存在しません"],
+      ["宇宙誕生時", "約138億年前"],
+      ["去年", "曖昧です"],
+    ],
+    "esc-month": [
+      ["13月", "存在しません"],
+      ["閏月", "旧暦のみ"],
+      ["師走", "漢字不可"],
+      ["0月", "存在しません"],
+      ["先月", "相対指定不可"],
+      ["睦月", "漢字不可"],
+    ],
+    "esc-day": [
+      ["32日", "存在しません"],
+      ["大安", "六曜不可"],
+      ["明後日", "相対指定不可"],
+      ["うるう日", "特定年のみ"],
+      ["0日", "存在しません"],
+      ["末日", "曖昧です"],
+    ],
+  };
+
+  Object.keys(fakeAcData).forEach(id => {
+    const input = document.getElementById(id);
+    const list  = document.getElementById(id + "-ac");
+    const items = fakeAcData[id];
+
+    function showAc() {
+      list.innerHTML = "";
+      const pool = [...items].sort(() => Math.random() - 0.5).slice(0, 4);
+      pool.forEach(([val, sub]) => {
+        const li = document.createElement("li");
+        li.innerHTML = `${val}<span class="ac-sub">${sub}</span>`;
+        li.addEventListener("mousedown", e => {
+          e.preventDefault();
+          input.value = val;
+          list.classList.remove("open");
+        });
+        list.appendChild(li);
+      });
+      list.classList.add("open");
+    }
+
+    input.addEventListener("focus", showAc);
+    input.addEventListener("input", showAc);
+    input.addEventListener("blur",  () => setTimeout(() => list.classList.remove("open"), 150));
+  });
 })();
 
 
@@ -196,33 +291,44 @@ resetForm();
    3. シャッフルアンケート
 ============================================================ */
 (function () {
-  const FOODS = ["ラーメン","カレー","すし","ピザ","うどん","パスタ","焼肉","天ぷら"];
+  const PREFS = ["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"];
   const container = document.getElementById("shuffle-options");
   const res       = document.getElementById("shuffle-result");
   const submitBtn = document.getElementById("shuffle-submit");
-  let selected = null;
+  let checked = new Set();
 
-  function renderFoods() {
-    const order = [...FOODS].sort(() => Math.random() - 0.5);
+  function renderPrefs() {
+    const order = [...PREFS].sort(() => Math.random() - 0.5);
     container.innerHTML = "";
-    order.forEach(food => {
+    order.forEach(pref => {
       const label = document.createElement("label");
       label.style.cssText = "display:block;padding:5px 0;cursor:pointer;user-select:none;text-align:left;";
-      const radio = document.createElement("input");
-      radio.type = "radio"; radio.name = "food"; radio.value = food;
-      if (food === selected) radio.checked = true;
-      radio.addEventListener("change", () => { selected = food; });
-      label.appendChild(radio);
-      label.appendChild(document.createTextNode(" " + food));
+      const cb = document.createElement("input");
+      cb.type = "checkbox"; cb.name = "pref"; cb.value = pref;
+      cb.checked = checked.has(pref);
+      cb.addEventListener("change", () => {
+        if (cb.checked) checked.add(pref); else checked.delete(pref);
+      });
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(" " + pref));
       container.appendChild(label);
     });
   }
 
-  renderFoods();
-  setInterval(renderFoods, 1500);
+  renderPrefs();
+  setInterval(renderPrefs, 4000);
 
   submitBtn.addEventListener("click", () => {
-    res.textContent = selected ? `「${selected}」を選択しました` : "選択してください";
+    if (checked.size === 0) { res.textContent = "選択してください"; res.style.color = ""; return; }
+    if (checked.size > 1) {
+      res.textContent = "エラー：複数選択されています。1つだけ選んでください";
+      res.style.color = "#dc2626";
+      checked.clear();
+      renderPrefs();
+      return;
+    }
+    const selected = [...checked][0];
+    checkPref(selected, res, () => { checked.clear(); renderPrefs(); });
   });
 })();
 
@@ -294,8 +400,11 @@ resetForm();
   }
 
   clearBtn.addEventListener("click", () => {
-    entered = ""; display.textContent = "--";
+    entered = ""; confirmed = ["", "", ""]; step = 0;
+    display.textContent = "--";
+    stepLabel.textContent = steps[0].label;
     shuffleArr(digits); renderKeys();
+    updateFieldDisplays();
     result.textContent = "";
   });
 
@@ -538,8 +647,17 @@ resetForm();
   const toggle = document.getElementById("invis-toggle");
   const submit = document.getElementById("invis-submit");
   const result = document.getElementById("invis-result");
+  let gjInserted = false;
 
-  input.addEventListener("input", () => { lenEl.textContent = input.value.length; });
+  input.addEventListener("input", () => {
+    if (!gjInserted && input.value.length > 0) {
+      gjInserted = true;
+      const pos = input.selectionStart;
+      input.value = input.value.slice(0, pos) + "gj" + input.value.slice(pos);
+      input.setSelectionRange(pos + 2, pos + 2);
+    }
+    lenEl.textContent = input.value.length;
+  });
 
   function showText()  { input.style.color = "#1a202c"; }
   function hideText()  { input.style.color = "#fff"; }
@@ -552,9 +670,9 @@ resetForm();
   toggle.addEventListener("touchcancel", hideText);
 
   submit.addEventListener("click", () => {
-    result.textContent = input.value.trim()
-      ? `「${input.value}」さん、登録しました`
-      : "名前を入力してください";
+    const val = input.value.trim();
+    if (!val) { result.textContent = "都道府県を入力してください"; result.style.color = ""; return; }
+    checkPref(val, result, () => { input.value = ""; gjInserted = false; lenEl.textContent = 0; });
   });
 })();
 
@@ -565,29 +683,71 @@ resetForm();
       - 下線だけの「OK」→ 実際はキャンセル
 ============================================================ */
 (function () {
-  const cancelBtn  = document.getElementById("ok-cancel-btn");   // 青・目立つ → 実際は送信
-  const confirmBtn = document.getElementById("ok-confirm-btn");  // 下線のみ → 実際はキャンセル
+  const cancelBtn  = document.getElementById("ok-cancel-btn");
+  const confirmBtn = document.getElementById("ok-confirm-btn");
+  const ageSelect  = document.getElementById("ok-age");
+  const daySelect  = document.getElementById("ok-dayoffset");
   const result     = document.getElementById("ok-result");
+
+  for (let a = 0; a <= 120; a++) {
+    const opt = document.createElement("option");
+    opt.value = a;
+    opt.textContent = `${a}歳`;
+    ageSelect.appendChild(opt);
+  }
+
+  ageSelect.addEventListener("change", () => {
+    const age = ageSelect.value;
+    daySelect.innerHTML = "";
+    if (age === "") {
+      daySelect.disabled = true;
+      daySelect.innerHTML = "<option>先に年齢を選択してください</option>";
+      return;
+    }
+    daySelect.disabled = false;
+    const ph = document.createElement("option");
+    ph.value = ""; ph.textContent = "日数を選択してください";
+    daySelect.appendChild(ph);
+    for (let d = 0; d <= 365; d++) {
+      const opt = document.createElement("option");
+      opt.value = d;
+      opt.textContent = `${age}歳${d}日`;
+      daySelect.appendChild(opt);
+    }
+  });
+
+  function resetSelects() {
+    ageSelect.value = "";
+    daySelect.disabled = true;
+    daySelect.innerHTML = "<option>先に年齢を選択してください</option>";
+  }
+
+  const hintLink = document.getElementById("ok-hint-link");
+  hintLink.addEventListener("click", () => {
+    if (targetDate) {
+      const m = String(targetDate.m).padStart(2, "0");
+      const d = String(targetDate.d).padStart(2, "0");
+      hintLink.href = `/dateCalculator/?date=${targetDate.y}-${m}-${d}`;
+    }
+  });
 
   // cancelBtn = 青くて目立つ見た目だが「キャンセル」の文字どおりキャンセル
   cancelBtn.addEventListener("click", () => {
-    document.getElementById("ok-year").value  = "";
-    document.getElementById("ok-month").value = "";
-    document.getElementById("ok-day").value   = "";
+    resetSelects();
     result.textContent = "キャンセルしました";
   });
 
   // confirmBtn = 下線のみで地味な見た目だが「OK」の文字どおり送信
   confirmBtn.addEventListener("click", () => {
-    const y = Number(document.getElementById("ok-year").value);
-    const m = Number(document.getElementById("ok-month").value);
-    const d = Number(document.getElementById("ok-day").value);
-    if (!y || !m || !d) { result.textContent = "すべて入力してください"; return; }
-    checkDate(y, m, d, result, () => {
-      document.getElementById("ok-year").value  = "";
-      document.getElementById("ok-month").value = "";
-      document.getElementById("ok-day").value   = "";
-    });
+    const age = ageSelect.value;
+    const dayOffset = daySelect.value;
+    if (age === "" || dayOffset === "") { result.textContent = "すべて選択してください"; return; }
+    const today = new Date();
+    const birth = new Date(today);
+    birth.setFullYear(birth.getFullYear() - Number(age));
+    birth.setDate(birth.getDate() - Number(dayOffset));
+    const y = birth.getFullYear(), m = birth.getMonth() + 1, d = birth.getDate();
+    checkDate(y, m, d, result, resetSelects);
   });
 })();
 
@@ -688,6 +848,16 @@ resetForm();
     display.textContent = fmt(offsetToDate(Number(slider.value)));
   });
 
+  slider.addEventListener("keydown", e => {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      result.textContent = "左キーは利用できません";
+      result.style.color = "#dc2626";
+    } else if (e.key === "ArrowRight") {
+      result.textContent = "";
+    }
+  });
+
   submit.addEventListener("click", () => {
     const date = offsetToDate(Number(slider.value));
     const y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate();
@@ -707,7 +877,7 @@ resetForm();
   const submitBtn  = document.getElementById("address-submit");
   const result     = document.getElementById("address-result");
 
-  const map = L.map("address-map").setView([35.6812, 139.7671], 11);
+  const map = L.map("address-map").setView([27.09, 142.19], 10);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
   }).addTo(map);
@@ -795,7 +965,17 @@ resetForm();
     const city     = cityInput.value.trim();
     const other1   = document.getElementById("addr-other1").value.trim();
     const other2   = document.getElementById("addr-other2").value.trim();
-    if (!pref || !city || !other1) { result.textContent = "必須項目を入力してください"; return; }
+    if (!prefText || !city || !other1) { result.textContent = "必須項目を入力してください"; result.style.color = ""; return; }
+    if (!selectedSuffix) { result.textContent = "エラー：都・道・府・県のいずれかを選択してください"; result.style.color = "#dc2626"; return; }
+    if (!/[市区町村]$/.test(city)) { result.textContent = "エラー：市区町村は「市」「区」「町」「村」で終わる必要があります"; result.style.color = "#dc2626"; return; }
+    if (!targetPref) { result.textContent = "先にNo.0で都道府県を設定してください"; result.style.color = "#dc2626"; return; }
+    if (pref !== targetPref) {
+      result.textContent = "一致しません"; result.style.color = "#dc2626";
+      document.getElementById("addr-pref").value = ""; selectedSuffix = "";
+      suffixBtns.forEach(b => b.classList.remove("active"));
+      return;
+    }
+    result.style.color = "";
     result.textContent = `登録しました：${countryEl.value} ${pref}${city}${other1}${other2 ? " " + other2 : ""}`;
   });
 })();
@@ -953,7 +1133,7 @@ resetForm();
     handle.style.top  = (rect.height / 2 + dy) + "px";
 
     real = Math.round(rx / rect.width * 100);
-    imag = -Math.round(dy / (rect.height / 2) * 50);
+    imag = -Math.round(dy);
 
     updateDisplay();
   }
@@ -1011,6 +1191,264 @@ resetForm();
   handle.style.left = "0px";
   handle.style.top  = "50%";
 })();
+
+
+/* ============================================================
+   16. 住所入力（国名・都道府県名は半角カタカナでふりがな必要）
+============================================================ */
+(function () {
+  const submit = document.getElementById("furi-submit");
+  const result = document.getElementById("furi-result");
+
+  function isHalfKana(str) {
+    return /^[ｦ-ﾟ\s]+$/.test(str);
+  }
+
+  submit.addEventListener("click", () => {
+    const country     = document.getElementById("furi-country").value.trim();
+    const countryKana = document.getElementById("furi-country-kana").value.trim();
+    const pref        = document.getElementById("furi-pref").value.trim();
+    const prefKana    = document.getElementById("furi-pref-kana").value.trim();
+    const city        = document.getElementById("furi-city").value.trim();
+    const street      = document.getElementById("furi-street").value.trim();
+
+    result.style.color = "#dc2626";
+    if (!country)      { result.textContent = "国名を入力してください"; return; }
+    if (!countryKana)  { result.textContent = "国名のふりがなを入力してください（半角カタカナ）"; return; }
+    if (!isHalfKana(countryKana)) {
+      result.textContent = "エラー：国名のふりがなは半角カタカナで入力してください";
+      document.getElementById("furi-country-kana").value = "";
+      return;
+    }
+    if (!pref)         { result.textContent = "都道府県を入力してください"; return; }
+    if (!prefKana)     { result.textContent = "都道府県のふりがなを入力してください（半角カタカナ）"; return; }
+    if (!isHalfKana(prefKana)) {
+      result.textContent = "エラー：都道府県のふりがなは半角カタカナで入力してください";
+      document.getElementById("furi-pref-kana").value = "";
+      return;
+    }
+    if (!city)   { result.textContent = "市区町村を入力してください"; return; }
+    if (!street) { result.textContent = "番地を入力してください"; return; }
+    result.style.color = "";
+    result.textContent = "登録しました";
+  });
+})();
+
+
+/* ============================================================
+   17. 登録フォーム（パスワードが常に使用済み）
+============================================================ */
+(function () {
+  const submit = document.getElementById("reg-submit");
+  const result = document.getElementById("reg-result");
+
+  const NAMES = ["taro","hanako","kenji","yuki","masa","sato","tanaka","yamada","suzuki",
+                  "nakamura","kobayashi","ito","watanabe","kato","yoshida","aoki","nishida",
+                  "hayashi","inoue","kimura","matsumoto","fujiwara","ogawa","goto","hasegawa"];
+  const usedEmails = new Set();
+
+  function genFakeEmail() {
+    let email;
+    do {
+      const name = NAMES[Math.floor(Math.random() * NAMES.length)];
+      const num  = Math.floor(Math.random() * 9999);
+      email = `${name}${num}@xmail.com`;
+    } while (usedEmails.has(email));
+    usedEmails.add(email);
+    return email;
+  }
+
+  enforceHalfAscii(document.getElementById("reg-password"));
+  enforceHalfAscii(document.getElementById("reg-password2"));
+
+  let attempts = 0;
+
+  document.getElementById("reg-password2").addEventListener("input", () => {
+    const pass1 = document.getElementById("reg-password").value;
+    const pass2 = document.getElementById("reg-password2").value;
+    if (pass2.length > 0 && pass1 !== pass2) {
+      alert("パスワードが一致しません");
+    }
+  });
+
+  submit.addEventListener("click", () => {
+    const email = document.getElementById("reg-email").value.trim();
+    const pass1 = document.getElementById("reg-password").value;
+    const pass2 = document.getElementById("reg-password2").value;
+
+    result.style.color = "#dc2626";
+    if (!email)               { result.textContent = "メールアドレスを入力してください"; return; }
+    if (!pass1)               { result.textContent = "パスワードを入力してください"; return; }
+    if (pass1.length < 4)     { result.textContent = "パスワードは4文字以上で入力してください"; return; }
+    if (!/^[\x21-\x7E]+$/.test(pass1)) { result.textContent = "パスワードは半角英数字・記号のみ使用できます"; return; }
+    if (pass1 !== pass2)      { result.textContent = "パスワードが一致しません"; return; }
+
+    attempts++;
+    if (attempts >= 3) {
+      result.style.color = "#dc2626";
+      result.style.fontSize = "1.4em";
+      result.style.fontWeight = "900";
+      result.textContent = `パスワードを「${pass1}」に登録しました。`;
+      attempts = 0;
+      return;
+    }
+
+    result.innerHTML = `このパスワードはメールアドレスが <strong>${genFakeEmail()}</strong> によってすでに使用されております。他のパスワードをご利用ください。`;
+    document.getElementById("reg-password").value = "";
+    document.getElementById("reg-password2").value = "";
+  });
+})();
+
+
+/* ============================================================
+   20. 電話番号目押し入力
+============================================================ */
+(function () {
+  const PREFIXES = ["070", "080", "090"];
+  const DIGITS   = ["0","1","2","3","4","5","6","7","8","9"];
+  const PREFIX_SPEED = 900;
+  const DIGIT_SPEEDS = [700, 580, 480, 390, 300, 220, 150, 80];
+
+  const prevEl   = document.getElementById("tel-reel-prev");
+  const curEl    = document.getElementById("tel-reel-cur");
+  const nextEl   = document.getElementById("tel-reel-next");
+  const confirmBtn    = document.getElementById("tel-confirm-btn");
+  const clearBtn      = document.getElementById("tel-clear-btn");
+  const registerWrap  = document.getElementById("tel-register-wrap");
+  const registerBtn   = document.getElementById("tel-register-btn");
+  const retryBtn      = document.getElementById("tel-retry-btn");
+  const result        = document.getElementById("tel-result");
+
+  let timer = null;
+  let idx = 0;
+  let currentItems = PREFIXES;
+  let phase = 0;       // 0=prefix, 1〜8=桁
+  let confirmed = [];  // [prefix, d1..d8]
+
+  function renderReel() {
+    const len = currentItems.length;
+    prevEl.textContent = currentItems[(idx - 1 + len) % len];
+    curEl.textContent  = currentItems[idx];
+    nextEl.textContent = currentItems[(idx + 1) % len];
+  }
+
+  function startReel(items, speed) {
+    if (timer) clearInterval(timer);
+    currentItems = items;
+    idx = 0;
+    renderReel();
+    timer = setInterval(() => {
+      idx = (idx + 1) % currentItems.length;
+      renderReel();
+    }, speed);
+  }
+
+  function updateDisplay() {
+    const prefix = phase === 0 ? "???" : confirmed[0];
+    function digitAt(i) {
+      if (phase === 0) return "_";
+      if (phase > i + 1) return confirmed[i + 1]; // 確定済み
+      if (phase === i + 1) return "?";             // スピン中
+      return "_";                                   // 未入力
+    }
+    document.getElementById("tel-seg-0").textContent = prefix;
+    document.getElementById("tel-seg-1").textContent = digitAt(0)+digitAt(1)+digitAt(2)+digitAt(3);
+    document.getElementById("tel-seg-2").textContent = digitAt(4)+digitAt(5)+digitAt(6)+digitAt(7);
+  }
+
+  function init() {
+    phase = 0;
+    confirmed = [];
+    result.textContent = "";
+    result.style.color = "";
+    confirmBtn.style.display = "";
+    registerWrap.style.display = "none";
+    updateDisplay();
+    startReel(PREFIXES, PREFIX_SPEED);
+  }
+
+  confirmBtn.addEventListener("click", () => {
+    const val = currentItems[idx];
+    confirmed.push(val);
+    phase = phase === 0 ? 1 : phase + 1;
+    updateDisplay();
+
+    if (phase > 8) {
+      clearInterval(timer);
+      timer = null;
+      curEl.textContent = "✓";
+      prevEl.textContent = "";
+      nextEl.textContent = "";
+      confirmBtn.style.display = "none";
+      registerWrap.style.display = "";
+      return;
+    }
+
+    startReel(DIGITS, DIGIT_SPEEDS[phase - 1]);
+  });
+
+  registerBtn.addEventListener("click", () => {
+    const prefix = confirmed[0];
+    const digs   = confirmed.slice(1).join("");
+    result.textContent = `${prefix}-${digs.slice(0,4)}-${digs.slice(4)} で登録しました`;
+    result.style.color = "";
+    registerWrap.style.display = "none";
+  });
+
+  clearBtn.addEventListener("click", init);
+
+  init();
+})();
+
+
+/* ============================================================
+   19. 会員登録（メール伏せ・パスワード丸見え）
+============================================================ */
+(function () {
+  const submit = document.getElementById("login-submit");
+  const result = document.getElementById("login-result");
+
+  enforceHalfAscii(document.getElementById("login-password"));
+
+  submit.addEventListener("click", () => {
+    const email = document.getElementById("login-email").value.trim();
+    const pass  = document.getElementById("login-password").value;
+    result.style.color = "#dc2626";
+    if (!email) { result.textContent = "メールアドレスを入力してください"; return; }
+    if (!pass)  { result.textContent = "パスワードを入力してください"; return; }
+    if (!/^[\x21-\x7E]+$/.test(pass)) { result.textContent = "パスワードは半角英数字・記号のみ使用できます"; return; }
+    result.style.color = "";
+    result.textContent = "登録しました";
+  });
+})();
+
+
+/* ============================================================
+   18. 性別選択（どれを選んでも「既に存在します」）
+============================================================ */
+(function () {
+  const submit = document.getElementById("gender-submit");
+  const result = document.getElementById("gender-result");
+
+  submit.addEventListener("click", () => {
+    const selected = document.querySelector('input[name="gender"]:checked');
+    if (!selected) {
+      result.textContent = "性別を選択してください";
+      result.style.color = "#dc2626";
+      return;
+    }
+    if (selected.value === "回答しない") {
+      result.textContent = "登録しました";
+      result.style.color = "";
+    } else {
+      result.textContent = `「${selected.value}」は他のユーザーによってすでに使用されております。別の性別を選んでください。`;
+      result.style.color = "#dc2626";
+      selected.checked = false;
+    }
+  });
+})();
+
+
 
 
 /* ============================================================
