@@ -1,46 +1,45 @@
-// ===== 基本設定（色はここで統一管理） =====
 const TIMEZONE = 'Asia/Tokyo';
-const COLOR_HIGH = '#007700';
-const COLOR_LOW  = 'goldenrod';
+const COLOR_HIGH    = '#007700';
+const COLOR_LOW     = 'goldenrod';
 const COLOR_NEUTRAL = '#000000';
 
-const main_kyu = 2000;
-const jimu_kyu = 1226;
-const WAGE_SCHEDULE = [
-  { start: '14:45:01', end: '15:00:00', rate: jimu_kyu },
-  { start: '15:00:01', end: '16:30:00', rate: main_kyu },
-  { start: '16:30:01', end: '17:00:00', rate: jimu_kyu },
-  { start: '17:00:01', end: '18:30:00', rate: main_kyu },
-  { start: '18:30:01', end: '19:00:00', rate: jimu_kyu },
-  { start: '19:00:01', end: '20:30:00', rate: main_kyu },
-  { start: '20:30:01', end: '23:59:59', rate: jimu_kyu },
+const RATE_A = 2000;
+const RATE_B = 1226;
+
+const SCHEDULE = [
+  { start: '14:45:01', end: '15:00:00', rate: RATE_B },
+  { start: '15:00:01', end: '16:30:00', rate: RATE_A },
+  { start: '16:30:01', end: '17:00:00', rate: RATE_B },
+  { start: '17:00:01', end: '18:30:00', rate: RATE_A },
+  { start: '18:30:01', end: '19:00:00', rate: RATE_B },
+  { start: '19:00:01', end: '20:30:00', rate: RATE_A },
+  { start: '20:30:01', end: '23:59:59', rate: RATE_B },
 ];
 
-const WAGE_SCHEDULE_SATURDAY = [
-  { start: '09:30:01', end: '10:00:00', rate: jimu_kyu },
-  { start: '10:00:01', end: '11:30:00', rate: main_kyu },
-  { start: '11:30:01', end: '11:45:00', rate: jimu_kyu },
+const SCHEDULE_SAT = [
+  { start: '09:30:01', end: '10:00:00', rate: RATE_B },
+  { start: '10:00:01', end: '11:30:00', rate: RATE_A },
+  { start: '11:30:01', end: '11:45:00', rate: RATE_B },
   { start: '11:45:01', end: '12:45:00', rate: 0 },
-  { start: '12:45:01', end: '13:00:00', rate: jimu_kyu },
-  { start: '13:00:01', end: '14:30:00', rate: main_kyu },
-  { start: '14:30:01', end: '15:00:00', rate: jimu_kyu },
-  { start: '15:00:01', end: '16:30:00', rate: main_kyu },
-  { start: '16:30:01', end: '17:00:00', rate: jimu_kyu },
-  { start: '17:00:01', end: '18:30:00', rate: main_kyu },
-  { start: '18:30:01', end: '19:00:00', rate: jimu_kyu },
-  { start: '19:00:01', end: '20:30:00', rate: main_kyu },
-  { start: '20:30:01', end: '20:45:00', rate: jimu_kyu },
+  { start: '12:45:01', end: '13:00:00', rate: RATE_B },
+  { start: '13:00:01', end: '14:30:00', rate: RATE_A },
+  { start: '14:30:01', end: '15:00:00', rate: RATE_B },
+  { start: '15:00:01', end: '16:30:00', rate: RATE_A },
+  { start: '16:30:01', end: '17:00:00', rate: RATE_B },
+  { start: '17:00:01', end: '18:30:00', rate: RATE_A },
+  { start: '18:30:01', end: '19:00:00', rate: RATE_B },
+  { start: '19:00:01', end: '20:30:00', rate: RATE_A },
+  { start: '20:30:01', end: '20:45:00', rate: RATE_B },
 ];
 
-const WAGE_SCHEDULE_FRIDAY = [
-  { start: '16:45:01', end: '17:00:00', rate: jimu_kyu },
-  { start: '17:00:01', end: '18:30:00', rate: main_kyu },
-  { start: '18:30:01', end: '19:00:00', rate: jimu_kyu },
-  { start: '19:00:01', end: '20:30:00', rate: main_kyu },
-  { start: '20:30:01', end: '20:45:00', rate: jimu_kyu },
+const SCHEDULE_FRI = [
+  { start: '16:45:01', end: '17:00:00', rate: RATE_B },
+  { start: '17:00:01', end: '18:30:00', rate: RATE_A },
+  { start: '18:30:01', end: '19:00:00', rate: RATE_B },
+  { start: '19:00:01', end: '20:30:00', rate: RATE_A },
+  { start: '20:30:01', end: '20:45:00', rate: RATE_B },
 ];
 
-// ===== ユーティリティ =====
 const fmtTime = new Intl.DateTimeFormat('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: TIMEZONE });
 const fmtNum  = new Intl.NumberFormat('ja-JP', { style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -53,7 +52,7 @@ const asToday = (hhmmss, baseDate) => {
 
 const buildBlocks = (baseDate) => {
   const day = baseDate.getDay();
-  const schedule = day === 5 ? WAGE_SCHEDULE_FRIDAY : day === 6 ? WAGE_SCHEDULE_SATURDAY : [];
+  const schedule = day === 5 ? SCHEDULE_FRI : day === 6 ? SCHEDULE_SAT : [];
   return schedule.map(p => ({
     start: asToday(p.start, baseDate),
     end: asToday(p.end, baseDate),
@@ -63,7 +62,7 @@ const buildBlocks = (baseDate) => {
 
 const secsBetween = (a, b) => Math.max(0, Math.floor((b - a) / 1000));
 
-function calculateEarnings(now, blocks) {
+function calcTotal(now, blocks) {
   let total = 0;
   for (const blk of blocks) {
     if (now <= blk.start) continue;
@@ -83,9 +82,9 @@ function tick() {
   document.getElementById('clock').innerHTML = `${parts.hour}<span id="colon">:</span>${parts.minute}<span id="sec">` + parts.second + `</span>`;
 
   const blocks = buildBlocks(today);
-  const earningNow = calculateEarnings(today, blocks);
+  const total = calcTotal(today, blocks);
   const earnedEl = document.getElementById('earned');
-  earnedEl.textContent = fmtNum.format(earningNow);
+  earnedEl.textContent = fmtNum.format(total);
 
   const current = findCurrentBlock(today, blocks);
   if (!current) {

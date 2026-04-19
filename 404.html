@@ -5,11 +5,88 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>404 Not Found</title>
   <link rel="stylesheet" href="/404.css" />
-  
 </head>
 <body>
-  <h1>404</h1>
-  <p>ありません</p> 
-  <a href="/">戻れ</a>
+  <div class="container">
+    <div class="signal-bar">
+      <span class="dot" id="dot"></span>
+      <span id="signal-text">GPS受信中...</span>
+    </div>
+
+    <svg class="compass" viewBox="0 0 200 200" width="200" height="200" aria-hidden="true">
+      <circle cx="100" cy="100" r="92" fill="none" stroke="#2a3a4a" stroke-width="2"/>
+      <circle cx="100" cy="100" r="78" fill="none" stroke="#2a3a4a" stroke-width="1" stroke-dasharray="4 8"/>
+
+      <text x="100" y="18"  text-anchor="middle" fill="#e74c3c" font-size="14" font-weight="700" font-family="system-ui">N</text>
+      <text x="100" y="194" text-anchor="middle" fill="#4a5a6a" font-size="12" font-family="system-ui">S</text>
+      <text x="190" y="104" text-anchor="middle" fill="#4a5a6a" font-size="12" font-family="system-ui">E</text>
+      <text x="10"  y="104" text-anchor="middle" fill="#4a5a6a" font-size="12" font-family="system-ui">W</text>
+
+      <g id="needle">
+        <polygon points="100,28 105,98 100,110 95,98" fill="#e74c3c"/>
+        <polygon points="100,172 105,102 100,110 95,102" fill="#4a5a6a"/>
+        <circle cx="100" cy="100" r="7" fill="#1a2a3a" stroke="#4a5a6a" stroke-width="1.5"/>
+      </g>
+    </svg>
+
+    <div class="code">404</div>
+
+    <div class="info">
+      <div class="info-row">現在地：<span class="info-val" id="location">不明</span></div>
+      <div class="info-row">目的地：<span class="info-val">ホーム</span></div>
+    </div>
+
+    <a href="/" class="nav-btn" id="nav-btn" aria-label="ホームへ移動">ナビ開始 →</a>
+
+    <p class="note">このページは存在しません</p>
+  </div>
+
+  <script>
+    const needle = document.getElementById('needle');
+    const signalText = document.getElementById('signal-text');
+    const dot = document.getElementById('dot');
+    const locationEl = document.getElementById('location');
+    const navBtn = document.getElementById('nav-btn');
+
+    let angle = Math.random() * 360;
+    let velocity = 12 + Math.random() * 8;
+    let phase = 'searching';
+
+    function setAngle(a) {
+      needle.setAttribute('transform', `rotate(${a}, 100, 100)`);
+    }
+
+    function animate() {
+      if (phase === 'found') return;
+
+      velocity *= 0.975;
+      angle += velocity;
+      setAngle(angle);
+
+      if (velocity < 2 && phase === 'searching') {
+        phase = 'locking';
+        signalText.textContent = '信号ロック中...';
+        dot.classList.add('locking');
+      }
+
+      if (velocity < 0.3) {
+        phase = 'found';
+        const remainder = angle % 360;
+        const finalAngle = angle + (360 - remainder);
+        setAngle(finalAngle);
+
+        signalText.textContent = 'ホーム発見！';
+        dot.classList.remove('locking');
+        dot.classList.add('found');
+        locationEl.textContent = '存在しないページ';
+        navBtn.classList.add('visible');
+        return;
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
 </body>
 </html>
