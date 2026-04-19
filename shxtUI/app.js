@@ -211,15 +211,56 @@ resetForm();
   const arena     = document.getElementById("escape-arena");
   const escResult = document.getElementById("esc-result");
 
-  escBtn.style.cssText = "position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);";
+  const card = arena.closest(".ui");
+  card.style.position = "relative";
+  escBtn.style.cssText = "position:absolute;z-index:9;";
   escBtn.tabIndex = -1;
 
+  let escapeCount = 0;
+  // 逃げた回数に応じてトランジション時間を伸ばす（＝遅くなる＝捕まえやすくなる）
+  // 0〜4回: 即逃げ, 5〜9回: 少し遅い, 10〜14回: かなり遅い, 15回〜: 止まる
+  const stages = [
+    { until: 5,  transition: "0s",     range: 1.0 },
+    { until: 10, transition: "0.4s",   range: 0.8 },
+    { until: 15, transition: "0.9s",   range: 0.5 },
+    { until: 20, transition: "1.8s",   range: 0.25 },
+  ];
+
+  function getStage() {
+    return stages.find(s => escapeCount < s.until) ?? null;
+  }
+
+  function placeAtArenaCenter() {
+    const cardRect  = card.getBoundingClientRect();
+    const arenaRect = arena.getBoundingClientRect();
+    escBtn.style.transition = "0s";
+    escBtn.style.left = (arenaRect.left - cardRect.left + arenaRect.width  / 2 - escBtn.offsetWidth  / 2) + "px";
+    escBtn.style.top  = (arenaRect.top  - cardRect.top  + arenaRect.height / 2 - escBtn.offsetHeight / 2) + "px";
+  }
+  requestAnimationFrame(placeAtArenaCenter);
+
   escBtn.addEventListener("mouseenter", () => {
-    const maxX = arena.offsetWidth  - escBtn.offsetWidth  - 8;
-    const maxY = arena.offsetHeight - escBtn.offsetHeight - 8;
-    escBtn.style.transform = "";
-    escBtn.style.left = Math.random() * Math.max(maxX, 0) + "px";
-    escBtn.style.top  = Math.random() * Math.max(maxY, 0) + "px";
+    const stage = getStage();
+    if (!stage) return; // 20回超えたら逃げない（押せる）
+
+    escapeCount++;
+    const pad  = 8;
+    const r    = stage.range;
+    const cardW = card.offsetWidth;
+    const cardH = card.offsetHeight;
+    const bW   = escBtn.offsetWidth;
+    const bH   = escBtn.offsetHeight;
+    // rangeが小さいほど中央付近にしか逃げない
+    const centerX = cardW / 2 - bW / 2;
+    const centerY = cardH / 2 - bH / 2;
+    const halfRangeX = (cardW / 2 - bW - pad) * r;
+    const halfRangeY = (cardH / 2 - bH - pad) * r;
+    const newX = centerX + (Math.random() * 2 - 1) * halfRangeX;
+    const newY = centerY + (Math.random() * 2 - 1) * halfRangeY;
+
+    escBtn.style.transition = `left ${stage.transition} ease, top ${stage.transition} ease`;
+    escBtn.style.left = Math.max(pad, Math.min(cardW - bW - pad, newX)) + "px";
+    escBtn.style.top  = Math.max(pad, Math.min(cardH - bH - pad, newY)) + "px";
   });
 
   escBtn.addEventListener("click", () => {
@@ -816,6 +857,13 @@ resetForm();
     return String(y);
   }
 
+  function makePlaceholder(text) {
+    const opt = document.createElement("option");
+    opt.value = ""; opt.textContent = text; opt.disabled = true; opt.selected = true;
+    return opt;
+  }
+
+  engYear.appendChild(makePlaceholder("年を入力してください"));
   const yearOpts = [];
   for (let y = 1950; y <= 2025; y++) yearOpts.push({ y, label: yearToWords(y) });
   yearOpts.sort((a, b) => a.label.localeCompare(b.label));
@@ -825,6 +873,7 @@ resetForm();
     engYear.appendChild(opt);
   });
 
+  engMonth.appendChild(makePlaceholder("月を入力してください"));
   const MONTHS_EN = [
     { name: "April",     n: 4  }, { name: "August",    n: 8  },
     { name: "December",  n: 12 }, { name: "February",  n: 2  },

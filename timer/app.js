@@ -16,6 +16,30 @@ const WAGE_SCHEDULE = [
   { start: '20:30:01', end: '23:59:59', rate: jimu_kyu },
 ];
 
+const WAGE_SCHEDULE_SATURDAY = [
+  { start: '09:30:01', end: '10:00:00', rate: jimu_kyu },
+  { start: '10:00:01', end: '11:30:00', rate: main_kyu },
+  { start: '11:30:01', end: '11:45:00', rate: jimu_kyu },
+  { start: '11:45:01', end: '12:45:00', rate: 0 },
+  { start: '12:45:01', end: '13:00:00', rate: jimu_kyu },
+  { start: '13:00:01', end: '14:30:00', rate: main_kyu },
+  { start: '14:30:01', end: '15:00:00', rate: jimu_kyu },
+  { start: '15:00:01', end: '16:30:00', rate: main_kyu },
+  { start: '16:30:01', end: '17:00:00', rate: jimu_kyu },
+  { start: '17:00:01', end: '18:30:00', rate: main_kyu },
+  { start: '18:30:01', end: '19:00:00', rate: jimu_kyu },
+  { start: '19:00:01', end: '20:30:00', rate: main_kyu },
+  { start: '20:30:01', end: '20:45:00', rate: jimu_kyu },
+];
+
+const WAGE_SCHEDULE_FRIDAY = [
+  { start: '16:45:01', end: '17:00:00', rate: jimu_kyu },
+  { start: '17:00:01', end: '18:30:00', rate: main_kyu },
+  { start: '18:30:01', end: '19:00:00', rate: jimu_kyu },
+  { start: '19:00:01', end: '20:30:00', rate: main_kyu },
+  { start: '20:30:01', end: '20:45:00', rate: jimu_kyu },
+];
+
 // ===== ユーティリティ =====
 const fmtTime = new Intl.DateTimeFormat('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: TIMEZONE });
 const fmtNum  = new Intl.NumberFormat('ja-JP', { style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -27,11 +51,15 @@ const asToday = (hhmmss, baseDate) => {
   return d;
 };
 
-const buildBlocks = (baseDate) => WAGE_SCHEDULE.map(p => ({
-  start: asToday(p.start, baseDate),
-  end: asToday(p.end, baseDate),
-  rate: p.rate
-}));
+const buildBlocks = (baseDate) => {
+  const day = baseDate.getDay();
+  const schedule = day === 5 ? WAGE_SCHEDULE_FRIDAY : day === 6 ? WAGE_SCHEDULE_SATURDAY : [];
+  return schedule.map(p => ({
+    start: asToday(p.start, baseDate),
+    end: asToday(p.end, baseDate),
+    rate: p.rate
+  }));
+};
 
 const secsBetween = (a, b) => Math.max(0, Math.floor((b - a) / 1000));
 
