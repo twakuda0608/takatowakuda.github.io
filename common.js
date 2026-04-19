@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   if (location.pathname === "/" || location.pathname === "/index.html") return;
+  if (location.pathname.startsWith("/fll2025")) return;
 
   const btn = document.createElement("a");
   btn.href = "/";

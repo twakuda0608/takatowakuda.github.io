@@ -117,13 +117,23 @@ button:disabled { background: #ccc; cursor: not-allowed; }
 }
 
 /* === 逃げるボタン === */
+.ui-esc-card {
+  min-height: 240px;
+}
 .escape-arena {
-  position: relative;
   height: 72px;
   margin: 12px auto;
   border: 1px dashed #ccc;
   border-radius: 8px;
   max-width: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.escape-arena-hint {
+  font-size: 0.78em;
+  color: #aaa;
+  pointer-events: none;
 }
 
 /* === シャッフルチェックボックス（目立たない） === */
