@@ -823,3 +823,198 @@ input[type="range"] {
   accent-color: #0078d7;
   min-width: unset;
 }
+
+/* === ログイン確認ウィザード (No.21) === */
+.lwiz-wrap {
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin: 14px 0;
+}
+
+.lwiz-slides {
+  display: flex;
+  width: 500%;
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lwiz-slide {
+  position: relative;
+  width: 20%;
+  min-height: 220px;
+  padding: 28px 20px 70px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: #f8fafc;
+}
+
+/* External service slide (step 0) */
+.lwiz-slide-service {
+  background: #f9fafb;
+  align-items: center;
+  gap: 10px;
+}
+
+.lwiz-service-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lwiz-service-icon {
+  font-size: 22px;
+}
+
+.lwiz-service-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a202c;
+  letter-spacing: -0.5px;
+}
+
+.lwiz-univ-btn {
+  background: #1c3557;
+  border-radius: 6px;
+  font-size: 14px;
+  min-width: 200px;
+  padding: 11px 20px;
+  letter-spacing: 0.2px;
+}
+
+.lwiz-univ-btn:hover { background: #162840; }
+
+/* SSO (学認-style) slides */
+.lwiz-slide-sso {
+  background: #fff;
+  align-items: flex-start;
+  padding-left: 32px;
+  padding-right: 32px;
+}
+
+.lwiz-sso-logo {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #2a2a2a;
+  margin-bottom: 4px;
+  letter-spacing: 0.3px;
+}
+
+.lwiz-sso-dots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.lwiz-sso-dots span { border-radius: 50%; }
+.lwiz-sso-dots span:nth-child(1) { background: #d94f3d; }
+.lwiz-sso-dots span:nth-child(2) { background: #3a7dc9; }
+.lwiz-sso-dots span:nth-child(3) { background: #f0b429; }
+.lwiz-sso-dots span:nth-child(4) { background: #2eaa60; }
+
+.lwiz-slide-sso .lwiz-step-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+  text-align: left;
+  width: 100%;
+}
+
+.lwiz-slide-sso .lwiz-step-sub {
+  color: #999;
+  font-size: 12px;
+  text-align: left;
+  width: 100%;
+}
+
+.lwiz-sso-input {
+  width: 100%;
+  max-width: 100%;
+  min-width: unset;
+  box-sizing: border-box;
+  border-radius: 3px;
+  border: 1.5px solid #888;
+  padding: 9px 10px;
+  font-size: 15px;
+}
+
+.lwiz-sso-input:focus {
+  outline: none;
+  border-color: #2a6db5;
+  box-shadow: 0 0 0 1px #2a6db5;
+}
+
+.lwiz-sso-btn {
+  background: #2a6db5;
+  border-radius: 3px;
+  font-size: 15px;
+  padding: 9px 20px;
+  min-width: 80px;
+}
+
+.lwiz-sso-btn:hover { background: #1f5a9a; }
+
+/* Done slide */
+.lwiz-slide-done {
+  background: #f0fdf4;
+  align-items: center;
+}
+
+.lwiz-dialog-icon {
+  font-size: 40px;
+  line-height: 1;
+}
+
+.lwiz-step-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a202c;
+  line-height: 1.5;
+}
+
+.lwiz-step-sub {
+  font-size: 12px;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+.lwiz-input {
+  width: 100%;
+  max-width: 260px;
+  box-sizing: border-box;
+  min-width: unset;
+}
+
+.lwiz-ok-btn {
+  min-width: 90px;
+  padding: 10px 20px;
+  font-size: 15px;
+}
+
+.lwiz-progress {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.lwiz-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  transition: background 0.3s;
+  display: inline-block;
+}
+
+.lwiz-dot-active {
+  background: #0078d7;
+}
