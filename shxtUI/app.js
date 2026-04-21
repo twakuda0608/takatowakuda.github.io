@@ -1005,11 +1005,13 @@ resetForm();
 
   autofillBtn.addEventListener("click", () => {
     if (!zipInput.value.trim()) { result.textContent = "郵便番号を入力してください"; return; }
+    if (!/^\d{3}-\d{4}$/.test(zipInput.value.trim())) { result.textContent = "エラー：ハイフン（-）は必須です（例：123-4567）"; result.style.color = "#dc2626"; return; }
     autofillBtn.textContent = "取得中...";
     autofillBtn.disabled = true;
     result.textContent = "郵便番号から住所を取得しています。しばらくお待ちください...";
     setTimeout(() => {
       countryEl.value = "日本";
+      zipInput.value = "";
       autofillBtn.textContent = "自動入力";
       autofillBtn.disabled = false;
       result.textContent = "住所の自動入力が完了しました";
@@ -1531,6 +1533,81 @@ resetForm();
 })();
 
 
+
+
+/* ============================================================
+   21. ログイン（無意味な確認ステップ × スライドアニメーション）
+============================================================ */
+(function () {
+  const slidesEl = document.getElementById("lwiz-slides");
+  const dots     = document.querySelectorAll("#login-wizard-ui .lwiz-dot");
+  const resultEl = document.getElementById("lwiz-result");
+
+  const btnIds = ["lwiz-ok-0","lwiz-ok-1","lwiz-ok-2","lwiz-ok-3","lwiz-reset"];
+  const btns   = btnIds.map(id => document.getElementById(id));
+
+  // Possible absolute positions for the OK button within its slide
+  const positions = [
+    { bottom: "18px", left: "50%",  transform: "translateX(-50%)" }, // center-bottom
+    { bottom: "18px", left:  "18px" },                                // bottom-left
+    { bottom: "18px", right: "18px" },                                // bottom-right
+    { top:    "18px", right: "18px" },                                // top-right
+    { top:    "18px", left:  "18px" },                                // top-left
+    { top: "50%",     right: "18px", transform: "translateY(-50%)" }, // middle-right
+    { top: "50%",     left:  "18px", transform: "translateY(-50%)" }, // middle-left
+  ];
+
+  function applyPos(btn, pos) {
+    btn.style.position = "absolute";
+    ["top","bottom","left","right","transform"].forEach(p => btn.style[p] = "");
+    Object.entries(pos).forEach(([k, v]) => btn.style[k] = v);
+  }
+
+  function randomizeBtn(btn) {
+    applyPos(btn, positions[Math.floor(Math.random() * positions.length)]);
+  }
+
+  // Initial: first button centered, rest randomized
+  applyPos(btns[0], positions[0]);
+  btns.slice(1).forEach(randomizeBtn);
+
+  function goTo(n, btn) {
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = "…";
+    const delay = 500 + Math.random() * 500; // 500–1000ms
+    setTimeout(() => {
+      slidesEl.style.transform = `translateX(-${n * 20}%)`;
+      dots.forEach((d, i) => d.classList.toggle("lwiz-dot-active", i === n));
+      resultEl.textContent = "";
+      btn.textContent  = orig;
+      btn.disabled     = false;
+    }, delay);
+  }
+
+  btns[0].addEventListener("click", function () { goTo(1, this); });
+  btns[1].addEventListener("click", function () { goTo(2, this); });
+
+  btns[2].addEventListener("click", function () {
+    const email = document.getElementById("lwiz-email").value.trim();
+    if (!email) { resultEl.textContent = "メールアドレスを入力してください"; return; }
+    goTo(3, this);
+  });
+
+  btns[3].addEventListener("click", function () {
+    const pass = document.getElementById("lwiz-password").value;
+    if (!pass) { resultEl.textContent = "パスワードを入力してください"; return; }
+    goTo(4, this);
+  });
+
+  btns[4].addEventListener("click", function () {
+    document.getElementById("lwiz-email").value    = "";
+    document.getElementById("lwiz-password").value = "";
+    applyPos(btns[0], positions[0]);
+    btns.slice(1).forEach(randomizeBtn);
+    goTo(0, this);
+  });
+})();
 
 
 /* ============================================================

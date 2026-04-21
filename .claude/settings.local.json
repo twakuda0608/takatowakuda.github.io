@@ -6,7 +6,11 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git merge *)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(mkdir -p \"/c/Users/Takato Wakuda/.claude/commands\")",
+      "Bash(cp \"/c/Users/Takato Wakuda/Documents/website/.claude/commands/shxtui.md\" \"/c/Users/Takato Wakuda/.claude/commands/shxtui.md\")",
+      "Bash(rm \"/c/Users/Takato Wakuda/Documents/website/.claude/commands/shxtui.md\")",
+      "Bash(git ls-tree *)"
     ]
   }
 }

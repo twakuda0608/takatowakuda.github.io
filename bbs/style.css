@@ -1,0 +1,264 @@
+body {
+  margin: 0;
+  padding: 0 0 80px;
+  background: #f5f6fa;
+  font-family: system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+}
+
+/* === ヘッダー === */
+.bbs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.bbs-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a202c;
+  margin: 0;
+}
+
+/* === 認証エリア === */
+.auth-area {
+  display: flex;
+  align-items: center;
+}
+
+.google-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #fff;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.google-btn:hover {
+  background: #f8fafc;
+  border-color: #aaa;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #e2e8f0;
+  flex-shrink: 0;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout-btn {
+  padding: 6px 12px;
+  background: none;
+  border: 1.5px solid #ddd;
+  border-radius: 7px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+/* === コンテンツ === */
+.bbs-container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+/* === ログインプロンプト === */
+.login-prompt {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.07);
+  margin-bottom: 24px;
+}
+
+.login-prompt p {
+  margin: 0 0 14px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.login-prompt .google-btn {
+  margin: 0 auto;
+}
+
+/* === 投稿フォーム === */
+.post-form {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.form-user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.post-form textarea {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1.5px solid #ddd;
+  border-radius: 9px;
+  font-size: 15px;
+  font-family: inherit;
+  box-sizing: border-box;
+  resize: vertical;
+  transition: border-color 0.15s;
+}
+
+.post-form textarea:focus {
+  outline: none;
+  border-color: #0078d7;
+  box-shadow: 0 0 0 3px #bfdbfe44;
+}
+
+.post-form button[type="submit"] {
+  align-self: flex-end;
+  padding: 10px 24px;
+  background: #0078d7;
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-size: 15px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.post-form button[type="submit"]:hover    { background: #005bb5; }
+.post-form button[type="submit"]:disabled { background: #93c5fd; cursor: not-allowed; }
+
+/* === 投稿一覧 === */
+.posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.post {
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.post-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.post-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #e2e8f0;
+  flex-shrink: 0;
+}
+
+.post-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1a202c;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-date {
+  font-size: 12px;
+  color: #94a3b8;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.post-message {
+  font-size: 15px;
+  color: #374151;
+  line-height: 1.7;
+  word-break: break-word;
+  margin-bottom: 8px;
+}
+
+.delete-btn {
+  font-size: 11px;
+  color: #cbd5e1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  font-family: inherit;
+}
+
+.delete-btn:hover { color: #dc2626; }
+
+/* === 状態表示 === */
+.bbs-loading,
+.bbs-empty {
+  text-align: center;
+  color: #94a3b8;
+  padding: 48px 0;
+  font-size: 14px;
+}

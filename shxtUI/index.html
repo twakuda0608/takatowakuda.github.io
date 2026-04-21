@@ -402,6 +402,71 @@
       <div class="result" id="tel-result"></div>
     </div>
 
+    <!-- 21. ログイン（無意味な確認ステップ × スライドアニメーション） -->
+    <div class="ui" id="login-wizard-ui">
+      <div class="title">ログイン</div>
+      <div class="lwiz-wrap">
+        <div class="lwiz-slides" id="lwiz-slides">
+          <!-- Step 0: 外部サービス（大学メールでログインを促す） -->
+          <div class="lwiz-slide lwiz-slide-service">
+            <div class="lwiz-service-header">
+              <span class="lwiz-service-icon">📖</span>
+              <span class="lwiz-service-name">CampusLink</span>
+            </div>
+            <div class="lwiz-step-title">大学のメールアドレスを使ってログインしてください</div>
+            <div class="lwiz-step-sub">ステップ 1 / 4</div>
+            <button class="lwiz-ok-btn lwiz-univ-btn" id="lwiz-ok-0">🏛️ 遅稲田大学 でログイン</button>
+          </div>
+          <!-- Step 1: SSO確認 -->
+          <div class="lwiz-slide lwiz-slide-sso">
+            <div class="lwiz-sso-logo">
+              <span class="lwiz-sso-dots"><span></span><span></span><span></span><span></span></span>
+              学認 ID
+            </div>
+            <div class="lwiz-step-title">gakusei@choseda-u.ac.jpでサインインしますね。</div>
+            <div class="lwiz-step-sub">ステップ 2 / 4</div>
+            <button class="lwiz-ok-btn lwiz-sso-btn" id="lwiz-ok-1">確認</button>
+          </div>
+          <!-- Step 2: Email -->
+          <div class="lwiz-slide lwiz-slide-sso">
+            <div class="lwiz-sso-logo">
+              <span class="lwiz-sso-dots"><span></span><span></span><span></span><span></span></span>
+              学認 ID
+            </div>
+            <div class="lwiz-step-title">サインイン</div>
+            <div class="lwiz-step-sub">ステップ 3 / 4</div>
+            <input type="email" id="lwiz-email" placeholder="メールアドレスを入力" class="lwiz-input lwiz-sso-input" autocomplete="off">
+            <button class="lwiz-ok-btn lwiz-sso-btn" id="lwiz-ok-2">次へ</button>
+          </div>
+          <!-- Step 3: Password -->
+          <div class="lwiz-slide lwiz-slide-sso">
+            <div class="lwiz-sso-logo">
+              <span class="lwiz-sso-dots"><span></span><span></span><span></span><span></span></span>
+              学認 ID
+            </div>
+            <div class="lwiz-step-title">パスワードの入力</div>
+            <div class="lwiz-step-sub">ステップ 4 / 4</div>
+            <input type="password" id="lwiz-password" placeholder="パスワード" class="lwiz-input lwiz-sso-input" autocomplete="new-password">
+            <button class="lwiz-ok-btn lwiz-sso-btn" id="lwiz-ok-3">サインイン</button>
+          </div>
+          <!-- Step 4: 完了 -->
+          <div class="lwiz-slide lwiz-slide-done">
+            <div class="lwiz-dialog-icon">✅</div>
+            <div class="lwiz-step-title">サインインが完了しました</div>
+            <button class="lwiz-ok-btn" id="lwiz-reset">最初から</button>
+          </div>
+        </div>
+      </div>
+      <div class="lwiz-progress" id="lwiz-progress">
+        <span class="lwiz-dot lwiz-dot-active"></span>
+        <span class="lwiz-dot"></span>
+        <span class="lwiz-dot"></span>
+        <span class="lwiz-dot"></span>
+        <span class="lwiz-dot"></span>
+      </div>
+      <div class="result" id="lwiz-result"></div>
+    </div>
+
   </div>
 
   <script src="app.js" defer></script>
