@@ -19,8 +19,21 @@
       <div id="user-info" class="user-info" style="display:none;">
         <img id="user-avatar" class="user-avatar" src="" alt="">
         <span id="user-name" class="user-name"></span>
+        <button id="edit-name-btn" class="edit-name-btn" title="ニックネームを変更">✏️</button>
         <button id="logout-btn" class="logout-btn">ログアウト</button>
       </div>
+    </div>
+  </div>
+
+  <div id="nickname-modal" class="nickname-modal" style="display:none;">
+    <div class="nickname-modal-box">
+      <div class="nickname-modal-title">ニックネームを変更</div>
+      <input type="text" id="nickname-input" maxlength="30" placeholder="ニックネーム" autocomplete="off">
+      <div class="nickname-modal-btns">
+        <button id="nickname-cancel" class="logout-btn">キャンセル</button>
+        <button id="nickname-save">保存</button>
+      </div>
+    </div>
     </div>
   </div>
 

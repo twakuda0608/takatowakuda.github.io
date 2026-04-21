@@ -1,7 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, onSnapshot,
-  orderBy, query, serverTimestamp, deleteDoc, doc
+  orderBy, query, serverTimestamp, deleteDoc, doc,
+  getDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup,
@@ -23,21 +24,27 @@ const auth     = getAuth(app);
 const provider = new GoogleAuthProvider();
 
 // DOM
-const loginBtn    = document.getElementById("login-btn");
-const loginBtn2   = document.getElementById("login-btn-2");
-const logoutBtn   = document.getElementById("logout-btn");
-const userInfo    = document.getElementById("user-info");
-const userAvatar  = document.getElementById("user-avatar");
-const userName    = document.getElementById("user-name");
-const loginPrompt = document.getElementById("login-prompt");
-const postForm    = document.getElementById("post-form");
-const formAvatar  = document.getElementById("form-avatar");
-const formName    = document.getElementById("form-name");
-const msgInput    = document.getElementById("message-input");
-const submitBtn   = document.getElementById("submit-btn");
-const postsList   = document.getElementById("posts-list");
+const loginBtn       = document.getElementById("login-btn");
+const loginBtn2      = document.getElementById("login-btn-2");
+const logoutBtn      = document.getElementById("logout-btn");
+const userInfo       = document.getElementById("user-info");
+const userAvatar     = document.getElementById("user-avatar");
+const userName       = document.getElementById("user-name");
+const editNameBtn    = document.getElementById("edit-name-btn");
+const nicknameModal  = document.getElementById("nickname-modal");
+const nicknameInput  = document.getElementById("nickname-input");
+const nicknameSave   = document.getElementById("nickname-save");
+const nicknameCancel = document.getElementById("nickname-cancel");
+const loginPrompt    = document.getElementById("login-prompt");
+const postForm       = document.getElementById("post-form");
+const formAvatar     = document.getElementById("form-avatar");
+const formName       = document.getElementById("form-name");
+const msgInput       = document.getElementById("message-input");
+const submitBtn      = document.getElementById("submit-btn");
+const postsList      = document.getElementById("posts-list");
 
-let currentUser = null;
+let currentUser    = null;
+let userNickname   = "";
 
 function escHtml(str) {
   return str
@@ -54,6 +61,45 @@ function formatDate(ts) {
     hour: "2-digit", minute: "2-digit"
   });
 }
+
+async function loadOrCreateProfile(user) {
+  const ref  = doc(db, "users", user.uid);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    userNickname = snap.data().nickname || user.displayName || user.email;
+  } else {
+    userNickname = user.displayName || user.email;
+    await setDoc(ref, { nickname: userNickname });
+  }
+  userName.textContent = userNickname;
+  formName.textContent = userNickname;
+}
+
+editNameBtn.addEventListener("click", () => {
+  nicknameInput.value = userNickname;
+  nicknameModal.style.display = "flex";
+  nicknameInput.focus();
+  nicknameInput.select();
+});
+
+nicknameCancel.addEventListener("click", () => {
+  nicknameModal.style.display = "none";
+});
+
+nicknameSave.addEventListener("click", async () => {
+  const newName = nicknameInput.value.trim();
+  if (!newName || !currentUser) return;
+  await setDoc(doc(db, "users", currentUser.uid), { nickname: newName });
+  userNickname = newName;
+  userName.textContent = userNickname;
+  formName.textContent = userNickname;
+  nicknameModal.style.display = "none";
+});
+
+nicknameInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") nicknameSave.click();
+  if (e.key === "Escape") nicknameCancel.click();
+});
 
 async function signIn() {
   try {
@@ -75,7 +121,7 @@ onAuthStateChanged(auth, (user) => {
     loginBtn.style.display    = "none";
     userInfo.style.display    = "flex";
     userAvatar.src            = user.photoURL || "";
-    userName.textContent      = user.displayName || user.email;
+    await loadOrCreateProfile(user);
     loginPrompt.style.display = "none";
     postForm.style.display    = "flex";
     formAvatar.src            = user.photoURL || "";
@@ -100,7 +146,7 @@ postForm.addEventListener("submit", async (e) => {
 
   try {
     await addDoc(collection(db, "bbs"), {
-      name:      currentUser.displayName || currentUser.email,
+      name:      userNickname,
       avatarUrl: currentUser.photoURL || "",
       uid:       currentUser.uid,
       message,
@@ -128,7 +174,8 @@ onSnapshot(q, (snapshot) => {
 
   snapshot.forEach((snap) => {
     const data     = snap.data();
-    const isOwner  = currentUser && currentUser.uid === data.uid;
+    const isAdmin  = currentUser && currentUser.uid === "DCrmDRYKuPXKQtiQ9gAgz8fAJRL2";
+    const isOwner  = currentUser && (currentUser.uid === data.uid || isAdmin);
     const div      = document.createElement("div");
     div.className  = "post";
     div.innerHTML  = `
