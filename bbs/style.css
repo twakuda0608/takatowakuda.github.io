@@ -10,7 +10,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
+  padding: 16px 24px 16px 68px;
   background: #fff;
   border-bottom: 1px solid #e2e8f0;
   position: sticky;
@@ -91,6 +91,68 @@ body {
 .logout-btn:hover {
   border-color: #dc2626;
   color: #dc2626;
+}
+
+.edit-name-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+
+.edit-name-btn:hover { opacity: 1; }
+
+/* === ニックネームモーダル === */
+.nickname-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nickname-modal-box {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+.nickname-modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.nickname-modal-box input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 9px;
+  font-size: 15px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.nickname-modal-box input:focus {
+  outline: none;
+  border-color: #0078d7;
+  box-shadow: 0 0 0 3px #bfdbfe44;
+}
+
+.nickname-modal-btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 /* === コンテンツ === */
