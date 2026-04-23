@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>学習</title>
+  <link rel="stylesheet" href="/common.css">
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --panel: #ffffff;
+      --border: #e0e4ea;
+      --accent: #4f8ef7;
+      --text: #1a1a2e;
+      --muted: #6b7280;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif;
+      min-height: 100vh;
+      padding: 40px 20px 80px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .lead {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 40px;
+    }
+
+    .grid {
+      max-width: 680px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    .card {
+      display: block;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      text-decoration: none;
+      color: inherit;
+      transition: box-shadow 0.15s, transform 0.15s;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+      transform: translateY(-2px);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--accent);
+    }
+
+    .card-desc {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <h1>学習</h1>
+  <p class="lead">プログラミングや知識を学べるページ集</p>
+
+  <div class="grid">
+    <a class="card" href="/学習/変数リスト/">
+      <div class="card-title">変数とリストを学ぼう</div>
+      <div class="card-desc">変数・代入・リスト・二次元リストを視覚的に理解できる</div>
+    </a>
+  </div>
+
+  <script src="/common.js"></script>
+</body>
+</html>

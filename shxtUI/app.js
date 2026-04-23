@@ -211,6 +211,23 @@ resetForm();
   const arena     = document.getElementById("escape-arena");
   const escResult = document.getElementById("esc-result");
 
+  ["esc-year", "esc-day"].forEach(id => {
+    document.getElementById(id).addEventListener("keydown", e => {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        document.getElementById("furi-country").focus();
+      }
+    });
+  });
+
+  document.getElementById("esc-month").addEventListener("keydown", e => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      document.getElementById("esc-year").value = "";
+      document.getElementById("esc-year").focus();
+    }
+  });
+
   const card = arena.closest(".ui");
   card.style.position = "relative";
   escBtn.style.cssText = "position:absolute;z-index:9;";
@@ -342,19 +359,32 @@ resetForm();
   let checked = new Set(["島根県"]);
 
   function renderPrefs() {
-    const order = [...PREFS].sort(() => Math.random() - 0.5);
+    const allSel = checked.size === PREFS.length;
+    const order = [...PREFS, "__all__"].sort(() => Math.random() - 0.5);
     container.innerHTML = "";
     order.forEach(pref => {
       const label = document.createElement("label");
       label.style.cssText = "display:block;padding:5px 0;cursor:pointer;user-select:none;text-align:left;";
       const cb = document.createElement("input");
-      cb.type = "checkbox"; cb.name = "pref"; cb.value = pref; cb.className = "shuffle-cb";
-      cb.checked = checked.has(pref);
-      cb.addEventListener("change", () => {
-        if (cb.checked) checked.add(pref); else checked.delete(pref);
-      });
-      label.appendChild(cb);
-      label.appendChild(document.createTextNode(" " + pref));
+      cb.type = "checkbox";
+      if (pref === "__all__") {
+        cb.className = "shuffle-cb";
+        cb.checked = allSel;
+        cb.addEventListener("change", () => {
+          checked = cb.checked ? new Set(PREFS) : new Set();
+          renderPrefs();
+        });
+        label.appendChild(cb);
+        label.appendChild(document.createTextNode(" " + (allSel ? "全選択" : "全解除")));
+      } else {
+        cb.name = "pref"; cb.value = pref; cb.className = "shuffle-cb";
+        cb.checked = checked.has(pref);
+        cb.addEventListener("change", () => {
+          if (cb.checked) checked.add(pref); else checked.delete(pref);
+        });
+        label.appendChild(cb);
+        label.appendChild(document.createTextNode(" " + pref));
+      }
       container.appendChild(label);
     });
   }
@@ -368,8 +398,17 @@ resetForm();
     renderPrefs();
   }
 
+  function selectAll() {
+    checked = new Set(PREFS);
+    renderPrefs();
+  }
+
   submitBtn.addEventListener("click", () => {
-    if (checked.size === 0) { res.textContent = "選択してください"; res.style.color = ""; return; }
+    if (checked.size === 0) {
+      res.textContent = "選択してください"; res.style.color = "";
+      selectAll();
+      return;
+    }
     if (checked.size > 1) {
       const list = [...checked];
       const joined = list.length === 2
@@ -377,12 +416,13 @@ resetForm();
         : list.slice(0, -1).join("と") + `と${list[list.length - 1]}`;
       res.textContent = `${joined}が選択されております。入力は一つにしてください。`;
       res.style.color = "#dc2626";
-      resetWithRandom();
+      selectAll();
       return;
     }
     const selected = [...checked][0];
     checkPref(selected, res, resetWithRandom);
   });
+
 })();
 
 
@@ -438,12 +478,19 @@ resetForm();
     });
   }
 
+  function syncButtonOrder() {
+    const swapped = step === 2 && entered.length >= 1;
+    clearBtn.style.order  = swapped ? "1" : "";
+    submitBtn.style.order = swapped ? "0" : "";
+  }
+
   function pressDigit(d) {
     if (entered.length >= steps[step].max) return;
     entered += d;
     display.textContent = entered || "--";
     shuffleArr(digits);
     renderKeys();
+    syncButtonOrder();
   }
 
   function nextStep() {
@@ -459,6 +506,13 @@ resetForm();
     shuffleArr(digits); renderKeys();
     updateFieldDisplays();
     result.textContent = "";
+    clearBtn.classList.remove("numpad-clear-flash");
+    void clearBtn.offsetWidth;
+    clearBtn.classList.add("numpad-clear-flash");
+    setTimeout(() => {
+      clearBtn.classList.remove("numpad-clear-flash");
+      syncButtonOrder();
+    }, 1200);
   });
 
   submitBtn.addEventListener("click", () => {
@@ -468,6 +522,7 @@ resetForm();
     confirmed[step] = entered;
     entered = "";
     display.textContent = "--";
+    syncButtonOrder();
 
     if (step < 2) {
       step++;
@@ -696,7 +751,6 @@ resetForm();
 ============================================================ */
 (function () {
   const input  = document.getElementById("invis-input");
-  const lenEl  = document.getElementById("invis-len");
   const toggle = document.getElementById("invis-toggle");
   const submit = document.getElementById("invis-submit");
   const result = document.getElementById("invis-result");
@@ -709,7 +763,6 @@ resetForm();
       input.value = input.value.slice(0, pos) + "gj" + input.value.slice(pos);
       input.setSelectionRange(pos + 2, pos + 2);
     }
-    lenEl.textContent = input.value.length;
   });
 
   function showText()  { input.style.color = "#1a202c"; }
@@ -725,7 +778,7 @@ resetForm();
   submit.addEventListener("click", () => {
     const val = input.value.trim();
     if (!val) { result.textContent = "都道府県を入力してください"; result.style.color = ""; return; }
-    checkPref(val, result, () => { input.value = ""; gjInserted = false; lenEl.textContent = 0; });
+    checkPref(val, result, () => { input.value = ""; gjInserted = false; });
   });
 })();
 
@@ -1002,7 +1055,6 @@ resetForm();
   const countryEl   = document.getElementById("addr-country");
   const submit      = document.getElementById("addr-submit");
   const result      = document.getElementById("addr-result");
-
   autofillBtn.addEventListener("click", () => {
     if (!zipInput.value.trim()) { result.textContent = "郵便番号を入力してください"; return; }
     if (!/^\d{3}-\d{4}$/.test(zipInput.value.trim())) { result.textContent = "エラー：ハイフン（-）は必須です（例：123-4567）"; result.style.color = "#dc2626"; return; }
@@ -1044,17 +1096,20 @@ resetForm();
   });
 
   submit.addEventListener("click", () => {
+    const zip      = zipInput.value.trim();
+    const country  = countryEl.value.trim();
     const prefText = document.getElementById("addr-pref").value.trim();
     const pref     = prefText + selectedSuffix;
     const city     = cityInput.value.trim();
     const other1   = document.getElementById("addr-other1").value.trim();
     const other2   = document.getElementById("addr-other2").value.trim();
-    if (!prefText || !city || !other1) { result.textContent = "必須項目を入力してください"; result.style.color = ""; return; }
+    if (!zip || !country || !prefText || !city) { result.textContent = "必須項目を入力してください"; result.style.color = ""; return; }
+    if (!/^\d{3}-\d{4}$/.test(zip)) { result.textContent = "エラー：ハイフン（-）は必須です（例：123-4567）"; result.style.color = "#dc2626"; return; }
     if (!selectedSuffix) { result.textContent = "エラー：都・道・府・県のいずれかを選択してください"; result.style.color = "#dc2626"; return; }
     if (!/[市区町村]$/.test(city)) { result.textContent = "エラー：市区町村は「市」「区」「町」「村」で終わる必要があります"; result.style.color = "#dc2626"; return; }
     if (!targetPref) { result.textContent = "先にNo.0で都道府県を設定してください"; result.style.color = "#dc2626"; return; }
     if (pref !== targetPref) {
-      result.textContent = "一致しません"; result.style.color = "#dc2626";
+      result.textContent = `「${pref}」は一致しません`; result.style.color = "#dc2626";
       document.getElementById("addr-pref").value = ""; selectedSuffix = "";
       suffixBtns.forEach(b => b.classList.remove("active"));
       return;
