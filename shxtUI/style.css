@@ -1018,3 +1018,16 @@ input[type="range"] {
 .lwiz-dot-active {
   background: #0078d7;
 }
+
+@keyframes numpad-clear-flash {
+  0%   { background: #dc2626; color: #fff; transform: scale(1.35); box-shadow: 0 0 0 4px #fca5a5; }
+  20%  { background: #ef4444; color: #fff; transform: scale(1.25); box-shadow: 0 0 0 8px #fca5a5; }
+  40%  { background: #dc2626; color: #fff; transform: scale(1.35); box-shadow: 0 0 0 4px #fca5a5; }
+  70%  { background: #ef4444; color: #fff; transform: scale(1.25); box-shadow: 0 0 0 8px #fca5a5; }
+  90%  { background: #dc2626; color: #fff; transform: scale(1.2);  box-shadow: 0 0 0 4px #fca5a5; }
+  100% { background: "";      color: "";   transform: scale(1);    box-shadow: none; }
+}
+
+.numpad-clear-flash {
+  animation: numpad-clear-flash 1.2s ease forwards;
+}

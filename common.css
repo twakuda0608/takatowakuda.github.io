@@ -60,7 +60,9 @@ h1 {
   backdrop-filter: saturate(1.2) blur(4px);
   border: 1px solid #e4e4e4;
   color: #333;
-  text-decoration: none;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
   box-shadow: 0 4px 14px rgba(0,0,0,.08);
   transition: transform .1s, background .2s;
 }
