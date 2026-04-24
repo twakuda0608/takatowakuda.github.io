@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>条件式を学ぼう</title>
+  <link rel="stylesheet" href="/common.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <h1>条件式を学ぼう</h1>
+    <p class="lead">True か False かを判定する式の書き方を理解しよう</p>
+
+    <!-- ===== 比較演算子 ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge cmp-badge">比較演算子</span>
+        <h2>2つの値を比べる</h2>
+      </div>
+
+      <div class="controls-row">
+        <div class="input-group">
+          <label class="input-label">a の値</label>
+          <input class="demo-input mono" id="aInput" type="number" value="5">
+        </div>
+        <div class="input-group">
+          <label class="input-label">b の値</label>
+          <input class="demo-input mono" id="bInput" type="number" value="3">
+        </div>
+      </div>
+
+      <div class="cmp-table" id="cmpTable"></div>
+
+      <div class="code-block">
+        <div class="code-label">Python コード</div>
+        <pre><code id="cmpCode"></code></pre>
+      </div>
+    </section>
+
+    <!-- ===== 論理演算子 ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge logic-badge">論理演算子</span>
+        <h2>条件を組み合わせる</h2>
+      </div>
+
+      <div class="logic-toggles">
+        <div class="toggle-group">
+          <div class="toggle-label">A</div>
+          <button class="toggle-btn" id="toggleA" data-val="true">True</button>
+        </div>
+        <div class="toggle-group">
+          <div class="toggle-label">B</div>
+          <button class="toggle-btn" id="toggleB" data-val="false">False</button>
+        </div>
+      </div>
+
+      <div class="logic-table" id="logicTable"></div>
+
+      <div class="code-block">
+        <div class="code-label">Python コード</div>
+        <pre><code id="logicCode"></code></pre>
+      </div>
+
+      <div class="concept-note">
+        <strong>and</strong>：両方 True のときだけ True<br>
+        <strong>or</strong>：どちらか一方でも True なら True<br>
+        <strong>not</strong>：True ↔ False を反転
+      </div>
+    </section>
+
+    <!-- ===== 組み合わせ ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge combo-badge">組み合わせ</span>
+        <h2>比較 + 論理を組み合わせる</h2>
+      </div>
+
+      <div class="controls-row">
+        <div class="input-group">
+          <label class="input-label">score の値</label>
+          <input class="demo-input mono" id="scoreInput" type="number" value="72" min="0" max="100">
+        </div>
+      </div>
+
+      <div class="combo-table" id="comboTable"></div>
+
+      <div class="code-block">
+        <div class="code-label">Python コード</div>
+        <pre><code id="comboCode"></code></pre>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="app.js" defer></script>
+  <script src="/common.js"></script>
+</body>
+</html>

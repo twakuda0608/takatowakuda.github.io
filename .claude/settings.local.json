@@ -25,7 +25,9 @@
       "Bash(mkdir -p \"C:\\\\Users\\\\Takato Wakuda\\\\documents\\\\website\\\\学習\\\\変数リスト\")",
       "Bash(cp \"C:\\\\Users\\\\Takato Wakuda\\\\documents\\\\website\\\\programming/index.html\" \"C:\\\\Users\\\\Takato Wakuda\\\\documents\\\\website\\\\学習\\\\変数リスト/index.html\")",
       "Bash(cp \"C:\\\\Users\\\\Takato Wakuda\\\\documents\\\\website\\\\programming/style.css\" \"C:\\\\Users\\\\Takato Wakuda\\\\documents\\\\website\\\\学習\\\\変数リスト/style.css\")",
-      "Bash(cp \"C:\\\\Users\\\\Takato Wakuda\\\\documents\\\\website\\\\programming/app.js\" \"C:\\\\Users\\\\Takato Wakuda\\\\documents\\\\website\\\\学習\\\\変数リスト/app.js\")"
+      "Bash(cp \"C:\\\\Users\\\\Takato Wakuda\\\\documents\\\\website\\\\programming/app.js\" \"C:\\\\Users\\\\Takato Wakuda\\\\documents\\\\website\\\\学習\\\\変数リスト/app.js\")",
+      "PowerShell(Rename-Item *)",
+      "PowerShell(Move-Item *)"
     ]
   }
 }
