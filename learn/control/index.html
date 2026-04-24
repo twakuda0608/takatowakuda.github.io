@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>if・for・while を学ぼう</title>
+  <link rel="stylesheet" href="/common.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <h1>if・for・while を学ぼう</h1>
+    <p class="lead">プログラムの「判断」と「繰り返し」の仕組みを理解しよう</p>
+
+    <!-- ===== if ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge if-badge">if</span>
+        <h2>if 文（条件分岐）</h2>
+      </div>
+
+      <!-- Flowchart -->
+      <div class="fc">
+        <div class="fc-box fc-cond" id="ifCondBox">
+          <span class="kw">if</span> score &gt;= <span id="ifThreshDisplay">60</span>:
+        </div>
+        <div class="fc-fork">
+          <div class="fc-fork-branch true-branch" id="trueBranch">
+            <div class="fc-fork-lbl">True ✓</div>
+            <div class="fc-branch-box if-true-box">print("合格！")</div>
+          </div>
+          <div class="fc-fork-branch false-branch" id="falseBranch">
+            <div class="fc-fork-lbl">False ✗</div>
+            <div class="fc-branch-box if-false-box">print("不合格")</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Indent visualizer -->
+      <div class="iv">
+        <div class="iv-line">
+          <code><span class="kw">if</span> score &gt;= 60:</code>
+          <span class="iv-tag">← 条件</span>
+        </div>
+        <div class="iv-scope iv-if-scope">
+          <div class="iv-line">
+            <code>    print("合格！")</code>
+            <span class="iv-tag">← True のとき実行</span>
+          </div>
+        </div>
+        <div class="iv-line">
+          <code><span class="kw">else</span>:</code>
+        </div>
+        <div class="iv-scope iv-else-scope">
+          <div class="iv-line">
+            <code>    print("不合格")</code>
+            <span class="iv-tag">← False のとき実行</span>
+          </div>
+        </div>
+        <div class="iv-line iv-outside">
+          <code>print("終わり")</code>
+          <span class="iv-tag">← if の外（必ず実行）</span>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <div class="input-group">
+          <label class="input-label">score の値</label>
+          <input class="demo-input mono" id="ifScoreInput" type="number" value="75" min="0" max="100">
+        </div>
+        <div class="input-group">
+          <label class="input-label">しきい値</label>
+          <input class="demo-input mono" id="ifThreshInput" type="number" value="60" min="0" max="100">
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">Python コード</div>
+        <pre><code id="ifCode"></code></pre>
+      </div>
+
+      <div class="concept-note">
+        <code>elif</code> を使うと3つ以上の条件を順番にチェックできます。<br>
+        例：<code>if score &gt;= 80: ... elif score &gt;= 60: ... else: ...</code>
+      </div>
+    </section>
+
+    <!-- ===== for ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge for-badge">for</span>
+        <h2>for 文（回数を決めた繰り返し）</h2>
+      </div>
+
+      <!-- Loop flowchart -->
+      <div class="lfc">
+        <div class="lfc-top">
+          <div class="fc-box fc-cond for-cond">
+            <span class="kw">for</span> i <span class="kw">in</span> range(<span id="forFcN">5</span>):
+          </div>
+          <div class="lfc-exit">
+            <span class="lfc-exit-arrow">→ 全部終わったら</span>
+            <div class="fc-box fc-end">終了</div>
+          </div>
+        </div>
+        <div class="lfc-body for-lfc-body">
+          <div class="fc-box fc-action for-action">
+            ループ内処理<br>
+            <small class="fc-action-hint">（インデントされたコード）</small>
+          </div>
+          <div class="lfc-back-arrow">↑ i を次に進めて戻る</div>
+        </div>
+      </div>
+
+      <!-- Indent visualizer -->
+      <div class="iv">
+        <div class="iv-line">
+          <code><span class="kw">for</span> i <span class="kw">in</span> range(3):</code>
+          <span class="iv-tag">← ループヘッダー</span>
+        </div>
+        <div class="iv-scope iv-for-scope">
+          <div class="iv-line">
+            <code>    print(i)</code>
+            <span class="iv-tag">← 毎回実行される（3回）</span>
+          </div>
+          <div class="iv-line">
+            <code>    print("hello")</code>
+            <span class="iv-tag">← 毎回実行される（3回）</span>
+          </div>
+        </div>
+        <div class="iv-line iv-outside">
+          <code>print("done")</code>
+          <span class="iv-tag">← ループ後に1回だけ</span>
+        </div>
+      </div>
+
+      <!-- Step demo -->
+      <div class="for-visual" id="forVisual"></div>
+      <p class="step-hint" id="forHint">▶ ボタンを押してステップを確認しよう</p>
+
+      <div class="controls-row">
+        <div class="input-group">
+          <label class="input-label">range(n) の n</label>
+          <input class="demo-input mono" id="forNInput" type="number" value="5" min="1" max="8">
+        </div>
+        <button class="action-btn for-step-btn" id="forStepBtn">▶ 次へ</button>
+        <button class="action-btn reset-btn" id="forResetBtn">↩ リセット</button>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">Python コード</div>
+        <pre><code id="forCode"></code></pre>
+      </div>
+
+      <div class="concept-note">
+        リストに対しても使えます：<code>for item in fruits: print(item)</code>
+      </div>
+    </section>
+
+    <!-- ===== while ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge while-badge">while</span>
+        <h2>while 文（条件つき繰り返し）</h2>
+      </div>
+
+      <!-- Loop flowchart -->
+      <div class="lfc">
+        <div class="lfc-top">
+          <div class="fc-box fc-cond while-cond">
+            <span class="kw">while</span> count &lt; <span id="whileFcLimit">5</span>:
+          </div>
+          <div class="lfc-exit">
+            <span class="lfc-exit-arrow">→ False になったら</span>
+            <div class="fc-box fc-end">終了</div>
+          </div>
+        </div>
+        <div class="lfc-body while-lfc-body">
+          <div class="fc-box fc-action while-action">
+            ループ内処理<br>
+            <small class="fc-action-hint">（インデントされたコード）</small>
+          </div>
+          <div class="lfc-back-arrow">↑ 条件チェックに戻る</div>
+        </div>
+      </div>
+
+      <!-- Indent visualizer -->
+      <div class="iv">
+        <div class="iv-line">
+          <code><span class="kw">while</span> count &lt; 5:</code>
+          <span class="iv-tag">← 条件が True の間ループ</span>
+        </div>
+        <div class="iv-scope iv-while-scope">
+          <div class="iv-line">
+            <code>    count += 1</code>
+            <span class="iv-tag">← 毎回実行される</span>
+          </div>
+          <div class="iv-line">
+            <code>    print(count)</code>
+            <span class="iv-tag">← 毎回実行される</span>
+          </div>
+        </div>
+        <div class="iv-line iv-outside">
+          <code>print("終わり")</code>
+          <span class="iv-tag">← ループ後に1回だけ</span>
+        </div>
+      </div>
+
+      <!-- Step demo -->
+      <div class="while-visual">
+        <div class="while-var-area">
+          <div class="sub-label">count の値</div>
+          <div class="var-box" id="whileVarBox">
+            <div class="var-tag">count</div>
+            <div class="var-val" id="whileCountVal">0</div>
+          </div>
+        </div>
+        <div class="while-flow">
+          <div class="flow-step" id="whileCondStep">
+            <div class="flow-step-title">① 条件チェック</div>
+            <div class="flow-step-body" id="whileCondText">count &lt; 5</div>
+            <div class="flow-result" id="whileCondResult">—</div>
+          </div>
+          <div class="flow-arrow">↓ True のときループ内へ</div>
+          <div class="flow-step" id="whileBodyStep">
+            <div class="flow-step-title">② ループ内処理</div>
+            <div class="flow-step-body">count += 1</div>
+          </div>
+          <div class="flow-arrow">↑ ①に戻る</div>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <div class="input-group">
+          <label class="input-label">上限値</label>
+          <input class="demo-input mono" id="whileLimitInput" type="number" value="5" min="1" max="10">
+        </div>
+        <button class="action-btn while-step-btn" id="whileStepBtn">▶ 次のステップ</button>
+        <button class="action-btn reset-btn" id="whileResetBtn">↩ リセット</button>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">Python コード</div>
+        <pre><code id="whileCode"></code></pre>
+      </div>
+
+      <div class="concept-note">
+        ループを途中で抜けるには <code>break</code>、次のループにスキップするには <code>continue</code> を使います。<br>
+        <code>while True:</code> にすると無限ループになります。
+      </div>
+    </section>
+
+    <!-- ===== インデント ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <h2>インデント（字下げ）でスコープを決める</h2>
+      </div>
+
+      <div class="iv nested-iv">
+        <div class="iv-line">
+          <code><span class="kw">for</span> i <span class="kw">in</span> range(3):</code>
+          <span class="iv-tag iv-tag-for">← for ループ</span>
+        </div>
+        <div class="iv-scope iv-for-scope">
+          <div class="iv-line">
+            <code>    <span class="kw">if</span> i &gt; 0:</code>
+            <span class="iv-tag iv-tag-for">← for の中の if</span>
+          </div>
+          <div class="iv-scope iv-if-scope">
+            <div class="iv-line">
+              <code>        print(i)</code>
+              <span class="iv-tag iv-tag-if">← for かつ if の中</span>
+            </div>
+          </div>
+          <div class="iv-line">
+            <code>    print("A")</code>
+            <span class="iv-tag iv-tag-for">← for の中、if の外</span>
+          </div>
+        </div>
+        <div class="iv-line iv-outside">
+          <code>print("done")</code>
+          <span class="iv-tag iv-tag-out">← 全部の外（1回だけ）</span>
+        </div>
+      </div>
+
+      <div class="indent-rule">
+        <div class="indent-rule-item">
+          <div class="indent-rule-bar" style="background:var(--for-color)"></div>
+          <span>スペース <strong>4つ</strong> → for ループの中</span>
+        </div>
+        <div class="indent-rule-item">
+          <div class="indent-rule-bar" style="background:var(--if-color)"></div>
+          <span>スペース <strong>8つ</strong> → for の中の if の中</span>
+        </div>
+        <div class="indent-rule-item">
+          <div class="indent-rule-bar" style="background:#94a3b8"></div>
+          <span>字下げ <strong>なし</strong> → どのブロックの外</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== for vs while ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <h2>for と while のちがい</h2>
+      </div>
+      <div class="compare-grid">
+        <div class="compare-card for-theme">
+          <div class="compare-title">for 文</div>
+          <ul class="compare-list">
+            <li>繰り返す<strong>回数がわかっている</strong>とき</li>
+            <li>リストや range を順番に処理</li>
+            <li>終わりが明確</li>
+          </ul>
+          <div class="compare-code">for i in range(5):</div>
+        </div>
+        <div class="compare-card while-theme">
+          <div class="compare-title">while 文</div>
+          <ul class="compare-list">
+            <li>繰り返す<strong>回数がわからない</strong>とき</li>
+            <li>条件が False になるまで続ける</li>
+            <li>無限ループに注意</li>
+          </ul>
+          <div class="compare-code">while count &lt; 5:</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="app.js" defer></script>
+  <script src="/common.js"></script>
+</body>
+</html>
