@@ -7,32 +7,62 @@
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <h1>個人のウェブサイト</h1>
-<div class="profile">
-  <img src="Wave.jpg" alt="プロフィール画像">
-</div>
-  <p>便利ツールまとめ</p>
+  <div class="container">
 
-    <section class="intro">
-    <p>
-      こんにちは。このページはHTMLの勉強を目的とした、自分用のサイトです。
-      自分が最も使いやすい形になるように作っています。
-    </p>
-  </section>
+    <header class="site-header">
+      <img class="avatar" src="Wave.jpg" alt="">
+      <div class="header-text">
+        <h1>Takato Wakuda</h1>
+        <p class="tagline">HTMLの勉強を目的とした個人サイト</p>
+      </div>
+    </header>
 
-  <ul class="tool-grid">
-    <li><a href="/mahjong/" data-desc="麻雀の集計が行えるサイト。ウマオカ">麻雀点数計算</a></li>
-    <li><a href="/test/" data-desc="勉強を目的としたサイト">勉強用サイト</a></li>
-    <li><a href="/currency/" data-desc="複数の為替変換ができるサイト">為替変換</a></li>
-    <li><a href="/dateCalculator/" data-desc="とある日付からの今日までの日数が調べられるサイト">日付計算</a></li>
-    <li><a href="/binary/" data-desc="2進数と10進数を視覚的に理解できるサイト">2進数変換器</a></li>
-    <li><a href="/kanji/" data-desc="漢字を習う学年が調べられるサイト">いつならった漢字？</a></li>
-    <li><a href="/shxtUI/" data-desc="逆に使いづらいUIを体験してみてください">クソUI選手権</a></li>
-    <li><a href="/learn/" data-desc="プログラミングや知識を学べるページ集">学習</a></li>
+    <p class="intro">こんにちは。自分が最も使いやすい形になるように作っています。</p>
 
-  </ul>
-  <footer>
-    <p style="font-size:0.8em;color:#666;">© 2026 Takato Wakuda</p>
-  </footer>
+    <hr class="divider">
+
+    <main>
+      <p class="section-label">ツール一覧</p>
+      <ul class="tool-grid">
+        <li><a href="/mahjong/">
+          <span class="tool-name">麻雀点数計算</span>
+          <span class="tool-desc">麻雀の集計・ウマオカ精算</span>
+        </a></li>
+        <li><a href="/test/">
+          <span class="tool-name">勉強用サイト</span>
+          <span class="tool-desc">勉強を目的としたサイト</span>
+        </a></li>
+        <li><a href="/currency/">
+          <span class="tool-name">為替変換</span>
+          <span class="tool-desc">複数の通貨をまとめて変換</span>
+        </a></li>
+        <li><a href="/dateCalculator/">
+          <span class="tool-name">日付計算</span>
+          <span class="tool-desc">指定日からの経過日数</span>
+        </a></li>
+        <li><a href="/binary/">
+          <span class="tool-name">2進数変換器</span>
+          <span class="tool-desc">2進数と10進数を視覚的に理解</span>
+        </a></li>
+        <li><a href="/kanji/">
+          <span class="tool-name">いつ習った漢字？</span>
+          <span class="tool-desc">漢字を習う学年を調べる</span>
+        </a></li>
+        <li><a href="/shxtUI/">
+          <span class="tool-name">クソUI選手権</span>
+          <span class="tool-desc">わざと使いづらいUIを体験</span>
+        </a></li>
+        <li><a href="/learn/">
+          <span class="tool-name">学習</span>
+          <span class="tool-desc">プログラミングを図で学べるページ集</span>
+        </a></li>
+      </ul>
+    </main>
+
+    <footer>
+      <p>© 2026 Takato Wakuda</p>
+    </footer>
+
+  </div>
 </body>
 </html>
