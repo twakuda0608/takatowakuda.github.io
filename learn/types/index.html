@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>数値と文字列を学ぼう</title>
+  <link rel="stylesheet" href="/common.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <h1>数値と文字列を学ぼう</h1>
+    <p class="lead">int（整数）と str（文字列）のちがいを図で理解しよう</p>
+
+    <!-- ===== Section 1: 型 ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge type-badge">型</span>
+        <h2>int と str はどうちがう？</h2>
+      </div>
+      <div class="controls-row">
+        <div class="input-group">
+          <label class="input-label">値を入力</label>
+          <input class="demo-input mono" id="typeInput" type="text" value="42" maxlength="12">
+        </div>
+      </div>
+      <div id="typeCompare"></div>
+    </section>
+
+    <!-- ===== Section 2: + 演算子 ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge plus-badge">+ 演算子</span>
+        <h2>型によって + のはたらきが変わる</h2>
+      </div>
+      <div class="plus-controls">
+        <div class="operand-group">
+          <label class="input-label">左の値</label>
+          <input class="demo-input mono" id="valA" type="text" value="3">
+          <div class="type-toggle-row">
+            <button class="type-toggle int-toggle active" id="typeAInt">int</button>
+            <button class="type-toggle str-toggle"       id="typeAStr">str</button>
+          </div>
+        </div>
+        <div class="plus-mid">+</div>
+        <div class="operand-group">
+          <label class="input-label">右の値</label>
+          <input class="demo-input mono" id="valB" type="text" value="5">
+          <div class="type-toggle-row">
+            <button class="type-toggle int-toggle active" id="typeBInt">int</button>
+            <button class="type-toggle str-toggle"       id="typeBStr">str</button>
+          </div>
+        </div>
+      </div>
+      <div id="plusDiagram"></div>
+      <div class="code-block">
+        <div class="code-label">Python コード</div>
+        <pre><code id="plusCode"></code></pre>
+      </div>
+    </section>
+
+    <!-- ===== Section 3: 型変換 ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge conv-badge">型変換</span>
+        <h2>int() と str() で型を変える</h2>
+      </div>
+      <div class="controls-row">
+        <div class="input-group">
+          <label class="input-label">数値を入力</label>
+          <input class="demo-input mono" id="convInput" type="number" value="7">
+        </div>
+      </div>
+      <div id="convDiagram"></div>
+      <div class="code-block">
+        <div class="code-label">Python コード</div>
+        <pre><code id="convCode"></code></pre>
+      </div>
+    </section>
+
+  </div>
+  <script src="app.js" defer></script>
+  <script src="/common.js"></script>
+</body>
+</html>
