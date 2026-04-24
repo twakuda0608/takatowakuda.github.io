@@ -56,6 +56,19 @@
         </div>
       </div>
 
+      <div class="venn-diagrams">
+        <div class="venn-wrap">
+          <div class="venn-op-label and-label">and</div>
+          <svg id="vennAnd" class="venn-svg" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg"></svg>
+          <div class="venn-caption">緑の部分が True になる範囲</div>
+        </div>
+        <div class="venn-wrap">
+          <div class="venn-op-label or-label">or</div>
+          <svg id="vennOr" class="venn-svg" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg"></svg>
+          <div class="venn-caption">緑の部分が True になる範囲</div>
+        </div>
+      </div>
+
       <div class="logic-table" id="logicTable"></div>
 
       <div class="code-block">
@@ -63,10 +76,34 @@
         <pre><code id="logicCode"></code></pre>
       </div>
 
-      <div class="concept-note">
-        <strong>and</strong>：両方 True のときだけ True<br>
-        <strong>or</strong>：どちらか一方でも True なら True<br>
-        <strong>not</strong>：True ↔ False を反転
+      <div class="truth-tables">
+        <div class="truth-section">
+          <div class="truth-sec-header">
+            <span class="truth-badge and-badge">and</span>
+            <span class="truth-sec-title">の全パターン</span>
+          </div>
+          <div id="andTruth"></div>
+        </div>
+        <div class="truth-section">
+          <div class="truth-sec-header">
+            <span class="truth-badge or-badge">or</span>
+            <span class="truth-sec-title">の全パターン</span>
+          </div>
+          <div id="orTruth"></div>
+        </div>
+      </div>
+
+      <div class="op-notes">
+        <div class="op-note and-note">
+          <div class="op-note-title">and（かつ）</div>
+          <p>A <strong>も</strong> B <strong>も</strong>両方 True のときだけ True になる</p>
+          <p class="op-note-ex">例：「点数が60以上 and 提出物あり」<br>→ 両方クリアして初めて True</p>
+        </div>
+        <div class="op-note or-note">
+          <div class="op-note-title">or（または）</div>
+          <p>A か B の<strong>どちらか一方</strong>でも True なら True になる</p>
+          <p class="op-note-ex">例：「土曜日 or 日曜日」<br>→ どちらかなら True</p>
+        </div>
       </div>
     </section>
 
