@@ -1,212 +1,129 @@
-/* ======================================
-   ベース設定：深みのある動的な背景
-====================================== */
-:root {
-  --bg1: #ffffff;
-  --bg2: #e2e8f0;
-
-  --text: #1a202c;
-  --muted: #64748b;
-
-  --brand1: #0078d7;
-  --brand2: #00d4ff;
-
-  --card: rgba(255, 255, 255, 0.72);
-  --card-border: rgba(255, 255, 255, 0.35);
-
-  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.10), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-hover: 0 20px 25px -5px rgba(0, 120, 215, 0.25);
-
-  --radius: 16px;
-  --ring: rgba(0, 212, 255, 0.65);
-}
-body {
-  font-family: 'Noto Sans JP', 'Helvetica Neue', sans-serif;
-  background: radial-gradient(circle at top left, var(--bg1), var(--bg2));
-  color: #333;
+* {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  text-align: center;
 }
 
-/* ======================================
-   見出し
-====================================== */
-h1 {
-  margin-top: 60px;
-  font-size: 2.2em;
-  color: #0078d7;
-  letter-spacing: 2px;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+body {
+  background: #fafafa;
+  color: #111;
+  font-family: "Helvetica Neue", "Hiragino Sans", "Yu Gothic", sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
 }
 
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 64px 28px 80px;
+}
 
-/* プロフィール画像 */
-.profile {
-  margin-top: 20px;
+/* ===== Header ===== */
+.site-header {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  gap: 22px;
+  margin-bottom: 20px;
 }
 
-.profile img {
-  width: 160px;
-  height: 160px;
-  object-fit: cover;       /* ← 正方形トリミングの核心 */
-  border-radius: 20px;     /* ← 角丸（円にしたいなら50%） */
-
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-  border: 4px solid white;
-
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+.avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid #e0e0e0;
 }
 
-/* ホバーで浮く */
-.profile img:hover {
-  transform: translateY(-6px) scale(1.03);
-  box-shadow: 0 20px 40px rgba(0, 120, 215, 0.25);
+.header-text h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -.3px;
+  color: #111;
+  margin-bottom: 2px;
 }
-/* ======================================
-   説明文
-====================================== */
-p {
-  font-size: 1.2em;
+
+.tagline {
+  font-size: .88rem;
+  color: #888;
+}
+
+/* ===== Intro ===== */
+.intro {
+  font-size: .9rem;
   color: #555;
-  margin-bottom: 30px;
+  margin-bottom: 36px;
+  max-width: 560px;
 }
 
-/* ======================================
-   リンク部分
-====================================== */
+/* ===== Divider ===== */
+.divider {
+  border: none;
+  border-top: 1px solid #e5e5e5;
+  margin-bottom: 28px;
+}
+
+/* ===== Section label ===== */
+.section-label {
+  font-size: .72rem;
+  font-weight: 700;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 14px;
+}
+
+/* ===== Tool grid ===== */
 .tool-grid {
   list-style: none;
-  padding: 0;
-  margin: 40px auto;
-  width: min(1000px, 92%);
   display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(3, 1fr);
-}
-
-@media (max-width: 900px) {
-  .tool-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.tool-grid li {
-  position: relative;
-  z-index: 0;
-}
-
-.tool-grid li:hover,
-.tool-grid li:focus-within {
-  z-index: 20;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+  margin-bottom: 64px;
 }
 
 .tool-grid a {
-  position: relative;
-  display: block;
-  background: #0078d7;
-  color: white;
-  padding: 14px 18px;
-  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 18px 20px;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
   text-decoration: none;
-  font-weight: 500;
-  transition: background 0.2s ease, transform 0.2s ease;
+  color: inherit;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
 }
 
 .tool-grid a:hover {
-  background: #005bb5;
+  border-color: #999;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .07);
   transform: translateY(-2px);
 }
 
-.tool-grid a:active {
-  background: #003f88;
-  transform: scale(0.97);
+.tool-name {
+  font-size: .97rem;
+  font-weight: 600;
+  color: #111;
 }
 
-.tool-grid a:focus {
-  outline: 3px solid #66ccff;
-  outline-offset: 3px;
+.tool-desc {
+  font-size: .8rem;
+  color: #999;
+  line-height: 1.5;
 }
 
-/* ======================================
-   ツールチップ
-====================================== */
-.tool-grid a::after {
-  content: attr(data-desc);
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 10px);
-  transform: translateX(-50%) translateY(6px);
-  background: rgba(30, 41, 59, 0.95);
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 0.85em;
-  font-weight: 400;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  z-index: 100;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
-}
-
-.tool-grid a::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 100%;
-  transform: translateX(-50%);
-  border: 6px solid transparent;
-  border-top: 0;
-  border-bottom-color: rgba(30, 41, 59, 0.95);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  z-index: 100;
-}
-
-.tool-grid a:hover::after,
-.tool-grid a:hover::before,
-.tool-grid a:focus::after,
-.tool-grid a:focus::before {
-  opacity: 1;
-}
-
-.tool-grid a:hover::after,
-.tool-grid a:focus::after {
-  transform: translateX(-50%) translateY(0);
-}
-
-
-/* ======================================
-   フッター
-====================================== */
+/* ===== Footer ===== */
 footer {
-  margin-top: 60px;
-  padding: 20px 0;
-  background-color: #f1f3f5;
-  color: #666;
-  font-size: 0.9em;
-  border-top: 1px solid #ddd;
+  font-size: .78rem;
+  color: #bbb;
+  border-top: 1px solid #e5e5e5;
+  padding-top: 20px;
 }
 
-
-/* ======================================
-   スマホ対応
-====================================== */
-@media (max-width: 600px) {
-  h1 {
-    font-size: 1.8em;
-  }
-
-  .tool-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .tool-grid a {
-    width: 100%;
-    box-sizing: border-box;
-  }
+/* ===== Mobile ===== */
+@media (max-width: 480px) {
+  .container { padding: 40px 20px 60px; }
+  .header-text h1 { font-size: 1.4rem; }
+  .tool-grid { grid-template-columns: 1fr 1fr; }
 }
