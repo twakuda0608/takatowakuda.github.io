@@ -1,3 +1,6 @@
+let currentStartDate = null;
+const customRowUpdaters = [];
+
 function formatDate(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -8,11 +11,7 @@ function formatDate(date) {
 function formatWareki(date) {
   return new Intl.DateTimeFormat(
     "ja-JP-u-ca-japanese",
-    {
-      year: "numeric",
-      month: "long",
-      day: "numeric"
-    }
+    { year: "numeric", month: "long", day: "numeric" }
   ).format(date);
 }
 
@@ -22,16 +21,35 @@ function addDays(baseDate, days) {
   return d;
 }
 
-function calculate() {
-  const input = document.getElementById("inputDate").value;
-  const resultDiv = document.getElementById("result");
+function milestoneStatus(milestoneDate, today, msPerDay) {
+  const diff = Math.floor((milestoneDate - today) / msPerDay);
+  if (diff > 0) return `（あと ${diff} 日）`;
+  if (diff === 0) return "（ちょうど今日）";
+  return `（${-diff} 日前に到達）`;
+}
 
-  if (!input) {
+function calculate() {
+  const y = document.getElementById("inputYear").value.trim();
+  const m = document.getElementById("inputMonth").value.trim();
+  const d = document.getElementById("inputDay").value.trim();
+  const resultDiv = document.getElementById("result");
+  const milestoneSection = document.getElementById("milestoneSection");
+
+  if (!y || !m || !d) {
     resultDiv.textContent = "日付を入力してください．";
+    milestoneSection.hidden = true;
     return;
   }
 
-  const startDate = new Date(input);
+  const dateStr = `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+  const startDate = new Date(dateStr);
+
+  if (isNaN(startDate.getTime())) {
+    resultDiv.textContent = "無効な日付です．";
+    milestoneSection.hidden = true;
+    return;
+  }
+
   const wareki = formatWareki(startDate);
   const today = new Date();
 
@@ -44,71 +62,32 @@ function calculate() {
 
   if (totalDays < 0) {
     resultDiv.textContent = "未来の日付です．";
+    milestoneSection.hidden = true;
     return;
   }
 
   const weeks = Math.floor(totalDays / 7);
   const daysAfterWeeks = totalDays % 7;
 
-  // ===== 年・月・日 計算 =====
-  let years = 0;
-  let months = 0;
+  let years = 0, months = 0;
   let tempDate = new Date(startDate);
 
-  // 年
   while (true) {
     const nextYear = new Date(tempDate);
     nextYear.setFullYear(nextYear.getFullYear() + 1);
-
-    if (nextYear <= today) {
-      years++;
-      tempDate = nextYear;
-    } else {
-      break;
-    }
+    if (nextYear <= today) { years++; tempDate = nextYear; } else break;
   }
 
   const daysAfterYears = Math.floor((today - tempDate) / msPerDay);
 
-  // 月
   while (true) {
     const nextMonth = new Date(tempDate);
     nextMonth.setMonth(nextMonth.getMonth() + 1);
-
-    if (nextMonth <= today) {
-      months++;
-      tempDate = nextMonth;
-    } else {
-      break;
-    }
+    if (nextMonth <= today) { months++; tempDate = nextMonth; } else break;
   }
 
-  // 日
   const remainingDays = Math.floor((today - tempDate) / msPerDay);
 
-  // ===== 記念日 =====
-  const milestones = [1000, 5000, 10000, 15000, 20000];
-  let milestoneHtml = "<h2>記念日</h2><ul>";
-
-  milestones.forEach((m) => {
-    const milestoneDate = addDays(startDate, m);
-    const diffFromToday = Math.floor((milestoneDate - today) / msPerDay);
-
-    let statusText = "";
-    if (diffFromToday > 0) {
-      statusText = `（あと ${diffFromToday} 日）`;
-    } else if (diffFromToday === 0) {
-      statusText = "（ちょうど今日）";
-    } else {
-      statusText = `（${-diffFromToday} 日前に到達）`;
-    }
-
-    milestoneHtml += `<li>${m} 日目：${formatDate(milestoneDate)} ${statusText}</li>`;
-  });
-
-  milestoneHtml += "</ul>";
-
-  // ===== 表示 =====
   resultDiv.innerHTML = `
     <div class="result-card">
       <div class="result-title">入力した日付</div>
@@ -117,7 +96,6 @@ function calculate() {
         <p>（${wareki}）</p>
       </div>
     </div>
-
     <div class="result-card">
       <div class="result-title">経過期間</div>
       <div class="result-body">
@@ -127,20 +105,113 @@ function calculate() {
         <p>${years} 年 + ${daysAfterYears} 日</p>
       </div>
     </div>
-
-    ${milestoneHtml}
   `;
+
+  // 記念日（固定）
+  currentStartDate = startDate;
+  document.querySelectorAll("#milestoneList [data-days]").forEach(li => {
+    const days = parseInt(li.dataset.days, 10);
+    const mDate = addDays(startDate, days);
+    li.textContent = `${days} 日目：${formatDate(mDate)} ${milestoneStatus(mDate, today, msPerDay)}`;
+  });
+
+  // 記念日（カスタム）
+  customRowUpdaters.forEach(fn => fn());
+
+  milestoneSection.hidden = false;
+}
+
+function addCustomMilestoneRow() {
+  const list = document.getElementById("milestoneList");
+
+  const li = document.createElement("li");
+  li.className = "custom-milestone";
+
+  const input = document.createElement("input");
+  input.type = "number";
+  input.className = "milestone-input";
+  input.placeholder = "日数";
+  input.min = "1";
+
+  const resultSpan = document.createElement("span");
+  resultSpan.className = "milestone-result";
+
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.className = "remove-milestone-btn";
+  removeBtn.textContent = "×";
+
+  function updateRow() {
+    const val = parseInt(input.value, 10);
+    if (!currentStartDate || isNaN(val) || val <= 0) {
+      resultSpan.textContent = "";
+      return;
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const mDate = addDays(currentStartDate, val);
+    resultSpan.textContent = `${val} 日目：${formatDate(mDate)} ${milestoneStatus(mDate, today, msPerDay)}`;
+  }
+
+  input.addEventListener("input", updateRow);
+
+  removeBtn.addEventListener("click", () => {
+    const idx = customRowUpdaters.indexOf(updateRow);
+    if (idx !== -1) customRowUpdaters.splice(idx, 1);
+    li.remove();
+  });
+
+  li.append(input, resultSpan, removeBtn);
+  list.appendChild(li);
+  customRowUpdaters.push(updateRow);
+  input.focus();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const param = new URLSearchParams(location.search).get("date");
-  if (param) {
-    // 2020-1-1 のようなゼロ埋めなし形式も受け付ける
-    const parts = param.split("-");
-    if (parts.length === 3) {
-      const normalized = `${parts[0]}-${parts[1].padStart(2,"0")}-${parts[2].padStart(2,"0")}`;
-      document.getElementById("inputDate").value = normalized;
+  const calBtn     = document.getElementById("calBtn");
+  const hiddenDate = document.getElementById("hiddenDate");
+  const inputYear  = document.getElementById("inputYear");
+  const inputMonth = document.getElementById("inputMonth");
+  const inputDay   = document.getElementById("inputDay");
+
+  function syncHiddenDate() {
+    const y = inputYear.value.trim();
+    const m = inputMonth.value.trim();
+    const d = inputDay.value.trim();
+    if (y && m && d) {
+      hiddenDate.value = `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
     }
   }
+
+  calBtn.addEventListener("click", () => {
+    try { hiddenDate.showPicker(); } catch { hiddenDate.click(); }
+  });
+
+  hiddenDate.addEventListener("change", () => {
+    const [y, m, d] = hiddenDate.value.split("-");
+    inputYear.value  = parseInt(y, 10);
+    inputMonth.value = parseInt(m, 10);
+    inputDay.value   = parseInt(d, 10);
+    calculate();
+  });
+
+  [inputYear, inputMonth, inputDay].forEach(el =>
+    el.addEventListener("change", syncHiddenDate)
+  );
+
+  document.getElementById("addMilestoneBtn").addEventListener("click", addCustomMilestoneRow);
+
+  const param = new URLSearchParams(location.search).get("date");
+  if (param) {
+    const parts = param.split("-");
+    if (parts.length === 3) {
+      inputYear.value  = parseInt(parts[0], 10);
+      inputMonth.value = parseInt(parts[1], 10);
+      inputDay.value   = parseInt(parts[2], 10);
+    }
+  }
+
+  syncHiddenDate();
   calculate();
 });
