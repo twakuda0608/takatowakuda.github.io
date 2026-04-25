@@ -1,186 +1,256 @@
-/* ===== 共通レイアウト・ベーススタイル ===== */
+/* ===== Page-specific variables ===== */
+:root {
+  --max-width: 480px;
+  --text-muted: #666;
+  --border-color: #e0e0e0;
+}
 
-:root { --max: 480px; }
-
-.wrap{
-  max-width: var(--max);
+.wrap {
+  max-width: var(--max-width);
   margin: 0 auto;
   padding: 0 20px 40px;
 }
 
-/* タイトル */
-
-h1{
-  font-size: 20px;
-  margin: 0 0 12px;
+/* ===== Header ===== */
+.app-header {
+  text-align: center;
+  margin-bottom: 20px;
 }
 
-/* ===== 入力エリア ===== */
-
-fieldset{
-  border:1px solid #ddd;
-  border-radius:12px;
-  padding:16px;
-  margin:12px 0;
-  background:#fff;
+.subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 4px 0 0;
 }
 
-legend{
-  padding:0 6px;
-  font-size:13px;
-  color:#555;
+/* ===== Input card ===== */
+.config-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+  margin-bottom: 12px;
 }
 
-label{
-  font-size:14px;
-  color:#333;
-  display:block;
-  margin-bottom:8px;
+.section-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
 }
 
-input[type="date"]{
-  width:100%;
-  font-size:18px;
-  padding:10px;
-  border:1px solid #ccc;
-  border-radius:10px;
-  box-sizing:border-box;
-  margin-top:4px;
-  background:#fff;
+.date-selector-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
-.note{
-  font-size:12px;
-  color:#666;
-  margin-top:4px;
+.inputs-row {
+  display: flex;
+  flex: 1;
+  gap: 8px;
 }
 
-/* ボタン */
-
-button{
-  display:block;
-  width:100%;
-  margin-top:12px;
-  padding:10px 14px;
-  font-size:15px;
-  font-weight:500;
-  cursor:pointer;
-  border-radius:999px;
-  border:1px solid var(--brand);
-  background:var(--brand);
-  color:#fff;
-  box-shadow:0 3px 10px rgba(0,0,0,.08);
-  transition:background .15s, transform .1s, box-shadow .15s;
+.input-unit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
 }
 
-button:hover{
-  background:var(--brand-dark);
-  border-color:var(--brand-dark);
-  box-shadow:0 4px 14px rgba(0,0,0,.12);
+.input-unit input {
+  width: 100%;
+  padding: 10px 4px;
+  font-size: 17px;
+  font-weight: 500;
+  font-family: inherit;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  text-align: center;
+  background: #fff;
+  -moz-appearance: textfield;
 }
 
-button:active{
-  transform:scale(.98);
-  box-shadow:0 2px 6px rgba(0,0,0,.08);
+.input-unit input::-webkit-inner-spin-button,
+.input-unit input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+.input-unit span {
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
-button:focus-visible{
-  outline:3px solid #66ccff;
-  outline-offset:2px;
+/* ===== Calendar button ===== */
+.cal-anchor { position: relative; }
+
+#calBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: #fff;
+  color: var(--brand);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .2s, border-color .2s;
 }
 
-/* ===== 結果表示 ===== */
+#calBtn:hover { background: #f0f7ff; border-color: var(--brand); }
 
-#result{
-  margin-top:8px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
+#hiddenDate {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
 }
 
-/* 1つ1つのカード（期間まとめ・記念日など） */
-
-.result-card{
-  border:1px solid #e4e4e4;
-  border-radius:12px;
-  padding:12px;
-  background:#fff;
+/* ===== Calculate button ===== */
+.main-calc-btn {
+  width: 100%;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform .1s, background .2s;
 }
 
-.result-title{
-  font-size:14px;
-  font-weight:600;
-  margin:0 0 6px;
+.main-calc-btn:hover  { background: var(--brand-dark); }
+.main-calc-btn:active { transform: scale(.98); }
+
+/* ===== Result cards ===== */
+#result {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
-.result-body p{
+.result-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.result-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.result-body p {
   margin: 2px 0;
-  line-height: 1.4;   
+  line-height: 1.5;
 }
 
-.sumline{
-  font-variant-numeric: tabular-nums;
+/* ===== Milestones ===== */
+.milestones-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.muted{
-  color:#666;
+.milestones-list li {
+  padding: 6px 0;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
 }
 
-/* 記念日リスト */
+.milestones-list li:first-child { border-top: none; }
 
-.milestones{
-  list-style:none;
-  padding-left:0;
-  margin:4px 0 0;
+#addMilestoneBtn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--brand);
+  background: transparent;
+  color: var(--brand);
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.milestones li{
-  font-size:13px;
-  line-height:1.5;
-  padding:4px 0;
-  border-top:1px dashed #eee;
+#addMilestoneBtn:hover { background: #e8f3ff; }
+
+/* ===== Custom milestone row ===== */
+.custom-milestone {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  flex-wrap: wrap;
 }
 
-.milestones li:first-child{
-  border-top:none;
+.milestone-input {
+  width: 70px;
+  padding: 4px 6px;
+  font-size: inherit;
+  font-family: inherit;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  text-align: center;
+  -moz-appearance: textfield;
 }
 
-/* ステータスタグ（「今日」「あと◯日」など） */
+.milestone-input::-webkit-inner-spin-button,
+.milestone-input::-webkit-outer-spin-button { -webkit-appearance: none; }
 
-.badge{
-  display:inline-block;
-  padding:2px 8px;
-  margin-left:4px;
-  border-radius:999px;
-  font-size:11px;
-  line-height:1.6;
-  background:#e8f3ff;
-  color:var(--brand);
+.milestone-result {
+  flex: 1;
+  min-width: 0;
 }
 
-.badge--past{
-  background:#f3f3f3;
-  color:#666;
+.remove-milestone-btn {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  background: #fff;
+  color: #aaa;
+  font-size: 13px;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.badge--today{
-  background:#ffe9aa;
-  color:#a66900;
-}
+.remove-milestone-btn:hover { background: #ffeaea; border-color: #f99; color: #c00; }
 
-/* フッター */
-
-.footer{
-  font-size:12px;
-  color:#666;
-  margin-top:16px;
-  text-align:center;
-}
-
-/* ===== モバイル調整 ===== */
-
-@media (max-width: 480px){
-  body{
-    margin:16px;
-  }
+/* ===== Footer ===== */
+.footer {
+  margin-top: 32px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
 }
