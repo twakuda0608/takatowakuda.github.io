@@ -28,15 +28,20 @@ label{
 
 input, select{
   width:100%;
-  font-size:18px;
-  padding:10px;
+  font-size:15px;
+  padding:8px 10px;
   border:1px solid #ccc;
   border-radius:10px;
   box-sizing:border-box;
   margin-top:4px;
 }
 
-input[readonly]{ background:#fafafa; }
+input[readonly]{
+  background:#efefef;
+  color:#888;
+  border-color:#ddd;
+  cursor:default;
+}
 
 .note{ font-size:12px; color:#666; margin-top:4px; }
 
@@ -143,4 +148,363 @@ input[type="checkbox"]{ width:auto; }
     width:auto;
     margin-top:0;
   }
+}
+
+/* =========================
+   Record section (Tab 1)
+========================= */
+.login-hint { padding: 4px 0; }
+
+.rank-assign-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0;
+}
+.rank-assign-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.rank-label {
+  font-weight: 600;
+  min-width: 32px;
+  font-size: 14px;
+}
+.rank-pt-val {
+  font-variant-numeric: tabular-nums;
+  color: var(--brand);
+  min-width: 60px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.rank-assign-row select {
+  flex: 1;
+  font-size: 14px;
+  padding: 8px 10px;
+  width: auto;
+  margin-top: 0;
+}
+.record-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.record-btn {
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.record-btn:hover { background: var(--brand-dark); }
+.record-btn:disabled { opacity: 0.6; cursor: default; }
+.record-msg { font-size: 13px; }
+.record-msg.success { color: #059669; font-weight: 600; }
+.record-msg.error { color: #dc2626; }
+
+/* =========================
+   Login wall (Tab 3 logged out)
+========================= */
+.login-wall {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 36px 16px;
+  text-align: center;
+  color: #555;
+}
+.login-wall-icon { color: var(--muted-color, #64748b); }
+.login-wall p { margin: 0; line-height: 1.7; }
+.login-btn {
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-size: 15px;
+  cursor: pointer;
+}
+.login-btn:hover { background: var(--brand-dark); }
+
+/* =========================
+   User bar (Tab 3 logged in)
+========================= */
+.user-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 6px;
+  margin-bottom: 4px;
+}
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.user-name {
+  flex: 1;
+  font-weight: 600;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.logout-btn {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fafafa;
+  font-size: 13px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.logout-btn:hover { background: #f0f0f0; }
+
+/* =========================
+   Player grid (Tab 3)
+========================= */
+.player-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.player-grid label {
+  display: block;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+.player-grid label input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+/* =========================
+   Records table (Tab 3)
+========================= */
+.records-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 8px;
+}
+.records-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 300px;
+}
+.records-tbl th,
+.records-tbl td {
+  padding: 8px 10px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-soft, #e4e4e4);
+  white-space: nowrap;
+}
+.records-tbl thead th {
+  background: #f8fafc;
+  font-weight: 600;
+  font-size: 13px;
+}
+.records-tbl tfoot th {
+  background: #f0f9ff;
+  font-weight: 700;
+  border-top: 2px solid var(--brand);
+}
+.date-cell {
+  font-size: 12px;
+  color: #666;
+  text-align: left !important;
+}
+.pt-pos { color: #059669; font-weight: 600; }
+.pt-neg { color: #dc2626; font-weight: 600; }
+.rec-del-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #bbb;
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+}
+.rec-del-btn:hover { background: #fee2e2; color: #dc2626; }
+
+/* Edit match row */
+.match-actions-cell { white-space: nowrap; }
+.pt-edit-input {
+  width: 52px;
+  padding: 4px 6px;
+  font-size: 13px;
+  border: 1.5px solid var(--brand);
+  border-radius: 6px;
+  text-align: center;
+  margin: 0;
+}
+.edit-sum {
+  display: block;
+  font-size: 11px;
+  margin-bottom: 4px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.sum-ok { color: #059669; }
+.sum-ng { color: #dc2626; }
+.edit-save-btn {
+  display: block;
+  width: 100%;
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+.edit-save-btn:disabled { opacity: 0.45; cursor: default; }
+.edit-save-btn:not(:disabled):hover { background: var(--brand-dark); }
+
+/* =========================
+   My name setting (Tab 3)
+========================= */
+.myname-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 0 12px;
+  border-bottom: 1px solid var(--border-soft, #e4e4e4);
+  margin-bottom: 4px;
+}
+.myname-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  white-space: nowrap;
+}
+.player-name-input {
+  padding: 7px 10px;
+  font-size: 14px;
+  border: 1.5px solid var(--border, #ddd);
+  border-radius: 8px;
+  width: 110px;
+  box-sizing: border-box;
+  margin: 0;
+}
+.player-name-input:focus { border-color: var(--brand); outline: none; }
+
+/* =========================
+   Session players row (Tab 3)
+========================= */
+.session-players-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.session-players-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+}
+.player-edit-grid {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.player-edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* =========================
+   Session cards (Tab 3)
+========================= */
+.sessions-header {
+  margin: 12px 0 8px;
+}
+.sessions-empty {
+  text-align: center;
+  padding: 24px 0;
+}
+.session-card {
+  margin: 12px 0;
+}
+.session-legend {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand);
+}
+.session-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+.session-del-btn {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: #999;
+  cursor: pointer;
+}
+.session-del-btn:hover { border-color: #dc2626; color: #dc2626; background: #fee2e2; }
+
+/* =========================
+   All-time table (Tab 3)
+========================= */
+.alltime-tbl td { text-align: left !important; }
+.alltime-name { font-weight: 600; min-width: 80px; }
+
+/* =========================
+   Active session label (Tab 1)
+========================= */
+.session-label {
+  background: #f0f9ff;
+  border-left: 3px solid var(--brand);
+  padding: 6px 10px;
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 4px;
+}
+
+/* =========================
+   Player history (Tab 3)
+========================= */
+.history-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.history-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: #f8fafc;
+  border-radius: 6px;
+}
+.history-name {
+  flex: 1;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

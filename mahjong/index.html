@@ -15,6 +15,7 @@
     <div class="tabs">
       <button class="tabbtn active" data-tab="t1">ウマ/オカ 精算</button>
       <button class="tabbtn" data-tab="t2">総合ポイント精算</button>
+      <button class="tabbtn" data-tab="t3">戦績記録</button>
     </div>
 
     <!-- タブ1：ウマ/オカ 精算 -->
@@ -41,7 +42,7 @@
           </select>
         </label>
         <label class="checklabel">
-          <input id="decimal1" type="checkbox">
+          <input id="decimal1" type="checkbox" checked>
           小数点（0.1pt）まで計算する
         </label>
       </fieldset>
@@ -52,7 +53,6 @@
         <label>2位<input id="s2_1" type="number" value="300" /></label>
         <label>3位<input id="s3_1" type="number" value="200" /></label>
         <label>4位<input id="s4_1" type="number" value="100" /></label>
-        <div class="note">1位は「初期点×4 −（2位+3位+4位）」で自動計算。</div>
       </fieldset>
 
       <fieldset>
@@ -64,6 +64,46 @@
           <div class="card"><div class="rank">4位</div><div id="r4_1" class="sumline">—</div></div>
         </div>
         <div class="footer muted">出目（pt）の合計は常に0になります。</div>
+      </fieldset>
+
+      <!-- 記録セクション -->
+      <fieldset id="record-section">
+        <legend>ゲームを記録</legend>
+        <div id="record-needs-login" class="login-hint">
+          <p class="muted">記録するには「戦績記録」タブでログインしてください。</p>
+        </div>
+        <div id="record-no-session" class="login-hint" style="display:none">
+          <p class="muted">「戦績記録」タブでゲームを作成してください。</p>
+        </div>
+        <div id="record-logged-in" style="display:none">
+          <p id="active-session-label" class="note session-label"></p>
+          <div class="rank-assign-grid">
+            <div class="rank-assign-row">
+              <span class="rank-label">1位</span>
+              <span id="ra1-pt" class="rank-pt-val">—</span>
+              <select id="ra1"></select>
+            </div>
+            <div class="rank-assign-row">
+              <span class="rank-label">2位</span>
+              <span id="ra2-pt" class="rank-pt-val">—</span>
+              <select id="ra2"></select>
+            </div>
+            <div class="rank-assign-row">
+              <span class="rank-label">3位</span>
+              <span id="ra3-pt" class="rank-pt-val">—</span>
+              <select id="ra3"></select>
+            </div>
+            <div class="rank-assign-row">
+              <span class="rank-label">4位</span>
+              <span id="ra4-pt" class="rank-pt-val">—</span>
+              <select id="ra4"></select>
+            </div>
+          </div>
+          <div class="record-actions">
+            <button id="record-btn" class="record-btn">この試合を記録する</button>
+            <span id="record-success" class="record-msg"></span>
+          </div>
+        </div>
       </fieldset>
     </div>
 
@@ -99,11 +139,87 @@
         <div id="check2" class="note"></div>
       </fieldset>
     </div>
+
+    <!-- タブ3：戦績記録 -->
+    <div id="t3" class="tab">
+      <!-- 未ログイン -->
+      <div id="t3-login" class="login-wall">
+        <div class="login-wall-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <p>戦績を記録・閲覧するには<br>ログインが必要です。</p>
+        <button id="t3-login-btn" class="login-btn">Googleでログイン</button>
+      </div>
+
+      <!-- ログイン済み -->
+      <div id="t3-content" style="display:none">
+        <div class="user-bar">
+          <img id="t3-avatar" class="user-avatar" src="" alt="">
+          <span id="t3-name" class="user-name"></span>
+          <button id="t3-logout-btn" class="logout-btn">ログアウト</button>
+        </div>
+
+        <!-- あなたの名前設定 -->
+        <div class="myname-bar">
+          <span class="myname-label">あなたの名前</span>
+          <input id="my-name-input" class="player-name-input" placeholder="名前を登録">
+          <button id="my-name-save" class="logout-btn">保存</button>
+          <span id="my-name-msg" class="record-msg"></span>
+        </div>
+
+        <!-- 新しいゲーム作成 -->
+        <div class="sessions-header">
+          <button id="new-session-toggle" class="record-btn">+ 新しいゲームを作成</button>
+        </div>
+
+        <div id="new-session-form" style="display:none">
+          <fieldset>
+            <legend>プレイヤー名を入力</legend>
+            <div class="player-grid">
+              <label>P1<input id="ns-p1" placeholder="プレイヤー1" list="phd-1" autocomplete="off"></label>
+              <label>P2<input id="ns-p2" placeholder="プレイヤー2" list="phd-2" autocomplete="off"></label>
+              <label>P3<input id="ns-p3" placeholder="プレイヤー3" list="phd-3" autocomplete="off"></label>
+              <label>P4<input id="ns-p4" placeholder="プレイヤー4" list="phd-4" autocomplete="off"></label>
+            </div>
+            <div class="record-actions" style="margin-top:12px">
+              <button id="create-session-btn" class="record-btn">作成</button>
+              <button id="cancel-session-btn" class="logout-btn">キャンセル</button>
+            </div>
+          </fieldset>
+        </div>
+
+        <!-- セッション一覧 -->
+        <div id="sessions-list"></div>
+
+        <!-- 全期間集計 -->
+        <div id="alltime-section" style="display:none">
+          <fieldset>
+            <legend>全期間集計</legend>
+            <div id="alltime-table"></div>
+          </fieldset>
+        </div>
+
+        <!-- プレイヤー履歴 -->
+        <div id="player-history-section" style="display:none">
+          <fieldset>
+            <legend>プレイヤー履歴</legend>
+            <div id="player-history-list"></div>
+          </fieldset>
+        </div>
+      </div>
+    </div>
+
     </div><!-- /.page-card -->
   </div>
 
-  <!-- JS は defer で遅延読込（DOM構築後に実行） -->
-  <script src="./app.js" defer></script>
+  <datalist id="phd-1"></datalist>
+  <datalist id="phd-2"></datalist>
+  <datalist id="phd-3"></datalist>
+  <datalist id="phd-4"></datalist>
+  <script src="./app.js" type="module"></script>
   <script src="/common.js"></script>
 </body>
 </html>
