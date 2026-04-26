@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>関数と引数を学ぼう</title>
+  <link rel="stylesheet" href="/common.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <h1>関数と引数を学ぼう</h1>
+    <p class="lead">入力を受け取り・処理して・結果を返す「道具」を作ろう</p>
+
+    <!-- ===== 1: 関数マシン ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge fn-badge">関数</span>
+        <h2>関数は「処理マシン」</h2>
+      </div>
+      <p class="concept-desc">関数は <strong>入力を受け取り・処理して・答えを返す</strong> 道具です。</p>
+
+      <div class="machine-demo">
+        <div class="machine-col">
+          <div class="machine-col-lbl">入力</div>
+          <div class="machine-val in-val" id="mInVal">5</div>
+        </div>
+        <div class="machine-arrow-wrap">
+          <svg viewBox="0 0 50 24" fill="none">
+            <line x1="2" y1="12" x2="40" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <polyline points="32,4 44,12 32,20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="machine-box" id="mBox">
+          <div class="machine-fn-name">double</div>
+          <div class="machine-fn-op">× 2</div>
+        </div>
+        <div class="machine-arrow-wrap">
+          <svg viewBox="0 0 50 24" fill="none">
+            <line x1="2" y1="12" x2="40" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <polyline points="32,4 44,12 32,20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="machine-col">
+          <div class="machine-col-lbl">出力</div>
+          <div class="machine-val out-val" id="mOutVal">?</div>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <label class="ctrl-lbl">入力：<input type="number" id="mInput" class="demo-input" value="5"></label>
+        <button class="action-btn fn-btn" id="mRunBtn">▶ 実行</button>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">Python</div>
+        <pre><code id="mCode">def double(x):
+    return x * 2
+
+double(5)  # → 10</code></pre>
+      </div>
+    </section>
+
+    <!-- ===== 2: 定義の解剖 ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge def-badge">定義</span>
+        <h2>関数の書き方</h2>
+      </div>
+      <p class="concept-desc">ラベルにカーソルを当てると、コードの対応部分が光ります。</p>
+
+      <div class="anatomy-layout">
+        <div class="anatomy-code" id="anatCode">
+          <div class="anat-line">
+            <span class="sp-kw" data-hi="kw">def</span>&#32;<span class="sp-name" data-hi="name">double</span><span class="sp-paren">(</span><span class="sp-param" data-hi="param">x</span><span class="sp-paren">):</span>
+          </div>
+          <div class="anat-line anat-indent" data-hi="body">
+            &#32;&#32;&#32;&#32;<span class="sp-kw" data-hi="kw">return</span>&#32;<span class="sp-param" data-hi="param">x</span><span class="sp-plain"> * 2</span>
+          </div>
+        </div>
+
+        <div class="anat-legend">
+          <div class="anat-row" data-hi="kw">
+            <span class="anat-chip kw-chip">def / return</span>
+            <span class="anat-desc">命令キーワード</span>
+          </div>
+          <div class="anat-row" data-hi="name">
+            <span class="anat-chip name-chip">double</span>
+            <span class="anat-desc">関数の名前</span>
+          </div>
+          <div class="anat-row" data-hi="param">
+            <span class="anat-chip param-chip">x</span>
+            <span class="anat-desc">引数 ― 入力の受け取り口</span>
+          </div>
+          <div class="anat-row" data-hi="body">
+            <span class="anat-chip body-chip">　（インデント）</span>
+            <span class="anat-desc">関数の中身（スペース4個）</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="concept-note">
+        インデント（字下げ）がある行が関数の「中身」です。<strong>スペース 4 個</strong> が Python の標準です。
+      </div>
+    </section>
+
+    <!-- ===== 3: 引数のながれ ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge arg-badge">引数</span>
+        <h2>引数が関数に入る流れ</h2>
+      </div>
+      <p class="concept-desc"><code>double(5)</code> を呼ぶと <strong>5 が x に入り</strong>、処理されます。ボタンを押してステップを進めよう。</p>
+
+      <div class="step-flow">
+        <div class="flow-card" id="fs0">
+          <div class="fs-num">①</div>
+          <div class="fs-title">呼び出し</div>
+          <div class="fs-code" id="fscode0">double(<mark>5</mark>)</div>
+          <div class="fs-note">5 を渡す</div>
+        </div>
+        <div class="flow-card" id="fs1">
+          <div class="fs-num">②</div>
+          <div class="fs-title">代入</div>
+          <div class="fs-code" id="fscode1">x = <mark>5</mark></div>
+          <div class="fs-note">引数 x に 5 が入る</div>
+        </div>
+        <div class="flow-card" id="fs2">
+          <div class="fs-num">③</div>
+          <div class="fs-title">計算</div>
+          <div class="fs-code" id="fscode2"><mark>5</mark> × 2</div>
+          <div class="fs-note">x * 2 を実行</div>
+        </div>
+        <div class="flow-card" id="fs3">
+          <div class="fs-num">④</div>
+          <div class="fs-title">return</div>
+          <div class="fs-code fs-result" id="fscode3"><mark>10</mark></div>
+          <div class="fs-note">結果を返す</div>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <label class="ctrl-lbl">引数：<input type="number" id="fsInput" class="demo-input" value="5"></label>
+        <button class="action-btn arg-btn" id="fsNextBtn">次へ ▶</button>
+        <button class="action-btn reset-btn" id="fsResetBtn">↩ リセット</button>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">Python</div>
+        <pre><code>def double(x):
+    return x * 2
+
+result = double(5)
+print(result)  # → 10</code></pre>
+      </div>
+    </section>
+
+    <!-- ===== 4: 複数の引数 ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge multi-badge">複数の引数</span>
+        <h2>引数は 2 つ以上も OK</h2>
+      </div>
+      <p class="concept-desc">コンマ <code>,</code> で区切れば複数の入力を受け取れます。</p>
+
+      <div class="machine-demo">
+        <div class="multi-inputs">
+          <div class="machine-col">
+            <div class="machine-col-lbl">a</div>
+            <div class="machine-val in-val" id="mA">3</div>
+          </div>
+          <div class="machine-col">
+            <div class="machine-col-lbl">b</div>
+            <div class="machine-val in-val" id="mB">4</div>
+          </div>
+        </div>
+        <div class="machine-arrow-wrap">
+          <svg viewBox="0 0 50 24" fill="none">
+            <line x1="2" y1="12" x2="40" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <polyline points="32,4 44,12 32,20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="machine-box" id="mBoxMulti">
+          <div class="machine-fn-name">add</div>
+          <div class="machine-fn-op">a + b</div>
+        </div>
+        <div class="machine-arrow-wrap">
+          <svg viewBox="0 0 50 24" fill="none">
+            <line x1="2" y1="12" x2="40" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <polyline points="32,4 44,12 32,20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="machine-col">
+          <div class="machine-col-lbl">出力</div>
+          <div class="machine-val out-val" id="mMultiOut">?</div>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <label class="ctrl-lbl">a =<input type="number" id="mInputA" class="demo-input" value="3"></label>
+        <label class="ctrl-lbl">b =<input type="number" id="mInputB" class="demo-input" value="4"></label>
+        <button class="action-btn multi-btn" id="mRunMulti">▶ 実行</button>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">Python</div>
+        <pre><code id="mMultiCode">def add(a, b):
+    return a + b
+
+add(3, 4)  # → 7</code></pre>
+      </div>
+
+      <div class="concept-note">
+        引数の <strong>順番が重要</strong>です。<code>add(3, 4)</code> では <code>a=3, b=4</code> になります。
+      </div>
+    </section>
+
+  </div>
+
+  <script src="app.js" defer></script>
+  <script src="/common.js"></script>
+</body>
+</html>

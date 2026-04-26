@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>円周と直径を学ぼう</title>
+  <link rel="stylesheet" href="/common.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <h1>円周と直径を学ぼう</h1>
+    <p class="lead">円の「大きさ」と「まわりの長さ」のひみつを知ろう！</p>
+
+    <!-- ===== 1: 直径 ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge dia-badge">直径</span>
+        <h2>直径（ちょっけい）ってなに？</h2>
+      </div>
+      <p class="concept-desc">円の <strong>まん中を通って、はしからはしまで</strong> 引いた線の長さが直径です。</p>
+
+      <div class="canvas-wrap">
+        <canvas id="diaCanvas" width="480" height="220"></canvas>
+      </div>
+
+      <div class="controls-row">
+        <label class="ctrl-lbl">大きさ：<input type="range" id="diaSlider" min="40" max="95" value="70" class="range-input"></label>
+      </div>
+    </section>
+
+    <!-- ===== 2: 円周アニメ ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge circ-badge">円周</span>
+        <h2>糸を伸ばして円周を見てみよう！</h2>
+      </div>
+      <p class="concept-desc">赤い糸が円のまわりに巻かれています。<strong>ボタンを押して伸ばす</strong>と、円周の長さがわかります！</p>
+
+      <div class="canvas-wrap">
+        <canvas id="stringCanvas" width="560" height="290"></canvas>
+      </div>
+
+      <div class="controls-row">
+        <button class="action-btn circ-btn" id="unrollBtn">🧵 糸を伸ばす！</button>
+        <button class="action-btn reset-btn" id="resetBtn">↩ もどす</button>
+      </div>
+    </section>
+
+    <!-- ===== 3: 3倍比較 ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge ratio-badge">発見</span>
+        <h2>円周は直径の 約3倍！</h2>
+      </div>
+      <p class="concept-desc">直径を3本ならべると、円周とほぼ同じ長さになります。くらべてみよう！</p>
+
+      <div class="ratio-wrap">
+        <div class="ratio-row">
+          <div class="ratio-lbl">直径 × 3</div>
+          <div class="ratio-bars">
+            <div class="ratio-bar d-bar">直径</div>
+            <div class="ratio-bar d-bar">直径</div>
+            <div class="ratio-bar d-bar">直径</div>
+          </div>
+          <div class="ratio-num">300</div>
+        </div>
+        <div class="ratio-row">
+          <div class="ratio-lbl">円周</div>
+          <div class="ratio-bars">
+            <div class="ratio-bar c-bar"></div>
+            <div class="ratio-extra">+α</div>
+          </div>
+          <div class="ratio-num c-num">≈ 314</div>
+        </div>
+        <div class="ratio-hint">↑ 円周は直径 3 本よりちょっとだけ長い！</div>
+      </div>
+
+      <div class="concept-note">
+        どんな大きさの円でも、円周 ÷ 直径はいつも <strong>約3.14</strong>。これを <strong>円周率</strong> といいます（中学で詳しく習うよ！）。
+      </div>
+    </section>
+
+  </div>
+
+  <script src="app.js" defer></script>
+  <script src="/common.js"></script>
+</body>
+</html>
