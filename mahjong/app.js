@@ -33,8 +33,6 @@ let activeSession = null;
 let myName = '';
 let playerHistory = [];
 
-// Previous values for rank dropdowns — used for swap-on-duplicate logic
-let rankPrevVals = ['0', '1', '2', '3'];
 
 // ====== Tab switching ======
 document.querySelectorAll('.tabbtn').forEach(btn => {
@@ -51,6 +49,7 @@ const init1 = el('init1'), oka1 = el('oka1'), uma1 = el('uma1'), rate1 = el('rat
 const s1_1 = el('s1_1'), s2_1 = el('s2_1'), s3_1 = el('s3_1'), s4_1 = el('s4_1');
 const r1_1 = el('r1_1'), r2_1 = el('r2_1'), r3_1 = el('r3_1'), r4_1 = el('r4_1');
 const decimal1 = el('decimal1');
+let rankPrevVals = ['0', '1', '2', '3'];
 
 function thousandRoundPt1(realScore) {
   const score = Number(realScore) || 0;
@@ -105,6 +104,7 @@ function computeTab1() {
     ptStrs: [f1.ptStr, f2.ptStr, f3.ptStr, f4.ptStr]
   };
   updateRecordSection();
+  updateRankNames();
 }
 
 ['input', 'change'].forEach(ev => {
@@ -114,6 +114,87 @@ function computeTab1() {
 });
 
 computeTab1();
+
+// ====== Rank card name display (Tab 1) ======
+function updateRankNames() {
+  [1, 2, 3, 4].forEach(i => {
+    const nameEl = el(`rn${i}_1`);
+    if (!nameEl) return;
+    const field = el(`sn${i}_1`);
+    if (!field) { nameEl.textContent = ''; return; }
+    const name = field.tagName === 'SELECT'
+      ? (activeSession?.players || [])[Number(field.value)] || ''
+      : field.value.trim();
+    nameEl.textContent = name ? ` · ${name}` : '';
+  });
+}
+
+// ====== Name field helpers (Tab 1) ======
+// Replaces the 4 name text-inputs with selects populated from session players.
+function ensureNameSelects(players) {
+  [1, 2, 3, 4].forEach(rank => {
+    const id = `sn${rank}_1`;
+    const cur = el(id);
+    if (!cur) return;
+    const idx = rank - 1;
+
+    if (cur.tagName !== 'SELECT') {
+      const sel = document.createElement('select');
+      sel.id = id;
+      sel.className = cur.className;
+      cur.replaceWith(sel);
+
+      sel.addEventListener('change', () => {
+        const newVal = sel.value;
+        const oldVal = rankPrevVals[idx];
+        if (newVal === oldVal) return;
+        const conflictIdx = rankPrevVals.findIndex((v, j) => j !== idx && v === newVal);
+        if (conflictIdx >= 0) {
+          const conflictSel = el(`sn${conflictIdx + 1}_1`);
+          if (conflictSel) conflictSel.value = oldVal;
+          rankPrevVals[conflictIdx] = oldVal;
+        }
+        rankPrevVals[idx] = newVal;
+        updateRankNames();
+      });
+    }
+
+    const sel = el(id);
+    const prevVal = sel.value;
+    sel.innerHTML = players.map((n, i) => `<option value="${i}">${escHtml(n)}</option>`).join('');
+    const validPrev = prevVal !== '' && Number(prevVal) < players.length;
+    sel.value = validPrev ? prevVal : String(idx);
+    if (sel.value === '') sel.value = String(idx);
+  });
+
+  rankPrevVals = [1, 2, 3, 4].map(r => el(`sn${r}_1`)?.value ?? String(r - 1));
+  updateRankNames();
+}
+
+// Replaces the 4 name selects back to free-text inputs.
+function ensureNameInputs() {
+  [1, 2, 3, 4].forEach(rank => {
+    const id = `sn${rank}_1`;
+    const cur = el(id);
+    if (!cur) return;
+
+    if (cur.tagName === 'SELECT') {
+      const inp = document.createElement('input');
+      inp.id = id;
+      inp.type = 'text';
+      inp.className = cur.className;
+      inp.placeholder = `プレイヤー${rank}`;
+      inp.setAttribute('list', `phd-s${rank}`);
+      inp.autocomplete = 'off';
+      inp.addEventListener('input', () => { updatePlayerHistoryDatalist(); updateRankNames(); });
+      cur.replaceWith(inp);
+    } else {
+      cur.removeEventListener('input', updatePlayerHistoryDatalist);
+      cur.addEventListener('input', () => { updatePlayerHistoryDatalist(); updateRankNames(); });
+    }
+  });
+  updateRankNames();
+}
 
 // ====== Record section (Tab 1 bottom) ======
 function updateRecordSection() {
@@ -125,12 +206,14 @@ function updateRecordSection() {
     needsLogin.style.display = 'block';
     noSession.style.display  = 'none';
     loggedIn.style.display   = 'none';
+    ensureNameInputs();
     return;
   }
   if (!activeSession) {
     needsLogin.style.display = 'none';
     noSession.style.display  = 'block';
     loggedIn.style.display   = 'none';
+    ensureNameInputs();
     return;
   }
 
@@ -144,66 +227,31 @@ function updateRecordSection() {
   el('active-session-label').textContent =
     `記録先: ${date} — ${(activeSession.players || []).join(' / ')}`;
 
-  const players = activeSession.players || ['P1', 'P2', 'P3', 'P4'];
-  ['ra1', 'ra2', 'ra3', 'ra4'].forEach((id, rankIdx) => {
-    const sel = el(id);
-    if (!sel) return;
-    const curVal = sel.value;
-    sel.innerHTML = players.map((n, i) => `<option value="${i}">${escHtml(n)}</option>`).join('');
-    sel.value = (curVal !== '' && Number(curVal) < players.length) ? curVal : String(rankIdx);
-    if (!sel.value) sel.value = String(rankIdx);
-  });
-
-  // Sync swap-tracking array after repopulating dropdowns
-  rankPrevVals = ['ra1', 'ra2', 'ra3', 'ra4'].map(id => el(id).value);
-
-  if (lastResult) {
-    [1, 2, 3, 4].forEach(rank => {
-      const ptEl = el(`ra${rank}-pt`);
-      if (ptEl) ptEl.textContent = `${lastResult.ptStrs[rank - 1]}pt`;
-    });
-  }
+  ensureNameSelects(activeSession.players || ['P1', 'P2', 'P3', 'P4']);
 }
-
-// Swap-on-duplicate: when a dropdown is changed to a value already held by
-// another dropdown, swap the two so no player appears twice.
-;['ra1', 'ra2', 'ra3', 'ra4'].forEach((id, i) => {
-  el(id).addEventListener('change', () => {
-    const newVal = el(id).value;
-    const oldVal = rankPrevVals[i];
-    if (newVal === oldVal) return;
-
-    const conflictIdx = rankPrevVals.findIndex((v, j) => j !== i && v === newVal);
-    if (conflictIdx >= 0) {
-      const conflictId = ['ra1', 'ra2', 'ra3', 'ra4'][conflictIdx];
-      el(conflictId).value = oldVal;
-      rankPrevVals[conflictIdx] = oldVal;
-    }
-    rankPrevVals[i] = newVal;
-  });
-});
 
 el('record-btn').addEventListener('click', async () => {
   if (!currentUser || !activeSession || !lastResult) return;
 
   const players = activeSession.players || ['P1', 'P2', 'P3', 'P4'];
-  const playerRecords = [null, null, null, null];
-  const usedSlots = new Set();
-
-  for (let rankIdx = 0; rankIdx < 4; rankIdx++) {
-    const slotIdx = Number(el(`ra${rankIdx + 1}`).value);
-    if (!usedSlots.has(slotIdx)) {
-      playerRecords[slotIdx] = {
-        name: players[slotIdx] || `P${slotIdx + 1}`,
-        pt: lastResult.pts[rankIdx],
-        rank: rankIdx + 1
-      };
-      usedSlots.add(slotIdx);
-    }
-  }
-  playerRecords.forEach((r, i) => {
-    if (!r) playerRecords[i] = { name: players[i] || `P${i + 1}`, pt: 0, rank: null };
+  // names[i] = the player chosen for rank i+1 (rank-ordered)
+  const names = [1, 2, 3, 4].map(rank => {
+    const field = el(`sn${rank}_1`);
+    if (!field) return `P${rank}`;
+    if (field.tagName === 'SELECT') return players[Number(field.value)] || `P${rank}`;
+    return field.value.trim() || `P${rank}`;
   });
+
+  // Build a lookup: playerName → { pt, rank }
+  const rankLookup = {};
+  names.forEach((name, i) => { rankLookup[name] = { pt: lastResult.pts[i], rank: i + 1 }; });
+
+  // Store in session player order so each column index matches session.players
+  const playerRecords = players.map(name => ({
+    name,
+    pt: rankLookup[name]?.pt ?? 0,
+    rank: rankLookup[name]?.rank ?? 0
+  }));
 
   const matchRecord = { recordedAt: new Date().toISOString(), players: playerRecords };
 
@@ -217,6 +265,8 @@ el('record-btn').addEventListener('click', async () => {
       doc(db, 'mahjong_records', currentUser.uid, 'sessions', activeSession.id),
       { matches: arrayUnion(matchRecord) }
     );
+    updateHistoryWithNames(names);
+    await savePlayerHistory();
     msg.textContent = '記録しました！';
     msg.className = 'record-msg success';
     setTimeout(() => { msg.textContent = ''; msg.className = 'record-msg'; }, 3000);
@@ -329,6 +379,19 @@ async function loadProfile() {
 }
 
 function updatePlayerHistoryDatalist() {
+  // Score section text inputs (tab 1) — skip when replaced by selects
+  const scoreTaken = [1, 2, 3, 4].map(r => {
+    const f = el(`sn${r}_1`);
+    return (f && f.tagName === 'INPUT') ? f.value.trim() : '';
+  });
+  [1, 2, 3, 4].forEach(r => {
+    const dl = el(`phd-s${r}`);
+    if (!dl) return;
+    const others = new Set(scoreTaken.filter((v, j) => j !== r - 1 && v !== ''));
+    dl.innerHTML = playerHistory.filter(n => !others.has(n)).map(n => `<option value="${escHtml(n)}">`).join('');
+  });
+
+  // Session creation form (tab 3)
   const inputIds = ['ns-p1', 'ns-p2', 'ns-p3', 'ns-p4'];
   const taken = inputIds.map(id => { const inp = el(id); return inp ? inp.value.trim() : ''; });
   inputIds.forEach((_, i) => {
@@ -376,26 +439,11 @@ function renderPlayerHistory() {
   container.querySelectorAll('.history-del-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const name = btn.dataset.name;
-      if (!confirm(`「${name}」をプレイヤー履歴と全試合記録から削除しますか？\nこの操作は取り消せません。`)) return;
+      if (!confirm(`「${name}」を候補リストから削除しますか？\n試合記録は変わりません。`)) return;
       btn.disabled = true;
 
       playerHistory = playerHistory.filter(n => n !== name);
       await savePlayerHistory();
-
-      for (const session of sessions) {
-        const inPlayers = (session.players || []).includes(name);
-        const inMatches = (session.matches || []).some(m => (m.players || []).some(p => p.name === name));
-        if (!inPlayers && !inMatches) continue;
-        const newPlayers = (session.players || []).filter(p => p !== name);
-        const newMatches = (session.matches || []).map(m => ({
-          ...m,
-          players: (m.players || []).filter(p => p.name !== name)
-        }));
-        await updateDoc(
-          doc(db, 'mahjong_records', currentUser.uid, 'sessions', session.id),
-          { players: newPlayers, matches: newMatches }
-        );
-      }
     });
   });
 }
@@ -482,6 +530,16 @@ function subscribeSessions() {
 }
 
 // ====== Helpers ======
+function formatMatchTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const mm  = String(d.getMonth() + 1).padStart(2, '0');
+  const dd  = String(d.getDate()).padStart(2, '0');
+  const hh  = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${mm}/${dd} ${hh}:${min}`;
+}
+
 function escHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -490,8 +548,10 @@ function escHtml(str) {
 
 function fmtPt(pt) {
   if (typeof pt !== 'number' || isNaN(pt)) return '—';
-  const str = Number.isInteger(pt) ? String(pt) : pt.toFixed(1);
-  return `${pt > 0 ? '+' : ''}${str}pt`;
+  const abs = Math.abs(pt).toFixed(1);
+  if (pt > 0) return `+${abs}`;
+  if (pt < 0) return `▲${abs}`;
+  return abs;
 }
 
 const ptClass = pt => pt > 0 ? 'pt-pos' : pt < 0 ? 'pt-neg' : '';
@@ -523,7 +583,7 @@ function renderSessions(sessions) {
       : matches.map((m, mi) => {
           const mPlayers = m.players || [];
           return `<tr data-rid="${escHtml(session.id)}" data-midx="${mi}">
-            <td class="date-cell">${mi + 1}試合目</td>
+            <td class="date-cell match-label" data-time="${escHtml(formatMatchTime(m.recordedAt))}">${mi + 1}試合目</td>
             ${mPlayers.map(p => {
               const pt = (p && typeof p.pt === 'number') ? p.pt : 0;
               return `<td class="${ptClass(pt)}">${fmtPt(pt)}</td>`;
@@ -608,9 +668,27 @@ function renderSessions(sessions) {
         inp.value = name;
         inp.placeholder = `P${i + 1}`;
         inp.className = 'player-name-input';
+        inp.setAttribute('list', `phd-tbl-${i}`);
+        inp.autocomplete = 'off';
         grid.appendChild(inp);
         return inp;
       });
+
+      function updateTblDatalist() {
+        const taken = inputs.map(inp => inp.value.trim());
+        inputs.forEach((inp, i) => {
+          const dl = document.getElementById(`phd-tbl-${i}`);
+          if (!dl) return;
+          const others = new Set(taken.filter((v, j) => j !== i && v !== ''));
+          dl.innerHTML = playerHistory
+            .filter(n => !others.has(n))
+            .map(n => `<option value="${escHtml(n)}">`)
+            .join('');
+        });
+      }
+
+      inputs.forEach(inp => inp.addEventListener('input', updateTblDatalist));
+      updateTblDatalist();
 
       const actions = document.createElement('div');
       actions.className = 'player-edit-actions';
@@ -632,14 +710,35 @@ function renderSessions(sessions) {
           alert('プレイヤー名が重複しています。');
           return;
         }
+        const oldPlayers = players; // same list used to build inputs (may be reconstructed)
         const newPlayers = rawInputs.map((n, i) => n || `P${i + 1}`);
+
+        // Rename player names inside match records by position
+        const newMatches = (session.matches || []).map(m => ({
+          ...m,
+          players: (m.players || []).map((p, i) => ({
+            ...p,
+            name: newPlayers[i] !== undefined ? newPlayers[i] : p.name
+          }))
+        }));
+
         saveBtn.disabled = true;
         saveBtn.textContent = '保存中...';
         try {
           await updateDoc(
             doc(db, 'mahjong_records', currentUser.uid, 'sessions', sid),
-            { players: newPlayers }
+            { players: newPlayers, matches: newMatches }
           );
+
+          // Rename existing entries in playerHistory (old→new)
+          oldPlayers.forEach((oldName, i) => {
+            const newName = newPlayers[i];
+            if (oldName !== newName)
+              playerHistory = playerHistory.map(n => n === oldName ? newName : n);
+          });
+          // Add any new names that weren't already in history
+          updateHistoryWithNames(newPlayers);
+          await savePlayerHistory();
         } catch (err) {
           console.error(err);
           alert('保存に失敗しました。');
@@ -713,11 +812,12 @@ function buildEditRow(session, match, midx, displayRow) {
 
   function checkSum() {
     const sum = inputs.reduce((s, inp) => s + (Number(inp.value) || 0), 0);
-    const ok = Math.abs(sum) < 1e-9;
-    sumSpan.textContent = ok ? '合計: 0 ✓' : `合計: ${sum > 0 ? '+' : ''}${sum}`;
+    const rounded = Math.round(sum * 10) / 10;
+    const ok = Math.abs(rounded) < 1e-9;
+    sumSpan.textContent = ok ? '合計: 0 ✓' : `合計: ${rounded > 0 ? '+' : ''}${rounded.toFixed(1)}`;
     sumSpan.className = 'edit-sum ' + (ok ? 'sum-ok' : 'sum-ng');
     saveBtn.disabled = !ok;
-    return sum;
+    return rounded;
   }
 
   inputs.forEach(inp => inp.addEventListener('input', checkSum));
@@ -726,7 +826,7 @@ function buildEditRow(session, match, midx, displayRow) {
   cancelBtn.addEventListener('click', () => tr.replaceWith(displayRow));
 
   saveBtn.addEventListener('click', async () => {
-    if (Math.abs(inputs.reduce((s, inp) => s + (Number(inp.value) || 0), 0)) >= 1e-9) return;
+    if (Math.abs(Math.round(inputs.reduce((s, inp) => s + (Number(inp.value) || 0), 0) * 10) / 10) >= 1e-9) return;
 
     const updatedPlayers = (match.players || []).map((p, i) => ({
       ...p,

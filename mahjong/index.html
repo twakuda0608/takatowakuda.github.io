@@ -49,26 +49,41 @@
 
       <fieldset>
         <legend>点数（百点単位で入力）</legend>
-        <label>1位（自動計算）<input id="s1_1" type="number" readonly /></label>
-        <label>2位<input id="s2_1" type="number" value="300" /></label>
-        <label>3位<input id="s3_1" type="number" value="200" /></label>
-        <label>4位<input id="s4_1" type="number" value="100" /></label>
+        <div class="score-row">
+          <span class="score-row-rank">1位</span>
+          <input id="sn1_1" class="player-name-input score-name" placeholder="プレイヤー1" list="phd-s1" autocomplete="off">
+          <input id="s1_1" type="number" readonly class="score-num" placeholder="自動計算">
+        </div>
+        <div class="score-row">
+          <span class="score-row-rank">2位</span>
+          <input id="sn2_1" class="player-name-input score-name" placeholder="プレイヤー2" list="phd-s2" autocomplete="off">
+          <input id="s2_1" type="number" value="300" class="score-num">
+        </div>
+        <div class="score-row">
+          <span class="score-row-rank">3位</span>
+          <input id="sn3_1" class="player-name-input score-name" placeholder="プレイヤー3" list="phd-s3" autocomplete="off">
+          <input id="s3_1" type="number" value="200" class="score-num">
+        </div>
+        <div class="score-row">
+          <span class="score-row-rank">4位</span>
+          <input id="sn4_1" class="player-name-input score-name" placeholder="プレイヤー4" list="phd-s4" autocomplete="off">
+          <input id="s4_1" type="number" value="100" class="score-num">
+        </div>
       </fieldset>
 
       <fieldset>
         <legend>計算結果</legend>
         <div class="results">
-          <div class="card"><div class="rank">1位</div><div id="r1_1" class="sumline">—</div></div>
-          <div class="card"><div class="rank">2位</div><div id="r2_1" class="sumline">—</div></div>
-          <div class="card"><div class="rank">3位</div><div id="r3_1" class="sumline">—</div></div>
-          <div class="card"><div class="rank">4位</div><div id="r4_1" class="sumline">—</div></div>
+          <div class="card"><div class="rank">1位<span id="rn1_1" class="rank-name"></span></div><div id="r1_1" class="sumline">—</div></div>
+          <div class="card"><div class="rank">2位<span id="rn2_1" class="rank-name"></span></div><div id="r2_1" class="sumline">—</div></div>
+          <div class="card"><div class="rank">3位<span id="rn3_1" class="rank-name"></span></div><div id="r3_1" class="sumline">—</div></div>
+          <div class="card"><div class="rank">4位<span id="rn4_1" class="rank-name"></span></div><div id="r4_1" class="sumline">—</div></div>
         </div>
         <div class="footer muted">出目（pt）の合計は常に0になります。</div>
       </fieldset>
 
-      <!-- 記録セクション -->
-      <fieldset id="record-section">
-        <legend>ゲームを記録</legend>
+      <!-- 記録エリア -->
+      <div id="record-area">
         <div id="record-needs-login" class="login-hint">
           <p class="muted">記録するには「戦績記録」タブでログインしてください。</p>
         </div>
@@ -77,34 +92,12 @@
         </div>
         <div id="record-logged-in" style="display:none">
           <p id="active-session-label" class="note session-label"></p>
-          <div class="rank-assign-grid">
-            <div class="rank-assign-row">
-              <span class="rank-label">1位</span>
-              <span id="ra1-pt" class="rank-pt-val">—</span>
-              <select id="ra1"></select>
-            </div>
-            <div class="rank-assign-row">
-              <span class="rank-label">2位</span>
-              <span id="ra2-pt" class="rank-pt-val">—</span>
-              <select id="ra2"></select>
-            </div>
-            <div class="rank-assign-row">
-              <span class="rank-label">3位</span>
-              <span id="ra3-pt" class="rank-pt-val">—</span>
-              <select id="ra3"></select>
-            </div>
-            <div class="rank-assign-row">
-              <span class="rank-label">4位</span>
-              <span id="ra4-pt" class="rank-pt-val">—</span>
-              <select id="ra4"></select>
-            </div>
-          </div>
           <div class="record-actions">
             <button id="record-btn" class="record-btn">この試合を記録する</button>
             <span id="record-success" class="record-msg"></span>
           </div>
         </div>
-      </fieldset>
+      </div>
     </div>
 
     <!-- タブ2：総合ポイント精算 -->
@@ -219,6 +212,14 @@
   <datalist id="phd-2"></datalist>
   <datalist id="phd-3"></datalist>
   <datalist id="phd-4"></datalist>
+  <datalist id="phd-s1"></datalist>
+  <datalist id="phd-s2"></datalist>
+  <datalist id="phd-s3"></datalist>
+  <datalist id="phd-s4"></datalist>
+  <datalist id="phd-tbl-0"></datalist>
+  <datalist id="phd-tbl-1"></datalist>
+  <datalist id="phd-tbl-2"></datalist>
+  <datalist id="phd-tbl-3"></datalist>
   <script src="./app.js" type="module"></script>
   <script src="/common.js"></script>
 </body>

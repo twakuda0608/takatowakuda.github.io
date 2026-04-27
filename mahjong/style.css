@@ -89,6 +89,12 @@ input[readonly]{
 .rank{
   font-weight:600;
 }
+.rank-name {
+  font-weight: normal;
+  font-size: 13px;
+  color: var(--muted-color, #64748b);
+  margin-left: 4px;
+}
 
 .sumline{
   font-variant-numeric: tabular-nums;
@@ -151,40 +157,41 @@ input[type="checkbox"]{ width:auto; }
 }
 
 /* =========================
-   Record section (Tab 1)
+   Score rows with name inputs (Tab 1)
 ========================= */
-.login-hint { padding: 4px 0; }
-
-.rank-assign-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 10px 0;
-}
-.rank-assign-row {
+.score-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
-.rank-label {
-  font-weight: 600;
-  min-width: 32px;
+.score-row-rank {
   font-size: 14px;
-}
-.rank-pt-val {
-  font-variant-numeric: tabular-nums;
-  color: var(--brand);
-  min-width: 60px;
-  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
+  min-width: 28px;
   font-weight: 600;
 }
-.rank-assign-row select {
+.score-row .score-name {
   flex: 1;
-  font-size: 14px;
-  padding: 8px 10px;
+  min-width: 0;
   width: auto;
-  margin-top: 0;
+  margin: 0;
 }
+.score-row .score-num {
+  width: 110px;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+/* =========================
+   Record area (Tab 1)
+========================= */
+#record-area {
+  margin-top: 4px;
+}
+.login-hint { padding: 4px 0; }
+
 .record-actions {
   display: flex;
   align-items: center;
@@ -326,6 +333,26 @@ input[type="checkbox"]{ width:auto; }
   font-size: 12px;
   color: #666;
   text-align: left !important;
+}
+.match-label {
+  position: relative;
+  cursor: default;
+  white-space: nowrap;
+}
+.match-label[data-time]:hover::after {
+  content: attr(data-time);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  margin-top: 3px;
+  background: #1e293b;
+  color: #fff;
+  font-size: 11px;
+  white-space: nowrap;
+  padding: 3px 8px;
+  border-radius: 5px;
+  z-index: 20;
+  pointer-events: none;
 }
 .pt-pos { color: #059669; font-weight: 600; }
 .pt-neg { color: #dc2626; font-weight: 600; }
