@@ -48,7 +48,7 @@ document.querySelectorAll('.tabbtn').forEach(btn => {
 const init1 = el('init1'), oka1 = el('oka1'), uma1 = el('uma1'), rate1 = el('rate1');
 const s1_1 = el('s1_1'), s2_1 = el('s2_1'), s3_1 = el('s3_1'), s4_1 = el('s4_1');
 const r1_1 = el('r1_1'), r2_1 = el('r2_1'), r3_1 = el('r3_1'), r4_1 = el('r4_1');
-const decimal1 = el('decimal1');
+const decimal1 = el('decimal1'), tie1 = el('tie1');
 let rankPrevVals = ['0', '1', '2', '3'];
 
 function thousandRoundPt1(realScore) {
@@ -77,13 +77,44 @@ function computeTab1() {
   const S1 = I * 4 - S2 - S3 - S4;
   s1_1.value = S1;
 
-  const RS2 = S2 * 100, RS3 = S3 * 100, RS4 = S4 * 100;
   const okaPt = (O * 100) / 1000;
 
-  const p2 = thousandRoundPt1(RS2) + UX - okaPt;
-  const p3 = thousandRoundPt1(RS3) - UX - okaPt;
-  const p4 = thousandRoundPt1(RS4) - UY - okaPt;
-  const p1 = -(p2 + p3 + p4);
+  let p1, p2, p3, p4;
+
+  if (tie1 && tie1.checked) {
+    const S = [S1, S2, S3, S4];
+
+    // Uma bonus per rank: 1st=+UY, 2nd=+UX, 3rd=-UX, 4th=-UY
+    const uma = [UY, UX, -UX, -UY];
+
+    // Average uma bonuses for any group of consecutive equal scores
+    let i = 0;
+    while (i < 4) {
+      let j = i + 1;
+      while (j < 4 && S[j] === S[i]) j++;
+      if (j - i > 1) {
+        const avg = uma.slice(i, j).reduce((a, b) => a + b, 0) / (j - i);
+        for (let k = i; k < j; k++) uma[k] = avg;
+      }
+      i = j;
+    }
+
+    // Compute each player's score directly (no p1=-(p2+p3+p4) yet)
+    const direct = S.map((s, idx) => thousandRoundPt1(s * 100) + uma[idx] - okaPt);
+
+    // The sum won't be zero when init ≠ oka; distribute the surplus to the top-score group
+    const surplus = -direct.reduce((a, b) => a + b, 0);
+    const maxS = Math.max(...S);
+    const topCount = S.filter(s => s === maxS).length;
+    [p1, p2, p3, p4] = direct.map((d, idx) => d + (S[idx] === maxS ? surplus / topCount : 0));
+
+  } else {
+    // Original formula: p1 absorbs all oka surplus (standard mahjong)
+    p2 = thousandRoundPt1(S2 * 100) + UX - okaPt;
+    p3 = thousandRoundPt1(S3 * 100) - UX - okaPt;
+    p4 = thousandRoundPt1(S4 * 100) - UY - okaPt;
+    p1 = -(p2 + p3 + p4);
+  }
 
   function fmt(pt) {
     const val = Math.abs(pt) < 1e-9 ? 0 : pt;
@@ -108,7 +139,7 @@ function computeTab1() {
 }
 
 ['input', 'change'].forEach(ev => {
-  [init1, oka1, uma1, rate1, s2_1, s3_1, s4_1, decimal1].forEach(e =>
+  [init1, oka1, uma1, rate1, s2_1, s3_1, s4_1, decimal1, tie1].forEach(e =>
     e.addEventListener(ev, computeTab1)
   );
 });
