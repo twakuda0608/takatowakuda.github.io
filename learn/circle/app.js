@@ -61,11 +61,11 @@ function drawDiaCanvas(R) {
   dCtx.textBaseline = 'bottom';
   dCtx.fillText('← 直径 →', DCX, DCY - 10);
 
-  // "まん中" label at center
+  // "中心" label at center
   dCtx.fillStyle = '#6b7280';
   setFont(dCtx, 11);
   dCtx.textBaseline = 'top';
-  dCtx.fillText('まん中', DCX + 10, DCY + 6);
+  dCtx.fillText('中心', DCX + 10, DCY + 6);
 }
 
 const diaSlider = document.getElementById('diaSlider');
@@ -74,19 +74,18 @@ drawDiaCanvas(+diaSlider.value);
 
 
 /* ============================================================
-   Section 2: 糸モーフィングアニメーション
+   Section 2: 円周テープアニメーション
 ============================================================ */
 const stringCanvas = document.getElementById('stringCanvas');
 const sCtx         = stringCanvas.getContext('2d');
 const SW  = stringCanvas.width;   // 560
 const SH  = stringCanvas.height;  // 290
-const SR  = 78;                   // circle radius
-const SCX = SW / 2;               // 280
-const SCY = 108;                  // circle center y
-const S_GAP  = 58;                // gap between circle bottom and line
-const SLineY = SCY + SR + S_GAP; // y of the straight line ≈ 244
-const SLineStart = SCX - Math.PI * SR; // left end of line ≈ 35
-const SCircumference = 2 * Math.PI * SR;
+const SR  = 72;                   // circle radius
+const SCX = 90;                   // circle center x (left side)
+const SCY = 112;                  // circle center y
+const SContactX = SCX;            // tangent point x (bottom of circle)
+const SContactY = SCY + SR;       // tangent point y = 184
+const SCircumference = 2 * Math.PI * SR; // ≈ 452
 
 const DURATION = 1800; // ms
 let sProgress  = 0;
@@ -96,10 +95,9 @@ let sRAF       = null;
 
 function drawStringCanvas(p) {
   sCtx.clearRect(0, 0, SW, SH);
-
   const ep = easeInOut(p);
 
-  // -- Circle fill --
+  // Circle fill
   sCtx.beginPath();
   sCtx.arc(SCX, SCY, SR, 0, Math.PI * 2);
   sCtx.fillStyle = '#eff6ff';
@@ -108,7 +106,7 @@ function drawStringCanvas(p) {
   sCtx.lineWidth = 1.5;
   sCtx.stroke();
 
-  // -- Diameter line (stays fixed) --
+  // Diameter line
   sCtx.beginPath();
   sCtx.moveTo(SCX - SR, SCY);
   sCtx.lineTo(SCX + SR, SCY);
@@ -117,7 +115,13 @@ function drawStringCanvas(p) {
   sCtx.lineCap = 'round';
   sCtx.stroke();
 
-  // Diameter label (fades out as string unrolls)
+  // Center dot
+  sCtx.beginPath();
+  sCtx.arc(SCX, SCY, 4, 0, Math.PI * 2);
+  sCtx.fillStyle = '#3b82f6';
+  sCtx.fill();
+
+  // Diameter label (fades as tape extends)
   sCtx.globalAlpha = 1 - ep * 0.7;
   sCtx.fillStyle = '#1e40af';
   setFont(sCtx, 12, 'bold');
@@ -126,62 +130,86 @@ function drawStringCanvas(p) {
   sCtx.fillText('直径', SCX, SCY - 6);
   sCtx.globalAlpha = 1;
 
-  // -- Morph: string from circle arc → straight line --
-  // Parameterization: t ∈ [0, 2π]
-  // Arc: starts at top (sin/cos convention), goes clockwise
-  //   arcX = SCX + SR * sin(t)
-  //   arcY = SCY - SR * cos(t)
-  // Line: horizontal below circle
-  //   lineX = SLineStart + t * SR
-  //   lineY = SLineY
-  const N = 360;
-  sCtx.beginPath();
-  for (let i = 0; i <= N; i++) {
-    const t  = (i / N) * 2 * Math.PI;
-    const ax = SCX + SR * Math.sin(t);
-    const ay = SCY - SR * Math.cos(t);
-    const lx = SLineStart + t * SR;
-    const ly = SLineY;
-    const x  = lerp(ax, lx, ep);
-    const y  = lerp(ay, ly, ep);
-    i === 0 ? sCtx.moveTo(x, y) : sCtx.lineTo(x, y);
-  }
-  sCtx.strokeStyle = '#ef4444';
-  sCtx.lineWidth = 4;
-  sCtx.lineCap   = 'round';
-  sCtx.lineJoin  = 'round';
-  sCtx.stroke();
+  // Peel counterclockwise from bottom (π/2): right side peels first
+  const bottomAngle = Math.PI / 2;
+  const peelAngle   = bottomAngle - ep * 2 * Math.PI;
+  const lineEndX    = SContactX + ep * SCircumference;
 
-  // -- Start point dot (top of circle → left end of line) --
-  const dotX = lerp(SCX, SLineStart, ep);
-  const dotY = lerp(SCY - SR, SLineY, ep);
+  // Remaining arc (unpeeled portion, counterclockwise from peel point back to bottom)
+  if (ep < 0.001) {
+    sCtx.beginPath();
+    sCtx.arc(SCX, SCY, SR, 0, Math.PI * 2);
+    sCtx.strokeStyle = '#ef4444';
+    sCtx.lineWidth = 4;
+    sCtx.stroke();
+  } else if (ep < 0.999) {
+    sCtx.beginPath();
+    sCtx.arc(SCX, SCY, SR, peelAngle, bottomAngle, true);
+    sCtx.strokeStyle = '#ef4444';
+    sCtx.lineWidth = 4;
+    sCtx.lineCap = 'round';
+    sCtx.stroke();
+  }
+
+  // Growing tape line (extending rightward from tangent point)
+  if (ep > 0.001) {
+    sCtx.beginPath();
+    sCtx.moveTo(SContactX, SContactY);
+    sCtx.lineTo(lineEndX, SContactY);
+    sCtx.strokeStyle = '#ef4444';
+    sCtx.lineWidth = 4;
+    sCtx.lineCap = 'round';
+    sCtx.stroke();
+  }
+
+  // Tangent point dot (fixed at bottom of circle = left anchor of tape)
   sCtx.beginPath();
-  sCtx.arc(dotX, dotY, 6, 0, Math.PI * 2);
+  sCtx.arc(SContactX, SContactY, 5.5, 0, Math.PI * 2);
   sCtx.fillStyle = '#ef4444';
   sCtx.fill();
   sCtx.strokeStyle = '#fff';
   sCtx.lineWidth = 2;
   sCtx.stroke();
 
-  // -- Line label + diameter tick marks (appear when nearly done) --
+  // Moving peel point dot + right-end dot (during animation)
+  if (ep > 0.005 && ep < 0.995) {
+    const peelX = SCX + SR * Math.cos(peelAngle);
+    const peelY = SCY + SR * Math.sin(peelAngle);
+
+    sCtx.beginPath();
+    sCtx.arc(peelX, peelY, 5.5, 0, Math.PI * 2);
+    sCtx.fillStyle = '#ef4444';
+    sCtx.fill();
+    sCtx.strokeStyle = '#fff';
+    sCtx.lineWidth = 2;
+    sCtx.stroke();
+
+    sCtx.beginPath();
+    sCtx.arc(lineEndX, SContactY, 5.5, 0, Math.PI * 2);
+    sCtx.fillStyle = '#ef4444';
+    sCtx.fill();
+    sCtx.strokeStyle = '#fff';
+    sCtx.lineWidth = 2;
+    sCtx.stroke();
+  }
+
+  // Labels + tick marks (fade in when nearly done)
   if (ep > 0.75) {
     const alpha = Math.min((ep - 0.75) / 0.25, 1);
     sCtx.globalAlpha = alpha;
 
-    // "円周" label
     sCtx.fillStyle = '#dc2626';
-    setFont(sCtx, 15, 'bold');
+    setFont(sCtx, 14, 'bold');
     sCtx.textAlign = 'center';
     sCtx.textBaseline = 'top';
-    sCtx.fillText('← 円周（まわりの長さ） →', SCX, SLineY + 12);
+    sCtx.fillText('← 円周（まわりの長さ） →', SContactX + SCircumference / 2, SContactY + 10);
 
-    // Tick marks at every diameter (D, 2D, 3D)
     const dLen = SR * 2;
     for (let i = 1; i <= 3; i++) {
-      const tx = SLineStart + dLen * i;
+      const tx = SContactX + dLen * i;
       sCtx.beginPath();
-      sCtx.moveTo(tx, SLineY - 10);
-      sCtx.lineTo(tx, SLineY + 10);
+      sCtx.moveTo(tx, SContactY - 10);
+      sCtx.lineTo(tx, SContactY + 10);
       sCtx.strokeStyle = '#3b82f6';
       sCtx.lineWidth = 2;
       sCtx.stroke();
@@ -190,26 +218,25 @@ function drawStringCanvas(p) {
       sCtx.fillStyle = '#1e40af';
       sCtx.textAlign = 'center';
       sCtx.textBaseline = 'bottom';
-      sCtx.fillText(`${i}D`, tx, SLineY - 12);
+      sCtx.fillText(`${i}D`, tx, SContactY - 12);
     }
 
-    // Small annotation: "約3.14倍"
     sCtx.fillStyle = '#059669';
     setFont(sCtx, 12, 'bold');
     sCtx.textAlign = 'right';
     sCtx.textBaseline = 'middle';
-    sCtx.fillText('≈ 直径 × 3.14', SLineStart + SCircumference - 2, SLineY - 26);
+    sCtx.fillText('≈ 直径 × 3.14', SContactX + SCircumference - 2, SContactY - 50);
 
     sCtx.globalAlpha = 1;
   }
 
-  // -- "糸を巻こう" hint when at rest --
+  // Hint at rest (shown to the right of the circle)
   if (ep < 0.05) {
     sCtx.fillStyle = '#6b7280';
     setFont(sCtx, 12);
     sCtx.textAlign = 'center';
-    sCtx.textBaseline = 'top';
-    sCtx.fillText('↑ 赤い糸が円のまわりに巻いてあります', SCX, SLineY + 8);
+    sCtx.textBaseline = 'middle';
+    sCtx.fillText('赤い線が円周。ボタンを押して引き伸ばしてみよう！', (SCX + SR + SW) / 2, SCY);
   }
 }
 
