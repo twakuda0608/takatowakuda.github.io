@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ギア比を学ぼう</title>
+  <link rel="stylesheet" href="/common.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <h1>ギア比を学ぼう</h1>
+    <p class="lead">ドライバー・フォロワー・アイドラーの仕組みと、ギア比の計算を図で理解しよう。</p>
+
+    <!-- 1. 基本 -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge bdg-basic">基本</span>
+        <h2>ギアを見てみよう</h2>
+      </div>
+      <div class="legend-row">
+        <span class="leg-dot" style="background:#f97316"></span><span class="leg-text">ドライバー（入力）</span>
+        <span class="leg-dot" style="background:#3b82f6"></span><span class="leg-text">フォロワー（出力）</span>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="c1" width="560" height="200"></canvas>
+      </div>
+      <div class="controls-row">
+        <button class="action-btn btn-orange" id="btn-basic">▶ スタート</button>
+        <div class="concept-note inline-note">ドライバーが回ると、フォロワーは<strong>逆方向</strong>に回る</div>
+      </div>
+    </section>
+
+    <!-- 2. 歯の数 -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge bdg-teeth">歯の数</span>
+        <h2>歯の数で速さが変わる</h2>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="c2" width="560" height="260"></canvas>
+      </div>
+      <div class="slider-grid">
+        <label class="slider-row">
+          <span class="slab" style="color:#c2410c">ドライバー</span>
+          <input type="range" id="sl-drv" min="6" max="28" value="12" step="2">
+          <span class="sval" style="color:#c2410c" id="sv-drv">12</span>歯
+        </label>
+        <label class="slider-row">
+          <span class="slab" style="color:#1d4ed8">フォロワー</span>
+          <input type="range" id="sl-fol" min="6" max="28" value="24" step="2">
+          <span class="sval" style="color:#1d4ed8" id="sv-fol">24</span>歯
+        </label>
+      </div>
+      <div class="ratio-box">
+        ギア比 ＝ <span style="color:#1d4ed8" id="rb-fol">24</span>（フォロワー）÷ <span style="color:#c2410c" id="rb-drv">12</span>（ドライバー）＝ <strong class="ratio-val" id="rb-val">2.00</strong>
+      </div>
+      <div class="concept-note" id="ratio-note" style="margin-top:10px;"></div>
+    </section>
+
+    <!-- 3. アイドラー -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge bdg-idler">アイドラー</span>
+        <h2>アイドラーの役割</h2>
+      </div>
+      <p class="concept-desc">ドライバーとフォロワーの間に <strong style="color:#7c3aed">アイドラー</strong> を入れると、回転方向が逆になる。</p>
+      <div class="step-tabs">
+        <button class="stab active" data-s="0">① ドライバーのみ</button>
+        <button class="stab" data-s="1">② ＋ フォロワー</button>
+        <button class="stab" data-s="2">③ ＋ アイドラー</button>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="c3" width="560" height="200"></canvas>
+      </div>
+      <div class="idler-note" id="idler-note"></div>
+    </section>
+
+    <!-- 4. 計算 -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge bdg-calc">計算</span>
+        <h2>ギア比を計算しよう</h2>
+      </div>
+      <div class="formula-card">
+        <div class="formula-main">
+          <span class="formula-label">ギア比 ＝</span>
+          <div class="frac">
+            <div class="frac-top" style="color:#1d4ed8">フォロワーの歯数</div>
+            <div class="frac-line"></div>
+            <div class="frac-bot" style="color:#c2410c">ドライバーの歯数</div>
+          </div>
+        </div>
+      </div>
+      <div class="calc-row">
+        <div class="calc-group">
+          <label style="color:#c2410c">ドライバー歯数</label>
+          <input type="number" class="demo-input" id="ci-drv" value="12" min="1" max="200">
+        </div>
+        <div class="calc-op">÷</div>
+        <div class="calc-group">
+          <label style="color:#1d4ed8">フォロワー歯数</label>
+          <input type="number" class="demo-input" id="ci-fol" value="36" min="1" max="200">
+        </div>
+        <div class="calc-op">=</div>
+        <div class="calc-result">
+          <div class="calc-rlabel">ギア比</div>
+          <div class="calc-rval" id="calc-rval">3.00</div>
+        </div>
+      </div>
+      <div class="speed-section">
+        <div class="speed-row">
+          <span class="speed-lbl" style="color:#c2410c">ドライバー</span>
+          <div class="speed-track">
+            <div class="speed-fill" id="sf-drv" style="background:#f97316;width:100%"></div>
+          </div>
+          <span class="speed-text" id="st-drv">1回転/秒</span>
+        </div>
+        <div class="speed-row">
+          <span class="speed-lbl" style="color:#1d4ed8">フォロワー</span>
+          <div class="speed-track">
+            <div class="speed-fill" id="sf-fol" style="background:#3b82f6;width:33%"></div>
+          </div>
+          <span class="speed-text" id="st-fol">0.33回転/秒</span>
+        </div>
+      </div>
+      <div class="concept-note" id="calc-note"></div>
+    </section>
+
+  </div>
+  <script src="app.js" defer></script>
+  <script src="/common.js"></script>
+</body>
+</html>
