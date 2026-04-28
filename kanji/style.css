@@ -49,6 +49,7 @@ textarea {
   font-size: 12px;
   font-weight: 600;
   display: inline-block;
+  white-space: nowrap;
 }
 
 /* 学年別カラー */

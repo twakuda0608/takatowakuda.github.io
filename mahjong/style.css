@@ -107,7 +107,7 @@ input[readonly]{
 /* =========================
    Tabs
 ========================= */
-.tabs{ display:flex; gap:8px; justify-content:center; margin:0 0 12px; }
+.tabs{ display:flex; gap:8px; justify-content:center; margin:0 0 12px; flex-wrap:wrap; }
 .tabbtn{
   padding:8px 14px;
   border:1px solid #ddd;
@@ -119,6 +119,18 @@ input[readonly]{
 .tabbtn.active{ background:#e8f3ff; border-color:var(--brand); color:var(--brand); }
 .tab{ display:none; }
 .tab.active{ display:block; }
+
+/* =========================
+   Mobile: tighten layout
+========================= */
+.sp-br { display: none; }
+
+@media (max-width: 460px) {
+  .page-card { padding: 16px; }
+  .tabbtn { font-size: 13px; padding: 7px 10px; }
+  .score-row .score-num { width: 90px; }
+  .sp-br { display: inline; }
+}
 
 /* =========================
    Tab2 grid: keep existing layout
