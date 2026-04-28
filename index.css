@@ -129,9 +129,12 @@ footer {
   padding-top: 20px;
 }
 
+.nb { display: inline-block; } /* non-breaking chunk for JP titles */
+
 /* ===== Mobile ===== */
 @media (max-width: 480px) {
   .container { padding: 40px 20px 60px; }
   .header-text h1 { font-size: 1.4rem; }
-  .tool-grid { grid-template-columns: 1fr 1fr; }
+  .tool-grid { grid-template-columns: 1fr 1fr; grid-auto-rows: auto; }
+  .tool-grid a { min-height: 100px; }
 }
