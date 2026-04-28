@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>麻雀テーブル</title>
+  <link rel="stylesheet" href="/common.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0b2e14;
+      font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
+      -webkit-user-select: none;
+      user-select: none;
+      touch-action: manipulation;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Square table: side = narrower viewport dimension (100vw on portrait phones) */
+    .table {
+      display: grid;
+      grid-template-columns: 112px 1fr 112px;
+      grid-template-rows: 138px 1fr 138px;
+      width: 100vw;
+      height: 100vw;
+      background: #155a26;
+      flex-shrink: 0;
+    }
+
+    /* Player zones */
+    .pz {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pz.top    { grid-column: 2; grid-row: 1; }
+    .pz.left   { grid-column: 1; grid-row: 2; position: relative; }
+    .pz.center { grid-column: 2; grid-row: 2; position: relative; overflow: visible; }
+    .pz.right  { grid-column: 3; grid-row: 2; position: relative; }
+    .pz.bottom { grid-column: 2; grid-row: 3; }
+
+    /* Player card */
+    .pcard {
+      background: rgba(0, 0, 0, 0.45);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+    }
+
+    /* Top / bottom cards: fill horizontal space */
+    .pz.top .pcard,
+    .pz.bottom .pcard {
+      width: min(250px, 94%);
+    }
+    .pz.top .pcard { transform: rotate(180deg); }
+
+    /* Left / right cards: absolute + rotated so they read from each side */
+    .pz.left .pcard,
+    .pz.right .pcard {
+      position: absolute;
+      width: 200px;
+      left: 50%;
+      top: 50%;
+    }
+    .pz.left .pcard  { transform: translate(-50%, -50%) rotate(90deg); }
+    .pz.right .pcard { transform: translate(-50%, -50%) rotate(-90deg); }
+
+    /* Wind badge */
+    .wind {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fbbf24;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid rgba(251, 191, 36, 0.35);
+      background: rgba(251, 191, 36, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.1s;
+    }
+    .wind:active { background: rgba(251, 191, 36, 0.3); }
+
+    /* Score row: [−1k] [value/input] [+1k] */
+    .srow {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .adj {
+      background: rgba(255, 255, 255, 0.11);
+      border: none;
+      border-radius: 6px;
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 5px 7px;
+      cursor: pointer;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .adj:active { background: rgba(255, 255, 255, 0.28); }
+
+    .sval {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      min-width: 82px;
+      text-align: center;
+      cursor: pointer;
+      letter-spacing: -0.5px;
+    }
+    .sinp {
+      display: none;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1.5px solid rgba(255, 255, 255, 0.55);
+      border-radius: 8px;
+      padding: 3px 6px;
+      width: 88px;
+      text-align: center;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    /* Riichi toggle button */
+    .rbtn {
+      background: rgba(255, 255, 255, 0.09);
+      border: 1.5px solid rgba(255, 255, 255, 0.22);
+      border-radius: 20px;
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 18px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .rbtn.on {
+      background: #b91c1c;
+      border-color: #f87171;
+      color: #fff;
+      box-shadow: 0 0 18px rgba(239, 68, 68, 0.65);
+    }
+
+    /* ── Center panel ────────────────────────────── */
+    .center-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 14px;
+      padding: 8px 4px;
+    }
+
+    .round-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 10px;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 5px 10px;
+      cursor: pointer;
+      letter-spacing: 1.5px;
+      width: 100%;
+      text-align: center;
+    }
+    .round-btn:active { background: rgba(255, 255, 255, 0.18); }
+
+    /* Riichi sticks — one per player, placed at the edge of the center zone facing that player */
+    .front-stick {
+      position: absolute;
+      width: 62px;
+      height: 9px;
+      background: #f5f5f0;
+      border-radius: 5px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+      z-index: 10;
+    }
+    .front-stick.on { opacity: 1; }
+    .front-stick::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #dc2626;
+      border-radius: 50%;
+      top: 0.5px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    /* Center each stick's midpoint on the boundary between center zone and that player's zone */
+    #fs0 { bottom: 0; left: 50%;  transform: translateX(-50%) translateY(50%); }
+    #fs1 { right:  0; top:  50%;  transform: translateX(50%)  translateY(-50%) rotate(90deg); }
+    #fs2 { top:    0; left: 50%;  transform: translateX(-50%) translateY(-50%); }
+    #fs3 { left:   0; top:  50%;  transform: translateX(-50%) translateY(-50%) rotate(90deg); }
+
+    /* Honba row */
+    .hrow {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .hbtn {
+      background: rgba(255, 255, 255, 0.11);
+      border: none;
+      border-radius: 6px;
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 14px;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .hbtn:active { background: rgba(255, 255, 255, 0.28); }
+    .hlbl {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 11px;
+      font-weight: 600;
+      min-width: 36px;
+      text-align: center;
+    }
+
+    /* Reset — lives at bottom of center */
+    .reset-btn {
+      background: none;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.38);
+      font-size: 10px;
+      padding: 3px 10px;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+    .reset-btn:active { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.5); }
+  </style>
+</head>
+<body>
+  <div class="table">
+
+    <!-- corners (spacers; top-left hosts the back FAB from common.js) -->
+    <div style="grid-column:1;grid-row:1"></div>
+    <div style="grid-column:3;grid-row:1"></div>
+    <div style="grid-column:1;grid-row:3"></div>
+    <div style="grid-column:3;grid-row:3"></div>
+
+    <!-- Top: 対面 (西) — rotated 180° -->
+    <div class="pz top">
+      <div class="pcard">
+        <div class="wind" id="w2">西</div>
+        <div class="srow">
+          <button class="adj" data-p="2" data-d="-1000">−1k</button>
+          <span class="sval" id="sv2">25000</span>
+          <input class="sinp" id="si2" type="number" inputmode="numeric">
+          <button class="adj" data-p="2" data-d="1000">+1k</button>
+        </div>
+        <button class="rbtn" id="r2">リーチ</button>
+      </div>
+    </div>
+
+    <!-- Left: 上家 (北) — rotated 90° -->
+    <div class="pz left">
+      <div class="pcard">
+        <div class="wind" id="w3">北</div>
+        <div class="srow">
+          <button class="adj" data-p="3" data-d="-1000">−1k</button>
+          <span class="sval" id="sv3">25000</span>
+          <input class="sinp" id="si3" type="number" inputmode="numeric">
+          <button class="adj" data-p="3" data-d="1000">+1k</button>
+        </div>
+        <button class="rbtn" id="r3">リーチ</button>
+      </div>
+    </div>
+
+    <!-- Center -->
+    <div class="pz center">
+      <!-- riichi sticks: fs0=bottom, fs1=right, fs2=top, fs3=left -->
+      <div class="front-stick" id="fs0"></div>
+      <div class="front-stick" id="fs1"></div>
+      <div class="front-stick" id="fs2"></div>
+      <div class="front-stick" id="fs3"></div>
+      <div class="center-inner">
+        <button class="round-btn" id="roundBtn">東1局</button>
+        <div class="hrow">
+          <button class="hbtn" id="hm">−</button>
+          <span class="hlbl" id="hl">0本場</span>
+          <button class="hbtn" id="hp">＋</button>
+        </div>
+        <button class="reset-btn" id="resetBtn">リセット</button>
+      </div>
+    </div>
+
+    <!-- Right: 下家 (南) — rotated −90° -->
+    <div class="pz right">
+      <div class="pcard">
+        <div class="wind" id="w1">南</div>
+        <div class="srow">
+          <button class="adj" data-p="1" data-d="-1000">−1k</button>
+          <span class="sval" id="sv1">25000</span>
+          <input class="sinp" id="si1" type="number" inputmode="numeric">
+          <button class="adj" data-p="1" data-d="1000">+1k</button>
+        </div>
+        <button class="rbtn" id="r1">リーチ</button>
+      </div>
+    </div>
+
+    <!-- Bottom: 自分 (東) — normal -->
+    <div class="pz bottom">
+      <div class="pcard">
+        <div class="wind" id="w0">東</div>
+        <div class="srow">
+          <button class="adj" data-p="0" data-d="-1000">−1k</button>
+          <span class="sval" id="sv0">25000</span>
+          <input class="sinp" id="si0" type="number" inputmode="numeric">
+          <button class="adj" data-p="0" data-d="1000">+1k</button>
+        </div>
+        <button class="rbtn" id="r0">リーチ</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/common.js"></script>
+  <script>
+    const WINDS = ['東', '南', '西', '北'];
+    const ROUND_WINDS = ['東', '南', '西', '北'];
+
+    function freshState() {
+      return {
+        players: [
+          { score: 25000, wind: '東', riichi: false },
+          { score: 25000, wind: '南', riichi: false },
+          { score: 25000, wind: '西', riichi: false },
+          { score: 25000, wind: '北', riichi: false },
+        ],
+        honba: 0,
+        roundWind: 0,
+        roundNum: 1,
+      };
+    }
+
+    let state = freshState();
+
+    function render() {
+      for (let i = 0; i < 4; i++) {
+        const p = state.players[i];
+        document.getElementById(`sv${i}`).textContent = p.score.toLocaleString();
+        document.getElementById(`w${i}`).textContent = p.wind;
+        document.getElementById(`r${i}`).classList.toggle('on', p.riichi);
+        document.getElementById(`fs${i}`).classList.toggle('on', p.riichi);
+      }
+      document.getElementById('hl').textContent = `${state.honba}本場`;
+      document.getElementById('roundBtn').textContent =
+        `${ROUND_WINDS[state.roundWind]}${state.roundNum}局`;
+    }
+
+    // Riichi toggle: deduct/return 1000, show/hide the stick in front of that player
+    for (let i = 0; i < 4; i++) {
+      document.getElementById(`r${i}`).addEventListener('click', () => {
+        const p = state.players[i];
+        p.riichi = !p.riichi;
+        p.score += p.riichi ? -1000 : 1000;
+        render();
+      });
+    }
+
+    // Wind: tap to cycle
+    for (let i = 0; i < 4; i++) {
+      document.getElementById(`w${i}`).addEventListener('click', () => {
+        const p = state.players[i];
+        p.wind = WINDS[(WINDS.indexOf(p.wind) + 1) % 4];
+        render();
+      });
+    }
+
+    // Score: tap value to edit inline
+    for (let i = 0; i < 4; i++) {
+      const sv = document.getElementById(`sv${i}`);
+      const si = document.getElementById(`si${i}`);
+      sv.addEventListener('click', () => {
+        sv.style.display = 'none';
+        si.style.display = 'block';
+        si.value = state.players[i].score;
+        si.focus();
+        si.select();
+      });
+      const commit = () => {
+        const v = parseInt(si.value, 10);
+        if (!isNaN(v)) state.players[i].score = v;
+        si.style.display = 'none';
+        sv.style.display = '';
+        render();
+      };
+      si.addEventListener('blur', commit);
+      si.addEventListener('keydown', e => e.key === 'Enter' && si.blur());
+    }
+
+    // Score ±1k buttons
+    document.querySelectorAll('.adj').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        state.players[+btn.dataset.p].score += +btn.dataset.d;
+        render();
+      });
+    });
+
+    // Honba
+    document.getElementById('hm').addEventListener('click', () => { state.honba = Math.max(0, state.honba - 1); render(); });
+    document.getElementById('hp').addEventListener('click', () => { state.honba++; render(); });
+
+    // Round: tap to advance (東1→東2→…→東4→南1→…)
+    document.getElementById('roundBtn').addEventListener('click', () => {
+      state.roundNum++;
+      if (state.roundNum > 4) {
+        state.roundNum = 1;
+        state.roundWind = (state.roundWind + 1) % 4;
+      }
+      render();
+    });
+
+    // Reset
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (!confirm('スコアをリセットしますか？')) return;
+      state = freshState();
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
