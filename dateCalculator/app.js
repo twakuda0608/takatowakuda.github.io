@@ -44,7 +44,12 @@ function calculate() {
   const dateStr = `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
   const startDate = new Date(dateStr);
 
-  if (isNaN(startDate.getTime())) {
+  if (
+    isNaN(startDate.getTime()) ||
+    startDate.getFullYear() !== parseInt(y, 10) ||
+    startDate.getMonth() + 1 !== parseInt(m, 10) ||
+    startDate.getDate() !== parseInt(d, 10)
+  ) {
     resultDiv.textContent = "無効な日付です．";
     milestoneSection.hidden = true;
     return;
@@ -197,7 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   [inputYear, inputMonth, inputDay].forEach(el =>
-    el.addEventListener("change", syncHiddenDate)
+    el.addEventListener("input", () => { syncHiddenDate(); calculate(); })
   );
 
   document.getElementById("addMilestoneBtn").addEventListener("click", addCustomMilestoneRow);

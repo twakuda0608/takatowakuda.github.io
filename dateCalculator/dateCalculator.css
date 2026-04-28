@@ -112,24 +112,6 @@
   pointer-events: none;
 }
 
-/* ===== Calculate button ===== */
-.main-calc-btn {
-  width: 100%;
-  padding: 13px;
-  font-size: 15px;
-  font-weight: 600;
-  font-family: inherit;
-  background: var(--brand);
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: transform .1s, background .2s;
-}
-
-.main-calc-btn:hover  { background: var(--brand-dark); }
-.main-calc-btn:active { transform: scale(.98); }
-
 /* ===== Result cards ===== */
 #result {
   display: grid;

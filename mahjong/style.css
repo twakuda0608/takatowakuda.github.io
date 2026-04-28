@@ -484,6 +484,9 @@ input[type="checkbox"]{ width:auto; }
 }
 .session-card {
   margin: 12px 0;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .session-legend {
   font-size: 13px;
