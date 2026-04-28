@@ -171,23 +171,9 @@ canvas {
 }
 
 .c-bar {
-  width: 300px;
+  width: 340px;
   background: #fecaca;
   border: 2px solid #ef4444;
-}
-
-.ratio-extra {
-  font-size: .72rem;
-  font-weight: 700;
-  color: #ef4444;
-  background: #fef2f2;
-  border: 1.5px dashed #ef4444;
-  border-radius: 4px;
-  padding: 2px 5px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
 }
 
 .ratio-num {
@@ -211,6 +197,6 @@ canvas {
 @media (max-width: 480px) {
   .ratio-row { flex-wrap: wrap; }
   .d-bar  { width: 76px; }
-  .c-bar  { width: 228px; }
+  .c-bar  { width: 259px; }
   .ratio-hint { margin-left: 0; }
 }
