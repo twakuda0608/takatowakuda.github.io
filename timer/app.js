@@ -35,27 +35,27 @@ const SHIFT_DATA = {
 };
 
 const SCHEDULE_SAT = [
-  { start: '09:30:01', end: '10:00:00', rate: RATE_B },
-  { start: '10:00:01', end: '11:30:00', rate: RATE_A },
-  { start: '11:30:01', end: '11:45:00', rate: RATE_B },
-  { start: '11:45:01', end: '12:45:00', rate: 0 },
-  { start: '12:45:01', end: '13:00:00', rate: RATE_B },
-  { start: '13:00:01', end: '14:30:00', rate: RATE_A },
-  { start: '14:30:01', end: '15:00:00', rate: RATE_B },
-  { start: '15:00:01', end: '16:30:00', rate: RATE_A },
-  { start: '16:30:01', end: '17:00:00', rate: RATE_B },
-  { start: '17:00:01', end: '18:30:00', rate: RATE_A },
-  { start: '18:30:01', end: '19:00:00', rate: RATE_B },
-  { start: '19:00:01', end: '20:30:00', rate: RATE_A },
-  { start: '20:30:01', end: '20:45:00', rate: RATE_B },
+  { start: '09:30:00', end: '10:00:00', rate: RATE_B },
+  { start: '10:00:00', end: '11:30:00', rate: RATE_A },
+  { start: '11:30:00', end: '11:45:00', rate: RATE_B },
+  { start: '11:45:00', end: '12:45:00', rate: 0 },
+  { start: '12:45:00', end: '13:00:00', rate: RATE_B },
+  { start: '13:00:00', end: '14:30:00', rate: RATE_A },
+  { start: '14:30:00', end: '15:00:00', rate: RATE_B },
+  { start: '15:00:00', end: '16:30:00', rate: RATE_A },
+  { start: '16:30:00', end: '17:00:00', rate: RATE_B },
+  { start: '17:00:00', end: '18:30:00', rate: RATE_A },
+  { start: '18:30:00', end: '19:00:00', rate: RATE_B },
+  { start: '19:00:00', end: '20:30:00', rate: RATE_A },
+  { start: '20:30:00', end: '20:45:00', rate: RATE_B },
 ];
 
 const SCHEDULE_FRI = [
-  { start: '16:45:01', end: '17:00:00', rate: RATE_B },
-  { start: '17:00:01', end: '18:30:00', rate: RATE_A },
-  { start: '18:30:01', end: '19:00:00', rate: RATE_B },
-  { start: '19:00:01', end: '20:30:00', rate: RATE_A },
-  { start: '20:30:01', end: '20:45:00', rate: RATE_B },
+  { start: '16:45:00', end: '17:00:00', rate: RATE_B },
+  { start: '17:00:00', end: '18:30:00', rate: RATE_A },
+  { start: '18:30:00', end: '19:00:00', rate: RATE_B },
+  { start: '19:00:00', end: '20:30:00', rate: RATE_A },
+  { start: '20:30:00', end: '20:45:00', rate: RATE_B },
 ];
 
 const fmtTime = new Intl.DateTimeFormat('ja-JP', {
@@ -117,7 +117,7 @@ function calcEarned(from, to, blocks) {
     if (e <= s) continue;
     total += (blk.rate / 3600) * ((e - s) / 1000);
   }
-  return total;
+  return Math.round(total);
 }
 
 const findCurrentBlock = (now, blocks, shiftStart) =>
