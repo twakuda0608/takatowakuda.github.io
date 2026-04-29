@@ -256,6 +256,94 @@
       letter-spacing: 1px;
     }
     .reset-btn:active { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.5); }
+
+    /* ── 和了モーダル ─────────────────────────── */
+    .ag-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.82);
+      display: flex; align-items: flex-start; justify-content: center;
+      z-index: 300; padding: 16px 12px 24px;
+      overflow-y: auto;
+    }
+    .ag-card {
+      background: #1c3a25;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 18px;
+      padding: 18px 16px 14px;
+      width: 100%; max-width: 340px;
+      color: #fff;
+    }
+    .ag-head { text-align:center; font-size:15px; font-weight:800; letter-spacing:3px; margin-bottom:16px; }
+    .ag-sec { margin-bottom:12px; }
+    .ag-lbl { font-size:10px; font-weight:700; color:rgba(255,255,255,0.5); letter-spacing:1.5px; margin-bottom:5px; }
+    .ag-row { display:flex; gap:5px; }
+    .psel {
+      flex:1; padding:7px 2px;
+      background:rgba(255,255,255,0.08);
+      border:1.5px solid rgba(255,255,255,0.15);
+      border-radius:8px; color:rgba(255,255,255,0.6);
+      font-size:14px; font-weight:800; cursor:pointer;
+      text-align:center; transition:all 0.1s;
+    }
+    .psel.sel { background:rgba(251,191,36,0.2); border-color:#fbbf24; color:#fbbf24; }
+    .psel:disabled { opacity:0.28; cursor:default; }
+    .wtype {
+      flex:1; padding:9px 4px;
+      background:rgba(255,255,255,0.08);
+      border:1.5px solid rgba(255,255,255,0.15);
+      border-radius:8px; color:rgba(255,255,255,0.6);
+      font-size:14px; font-weight:800; cursor:pointer;
+      text-align:center; transition:all 0.1s;
+    }
+    .wtype.sel { background:rgba(37,99,235,0.3); border-color:#60a5fa; color:#93c5fd; }
+    .han-tree { display:flex; flex-direction:column; gap:3px; }
+    .han-group { display:flex; flex-direction:column; }
+    .han-row {
+      display:flex; align-items:center; gap:8px;
+      padding:10px 12px; border-radius:8px; cursor:pointer;
+      color:rgba(255,255,255,0.65); font-size:13px; font-weight:700;
+      background:rgba(255,255,255,0.06);
+      border:1.5px solid rgba(255,255,255,0.1);
+      transition:background 0.1s; user-select:none;
+    }
+    .han-row.sel { background:rgba(251,191,36,0.18); border-color:rgba(251,191,36,0.6); color:#fbbf24; }
+    .han-row .arr { font-size:9px; color:rgba(255,255,255,0.35); transition:transform 0.15s; flex-shrink:0; }
+    .han-row.open .arr { transform:rotate(90deg); }
+    .fu-children { display:none; flex-direction:column; gap:2px; padding:3px 0 2px 24px; }
+    .fu-children.open { display:flex; }
+    .fu-row {
+      display:flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:6px; cursor:pointer;
+      color:rgba(255,255,255,0.5); font-size:12px; font-weight:600;
+      transition:background 0.1s; user-select:none;
+    }
+    .fu-row.sel { background:rgba(37,99,235,0.22); color:#93c5fd; }
+    .fu-dot { width:6px; height:6px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.25); flex-shrink:0; transition:all 0.1s; }
+    .fu-row.sel .fu-dot { background:#60a5fa; border-color:#60a5fa; }
+    .ag-result {
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:10px; padding:12px;
+      margin-bottom:12px;
+      font-size:13px; line-height:1.9;
+    }
+    .ag-result-hl { font-weight:800; font-size:15px; color:#fbbf24; margin-bottom:6px; }
+    .ag-actions { display:flex; gap:8px; }
+    .ag-apply {
+      flex:2; padding:11px;
+      background:#15803d; border:none;
+      border-radius:10px; color:#fff;
+      font-size:14px; font-weight:800;
+      cursor:pointer; letter-spacing:1px;
+    }
+    .ag-apply:active { background:#166534; }
+    .ag-cancel {
+      flex:1; padding:11px;
+      background:rgba(255,255,255,0.07);
+      border:1px solid rgba(255,255,255,0.18);
+      border-radius:10px; color:rgba(255,255,255,0.55);
+      font-size:13px; font-weight:700; cursor:pointer;
+    }
   </style>
 </head>
 <body>
@@ -343,6 +431,106 @@
 
   </div>
 
+  <!-- 和了モーダル -->
+  <div class="ag-overlay" id="agariModal" style="display:none">
+    <div class="ag-card">
+      <div class="ag-head" id="agHead">の和了</div>
+
+      <div id="selScreen">
+      <div class="ag-sec">
+        <div class="ag-lbl">和了方法</div>
+        <div class="ag-row">
+          <button class="wtype sel" id="wtRon">ロン</button>
+          <button class="wtype" id="wtTsumo">ツモ</button>
+        </div>
+      </div>
+
+      <div class="ag-sec" id="dealerSec">
+        <div class="ag-lbl">放銃者</div>
+        <div class="ag-row" id="dealerRow"></div>
+      </div>
+
+      <div class="ag-sec">
+        <div class="ag-lbl">飜数</div>
+        <div class="han-tree" id="hanTree">
+
+          <div class="han-group">
+            <div class="han-row" data-idx="0"><span class="arr">▶</span>1翻</div>
+            <div class="fu-children">
+              <div class="fu-row" data-fu="20"><span class="fu-dot"></span>20符</div>
+              <div class="fu-row" data-fu="25"><span class="fu-dot"></span>25符</div>
+              <div class="fu-row" data-fu="30"><span class="fu-dot"></span>30符</div>
+              <div class="fu-row" data-fu="40"><span class="fu-dot"></span>40符</div>
+              <div class="fu-row" data-fu="50"><span class="fu-dot"></span>50符</div>
+              <div class="fu-row" data-fu="60"><span class="fu-dot"></span>60符</div>
+              <div class="fu-row" data-fu="70"><span class="fu-dot"></span>70符</div>
+              <div class="fu-row" data-fu="80"><span class="fu-dot"></span>80符</div>
+              <div class="fu-row" data-fu="90"><span class="fu-dot"></span>90符</div>
+              <div class="fu-row" data-fu="100"><span class="fu-dot"></span>100符</div>
+              <div class="fu-row" data-fu="110"><span class="fu-dot"></span>110符</div>
+            </div>
+          </div>
+
+          <div class="han-group">
+            <div class="han-row" data-idx="1"><span class="arr">▶</span>2翻</div>
+            <div class="fu-children">
+              <div class="fu-row" data-fu="20"><span class="fu-dot"></span>20符</div>
+              <div class="fu-row" data-fu="25"><span class="fu-dot"></span>25符</div>
+              <div class="fu-row" data-fu="30"><span class="fu-dot"></span>30符</div>
+              <div class="fu-row" data-fu="40"><span class="fu-dot"></span>40符</div>
+              <div class="fu-row" data-fu="50"><span class="fu-dot"></span>50符</div>
+              <div class="fu-row" data-fu="60"><span class="fu-dot"></span>60符</div>
+              <div class="fu-row" data-fu="70"><span class="fu-dot"></span>70符</div>
+              <div class="fu-row" data-fu="80"><span class="fu-dot"></span>80符</div>
+              <div class="fu-row" data-fu="90"><span class="fu-dot"></span>90符</div>
+              <div class="fu-row" data-fu="100"><span class="fu-dot"></span>100符</div>
+              <div class="fu-row" data-fu="110"><span class="fu-dot"></span>110符</div>
+            </div>
+          </div>
+
+          <div class="han-group">
+            <div class="han-row" data-idx="2"><span class="arr">▶</span>3翻</div>
+            <div class="fu-children">
+              <div class="fu-row" data-fu="20"><span class="fu-dot"></span>20符</div>
+              <div class="fu-row" data-fu="25"><span class="fu-dot"></span>25符</div>
+              <div class="fu-row" data-fu="30"><span class="fu-dot"></span>30符</div>
+              <div class="fu-row" data-fu="40"><span class="fu-dot"></span>40符</div>
+              <div class="fu-row" data-fu="50"><span class="fu-dot"></span>50符</div>
+              <div class="fu-row" data-fu="60"><span class="fu-dot"></span>60符</div>
+            </div>
+          </div>
+
+          <div class="han-group">
+            <div class="han-row" data-idx="3"><span class="arr">▶</span>4翻</div>
+            <div class="fu-children">
+              <div class="fu-row" data-fu="20"><span class="fu-dot"></span>20符</div>
+              <div class="fu-row" data-fu="25"><span class="fu-dot"></span>25符</div>
+              <div class="fu-row" data-fu="30"><span class="fu-dot"></span>30符</div>
+            </div>
+          </div>
+
+          <div class="han-row" data-idx="4">満貫</div>
+          <div class="han-row" data-idx="5">跳満</div>
+          <div class="han-row" data-idx="6">倍満</div>
+          <div class="han-row" data-idx="7">三倍満</div>
+          <div class="han-row" data-idx="8">役満</div>
+
+        </div>
+      </div>
+
+        <button class="ag-cancel" id="agariCancel">キャンセル</button>
+      </div>
+
+      <div id="confScreen" style="display:none">
+        <div class="ag-result" id="agariResult"></div>
+        <div class="ag-actions">
+          <button class="ag-apply" id="agariApply">適　用</button>
+          <button class="ag-cancel" id="backBtn">やり直し</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="/common.js"></script>
   <script>
     const WINDS = ['東', '南', '西', '北'];
@@ -396,26 +584,9 @@
       });
     }
 
-    // Score: tap value to edit inline
+    // Score: tap to open agari modal for that player
     for (let i = 0; i < 4; i++) {
-      const sv = document.getElementById(`sv${i}`);
-      const si = document.getElementById(`si${i}`);
-      sv.addEventListener('click', () => {
-        sv.style.display = 'none';
-        si.style.display = 'block';
-        si.value = state.players[i].score;
-        si.focus();
-        si.select();
-      });
-      const commit = () => {
-        const v = parseInt(si.value, 10);
-        if (!isNaN(v)) state.players[i].score = v;
-        si.style.display = 'none';
-        sv.style.display = '';
-        render();
-      };
-      si.addEventListener('blur', commit);
-      si.addEventListener('keydown', e => e.key === 'Enter' && si.blur());
+      document.getElementById(`sv${i}`).addEventListener('click', () => openAgariModal(i));
     }
 
     // Score ±1k buttons
@@ -449,6 +620,207 @@
     });
 
     render();
+
+    // ── 和了スコア計算 ──────────────────────────
+    function roundUp100(n) { return Math.ceil(n / 100) * 100; }
+
+    const HAN_DEFS = [
+      { han: 1, needsFu: true },
+      { han: 2, needsFu: true },
+      { han: 3, needsFu: true },
+      { han: 4, needsFu: true },
+      { base: 2000, name: '満貫' },
+      { base: 3000, name: '跳満' },
+      { base: 4000, name: '倍満' },
+      { base: 6000, name: '三倍満' },
+      { base: 8000, name: '役満' },
+    ];
+
+    let agWinner = -1, agDealer = -1, agWinType = 'ron';
+    let agHanIdx = -1, agFu = -1, agDeltas = null;
+
+    function repopulateDealerRow() {
+      const row = document.getElementById('dealerRow');
+      row.innerHTML = '';
+      for (let i = 0; i < 4; i++) {
+        if (i === agWinner) continue;
+        const b = document.createElement('button');
+        b.className = 'psel ad-btn';
+        b.dataset.i = i;
+        b.textContent = state.players[i].wind;
+        b.addEventListener('click', () => {
+          agDealer = +b.dataset.i;
+          row.querySelectorAll('.ad-btn').forEach(x => x.classList.toggle('sel', x === b));
+          tryCalcAgari();
+        });
+        row.appendChild(b);
+      }
+    }
+
+    function openAgariModal(playerIdx) {
+      agWinner = playerIdx;
+      agDealer = -1; agWinType = 'ron';
+      agHanIdx = -1; agFu = -1; agDeltas = null;
+
+      document.getElementById('agHead').textContent = state.players[playerIdx].wind + 'の和了';
+      document.getElementById('wtRon').classList.add('sel');
+      document.getElementById('wtTsumo').classList.remove('sel');
+      document.getElementById('dealerSec').style.display = 'block';
+      repopulateDealerRow();
+
+      document.querySelectorAll('#hanTree .han-row').forEach(r => r.classList.remove('sel', 'open'));
+      document.querySelectorAll('#hanTree .fu-children').forEach(fc => fc.classList.remove('open'));
+      document.querySelectorAll('#hanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
+
+      document.getElementById('selScreen').style.display = 'block';
+      document.getElementById('confScreen').style.display = 'none';
+      document.getElementById('agariModal').style.display = 'flex';
+    }
+
+    document.getElementById('agariCancel').addEventListener('click', () => {
+      document.getElementById('agariModal').style.display = 'none';
+    });
+
+    document.getElementById('wtRon').addEventListener('click', () => {
+      agWinType = 'ron'; agDealer = -1;
+      document.getElementById('wtRon').classList.add('sel');
+      document.getElementById('wtTsumo').classList.remove('sel');
+      document.getElementById('dealerSec').style.display = 'block';
+      repopulateDealerRow();
+      tryCalcAgari();
+    });
+
+    document.getElementById('wtTsumo').addEventListener('click', () => {
+      agWinType = 'tsumo'; agDealer = -1;
+      document.getElementById('wtTsumo').classList.add('sel');
+      document.getElementById('wtRon').classList.remove('sel');
+      document.getElementById('dealerSec').style.display = 'none';
+      tryCalcAgari();
+    });
+
+    // Tree: expandable han rows (1–4翻)
+    document.querySelectorAll('#hanTree .han-group .han-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const fuChildren = row.nextElementSibling;
+        document.querySelectorAll('#hanTree .han-row').forEach(r => r.classList.remove('sel', 'open'));
+        document.querySelectorAll('#hanTree .fu-children').forEach(fc => fc.classList.remove('open'));
+        document.querySelectorAll('#hanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
+        row.classList.add('sel', 'open');
+        fuChildren.classList.add('open');
+        agHanIdx = +row.dataset.idx;
+        agFu = -1;
+      });
+    });
+
+    // Tree: limit hand rows (満貫〜役満)
+    document.querySelectorAll('#hanTree > .han-row').forEach(row => {
+      row.addEventListener('click', () => {
+        document.querySelectorAll('#hanTree .han-row').forEach(r => r.classList.remove('sel', 'open'));
+        document.querySelectorAll('#hanTree .fu-children').forEach(fc => fc.classList.remove('open'));
+        document.querySelectorAll('#hanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
+        row.classList.add('sel');
+        agHanIdx = +row.dataset.idx;
+        agFu = -1;
+        tryCalcAgari();
+      });
+    });
+
+    // Tree: fu rows
+    document.querySelectorAll('#hanTree .fu-row').forEach(fuRow => {
+      fuRow.addEventListener('click', () => {
+        document.querySelectorAll('#hanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
+        fuRow.classList.add('sel');
+        agFu = +fuRow.dataset.fu;
+        tryCalcAgari();
+      });
+    });
+
+    function tryCalcAgari() {
+      const def = HAN_DEFS[agHanIdx];
+      if (!def) return;
+      if (agWinType === 'ron' && agDealer < 0) return;
+      if (def.needsFu && agFu < 0) return;
+
+      let base, limitName;
+      if (def.needsFu) {
+        base = agFu * Math.pow(2, def.han + 2);
+        if (base > 2000) { base = 2000; limitName = '満貫'; }
+        else limitName = '';
+      } else {
+        base = def.base;
+        limitName = def.name;
+      }
+
+      const isParent = state.players[agWinner].wind === '東';
+      const honba = state.honba;
+      const riichiPot = state.players.filter(p => p.riichi).length * 1000;
+      const deltas = [0, 0, 0, 0];
+      let scoreText = '';
+
+      if (agWinType === 'ron') {
+        const pay = isParent ? roundUp100(base * 6) : roundUp100(base * 4);
+        const honbaPay = honba * 300;
+        deltas[agWinner] += pay + honbaPay + riichiPot;
+        deltas[agDealer]  -= pay + honbaPay;
+        scoreText = pay.toLocaleString() + '点' + (honba ? ` +${honbaPay}(本場)` : '');
+      } else {
+        if (isParent) {
+          const each = roundUp100(base * 2);
+          const honbaEach = honba * 100;
+          let get = riichiPot;
+          for (let i = 0; i < 4; i++) {
+            if (i === agWinner) continue;
+            deltas[i] -= each + honbaEach;
+            get += each + honbaEach;
+          }
+          deltas[agWinner] = get;
+          scoreText = `オール${each.toLocaleString()}点` + (honba ? ` +${honbaEach}(本場)` : '');
+        } else {
+          const parentPay = roundUp100(base * 2);
+          const childPay  = roundUp100(base);
+          const honbaEach = honba * 100;
+          let get = riichiPot;
+          for (let i = 0; i < 4; i++) {
+            if (i === agWinner) continue;
+            const pay = (state.players[i].wind === '東' ? parentPay : childPay) + honbaEach;
+            deltas[i] -= pay;
+            get += pay;
+          }
+          deltas[agWinner] = get;
+          scoreText = `親${parentPay.toLocaleString()} / 子${childPay.toLocaleString()}` + (honba ? ` +${honbaEach}(本場)` : '');
+        }
+      }
+
+      agDeltas = deltas;
+      let html = `<div class="ag-result-hl">${limitName ? limitName + ' ' : ''}${scoreText}</div>`;
+      for (let i = 0; i < 4; i++) {
+        const d = deltas[i];
+        if (d === 0) continue;
+        const after = state.players[i].score + d;
+        const sign = d > 0 ? '+' : '';
+        const col = d > 0 ? '#4ade80' : '#f87171';
+        html += `<div>${state.players[i].wind}: ${state.players[i].score.toLocaleString()} → <b>${after.toLocaleString()}</b> <span style="color:${col}">(${sign}${d.toLocaleString()})</span></div>`;
+      }
+      if (riichiPot > 0) html += `<div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:4px">リーチ棒 +${riichiPot.toLocaleString()}</div>`;
+      document.getElementById('agariResult').innerHTML = html;
+      document.getElementById('selScreen').style.display = 'none';
+      document.getElementById('confScreen').style.display = 'block';
+    }
+
+    document.getElementById('agariApply').addEventListener('click', () => {
+      if (!agDeltas) return;
+      for (let i = 0; i < 4; i++) {
+        state.players[i].score += agDeltas[i];
+        state.players[i].riichi = false;
+      }
+      document.getElementById('agariModal').style.display = 'none';
+      render();
+    });
+
+    document.getElementById('backBtn').addEventListener('click', () => {
+      document.getElementById('confScreen').style.display = 'none';
+      document.getElementById('selScreen').style.display = 'block';
+    });
   </script>
 </body>
 </html>
