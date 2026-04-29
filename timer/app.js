@@ -133,7 +133,8 @@ function tick() {
   const parts = fmtTime.formatToParts(today)
     .reduce((acc, p) => (acc[p.type] = p.value, acc), {});
   document.getElementById('clock').innerHTML =
-    parts.hour + '<span id="colon">:</span>' + parts.minute +
+    '<span id="hour">' + parts.hour + '</span>' +
+    '<span id="colon">:</span>' + parts.minute +
     '<span id="sec">' + parts.second + '</span>';
 
   const { blocks, shiftStart } = buildBlocks(today);
@@ -147,7 +148,30 @@ function tick() {
     : current.rate >= RATE_A ? COLOR_HIGH : COLOR_LOW;
 }
 
+function openTotal() {
+  if (!totalReady) {
+    var now = new Date();
+    totalYear  = now.getFullYear();
+    totalMonth = now.getMonth() + 1;
+    if (now.getDate() > 25) {
+      totalMonth++;
+      if (totalMonth > 12) { totalMonth = 1; totalYear++; }
+    }
+    renderTotal();
+    totalReady = true;
+  }
+  document.getElementById('timer-view').classList.add('hidden');
+  document.getElementById('total-view').classList.remove('hidden');
+}
+
+function closeTotal() {
+  document.getElementById('total-view').classList.add('hidden');
+  document.getElementById('timer-view').classList.remove('hidden');
+}
+
 document.addEventListener('click', function(e) {
+  if (e.target.id === 'hour')     openTotal();
+  if (e.target.id === 'close-btn') closeTotal();
   if (e.target.id === 'sec') {
     const el = document.getElementById('earned');
     el.style.visibility = el.style.visibility === 'hidden' ? 'visible' : 'hidden';
@@ -208,7 +232,7 @@ function calcDayEarnings(date, mode, endTime) {
 }
 
 function formatYen(amount) {
-  return '¥' + Math.round(amount).toLocaleString('ja-JP');
+  return Math.round(amount).toLocaleString('ja-JP');
 }
 
 function recalcTotal(days, settings) {
@@ -226,10 +250,7 @@ function renderTotal() {
   var settings = loadSettings(y, m);
   var days     = getWorkingDays(y, m);
 
-  var prevM = m === 1 ? 12 : m - 1;
-  var prevY = m === 1 ? y - 1 : y;
-  document.getElementById('month-heading').textContent =
-    y + '年' + m + '月 (' + prevY + '/' + prevM + '/26〜' + y + '/' + m + '/25)';
+  document.getElementById('month-heading').textContent = y + '年' + m + '月';
 
   var list = document.getElementById('days-list');
   list.innerHTML = '';
@@ -313,33 +334,9 @@ function renderTotal() {
   });
 }
 
-// ── Tab switching ──────────────────────────────────────────
+// ── Month nav ─────────────────────────────────────────────
 
 var totalReady = false;
-
-document.querySelectorAll('.tab-btn').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    var tab = btn.dataset.tab;
-    document.querySelectorAll('.tab-btn').forEach(function(b) {
-      b.classList.toggle('active', b === btn);
-    });
-    document.getElementById('timer-view').classList.toggle('hidden', tab !== 'timer');
-    document.getElementById('total-view').classList.toggle('hidden', tab !== 'total');
-
-    if (tab === 'total' && !totalReady) {
-      var now  = new Date();
-      totalYear  = now.getFullYear();
-      totalMonth = now.getMonth() + 1;
-      // After the 25th we're already in the next pay period
-      if (now.getDate() > 25) {
-        totalMonth++;
-        if (totalMonth > 12) { totalMonth = 1; totalYear++; }
-      }
-      renderTotal();
-      totalReady = true;
-    }
-  });
-});
 
 document.getElementById('prev-month').addEventListener('click', function() {
   totalMonth--;
