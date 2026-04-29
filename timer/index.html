@@ -8,8 +8,28 @@
   <link rel="stylesheet" href="timer.css" />
 </head>
 <body>
-  <div class="clock" id="clock">--:--<span id="sec">--</span></div>
-  <div class="earned" id="earned">0</div>
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="timer">タイマー</button>
+    <button class="tab-btn" data-tab="total">今月の収入</button>
+  </div>
+
+  <div id="timer-view" class="view">
+    <div class="clock" id="clock">--:--<span id="sec">--</span></div>
+    <div class="earned" id="earned">0</div>
+  </div>
+
+  <div id="total-view" class="view hidden">
+    <div class="month-nav">
+      <button class="month-nav-btn" id="prev-month">&#8249;</button>
+      <h2 id="month-heading"></h2>
+      <button class="month-nav-btn" id="next-month">&#8250;</button>
+    </div>
+    <div id="days-list"></div>
+    <div class="total-footer">
+      <span class="total-label">今月合計</span>
+      <span class="total-amount" id="total-amount">¥0</span>
+    </div>
+  </div>
 
   <script src="app.js" defer></script>
   <script src="/common.js"></script>
