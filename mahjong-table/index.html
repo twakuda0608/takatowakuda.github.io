@@ -190,6 +190,25 @@
       box-shadow: 0 0 18px rgba(239, 68, 68, 0.65);
     }
 
+    /* 起家マーク */
+    .kicha-mark {
+      background: #ea580c;
+      border: 1.5px solid rgba(255, 255, 255, 0.35);
+      border-radius: 4px;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 900;
+      width: 28px;
+      height: 20px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0;
+    }
+    .kicha-mark.visible { display: flex; }
+
     /* ── Center panel ────────────────────────────── */
     .center-inner {
       display: flex;
@@ -286,6 +305,118 @@
       letter-spacing: 1px;
     }
     .reset-btn:active { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.5); }
+
+    /* 流局ボタン */
+    .ryuu-btn {
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      border-radius: 8px;
+      color: rgba(251, 191, 36, 0.85);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 12px;
+      cursor: pointer;
+      letter-spacing: 1.5px;
+    }
+    .ryuu-btn:active { background: rgba(251, 191, 36, 0.25); }
+
+    /* 流局モーダル — mini table layout */
+    .ryuu-table-wrap {
+      display: grid;
+      grid-template-columns: 65px 1fr 65px;
+      grid-template-rows: 65px 1fr 65px;
+      aspect-ratio: 1;
+      background: #155a26;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .ryuu-pz {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .ryuu-pz.top    { grid-column: 2; grid-row: 1; }
+    .ryuu-pz.left   { grid-column: 1; grid-row: 2; }
+    .ryuu-pz.center { grid-column: 2; grid-row: 2; }
+    .ryuu-pz.right  { grid-column: 3; grid-row: 2; }
+    .ryuu-pz.bottom { grid-column: 2; grid-row: 3; }
+    .ryuu-mini-card {
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 140px;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1.5px solid rgba(255, 255, 255, 0.13);
+      border-radius: 10px;
+      padding: 6px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: border-color 0.12s;
+      user-select: none;
+    }
+    .ryuu-pz.bottom .ryuu-mini-card { transform: translate(-50%, -50%); }
+    .ryuu-pz.top    .ryuu-mini-card { transform: translate(-50%, -50%) rotate(180deg); }
+    .ryuu-pz.left   .ryuu-mini-card { transform: translate(-50%, -50%) rotate(90deg); }
+    .ryuu-pz.right  .ryuu-mini-card { transform: translate(-50%, -50%) rotate(-90deg); }
+    .ryuu-mini-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0);
+      transition: background 0.15s;
+      pointer-events: none;
+    }
+    .ryuu-mini-card.sel { border-color: #4ade80; }
+    .ryuu-mini-card.sel::after { background: rgba(0, 0, 0, 0.45); }
+    .ryuu-mini-wind-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .ryuu-mini-wind {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fbbf24;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid rgba(251, 191, 36, 0.35);
+      background: rgba(251, 191, 36, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .ryuu-mini-name {
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.5);
+    }
+    .ryuu-mini-score {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+    .ryuu-check {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 36px;
+      font-weight: 900;
+      color: #4ade80;
+      opacity: 0;
+      transition: opacity 0.12s;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .ryuu-mini-card.sel .ryuu-check { opacity: 1; }
 
     /* ── 和了モーダル ─────────────────────────── */
     .ag-overlay {
@@ -392,6 +523,7 @@
           <div class="wind" id="w2">西</div>
           <span class="pname" id="pn2">P3</span>
           <input class="pname-inp" id="pi2" type="text" maxlength="8">
+          <div class="kicha-mark" id="km2"></div>
         </div>
         <div class="srow">
           <button class="diff-btn" id="db2">±</button>
@@ -409,6 +541,7 @@
           <div class="wind" id="w3">北</div>
           <span class="pname" id="pn3">P4</span>
           <input class="pname-inp" id="pi3" type="text" maxlength="8">
+          <div class="kicha-mark" id="km3"></div>
         </div>
         <div class="srow">
           <button class="diff-btn" id="db3">±</button>
@@ -431,6 +564,7 @@
         <div class="hrow">
           <span class="hlbl" id="hl">0本場</span>
         </div>
+        <button class="ryuu-btn" id="ryuuBtn">流局</button>
         <button class="reset-btn" id="resetBtn">リセット</button>
       </div>
     </div>
@@ -442,6 +576,7 @@
           <div class="wind" id="w1">南</div>
           <span class="pname" id="pn1">P2</span>
           <input class="pname-inp" id="pi1" type="text" maxlength="8">
+          <div class="kicha-mark" id="km1"></div>
         </div>
         <div class="srow">
           <button class="diff-btn" id="db1">±</button>
@@ -459,6 +594,7 @@
           <div class="wind" id="w0">東</div>
           <span class="pname" id="pn0">P1</span>
           <input class="pname-inp" id="pi0" type="text" maxlength="8">
+          <div class="kicha-mark" id="km0"></div>
         </div>
         <div class="srow">
           <button class="diff-btn" id="db0">±</button>
@@ -469,6 +605,68 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- 流局モーダル -->
+  <div class="ag-overlay" id="ryuuModal" style="display:none">
+    <div class="ag-card">
+      <div class="ag-head">流　局</div>
+      <div class="ag-lbl" style="margin-bottom:8px">聴牌プレイヤーを選択</div>
+      <div class="ryuu-table-wrap">
+        <div style="grid-column:1;grid-row:1"></div>
+        <div class="ryuu-pz top">
+          <div class="ryuu-mini-card" id="rmc-2">
+            <span class="ryuu-check">✓</span>
+            <div class="ryuu-mini-wind-row">
+              <div class="ryuu-mini-wind" id="rm-wind-2"></div>
+              <span class="ryuu-mini-name" id="rm-name-2"></span>
+            </div>
+            <div class="ryuu-mini-score" id="rm-score-2"></div>
+          </div>
+        </div>
+        <div style="grid-column:3;grid-row:1"></div>
+        <div class="ryuu-pz left">
+          <div class="ryuu-mini-card" id="rmc-3">
+            <span class="ryuu-check">✓</span>
+            <div class="ryuu-mini-wind-row">
+              <div class="ryuu-mini-wind" id="rm-wind-3"></div>
+              <span class="ryuu-mini-name" id="rm-name-3"></span>
+            </div>
+            <div class="ryuu-mini-score" id="rm-score-3"></div>
+          </div>
+        </div>
+        <div class="ryuu-pz center">
+          <span style="color:rgba(255,255,255,0.22);font-size:10px;font-weight:700;letter-spacing:2px">タップで選択</span>
+        </div>
+        <div class="ryuu-pz right">
+          <div class="ryuu-mini-card" id="rmc-1">
+            <span class="ryuu-check">✓</span>
+            <div class="ryuu-mini-wind-row">
+              <div class="ryuu-mini-wind" id="rm-wind-1"></div>
+              <span class="ryuu-mini-name" id="rm-name-1"></span>
+            </div>
+            <div class="ryuu-mini-score" id="rm-score-1"></div>
+          </div>
+        </div>
+        <div style="grid-column:1;grid-row:3"></div>
+        <div class="ryuu-pz bottom">
+          <div class="ryuu-mini-card" id="rmc-0">
+            <span class="ryuu-check">✓</span>
+            <div class="ryuu-mini-wind-row">
+              <div class="ryuu-mini-wind" id="rm-wind-0"></div>
+              <span class="ryuu-mini-name" id="rm-name-0"></span>
+            </div>
+            <div class="ryuu-mini-score" id="rm-score-0"></div>
+          </div>
+        </div>
+        <div style="grid-column:3;grid-row:3"></div>
+      </div>
+      <div class="ag-result" id="ryuuPreview" style="min-height:130px"></div>
+      <div class="ag-actions" style="margin-top:10px">
+        <button class="ag-apply" id="ryuuApply">適　用</button>
+        <button class="ag-cancel" id="ryuuCancel">キャンセル</button>
+      </div>
+    </div>
   </div>
 
   <!-- 和了モーダル -->
@@ -609,6 +807,13 @@
         document.getElementById(`r${i}`).classList.toggle('on', p.riichi);
         document.getElementById(`fs${i}`).classList.toggle('on', p.riichi);
         document.getElementById(`pn${i}`).textContent = p.name;
+        const km = document.getElementById(`km${i}`);
+        if (p.wind === '東') {
+          km.textContent = ROUND_WINDS[state.roundWind];
+          km.classList.add('visible');
+        } else {
+          km.classList.remove('visible');
+        }
       }
       document.getElementById('hl').textContent = `${state.honba}本場`;
       document.getElementById('roundBtn').textContent =
@@ -702,6 +907,13 @@
       { base: 6000, name: '三倍満' },
       { base: 8000, name: '役満' },
     ];
+
+    function rotateWinds() {
+      for (let i = 0; i < 4; i++) {
+        const p = state.players[i];
+        p.wind = WINDS[(WINDS.indexOf(p.wind) + 3) % 4];
+      }
+    }
 
     let agWinner = -1, agDealer = -1, agWinType = 'ron';
     let agHanIdx = -1, agFu = -1, agDeltas = null;
@@ -883,6 +1095,7 @@
       if (state.players[agWinner].wind === '東') {
         state.honba++;
       } else {
+        rotateWinds();
         state.roundNum++;
         if (state.roundNum > 4) {
           state.roundNum = 1;
@@ -897,6 +1110,91 @@
     document.getElementById('backBtn').addEventListener('click', () => {
       document.getElementById('confScreen').style.display = 'none';
       document.getElementById('selScreen').style.display = 'block';
+    });
+
+    // ── 流局 ──────────────────────────────────────
+    let ryuuTenpai = [false, false, false, false];
+    let ryuuDeltas = [0, 0, 0, 0];
+
+    function calcRyuuDeltas() {
+      const count = ryuuTenpai.filter(Boolean).length;
+      const d = [0, 0, 0, 0];
+      if (count === 1) {
+        for (let i = 0; i < 4; i++) d[i] = ryuuTenpai[i] ? 3000 : -1000;
+      } else if (count === 2) {
+        for (let i = 0; i < 4; i++) d[i] = ryuuTenpai[i] ? 1500 : -1500;
+      } else if (count === 3) {
+        for (let i = 0; i < 4; i++) d[i] = ryuuTenpai[i] ? 1000 : -3000;
+      }
+      return d;
+    }
+
+    function updateRyuuPreview() {
+      ryuuDeltas = calcRyuuDeltas();
+      const count = ryuuTenpai.filter(Boolean).length;
+      const preview = document.getElementById('ryuuPreview');
+      let html = '';
+      if (count === 0) {
+        html = '<div>全員ノーテン — 点数移動なし</div>';
+      } else if (count === 4) {
+        html = '<div>全員聴牌 — 点数移動なし</div>';
+      } else {
+        for (let i = 0; i < 4; i++) {
+          const d = ryuuDeltas[i];
+          const after = state.players[i].score + d;
+          const sign = d > 0 ? '+' : '';
+          const col = d > 0 ? '#4ade80' : '#f87171';
+          html += `<div>${state.players[i].wind}: ${state.players[i].score.toLocaleString()} → <b>${after.toLocaleString()}</b> <span style="color:${col}">(${sign}${d.toLocaleString()})</span></div>`;
+        }
+      }
+      preview.innerHTML = html;
+    }
+
+    for (let i = 0; i < 4; i++) {
+      document.getElementById(`rmc-${i}`).addEventListener('click', () => {
+        ryuuTenpai[i] = !ryuuTenpai[i];
+        document.getElementById(`rmc-${i}`).classList.toggle('sel', ryuuTenpai[i]);
+        updateRyuuPreview();
+      });
+    }
+
+    function openRyuuModal() {
+      ryuuTenpai = [false, false, false, false];
+      ryuuDeltas = [0, 0, 0, 0];
+      for (let i = 0; i < 4; i++) {
+        document.getElementById(`rm-wind-${i}`).textContent = state.players[i].wind;
+        document.getElementById(`rm-name-${i}`).textContent = state.players[i].name;
+        document.getElementById(`rm-score-${i}`).textContent = state.players[i].score.toLocaleString();
+        document.getElementById(`rmc-${i}`).classList.remove('sel');
+      }
+      updateRyuuPreview();
+      document.getElementById('ryuuModal').style.display = 'flex';
+    }
+
+    document.getElementById('ryuuBtn').addEventListener('click', openRyuuModal);
+
+    document.getElementById('ryuuCancel').addEventListener('click', () => {
+      document.getElementById('ryuuModal').style.display = 'none';
+    });
+
+    document.getElementById('ryuuApply').addEventListener('click', () => {
+      for (let i = 0; i < 4; i++) {
+        state.players[i].score += ryuuDeltas[i];
+        state.players[i].riichi = false;
+      }
+      const eastIdx = state.players.findIndex(p => p.wind === '東');
+      const eastTenpai = eastIdx >= 0 && ryuuTenpai[eastIdx];
+      state.honba++;
+      if (!eastTenpai) {
+        rotateWinds();
+        state.roundNum++;
+        if (state.roundNum > 4) {
+          state.roundNum = 1;
+          state.roundWind = (state.roundWind + 1) % 4;
+        }
+      }
+      document.getElementById('ryuuModal').style.display = 'none';
+      render();
     });
   </script>
 </body>
