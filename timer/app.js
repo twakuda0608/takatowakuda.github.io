@@ -180,11 +180,14 @@ function saveSettings(y, m, settings) {
   catch (err) {}
 }
 
-// Returns only days that actually have a バイト shift in SHIFT_DATA
+// Returns shifts in the pay period: prev month 26th → this month 25th
 function getWorkingDays(y, m) {
-  const prefix = y + '-' + String(m).padStart(2, '0');
+  const from    = new Date(y, m - 2, 26);   // e.g. March 26 for "April"
+  const to      = new Date(y, m - 1, 25);   // e.g. April 25 for "April"
+  const fromKey = dayKey(from);
+  const toKey   = dayKey(to);
   return Object.keys(SHIFT_DATA)
-    .filter(k => k.startsWith(prefix))
+    .filter(k => k >= fromKey && k <= toKey)
     .sort()
     .map(k => {
       const [yr, mo, da] = k.split('-').map(Number);
@@ -223,7 +226,10 @@ function renderTotal() {
   var settings = loadSettings(y, m);
   var days     = getWorkingDays(y, m);
 
-  document.getElementById('month-heading').textContent = y + '年' + m + '月';
+  var prevM = m === 1 ? 12 : m - 1;
+  var prevY = m === 1 ? y - 1 : y;
+  document.getElementById('month-heading').textContent =
+    y + '年' + m + '月 (' + prevY + '/' + prevM + '/26〜' + y + '/' + m + '/25)';
 
   var list = document.getElementById('days-list');
   list.innerHTML = '';
@@ -324,6 +330,11 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
       var now  = new Date();
       totalYear  = now.getFullYear();
       totalMonth = now.getMonth() + 1;
+      // After the 25th we're already in the next pay period
+      if (now.getDate() > 25) {
+        totalMonth++;
+        if (totalMonth > 12) { totalMonth = 1; totalYear++; }
+      }
       renderTotal();
       totalReady = true;
     }
