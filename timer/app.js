@@ -204,29 +204,29 @@ function saveSettings(y, m, settings) {
   catch (err) {}
 }
 
-// Returns shifts in the pay period: prev month 26th → this month 25th
+// Returns all Fri/Sat in the pay period: prev month 26th → this month 25th
 function getWorkingDays(y, m) {
-  const from    = new Date(y, m - 2, 26);   // e.g. March 26 for "April"
-  const to      = new Date(y, m - 1, 25);   // e.g. April 25 for "April"
-  const fromKey = dayKey(from);
-  const toKey   = dayKey(to);
-  return Object.keys(SHIFT_DATA)
-    .filter(k => k >= fromKey && k <= toKey)
-    .sort()
-    .map(k => {
-      const [yr, mo, da] = k.split('-').map(Number);
-      return new Date(yr, mo - 1, da, 12, 0, 0);
-    });
+  const from = new Date(y, m - 2, 26);
+  const to   = new Date(y, m - 1, 25);
+  const days = [];
+  const cur  = new Date(from.getFullYear(), from.getMonth(), from.getDate(), 12, 0, 0);
+  while (cur <= to) {
+    const dow = cur.getDay();
+    if (dow === 5 || dow === 6) {
+      days.push(new Date(cur));
+    }
+    cur.setDate(cur.getDate() + 1);
+  }
+  return days;
 }
 
-function calcDayEarnings(date, mode, endTime) {
+function calcDayEarnings(date, mode, startTime, endTime) {
   const { blocks, shiftStart, shiftEnd } = buildBlocks(date);
   if (!shiftStart || blocks.length === 0 || mode === 'off') return 0;
   if (mode === 'custom') {
-    const [h, m] = (endTime || '17:00').split(':').map(Number);
-    const end = new Date(date.getTime());
-    end.setHours(h, m, 0, 0);
-    return calcEarned(shiftStart, end, blocks);
+    const from = startTime ? asTime(startTime, date) : shiftStart;
+    const to   = endTime   ? asTime(endTime,   date) : shiftEnd;
+    return calcEarned(from, to, blocks);
   }
   return calcEarned(shiftStart, shiftEnd, blocks);
 }
@@ -238,8 +238,9 @@ function formatYen(amount) {
 function recalcTotal(days, settings) {
   var total = 0;
   for (var i = 0; i < days.length; i++) {
-    var s = settings[dayKey(days[i])] || { mode: 'full', endTime: '' };
-    total += calcDayEarnings(days[i], s.mode, s.endTime);
+    var k = dayKey(days[i]);
+    var s = settings[k] || { mode: SHIFT_DATA[k] ? 'full' : 'off', startTime: '', endTime: '' };
+    total += calcDayEarnings(days[i], s.mode, s.startTime, s.endTime);
   }
   document.getElementById('total-amount').textContent = formatYen(total);
 }
@@ -260,9 +261,9 @@ function renderTotal() {
   for (var i = 0; i < days.length; i++) {
     var day   = days[i];
     var key   = dayKey(day);
-    var s     = settings[key] || { mode: 'full', endTime: '' };
+    var s     = settings[key] || { mode: SHIFT_DATA[key] ? 'full' : 'off', startTime: '', endTime: '' };
     var dow   = day.getDay();
-    var earn  = calcDayEarnings(day, s.mode, s.endTime);
+    var earn  = calcDayEarnings(day, s.mode, s.startTime, s.endTime);
     totalEarnings += earn;
 
     var shift      = SHIFT_DATA[key];
@@ -271,9 +272,11 @@ function renderTotal() {
     var dateLabel  = m + '月' + day.getDate() + '日(' + DAY_JA[dow] + ')';
     var dowClass   = dow === 6 ? 'sat' : 'fri';
     var rowClass   = 'day-row' + (isOff ? ' is-off' : '');
-    var timeDisp   = s.mode === 'custom' ? 'inline-block' : 'none';
+    var isCustom   = s.mode === 'custom';
+    var shiftDisp  = isCustom ? 'none' : 'inline';
+    var inputsDisp = isCustom ? 'flex' : 'none';
     var fullSel    = s.mode === 'full'   ? ' selected' : '';
-    var customSel  = s.mode === 'custom' ? ' selected' : '';
+    var customSel  = isCustom            ? ' selected' : '';
     var offSel     = s.mode === 'off'    ? ' selected' : '';
 
     var row = document.createElement('div');
@@ -281,16 +284,17 @@ function renderTotal() {
     row.dataset.key = key;
     row.innerHTML =
       '<span class="day-label ' + dowClass + '">' + dateLabel + '</span>' +
-      '<span class="shift-time">' + shiftLabel + '</span>' +
+      '<span class="shift-time" style="display:' + shiftDisp + '">' + shiftLabel + '</span>' +
       '<select class="mode-select" data-key="' + key + '">' +
         '<option value="full"'   + fullSel   + '>フル</option>' +
         '<option value="custom"' + customSel + '>カスタム</option>' +
         '<option value="off"'    + offSel    + '>休み</option>' +
       '</select>' +
-      '<input type="time" class="end-time-input" data-key="' + key + '"' +
-        ' value="' + (s.endTime || '') + '"' +
-        ' style="display:' + timeDisp + '" />' +
-      '<span class="day-earnings">' + (isOff ? '—' : formatYen(earn)) + '</span>';
+      '<span class="day-earnings">' + (isOff ? '—' : formatYen(earn)) + '</span>' +
+      '<div class="time-inputs" style="display:' + inputsDisp + '">' +
+        '<input type="time" class="start-time-input" data-key="' + key + '" value="' + (s.startTime || '') + '" />' +
+        '<input type="time" class="end-time-input"   data-key="' + key + '" value="' + (s.endTime   || '') + '" />' +
+      '</div>';
 
     list.appendChild(row);
   }
@@ -305,15 +309,30 @@ function renderTotal() {
       settings[key].mode = mode;
       saveSettings(y, m, settings);
 
-      var row     = list.querySelector('.day-row[data-key="' + key + '"]');
-      var timeInp = row.querySelector('.end-time-input');
-      timeInp.style.display = mode === 'custom' ? 'inline-block' : 'none';
+      var row = list.querySelector('.day-row[data-key="' + key + '"]');
+      row.querySelector('.shift-time').style.display  = mode === 'custom' ? 'none' : 'inline';
+      row.querySelector('.time-inputs').style.display = mode === 'custom' ? 'flex'  : 'none';
       row.classList.toggle('is-off', mode === 'off');
 
       var parts = key.split('-').map(Number);
       var date  = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
-      var earn  = calcDayEarnings(date, mode, settings[key].endTime || '');
+      var earn  = calcDayEarnings(date, mode, settings[key].startTime || '', settings[key].endTime || '');
       row.querySelector('.day-earnings').textContent = mode === 'off' ? '—' : formatYen(earn);
+      recalcTotal(days, settings);
+    });
+  });
+
+  list.querySelectorAll('.start-time-input').forEach(function(inp) {
+    inp.addEventListener('change', function(e) {
+      var key = e.target.dataset.key;
+      if (!settings[key]) settings[key] = { mode: 'custom', startTime: '', endTime: '' };
+      settings[key].startTime = e.target.value;
+      saveSettings(y, m, settings);
+
+      var parts = key.split('-').map(Number);
+      var date  = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+      var earn  = calcDayEarnings(date, settings[key].mode, e.target.value, settings[key].endTime || '');
+      list.querySelector('.day-row[data-key="' + key + '"] .day-earnings').textContent = formatYen(earn);
       recalcTotal(days, settings);
     });
   });
@@ -321,13 +340,13 @@ function renderTotal() {
   list.querySelectorAll('.end-time-input').forEach(function(inp) {
     inp.addEventListener('change', function(e) {
       var key = e.target.dataset.key;
-      if (!settings[key]) settings[key] = { mode: 'full', endTime: '' };
+      if (!settings[key]) settings[key] = { mode: 'custom', startTime: '', endTime: '' };
       settings[key].endTime = e.target.value;
       saveSettings(y, m, settings);
 
       var parts = key.split('-').map(Number);
       var date  = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
-      var earn  = calcDayEarnings(date, settings[key].mode, e.target.value);
+      var earn  = calcDayEarnings(date, settings[key].mode, settings[key].startTime || '', e.target.value);
       list.querySelector('.day-row[data-key="' + key + '"] .day-earnings').textContent = formatYen(earn);
       recalcTotal(days, settings);
     });
