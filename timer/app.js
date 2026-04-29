@@ -8,6 +8,32 @@ const COLOR_NEUTRAL = '#000000';
 const RATE_A = 2000;
 const RATE_B = 1226;
 
+// Actual バイト shifts from Google Calendar (crefus), Apr–Jun 2026
+const SHIFT_DATA = {
+  '2026-04-10': { start: '16:30', end: '20:45' },
+  '2026-04-11': { start: '12:45', end: '20:45' },
+  '2026-04-17': { start: '16:30', end: '20:45' },
+  '2026-04-18': { start: '09:00', end: '20:45' },
+  '2026-04-24': { start: '16:45', end: '20:45' },
+  '2026-04-25': { start: '09:30', end: '20:45' },
+  '2026-05-08': { start: '16:45', end: '20:45' },
+  '2026-05-09': { start: '09:30', end: '20:45' },
+  '2026-05-15': { start: '16:45', end: '20:45' },
+  '2026-05-16': { start: '09:30', end: '20:45' },
+  '2026-05-22': { start: '16:45', end: '20:45' },
+  '2026-05-23': { start: '09:30', end: '20:45' },
+  '2026-05-29': { start: '16:45', end: '20:45' },
+  '2026-05-30': { start: '09:30', end: '20:45' },
+  '2026-06-05': { start: '16:45', end: '20:45' },
+  '2026-06-06': { start: '09:30', end: '20:45' },
+  '2026-06-12': { start: '16:45', end: '20:45' },
+  '2026-06-13': { start: '09:30', end: '20:45' },
+  '2026-06-19': { start: '16:45', end: '20:45' },
+  '2026-06-20': { start: '09:30', end: '20:45' },
+  '2026-06-26': { start: '16:45', end: '20:45' },
+  '2026-06-27': { start: '09:30', end: '20:45' },
+};
+
 const SCHEDULE_SAT = [
   { start: '09:30:01', end: '10:00:00', rate: RATE_B },
   { start: '10:00:01', end: '11:30:00', rate: RATE_A },
@@ -40,6 +66,12 @@ const fmtNum = new Intl.NumberFormat('ja-JP', {
   style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2,
 });
 
+function dayKey(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
 const asToday = (hhmmss, baseDate) => {
   const [HH, MM, SS] = hhmmss.split(':').map(Number);
   const d = new Date(baseDate.getTime());
@@ -47,33 +79,53 @@ const asToday = (hhmmss, baseDate) => {
   return d;
 };
 
+const asTime = (hhmm, baseDate) => {
+  const [HH, MM] = hhmm.split(':').map(Number);
+  const d = new Date(baseDate.getTime());
+  d.setHours(HH, MM, 0, 0);
+  return d;
+};
+
+// Returns rate blocks + actual shift start/end from calendar data
 const buildBlocks = (baseDate) => {
-  const day = baseDate.getDay();
-  const schedule = day === 5 ? SCHEDULE_FRI : day === 6 ? SCHEDULE_SAT : [];
-  return schedule.map(p => ({
+  const key   = dayKey(baseDate);
+  const shift = SHIFT_DATA[key];
+  if (!shift) return { blocks: [], shiftStart: null, shiftEnd: null };
+
+  const dow      = baseDate.getDay();
+  const schedule = dow === 5 ? SCHEDULE_FRI : SCHEDULE_SAT;
+  const blocks   = schedule.map(p => ({
     start: asToday(p.start, baseDate),
     end:   asToday(p.end,   baseDate),
     rate:  p.rate,
   }));
+
+  return {
+    blocks,
+    shiftStart: asTime(shift.start, baseDate),
+    shiftEnd:   asTime(shift.end,   baseDate),
+  };
 };
 
-const secsBetween = (a, b) => Math.max(0, Math.floor((b - a) / 1000));
-
-function calcTotal(now, blocks) {
+// Earnings for the period [from, to], clipped to rate blocks
+function calcEarned(from, to, blocks) {
   let total = 0;
   for (const blk of blocks) {
-    if (now <= blk.start) continue;
-    const effectiveEnd = now < blk.end ? now : blk.end;
-    const secs = secsBetween(blk.start, effectiveEnd);
-    if (secs > 0) total += (blk.rate / 3600) * secs;
+    if (!blk.rate) continue;
+    const s = Math.max(from.getTime(), blk.start.getTime());
+    const e = Math.min(to.getTime(),   blk.end.getTime());
+    if (e <= s) continue;
+    total += (blk.rate / 3600) * ((e - s) / 1000);
   }
   return total;
 }
 
-const findCurrentBlock = (now, blocks) =>
-  blocks.find(b => now >= b.start && now < b.end) || null;
+const findCurrentBlock = (now, blocks, shiftStart) =>
+  (shiftStart && now >= shiftStart)
+    ? (blocks.find(b => now >= b.start && now < b.end) || null)
+    : null;
 
-// Timer tab
+// ── Timer tab ──────────────────────────────────────────────
 
 function tick() {
   const now   = new Date();
@@ -84,15 +136,15 @@ function tick() {
     parts.hour + '<span id="colon">:</span>' + parts.minute +
     '<span id="sec">' + parts.second + '</span>';
 
-  const blocks   = buildBlocks(today);
-  const total    = calcTotal(today, blocks);
+  const { blocks, shiftStart } = buildBlocks(today);
+  const total    = shiftStart ? calcEarned(shiftStart, today, blocks) : 0;
   const earnedEl = document.getElementById('earned');
   earnedEl.textContent = fmtNum.format(total);
 
-  const current = findCurrentBlock(today, blocks);
+  const current = findCurrentBlock(today, blocks, shiftStart);
   earnedEl.style.color = !current
     ? COLOR_NEUTRAL
-    : current.rate >= 2000 ? COLOR_HIGH : COLOR_LOW;
+    : current.rate >= RATE_A ? COLOR_HIGH : COLOR_LOW;
 }
 
 document.addEventListener('click', function(e) {
@@ -105,7 +157,7 @@ document.addEventListener('click', function(e) {
 tick();
 setInterval(tick, 1000);
 
-// Total tab
+// ── Total tab ──────────────────────────────────────────────
 
 const DAY_JA = ['日', '月', '火', '水', '木', '金', '土'];
 const STORAGE_PREFIX = 'timer_month_';
@@ -128,36 +180,32 @@ function saveSettings(y, m, settings) {
   catch (err) {}
 }
 
+// Returns only days that actually have a バイト shift in SHIFT_DATA
 function getWorkingDays(y, m) {
-  const days = [];
-  const d = new Date(y, m - 1, 1);
-  while (d.getMonth() === m - 1) {
-    if (d.getDay() === 5 || d.getDay() === 6) days.push(new Date(d));
-    d.setDate(d.getDate() + 1);
-  }
-  return days;
+  const prefix = y + '-' + String(m).padStart(2, '0');
+  return Object.keys(SHIFT_DATA)
+    .filter(k => k.startsWith(prefix))
+    .sort()
+    .map(k => {
+      const [yr, mo, da] = k.split('-').map(Number);
+      return new Date(yr, mo - 1, da, 12, 0, 0);
+    });
 }
 
 function calcDayEarnings(date, mode, endTime) {
-  const blocks = buildBlocks(date);
-  if (mode === 'off' || blocks.length === 0) return 0;
+  const { blocks, shiftStart, shiftEnd } = buildBlocks(date);
+  if (!shiftStart || blocks.length === 0 || mode === 'off') return 0;
   if (mode === 'custom') {
-    const parts = (endTime || '17:00').split(':').map(Number);
+    const [h, m] = (endTime || '17:00').split(':').map(Number);
     const end = new Date(date.getTime());
-    end.setHours(parts[0], parts[1], 0, 0);
-    return calcTotal(end, blocks);
+    end.setHours(h, m, 0, 0);
+    return calcEarned(shiftStart, end, blocks);
   }
-  return calcTotal(blocks[blocks.length - 1].end, blocks);
+  return calcEarned(shiftStart, shiftEnd, blocks);
 }
 
 function formatYen(amount) {
   return '¥' + Math.round(amount).toLocaleString('ja-JP');
-}
-
-function dayKey(d) {
-  return d.getFullYear() + '-' +
-    String(d.getMonth() + 1).padStart(2, '0') + '-' +
-    String(d.getDate()).padStart(2, '0');
 }
 
 function recalcTotal(days, settings) {
@@ -183,13 +231,15 @@ function renderTotal() {
   var totalEarnings = 0;
 
   for (var i = 0; i < days.length; i++) {
-    var day  = days[i];
-    var key  = dayKey(day);
-    var s    = settings[key] || { mode: 'full', endTime: '' };
-    var dow  = day.getDay();
-    var earn = calcDayEarnings(day, s.mode, s.endTime);
+    var day   = days[i];
+    var key   = dayKey(day);
+    var s     = settings[key] || { mode: 'full', endTime: '' };
+    var dow   = day.getDay();
+    var earn  = calcDayEarnings(day, s.mode, s.endTime);
     totalEarnings += earn;
 
+    var shift      = SHIFT_DATA[key];
+    var shiftLabel = shift ? shift.start + '〜' + shift.end : '';
     var isOff      = s.mode === 'off';
     var dateLabel  = m + '月' + day.getDate() + '日(' + DAY_JA[dow] + ')';
     var dowClass   = dow === 6 ? 'sat' : 'fri';
@@ -200,10 +250,11 @@ function renderTotal() {
     var offSel     = s.mode === 'off'    ? ' selected' : '';
 
     var row = document.createElement('div');
-    row.className    = rowClass;
-    row.dataset.key  = key;
+    row.className   = rowClass;
+    row.dataset.key = key;
     row.innerHTML =
       '<span class="day-label ' + dowClass + '">' + dateLabel + '</span>' +
+      '<span class="shift-time">' + shiftLabel + '</span>' +
       '<select class="mode-select" data-key="' + key + '">' +
         '<option value="full"'   + fullSel   + '>フル</option>' +
         '<option value="custom"' + customSel + '>カスタム</option>' +
@@ -256,7 +307,7 @@ function renderTotal() {
   });
 }
 
-// Tab switching
+// ── Tab switching ──────────────────────────────────────────
 
 var totalReady = false;
 
