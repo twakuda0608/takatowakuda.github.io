@@ -25,12 +25,14 @@
     /* Square table: side = narrower viewport dimension (100vw on portrait phones) */
     .table {
       display: grid;
-      grid-template-columns: 112px 1fr 112px;
-      grid-template-rows: 138px 1fr 138px;
+      grid-template-columns: 110px 1fr 110px;
+      grid-template-rows: 110px 1fr 110px;
       width: 100vw;
       height: 100vw;
       background: #155a26;
       flex-shrink: 0;
+      overflow: hidden;
+      --s: clamp(0.35, calc((100vw - 220px) / 250px), 1);
     }
 
     /* Player zones */
@@ -39,49 +41,46 @@
       align-items: center;
       justify-content: center;
     }
-    .pz.top    { grid-column: 2; grid-row: 1; }
+    .pz.top    { grid-column: 2; grid-row: 1; position: relative; }
     .pz.left   { grid-column: 1; grid-row: 2; position: relative; }
     .pz.center { grid-column: 2; grid-row: 2; position: relative; overflow: visible; }
     .pz.right  { grid-column: 3; grid-row: 2; position: relative; }
-    .pz.bottom { grid-column: 2; grid-row: 3; }
+    .pz.bottom { grid-column: 2; grid-row: 3; position: relative; }
 
-    /* Player card */
+    /* Player card — all 4 share the same reference size and are scaled uniformly */
     .pcard {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 250px;
       background: rgba(0, 0, 0, 0.45);
       border-radius: 16px;
       border: 1px solid rgba(255, 255, 255, 0.13);
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
-      padding: 10px 14px;
+      gap: 6px;
+      padding: 8px 12px;
     }
 
-    /* Top / bottom cards: fill horizontal space */
-    .pz.top .pcard,
-    .pz.bottom .pcard {
-      width: min(250px, 94%);
-    }
-    .pz.top .pcard { transform: rotate(180deg); }
+    .pz.top .pcard    { transform: translate(-50%, -50%) rotate(180deg) scale(var(--s)); }
+    .pz.bottom .pcard { transform: translate(-50%, -50%) scale(var(--s)); }
+    .pz.left .pcard   { transform: translate(-50%, -50%) rotate(90deg)  scale(var(--s)); }
+    .pz.right .pcard  { transform: translate(-50%, -50%) rotate(-90deg) scale(var(--s)); }
 
-    /* Left / right cards: absolute + rotated so they read from each side */
-    .pz.left .pcard,
-    .pz.right .pcard {
-      position: absolute;
-      width: 200px;
-      left: 50%;
-      top: 50%;
+    /* Wind badge + name row */
+    .wind-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
     }
-    .pz.left .pcard  { transform: translate(-50%, -50%) rotate(90deg); }
-    .pz.right .pcard { transform: translate(-50%, -50%) rotate(-90deg); }
 
-    /* Wind badge */
     .wind {
-      font-size: 20px;
+      font-size: 17px;
       font-weight: 800;
       color: #fbbf24;
-      width: 36px;
-      height: 36px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       border: 2px solid rgba(251, 191, 36, 0.35);
       background: rgba(251, 191, 36, 0.08);
@@ -94,25 +93,33 @@
     }
     .wind:active { background: rgba(251, 191, 36, 0.3); }
 
-    /* Score row: [−1k] [value/input] [+1k] */
+    .pname {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.55);
+      cursor: pointer;
+      letter-spacing: 0.5px;
+    }
+    .pname-inp {
+      display: none;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1.5px solid rgba(255, 255, 255, 0.55);
+      border-radius: 6px;
+      padding: 2px 6px;
+      width: 80px;
+      text-align: center;
+      outline: none;
+    }
+
     .srow {
       display: flex;
       align-items: center;
-      gap: 5px;
+      justify-content: center;
+      gap: 6px;
     }
-    .adj {
-      background: rgba(255, 255, 255, 0.11);
-      border: none;
-      border-radius: 6px;
-      color: rgba(255, 255, 255, 0.75);
-      font-size: 10px;
-      font-weight: 700;
-      padding: 5px 7px;
-      cursor: pointer;
-      flex-shrink: 0;
-      line-height: 1;
-    }
-    .adj:active { background: rgba(255, 255, 255, 0.28); }
 
     .sval {
       font-size: 22px;
@@ -122,6 +129,7 @@
       text-align: center;
       cursor: pointer;
       letter-spacing: -0.5px;
+      transition: color 0.1s;
     }
     .sinp {
       display: none;
@@ -136,6 +144,30 @@
       text-align: center;
       outline: none;
       -webkit-appearance: none;
+    }
+
+    /* Diff (+/−) button */
+    .diff-btn {
+      background: rgba(255,255,255,0.09);
+      border: 1.5px solid rgba(255,255,255,0.22);
+      border-radius: 6px;
+      color: rgba(255,255,255,0.55);
+      font-size: 12px;
+      font-weight: 800;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      touch-action: none;
+      transition: background 0.1s, color 0.1s;
+    }
+    .diff-btn.active {
+      background: rgba(255,255,255,0.22);
+      border-color: rgba(255,255,255,0.55);
+      color: #fff;
     }
 
     /* Riichi toggle button */
@@ -169,7 +201,7 @@
       padding: 8px 4px;
     }
 
-    .round-btn {
+    .round-display {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.28);
       border-radius: 10px;
@@ -177,12 +209,10 @@
       font-size: 13px;
       font-weight: 700;
       padding: 5px 10px;
-      cursor: pointer;
       letter-spacing: 1.5px;
       width: 100%;
       text-align: center;
     }
-    .round-btn:active { background: rgba(255, 255, 255, 0.18); }
 
     /* Riichi sticks — one per player, placed at the edge of the center zone facing that player */
     .front-stick {
@@ -358,12 +388,15 @@
     <!-- Top: 対面 (西) — rotated 180° -->
     <div class="pz top">
       <div class="pcard">
-        <div class="wind" id="w2">西</div>
+        <div class="wind-row">
+          <div class="wind" id="w2">西</div>
+          <span class="pname" id="pn2">P3</span>
+          <input class="pname-inp" id="pi2" type="text" maxlength="8">
+        </div>
         <div class="srow">
-          <button class="adj" data-p="2" data-d="-1000">−1k</button>
+          <button class="diff-btn" id="db2">±</button>
           <span class="sval" id="sv2">25000</span>
           <input class="sinp" id="si2" type="number" inputmode="numeric">
-          <button class="adj" data-p="2" data-d="1000">+1k</button>
         </div>
         <button class="rbtn" id="r2">リーチ</button>
       </div>
@@ -372,12 +405,15 @@
     <!-- Left: 上家 (北) — rotated 90° -->
     <div class="pz left">
       <div class="pcard">
-        <div class="wind" id="w3">北</div>
+        <div class="wind-row">
+          <div class="wind" id="w3">北</div>
+          <span class="pname" id="pn3">P4</span>
+          <input class="pname-inp" id="pi3" type="text" maxlength="8">
+        </div>
         <div class="srow">
-          <button class="adj" data-p="3" data-d="-1000">−1k</button>
+          <button class="diff-btn" id="db3">±</button>
           <span class="sval" id="sv3">25000</span>
           <input class="sinp" id="si3" type="number" inputmode="numeric">
-          <button class="adj" data-p="3" data-d="1000">+1k</button>
         </div>
         <button class="rbtn" id="r3">リーチ</button>
       </div>
@@ -391,11 +427,9 @@
       <div class="front-stick" id="fs2"></div>
       <div class="front-stick" id="fs3"></div>
       <div class="center-inner">
-        <button class="round-btn" id="roundBtn">東1局</button>
+        <div class="round-display" id="roundBtn">東1局</div>
         <div class="hrow">
-          <button class="hbtn" id="hm">−</button>
           <span class="hlbl" id="hl">0本場</span>
-          <button class="hbtn" id="hp">＋</button>
         </div>
         <button class="reset-btn" id="resetBtn">リセット</button>
       </div>
@@ -404,12 +438,15 @@
     <!-- Right: 下家 (南) — rotated −90° -->
     <div class="pz right">
       <div class="pcard">
-        <div class="wind" id="w1">南</div>
+        <div class="wind-row">
+          <div class="wind" id="w1">南</div>
+          <span class="pname" id="pn1">P2</span>
+          <input class="pname-inp" id="pi1" type="text" maxlength="8">
+        </div>
         <div class="srow">
-          <button class="adj" data-p="1" data-d="-1000">−1k</button>
+          <button class="diff-btn" id="db1">±</button>
           <span class="sval" id="sv1">25000</span>
           <input class="sinp" id="si1" type="number" inputmode="numeric">
-          <button class="adj" data-p="1" data-d="1000">+1k</button>
         </div>
         <button class="rbtn" id="r1">リーチ</button>
       </div>
@@ -418,12 +455,15 @@
     <!-- Bottom: 自分 (東) — normal -->
     <div class="pz bottom">
       <div class="pcard">
-        <div class="wind" id="w0">東</div>
+        <div class="wind-row">
+          <div class="wind" id="w0">東</div>
+          <span class="pname" id="pn0">P1</span>
+          <input class="pname-inp" id="pi0" type="text" maxlength="8">
+        </div>
         <div class="srow">
-          <button class="adj" data-p="0" data-d="-1000">−1k</button>
+          <button class="diff-btn" id="db0">±</button>
           <span class="sval" id="sv0">25000</span>
           <input class="sinp" id="si0" type="number" inputmode="numeric">
-          <button class="adj" data-p="0" data-d="1000">+1k</button>
         </div>
         <button class="rbtn" id="r0">リーチ</button>
       </div>
@@ -539,10 +579,10 @@
     function freshState() {
       return {
         players: [
-          { score: 25000, wind: '東', riichi: false },
-          { score: 25000, wind: '南', riichi: false },
-          { score: 25000, wind: '西', riichi: false },
-          { score: 25000, wind: '北', riichi: false },
+          { score: 25000, wind: '東', riichi: false, name: 'P1' },
+          { score: 25000, wind: '南', riichi: false, name: 'P2' },
+          { score: 25000, wind: '西', riichi: false, name: 'P3' },
+          { score: 25000, wind: '北', riichi: false, name: 'P4' },
         ],
         honba: 0,
         roundWind: 0,
@@ -551,19 +591,46 @@
     }
 
     let state = freshState();
+    let diffPlayer = -1;
 
     function render() {
       for (let i = 0; i < 4; i++) {
         const p = state.players[i];
-        document.getElementById(`sv${i}`).textContent = p.score.toLocaleString();
+        const svEl = document.getElementById(`sv${i}`);
+        if (diffPlayer >= 0 && i !== diffPlayer) {
+          const diff = state.players[diffPlayer].score - p.score;
+          svEl.textContent = (diff >= 0 ? '+' : '') + diff.toLocaleString();
+          svEl.style.color = diff >= 0 ? '#60a5fa' : '#f87171';
+        } else {
+          svEl.textContent = p.score.toLocaleString();
+          svEl.style.color = '';
+        }
         document.getElementById(`w${i}`).textContent = p.wind;
         document.getElementById(`r${i}`).classList.toggle('on', p.riichi);
         document.getElementById(`fs${i}`).classList.toggle('on', p.riichi);
+        document.getElementById(`pn${i}`).textContent = p.name;
       }
       document.getElementById('hl').textContent = `${state.honba}本場`;
       document.getElementById('roundBtn').textContent =
         `${ROUND_WINDS[state.roundWind]}${state.roundNum}局`;
     }
+
+    // Diff (+/−) buttons: hold to show score differences relative to that player
+    for (let i = 0; i < 4; i++) {
+      const btn = document.getElementById(`db${i}`);
+      btn.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        diffPlayer = i;
+        btn.classList.add('active');
+        render();
+      });
+    }
+    document.addEventListener('pointerup', () => {
+      if (diffPlayer < 0) return;
+      document.getElementById(`db${diffPlayer}`).classList.remove('active');
+      diffPlayer = -1;
+      render();
+    });
 
     // Riichi toggle: deduct/return 1000, show/hide the stick in front of that player
     for (let i = 0; i < 4; i++) {
@@ -584,33 +651,33 @@
       });
     }
 
+    // Name: tap to edit inline
+    for (let i = 0; i < 4; i++) {
+      const span = document.getElementById(`pn${i}`);
+      const inp  = document.getElementById(`pi${i}`);
+      span.addEventListener('click', () => {
+        inp.value = state.players[i].name;
+        span.style.display = 'none';
+        inp.style.display = 'block';
+        inp.focus();
+        inp.select();
+      });
+      const save = () => {
+        const v = inp.value.trim();
+        if (v) state.players[i].name = v;
+        inp.style.display = 'none';
+        span.style.display = '';
+        render();
+      };
+      inp.addEventListener('blur', save);
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); });
+    }
+
     // Score: tap to open agari modal for that player
     for (let i = 0; i < 4; i++) {
       document.getElementById(`sv${i}`).addEventListener('click', () => openAgariModal(i));
     }
 
-    // Score ±1k buttons
-    document.querySelectorAll('.adj').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        state.players[+btn.dataset.p].score += +btn.dataset.d;
-        render();
-      });
-    });
-
-    // Honba
-    document.getElementById('hm').addEventListener('click', () => { state.honba = Math.max(0, state.honba - 1); render(); });
-    document.getElementById('hp').addEventListener('click', () => { state.honba++; render(); });
-
-    // Round: tap to advance (東1→東2→…→東4→南1→…)
-    document.getElementById('roundBtn').addEventListener('click', () => {
-      state.roundNum++;
-      if (state.roundNum > 4) {
-        state.roundNum = 1;
-        state.roundWind = (state.roundWind + 1) % 4;
-      }
-      render();
-    });
 
     // Reset
     document.getElementById('resetBtn').addEventListener('click', () => {
@@ -812,6 +879,16 @@
       for (let i = 0; i < 4; i++) {
         state.players[i].score += agDeltas[i];
         state.players[i].riichi = false;
+      }
+      if (state.players[agWinner].wind === '東') {
+        state.honba++;
+      } else {
+        state.roundNum++;
+        if (state.roundNum > 4) {
+          state.roundNum = 1;
+          state.roundWind = (state.roundWind + 1) % 4;
+        }
+        state.honba = 0;
       }
       document.getElementById('agariModal').style.display = 'none';
       render();
