@@ -119,6 +119,10 @@ body {
   flex-wrap: wrap;
 }
 
+.day-row .day-earnings {
+  margin-left: auto;
+}
+
 .day-row.is-off {
   opacity: 0.45;
 }
@@ -150,6 +154,13 @@ body {
   font-family: inherit;
 }
 
+.time-inputs {
+  width: 100%;
+  gap: 6px;
+  order: 99;
+}
+
+.start-time-input,
 .end-time-input {
   border: 1px solid #ddd;
   border-radius: 8px;
