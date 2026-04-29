@@ -505,6 +505,42 @@
       border-radius:10px; color:rgba(255,255,255,0.55);
       font-size:13px; font-weight:700; cursor:pointer;
     }
+
+    /* ── 履歴ボタン ─────────────────────── */
+    .history-fab {
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 50%;
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: rgba(255,255,255,0.75);
+    }
+    .history-fab:active { background: rgba(255,255,255,0.25); }
+    .hist-badge {
+      position: absolute; top: -4px; right: -4px;
+      background: #ef4444; color: #fff;
+      font-size: 9px; font-weight: 800;
+      width: 16px; height: 16px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+
+    /* ── 履歴リスト ─────────────────────── */
+    .hist-list { max-height: 55vh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+    .hist-item {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .hist-item:active { background: rgba(255,255,255,0.12); }
+    .hist-round { font-size: 10px; color: rgba(255,255,255,0.42); font-weight: 600; letter-spacing: 1px; margin-bottom: 3px; }
+    .hist-label { font-size: 13px; color: rgba(255,255,255,0.82); font-weight: 700; }
+    .hist-scores { margin-top: 5px; font-size: 11px; color: rgba(255,255,255,0.45); line-height: 1.6; }
+    .hist-empty { color: rgba(255,255,255,0.32); font-size: 12px; text-align: center; padding: 24px 0; }
+    .hist-rewind-hint { font-size: 10px; color: rgba(255,255,255,0.3); text-align: center; margin-bottom: 8px; letter-spacing: 0.5px; }
   </style>
 </head>
 <body>
@@ -512,7 +548,17 @@
 
     <!-- corners (spacers; top-left hosts the back FAB from common.js) -->
     <div style="grid-column:1;grid-row:1"></div>
-    <div style="grid-column:3;grid-row:1"></div>
+    <div style="grid-column:3;grid-row:1;display:flex;align-items:flex-start;justify-content:flex-end;padding:10px">
+      <div style="position:relative">
+        <button id="historyBtn" class="history-fab" title="履歴">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 .49-3.51"></path>
+          </svg>
+        </button>
+        <div id="histBadge" class="hist-badge" style="display:none">0</div>
+      </div>
+    </div>
     <div style="grid-column:1;grid-row:3"></div>
     <div style="grid-column:3;grid-row:3"></div>
 
@@ -605,6 +651,18 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- 履歴モーダル -->
+  <div class="ag-overlay" id="historyModal" style="display:none">
+    <div class="ag-card">
+      <div class="ag-head">履　歴</div>
+      <div class="hist-rewind-hint">タップで巻き戻し</div>
+      <div class="hist-list" id="historyList"></div>
+      <div class="ag-actions" style="margin-top:12px">
+        <button class="ag-cancel" id="historyClose">閉じる</button>
+      </div>
+    </div>
   </div>
 
   <!-- 流局モーダル -->
@@ -790,6 +848,35 @@
 
     let state = freshState();
     let diffPlayer = -1;
+    let gameHistory = [];
+
+    function captureSnapshot() {
+      return {
+        players: state.players.map(p => ({ ...p })),
+        honba: state.honba,
+        roundWind: state.roundWind,
+        roundNum: state.roundNum,
+      };
+    }
+
+    function pushHistory(label) {
+      const roundLabel = `${ROUND_WINDS[state.roundWind]}${state.roundNum}局 ${state.honba}本場`;
+      const scores = state.players.map(p => `${p.wind}: ${p.score.toLocaleString()}`).join('　');
+      gameHistory.push({ label, roundLabel, scores, snapshot: captureSnapshot() });
+      const badge = document.getElementById('histBadge');
+      badge.textContent = gameHistory.length;
+      badge.style.display = 'flex';
+    }
+
+    function updateHistBadge() {
+      const badge = document.getElementById('histBadge');
+      if (gameHistory.length > 0) {
+        badge.textContent = gameHistory.length;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
 
     function render() {
       for (let i = 0; i < 4; i++) {
@@ -888,6 +975,8 @@
     document.getElementById('resetBtn').addEventListener('click', () => {
       if (!confirm('スコアをリセットしますか？')) return;
       state = freshState();
+      gameHistory = [];
+      updateHistBadge();
       render();
     });
 
@@ -1088,6 +1177,12 @@
 
     document.getElementById('agariApply').addEventListener('click', () => {
       if (!agDeltas) return;
+      const def = HAN_DEFS[agHanIdx];
+      const hanName = def
+        ? (def.needsFu ? `${def.han}翻${agFu}符` : def.name)
+        : '';
+      const wLabel = agWinType === 'ron' ? 'ロン' : 'ツモ';
+      pushHistory(`和了: ${state.players[agWinner].name}(${state.players[agWinner].wind}) ${wLabel} ${hanName}`);
       for (let i = 0; i < 4; i++) {
         state.players[i].score += agDeltas[i];
         state.players[i].riichi = false;
@@ -1178,6 +1273,11 @@
     });
 
     document.getElementById('ryuuApply').addEventListener('click', () => {
+      const tenpaiWinds = ryuuTenpai.map((t, i) => t ? state.players[i].wind : null).filter(Boolean);
+      const ryuuLabel = tenpaiWinds.length === 0 ? '流局 (全ノーテン)'
+        : tenpaiWinds.length === 4 ? '流局 (全聴牌)'
+        : `流局: ${tenpaiWinds.join('・')}聴牌`;
+      pushHistory(ryuuLabel);
       for (let i = 0; i < 4; i++) {
         state.players[i].score += ryuuDeltas[i];
         state.players[i].riichi = false;
@@ -1195,6 +1295,43 @@
       }
       document.getElementById('ryuuModal').style.display = 'none';
       render();
+    });
+    // ── 履歴 ────────────────────────────────────
+    function openHistoryModal() {
+      const list = document.getElementById('historyList');
+      if (gameHistory.length === 0) {
+        list.innerHTML = '<div class="hist-empty">まだ履歴がありません</div>';
+      } else {
+        list.innerHTML = [...gameHistory].reverse().map((h, ri) => {
+          const idx = gameHistory.length - 1 - ri;
+          return `<div class="hist-item" data-idx="${idx}">
+            <div class="hist-round">${h.roundLabel}</div>
+            <div class="hist-label">${h.label}</div>
+            <div class="hist-scores">${h.scores}</div>
+          </div>`;
+        }).join('');
+        list.querySelectorAll('.hist-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const idx = +item.dataset.idx;
+            const h = gameHistory[idx];
+            if (!confirm(`「${h.roundLabel}」の直前まで巻き戻しますか？`)) return;
+            state.players = h.snapshot.players.map(p => ({ ...p }));
+            state.honba   = h.snapshot.honba;
+            state.roundWind = h.snapshot.roundWind;
+            state.roundNum  = h.snapshot.roundNum;
+            gameHistory = gameHistory.slice(0, idx);
+            updateHistBadge();
+            document.getElementById('historyModal').style.display = 'none';
+            render();
+          });
+        });
+      }
+      document.getElementById('historyModal').style.display = 'flex';
+    }
+
+    document.getElementById('historyBtn').addEventListener('click', openHistoryModal);
+    document.getElementById('historyClose').addEventListener('click', () => {
+      document.getElementById('historyModal').style.display = 'none';
     });
   </script>
 </body>
