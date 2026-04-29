@@ -8,7 +8,6 @@ const COLOR_NEUTRAL = '#000000';
 const RATE_A = 2000;
 const RATE_B = 1226;
 
-// Actual バイト shifts from Google Calendar (crefus), Apr–Jun 2026
 const SHIFT_DATA = {
   '2026-04-10': { start: '16:30', end: '20:45' },
   '2026-04-11': { start: '12:45', end: '20:45' },
@@ -210,7 +209,7 @@ function getWorkingDays(y, m) {
   const to   = new Date(y, m - 1, 25);
   const days = [];
   const cur  = new Date(from.getFullYear(), from.getMonth(), from.getDate(), 12, 0, 0);
-  while (cur <= to) {
+  while (dayKey(cur) <= dayKey(to)) {
     const dow = cur.getDay();
     if (dow === 5 || dow === 6) {
       days.push(new Date(cur));
@@ -269,7 +268,7 @@ function renderTotal() {
     var shift      = SHIFT_DATA[key];
     var shiftLabel = shift ? shift.start + '〜' + shift.end : '';
     var isOff      = s.mode === 'off';
-    var dateLabel  = m + '月' + day.getDate() + '日(' + DAY_JA[dow] + ')';
+    var dateLabel  = (day.getMonth() + 1) + '月' + day.getDate() + '日(' + DAY_JA[dow] + ')';
     var dowClass   = dow === 6 ? 'sat' : 'fri';
     var rowClass   = 'day-row' + (isOff ? ' is-off' : '');
     var isCustom   = s.mode === 'custom';
