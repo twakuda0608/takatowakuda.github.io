@@ -134,74 +134,59 @@ def fetch_route(
     return _parse_dep_arr(text, from_st, to_st)
 
 
-
 def collect_trains(
-    anchors: list[int],
     from_before: str,
     to_after: str,
     date: datetime.date,
-    rough_before: int,
+    start: int = T(4, 0),
 ) -> list[dict]:
     """
-    各アンカー（西大宮出発時刻の目安）に対して 1 列車あたり 2 回 Yahoo を検索する。
+    始発から終電まで全列車を順番に収集する。
 
-    Step 1: 西大宮 → to_after   → dep_nishiomiya, arr_after を確認
-    Step 2: from_before → 西大宮 → dep_before, arr_nishiomiya を確認
-             (Step 1 の dep_nishiomiya を基点に rough_before + 余裕2分 手前で検索)
+    Step 1: from_before → 西大宮 (start から検索、以降は前の dep_before + 1)
+    Step 2: 西大宮 → to_after   (Step 1 の arr_nishiomiya をそのまま起点に使用)
+
+    終了条件: dep_before が前の列車より小さくなったとき（終電の次が翌朝始発に戻る）
 
     戻り値: [{dep_before, arr_nishiomiya, dep_nishiomiya, arr_after}, ...]
     """
     NISHI = "西大宮"
     results: list[dict] = []
-    seen: set[int] = set()
-    n = len(anchors)
+    current = start
+    prev_dep_before = -1
+    n = 0
 
-    for i, anchor in enumerate(anchors, 1):
-        prefix = f"  [{i:3d}/{n}]"
+    while True:
+        # ── Step 1: 前駅 → 西大宮 ──
+        dep_before_str, arr_nishi_str = fetch_route(from_before, NISHI, date, current)
 
-        # ── Step 1: 西大宮 → 次駅 ──
-        dep_nishi_str, arr_after_str = fetch_route(NISHI, to_after, date, anchor)
+        if dep_before_str is None or arr_nishi_str is None:
+            print(f"  ✗ 取得失敗 ({from_before}→西大宮, {fmt(current)})")
+            break
 
-        if dep_nishi_str is None:
-            print(f"{prefix} {fmt(anchor)} → ✗ 取得失敗 (西大宮→{to_after})")
-            if i < n:
-                polite_sleep()
-            continue
+        dep_before = parse_time(dep_before_str)
+        arr_nishi = parse_time(arr_nishi_str)
 
-        dep_nishi = parse_time(dep_nishi_str)
-
-        if dep_nishi in seen:
-            print(
-                f"{prefix} {fmt(anchor)} → 西大宮 {dep_nishi_str}発（重複, スキップ）"
-            )
-            if i < n:
-                polite_sleep()
-            continue
+        # 終電の次は翌朝の始発。2通りのケースを検出:
+        #   A) 23:xx → 04:xx : dep_before < prev_dep_before (時刻が巻き戻る)
+        #   B) 01:xx → 04:xx : dep_before > prev_dep_before だが 2時間以上ジャンプ
+        gap = dep_before - prev_dep_before
+        if results and (dep_before < prev_dep_before or gap > 120):
+            print(f"  → {dep_before_str} は翌朝始発、終了")
+            break
 
         polite_sleep()
 
-        # ── Step 2: 前駅 → 西大宮 ──
-        # arr_nishiomiya > dep_nishiomiya は物理的に不可能（到着が出発より後）
-        # → 別の列車を拾っているので 5 分ずつ早めてリトライ（最大 2 回）
-        dep_before = arr_nishi = None
-        dep_before_str = arr_nishi_str = None
+        # ── Step 2: 西大宮 → 次駅（Step 1 の西大宮到着時刻を起点に検索）──
+        dep_nishi_str, arr_after_str = fetch_route(NISHI, to_after, date, arr_nishi)
 
-        for attempt, extra in enumerate([0, 5, 10]):
-            if attempt > 0:
-                print(f"      ↩ {fmt(arr_nishi)}着 > {dep_nishi_str}発（別列車）→ {extra}分早めて再検索")
-                polite_sleep()
-            search_anchor = dep_nishi - rough_before - 2 - extra
-            dep_before_str, arr_nishi_str = fetch_route(from_before, NISHI, date, search_anchor)
-            dep_before = parse_time(dep_before_str) if dep_before_str else None
-            arr_nishi  = parse_time(arr_nishi_str)  if arr_nishi_str  else None
-            if dep_before is None or arr_nishi is None:
-                break
-            if arr_nishi <= dep_nishi:
-                break
-
+        dep_nishi = parse_time(dep_nishi_str) if dep_nishi_str else None
         arr_after = parse_time(arr_after_str) if arr_after_str else None
 
-        print(f"{prefix} {fmt(dep_before)}発 → {fmt(arr_nishi)}着 / {dep_nishi_str}発 → {fmt(arr_after)}着")
+        n += 1
+        print(
+            f"  [{n:3d}] {dep_before_str}発 → {fmt(arr_nishi)}着 / {fmt(dep_nishi)}発 → {fmt(arr_after)}着"
+        )
 
         results.append(
             {
@@ -211,151 +196,46 @@ def collect_trains(
                 "arr_after": arr_after,
             }
         )
-        seen.add(dep_nishi)
 
-        if i < n:
-            polite_sleep()
+        prev_dep_before = dep_before
+        current = dep_before + 1
+        polite_sleep()
 
     return results
 
 
 # ──────────────────────────────────────────────────────────────
-# アンカー時刻表（西大宮駅出発時刻）
+# ダミー（削除済みコードの参照エラーを防ぐため残す行はない）
 # ──────────────────────────────────────────────────────────────
-
-
-def make_range(h_start: int, h_end: int, mins: list[int]) -> list[int]:
-    return [T(h, m) for h in range(h_start, h_end + 1) for m in mins]
-
-
-def weekend_up_core() -> list[int]:
-    result = []
-    for h in range(9, 23):
-        if h % 2 == 1:
-            result += [T(h, 12), T(h, 36)]
-        else:
-            result += [T(h, 0), T(h, 24), T(h, 48)]
-    return result
-
-
-NISHIOMIYA: dict[str, dict[str, list[int]]] = {
-    "weekday": {
-        "up": [
-            T(4, 51),
-            T(5, 2),
-            T(5, 11),
-            T(5, 19),
-            T(5, 28),
-            T(5, 36),
-            T(5, 49),
-            T(5, 59),
-            T(6, 8),
-            T(6, 17),
-            T(6, 27),
-            T(6, 36),
-            T(6, 45),
-            T(6, 54),
-            T(7, 3),
-            T(7, 12),
-            T(7, 21),
-            T(7, 30),
-            T(7, 39),
-            T(7, 48),
-            T(7, 57),
-            T(8, 6),
-            T(8, 15),
-            T(8, 24),
-            T(8, 33),
-            T(8, 42),
-            T(8, 51),
-            *make_range(9, 22, [0, 12, 24, 36, 48]),
-            T(23, 5),
-            T(23, 18),
-            T(23, 32),
-            T(23, 47),
-        ],
-        "down": [
-            T(5, 44),
-            T(6, 11),
-            T(6, 33),
-            T(6, 57),
-            *make_range(7, 22, [13, 28, 43, 58]),
-            T(23, 13),
-            T(23, 35),
-            T(23, 56),
-        ],
-    },
-    "weekend": {
-        "up": [
-            T(4, 51),
-            T(5, 11),
-            T(5, 28),
-            T(5, 49),
-            T(6, 8),
-            T(6, 27),
-            T(6, 45),
-            T(7, 3),
-            T(7, 21),
-            T(7, 39),
-            T(7, 57),
-            T(8, 15),
-            T(8, 33),
-            T(8, 51),
-            *weekend_up_core(),
-            T(23, 18),
-            T(23, 47),
-        ],
-        "down": [
-            T(5, 44),
-            T(6, 33),
-            *make_range(7, 22, [13, 43]),
-            T(23, 35),
-        ],
-    },
-}
 
 
 # ──────────────────────────────────────────────────────────────
 # メイン
 # ──────────────────────────────────────────────────────────────
 
-# Step 2 の検索起点オフセット: 実測値 + 1分の余裕
-# (指扇→西大宮: 実測2分 → 3分, 日進→西大宮: 実測3分 → 4分)
-BEFORE_OFFSET = {
-    "up":   3,  # 指扇 → 西大宮
-    "down": 4,  # 日進 → 西大宮
-}
-
 
 def main() -> None:
     weekday_date = next_date(weekday=True)
     weekend_date = next_date(weekday=False)
 
-    total_anchors = sum(len(v) for d in NISHIOMIYA.values() for v in d.values())
-    total_req = total_anchors * 2
-    est_lo, est_hi = total_req * 2 // 60, total_req * 4 // 60
-    print(f"平日: {weekday_date.isoformat()} / 土休日: {weekend_date.isoformat()}")
-    print(f"合計リクエスト数: 約 {total_req} 回 / 推定所要時間: {est_lo}〜{est_hi} 分\n")
+    print(f"平日: {weekday_date.isoformat()} / 土休日: {weekend_date.isoformat()}\n")
 
-    # ── 各方向・日種で列車情報を収集 ───────────────────────────────
     collected: dict[str, dict[str, list[dict]]] = {}
 
     configs = [
-        # (day_type, direction, from_before, to_after, date)
-        ("weekday", "up",   "指扇", "日進", weekday_date),
+        ("weekday", "up", "指扇", "日進", weekday_date),
         ("weekday", "down", "日進", "指扇", weekday_date),
-        ("weekend", "up",   "指扇", "日進", weekend_date),
+        ("weekend", "up", "指扇", "日進", weekend_date),
         ("weekend", "down", "日進", "指扇", weekend_date),
     ]
 
     for day_type, direction, from_before, to_after, date in configs:
-        label     = "平日" if day_type == "weekday" else "土休日"
+        label = "平日" if day_type == "weekday" else "土休日"
         dir_label = "上り" if direction == "up" else "下り"
         print(f"\n{'─' * 52}")
         print(f"  {label} {dir_label}  ({from_before} → 西大宮 → {to_after})")
         print(f"{'─' * 52}")
-        anchors = NISHIOMIYA[day_type][direction]
-        trains = collect_trains(anchors, from_before, to_after, date, BEFORE_OFFSET[direction])
+        trains = collect_trains(from_before, to_after, date)
         collected.setdefault(day_type, {})[direction] = trains
         polite_sleep()
 
