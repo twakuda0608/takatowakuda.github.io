@@ -205,13 +205,28 @@ def collect_trains(
 
 
 # ──────────────────────────────────────────────────────────────
-# ダミー（削除済みコードの参照エラーを防ぐため残す行はない）
-# ──────────────────────────────────────────────────────────────
-
-
-# ──────────────────────────────────────────────────────────────
 # メイン
 # ──────────────────────────────────────────────────────────────
+
+OUT_FILE = "timetable.json"
+TMP_FILE = "timetable.json.tmp"
+
+
+def save(collected: dict, weekday_date: datetime.date, weekend_date: datetime.date) -> None:
+    """一時ファイルに書いてからリネーム（中断しても既存ファイルを壊さない）"""
+    output = {
+        "generated": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+        "source_dates": {
+            "weekday": weekday_date.isoformat(),
+            "weekend": weekend_date.isoformat(),
+        },
+        "timetable": collected,
+    }
+    import os
+    with open(TMP_FILE, "w", encoding="utf-8") as f:
+        json.dump(output, f, ensure_ascii=False, indent=2)
+    os.replace(TMP_FILE, OUT_FILE)
+    print(f"  💾 {OUT_FILE} を保存しました")
 
 
 def main() -> None:
@@ -223,36 +238,24 @@ def main() -> None:
     collected: dict[str, dict[str, list[dict]]] = {}
 
     configs = [
-        ("weekday", "up", "指扇", "日進", weekday_date),
+        ("weekday", "up",   "指扇", "日進", weekday_date),
         ("weekday", "down", "日進", "指扇", weekday_date),
-        ("weekend", "up", "指扇", "日進", weekend_date),
+        ("weekend", "up",   "指扇", "日進", weekend_date),
         ("weekend", "down", "日進", "指扇", weekend_date),
     ]
 
     for day_type, direction, from_before, to_after, date in configs:
-        label = "平日" if day_type == "weekday" else "土休日"
+        label     = "平日" if day_type == "weekday" else "土休日"
         dir_label = "上り" if direction == "up" else "下り"
         print(f"\n{'─' * 52}")
         print(f"  {label} {dir_label}  ({from_before} → 西大宮 → {to_after})")
         print(f"{'─' * 52}")
         trains = collect_trains(from_before, to_after, date)
         collected.setdefault(day_type, {})[direction] = trains
+        save(collected, weekday_date, weekend_date)  # 方向ごとに逐一保存
         polite_sleep()
 
-    # ── timetable.json 生成 ────────────────────────────────────────
-    output = {
-        "generated": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-        "source_dates": {
-            "weekday": weekday_date.isoformat(),
-            "weekend": weekend_date.isoformat(),
-        },
-        "timetable": collected,
-    }
-
-    with open("timetable.json", "w", encoding="utf-8") as f:
-        json.dump(output, f, ensure_ascii=False, indent=2)
-
-    print(f"\n✓ timetable.json を生成しました")
+    print(f"\n✓ 完了")
 
 
 if __name__ == "__main__":

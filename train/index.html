@@ -7,73 +7,72 @@
   <link rel="stylesheet" href="/common.css">
   <style>
     :root {
-      --bg: #0b1826;
-      --panel: #112240;
-      --border: #1d3557;
-      --text: #cde0f5;
-      --muted: #4d7a9e;
-      --up: #3ecf8e;
-      --down: #f08060;
-      --brand: #0078d7;
+      --up: #16a34a;
+      --down: #dc4a22;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, sans-serif;
-      min-height: 100vh;
-      padding-bottom: 80px;
+      background: radial-gradient(circle at top left, #ffffff, #e2e8f0);
+      color: #1a202c;
+      font-family: var(--font);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     header {
-      padding: 14px 20px;
-      background: var(--panel);
+      padding: 20px 48px;
+      background: #fff;
       border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-shrink: 0;
+      box-shadow: var(--shadow);
     }
-    .hd-title { font-size: 1.3rem; font-weight: 700; }
-    .hd-sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .hd-title { font-size: 2.2rem; font-weight: 700; color: var(--brand); letter-spacing: 0.02em; }
+    .hd-sub { font-size: 1rem; color: var(--muted-color); margin-top: 4px; }
     .hd-clock { text-align: right; }
     #clock {
       display: block;
-      font-size: 1.8rem;
+      font-size: 3.4rem;
       font-weight: 700;
       font-variant-numeric: tabular-nums;
       letter-spacing: 0.04em;
+      color: #1a202c;
     }
     #day-badge {
       display: inline-block;
-      font-size: 0.72rem;
+      font-size: 1rem;
       background: var(--brand);
       color: #fff;
-      padding: 1px 8px;
+      padding: 3px 14px;
       border-radius: 20px;
-      margin-top: 2px;
+      margin-top: 4px;
     }
 
     /* Track */
-    .track-section { padding: 32px 24px 20px; }
+    .track-section { padding: 40px 60px 24px; flex-shrink: 0; }
     .dir-row {
       display: flex;
       justify-content: space-between;
-      font-size: 0.74rem;
-      color: var(--muted);
-      margin-bottom: 8px;
+      font-size: 1.1rem;
+      color: var(--muted-color);
+      margin-bottom: 16px;
     }
     .track-wrap {
       position: relative;
-      height: 100px;
+      height: 260px;
     }
     .rail {
       position: absolute;
       top: 50%; left: 0; right: 0;
-      height: 10px;
-      background: var(--panel);
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
+      height: 18px;
+      background: #e2e8f0;
+      border: 2px solid #cbd5e1;
+      border-radius: 12px;
       transform: translateY(-50%);
     }
 
@@ -88,27 +87,27 @@
       z-index: 2;
     }
     .sta-dot {
-      width: 16px; height: 16px;
+      width: 32px; height: 32px;
       border-radius: 50%;
-      background: #6a94be;
-      border: 2px solid var(--bg);
-      box-shadow: 0 0 0 1.5px var(--border);
+      background: #94a3b8;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px #cbd5e1;
     }
     .sta.cur .sta-dot {
-      width: 22px; height: 22px;
+      width: 48px; height: 48px;
       background: var(--brand);
-      box-shadow: 0 0 0 2px #c5daf5, 0 0 14px rgba(0,120,215,0.5);
+      box-shadow: 0 0 0 3px #bfdbfe, 0 0 24px rgba(0,120,215,0.35);
     }
     .sta-label {
-      margin-top: 10px;
-      font-size: 0.8rem;
-      color: var(--muted);
+      margin-top: 20px;
+      font-size: 1.5rem;
+      color: var(--muted-color);
       white-space: nowrap;
     }
     .sta.cur .sta-label {
-      font-size: 0.95rem;
+      font-size: 1.9rem;
       font-weight: 700;
-      color: var(--text);
+      color: #1a202c;
     }
 
     /* Trains */
@@ -119,8 +118,8 @@
     .train {
       position: absolute;
       top: 50%;
-      width: 44px;
-      height: 20px;
+      width: 110px;
+      height: 50px;
       transform: translate(-50%, -50%);
       z-index: 3;
     }
@@ -128,20 +127,21 @@
 
     .t-label {
       position: absolute;
-      bottom: calc(100% + 4px);
+      bottom: calc(100% + 6px);
       left: 50%;
       transform: translateX(-50%);
-      font-size: 0.6rem;
-      color: var(--muted);
+      font-size: 1rem;
+      color: var(--muted-color);
       white-space: nowrap;
-      background: var(--bg);
-      padding: 1px 3px;
-      border-radius: 2px;
+      background: rgba(255,255,255,0.9);
+      padding: 2px 6px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
     }
     .t-car {
       width: 100%; height: 100%;
-      border-radius: 3px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      border-radius: 5px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18);
       position: relative;
       overflow: hidden;
     }
@@ -149,79 +149,85 @@
     .t-car::before, .t-car::after {
       content: '';
       position: absolute;
-      top: 4px; bottom: 4px;
-      width: 7px;
-      background: rgba(255,255,255,0.35);
-      border-radius: 1px;
+      top: 9px; bottom: 9px;
+      width: 16px;
+      background: rgba(255,255,255,0.45);
+      border-radius: 2px;
     }
     .train.up .t-car {
       background: var(--up);
-      border-radius: 3px 10px 10px 3px;
+      border-radius: 5px 22px 22px 5px;
     }
-    .train.up .t-car::before { left: 6px; }
-    .train.up .t-car::after  { left: 17px; }
+    .train.up .t-car::before { left: 14px; }
+    .train.up .t-car::after  { left: 38px; }
 
     .train.down .t-car {
       background: var(--down);
-      border-radius: 10px 3px 3px 10px;
+      border-radius: 22px 5px 5px 22px;
     }
-    .train.down .t-car::before { right: 6px; }
-    .train.down .t-car::after  { right: 17px; }
+    .train.down .t-car::before { right: 14px; }
+    .train.down .t-car::after  { right: 38px; }
 
     .no-train-msg {
       position: absolute;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 0.78rem;
-      color: var(--muted);
+      font-size: 1.2rem;
+      color: var(--muted-color);
       white-space: nowrap;
     }
 
     /* Legend */
     .legend {
-      display: flex; gap: 16px;
-      padding: 0 24px;
-      font-size: 0.74rem;
-      color: var(--muted);
+      display: flex; gap: 24px;
+      padding: 0 60px;
+      font-size: 1rem;
+      color: var(--muted-color);
+      flex-shrink: 0;
     }
-    .leg-item { display: flex; align-items: center; gap: 5px; }
-    .leg-rect { width: 14px; height: 8px; border-radius: 2px; }
+    .leg-item { display: flex; align-items: center; gap: 8px; }
+    .leg-rect { width: 28px; height: 14px; border-radius: 3px; }
 
     /* Next trains */
     .next-section {
-      margin: 20px 24px 0;
+      margin: 24px 60px 24px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 16px;
+      flex: 1;
+      min-height: 0;
     }
     .next-panel {
-      background: var(--panel);
+      background: #fff;
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
+      border-radius: 16px;
+      padding: 32px 40px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
     }
     .np-title {
-      display: flex; align-items: center; gap: 7px;
-      font-size: 0.72rem;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 1.1rem;
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      margin-bottom: 10px;
-      color: var(--muted);
+      margin-bottom: 24px;
+      color: var(--muted-color);
     }
-    .np-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .next-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .np-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+    .next-list { list-style: none; display: flex; flex-direction: column; gap: 20px; }
     .ni { display: flex; justify-content: space-between; align-items: center; }
     .ni-time {
-      font-size: 0.95rem;
+      font-size: 2.4rem;
       font-variant-numeric: tabular-nums;
       font-weight: 600;
+      color: #1a202c;
     }
-    .ni-wait { font-size: 0.74rem; color: var(--muted); }
+    .ni-wait { font-size: 1.3rem; color: var(--muted-color); }
     .ni.soon .ni-wait { color: var(--up); font-weight: 600; }
-    .ni.imminent .ni-time,
-    .ni.imminent .ni-wait { color: #ffe066; font-weight: 700; }
-    .empty-msg { font-size: 0.78rem; color: var(--muted); text-align: center; padding: 6px 0; }
+    .ni.imminent .ni-time { color: var(--brand); font-weight: 700; }
+    .ni.imminent .ni-wait { color: var(--brand); font-weight: 700; }
+    .empty-msg { font-size: 1rem; color: var(--muted-color); text-align: center; padding: 10px 0; }
   </style>
 </head>
 <body>
@@ -291,65 +297,15 @@
 
   <script src="/common.js"></script>
   <script>
-    const T = (h, m) => h * 60 + m;
+    // 画面上の駅位置 (%)
+    const L = 13, C = 50, R = 87;
 
-    function makeRange(hStart, hEnd, mins) {
-      const arr = [];
-      for (let h = hStart; h <= hEnd; h++)
-        for (const m of mins) arr.push(T(h, m));
-      return arr;
-    }
-
-    // Weekend up: hours 9-22 alternate between :12,:36 (odd) and :00,:24,:48 (even)
-    function weekendUpCore() {
-      const arr = [];
-      for (let h = 9; h <= 22; h++) {
-        if (h % 2 === 1) arr.push(T(h, 12), T(h, 36));
-        else             arr.push(T(h, 0),  T(h, 24), T(h, 48));
-      }
-      return arr;
-    }
-
-    const timetable = {
-      weekday: {
-        up: [
-          T(4,51),
-          T(5,2),  T(5,11), T(5,19), T(5,28), T(5,36), T(5,49), T(5,59),
-          T(6,8),  T(6,17), T(6,27), T(6,36), T(6,45), T(6,54),
-          T(7,3),  T(7,12), T(7,21), T(7,30), T(7,39), T(7,48), T(7,57),
-          T(8,6),  T(8,15), T(8,24), T(8,33), T(8,42), T(8,51),
-          ...makeRange(9, 22, [0, 12, 24, 36, 48]),
-          T(23,5), T(23,18), T(23,32), T(23,47)
-        ],
-        down: [
-          T(5,44),
-          T(6,11), T(6,33), T(6,57),
-          ...makeRange(7, 22, [13, 28, 43, 58]),
-          T(23,13), T(23,35), T(23,56)
-        ]
-      },
-      weekend: {
-        up: [
-          T(4,51),
-          T(5,11), T(5,28), T(5,49),
-          T(6,8),  T(6,27), T(6,45),
-          T(7,3),  T(7,21), T(7,39), T(7,57),
-          T(8,15), T(8,33), T(8,51),
-          ...weekendUpCore(),
-          T(23,18), T(23,47)
-        ],
-        down: [
-          T(5,44),
-          T(6,33),
-          ...makeRange(7, 22, [13, 43]),
-          T(23,35)
-        ]
-      }
-    };
+    let scheduleData = null;
 
     function getSched() {
+      if (!scheduleData) return null;
       const d = new Date().getDay();
-      return (d === 0 || d === 6) ? timetable.weekend : timetable.weekday;
+      return (d === 0 || d === 6) ? scheduleData.timetable.weekend : scheduleData.timetable.weekday;
     }
 
     function getNow() {
@@ -363,40 +319,39 @@
       return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
     }
 
-    // 画面上の駅位置 (%)
-    const L = 13, C = 50, R = 87;
-    // 駅間所要時間 (分) — scrape.py で取得した値
-    // 上り: 指扇→西大宮 2分, 西大宮→日進 3分
-    // 下り: 日進→西大宮 3分, 西大宮→指扇 2分
-    const DT = {
-      up:   { before: 2, after: 3 },
-      down: { before: 3, after: 2 },
-    };
-
     function getOnTrack(sched, now) {
       const out = [];
 
-      // 上り: 指扇(T-2) → 西大宮(T) → 日進(T+3)
-      for (const t of sched.up) {
-        const diff = now - t;
-        const { before, after } = DT.up;
-        if (diff < -before || diff > after) continue;
-        // 区間ごとに異なる速度を区分線形補間で表現
-        const pos = diff <= 0
-          ? L + (diff + before) / before * (C - L)
-          : C + diff / after * (R - C);
-        out.push({ id: `u${t}`, dir: 'up', pos, t });
+      // 上り: 指扇(dep_before) → 西大宮(arr/dep_nishiomiya) → 日進(arr_after)
+      for (const tr of sched.up) {
+        if (now < tr.dep_before || now > tr.arr_after) continue;
+        let pos;
+        if (now <= tr.arr_nishiomiya) {
+          const span = tr.arr_nishiomiya - tr.dep_before;
+          pos = span > 0 ? L + (now - tr.dep_before) / span * (C - L) : C;
+        } else if (now <= tr.dep_nishiomiya) {
+          pos = C;
+        } else {
+          const span = tr.arr_after - tr.dep_nishiomiya;
+          pos = span > 0 ? C + (now - tr.dep_nishiomiya) / span * (R - C) : R;
+        }
+        out.push({ id: `u${tr.arr_nishiomiya}`, dir: 'up', pos, t: tr.dep_nishiomiya });
       }
 
-      // 下り: 日進(T-3) → 西大宮(T) → 指扇(T+2)
-      for (const t of sched.down) {
-        const diff = now - t;
-        const { before, after } = DT.down;
-        if (diff < -before || diff > after) continue;
-        const pos = diff <= 0
-          ? R + (diff + before) / before * (C - R)
-          : C + diff / after * (L - C);
-        out.push({ id: `d${t}`, dir: 'down', pos, t });
+      // 下り: 日進(dep_before) → 西大宮(arr/dep_nishiomiya) → 指扇(arr_after)
+      for (const tr of sched.down) {
+        if (now < tr.dep_before || now > tr.arr_after) continue;
+        let pos;
+        if (now <= tr.arr_nishiomiya) {
+          const span = tr.arr_nishiomiya - tr.dep_before;
+          pos = span > 0 ? R + (now - tr.dep_before) / span * (C - R) : C;
+        } else if (now <= tr.dep_nishiomiya) {
+          pos = C;
+        } else {
+          const span = tr.arr_after - tr.dep_nishiomiya;
+          pos = span > 0 ? C + (now - tr.dep_nishiomiya) / span * (L - C) : L;
+        }
+        out.push({ id: `d${tr.arr_nishiomiya}`, dir: 'down', pos, t: tr.dep_nishiomiya });
       }
 
       return out;
@@ -404,8 +359,8 @@
 
     function getNext(sched, now, n = 4) {
       return {
-        up:   sched.up.filter(t => t > now).slice(0, n),
-        down: sched.down.filter(t => t > now).slice(0, n)
+        up:   sched.up.filter(tr => tr.dep_nishiomiya > now).slice(0, n),
+        down: sched.down.filter(tr => tr.dep_nishiomiya > now).slice(0, n)
       };
     }
 
@@ -424,7 +379,6 @@
           el.innerHTML = `<div class="t-label">${fmt(tr.t)}</div><div class="t-car"></div>`;
           layer.appendChild(el);
           trainEls.set(tr.id, el);
-          // Enable smooth transition after initial placement is rendered
           requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('animated')));
         } else {
           trainEls.get(tr.id).style.left = `${tr.pos}%`;
@@ -456,25 +410,24 @@
           ul.innerHTML = '<li class="empty-msg">本日の最終列車が終了しました</li>';
           continue;
         }
-        for (const t of next[dir]) {
-          const wait = t - now;
+        for (const tr of next[dir]) {
+          const wait = tr.dep_nishiomiya - now;
           const li = document.createElement('li');
           li.className = `ni${wait < 1 ? ' imminent' : wait < 5 ? ' soon' : ''}`;
           const waitStr = wait < 1   ? 'まもなく発車'
                         : wait < 60  ? `あと ${Math.round(wait)} 分`
                         : `あと ${Math.floor(wait / 60)}h${Math.round(wait % 60)}m`;
-          li.innerHTML = `<span class="ni-time">${fmt(t)}</span><span class="ni-wait">${waitStr}</span>`;
+          li.innerHTML = `<span class="ni-time">${fmt(tr.dep_nishiomiya)}</span><span class="ni-wait">${waitStr}</span>`;
           ul.appendChild(li);
         }
       }
     }
 
     function tick() {
-      const now  = getNow();
       const sched = getSched();
-      const d    = new Date();
+      const d = new Date();
+      const now = d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
 
-      // Clock
       const hh = String(d.getHours()).padStart(2,'0');
       const mm = String(d.getMinutes()).padStart(2,'0');
       const ss = String(d.getSeconds()).padStart(2,'0');
@@ -482,9 +435,21 @@
       const day = d.getDay();
       document.getElementById('day-badge').textContent = (day === 0 || day === 6) ? '土休日' : '平日';
 
-      renderTrains(getOnTrack(sched, now));
-      renderNext(getNext(sched, now), now);
+      if (!sched) return;
+      // After midnight (00:00–01:59), shift now into the post-midnight range so
+      // trains stored as 1440+ minutes are found correctly.
+      const schedNow = now < 120 ? now + 1440 : now;
+      renderTrains(getOnTrack(sched, schedNow));
+      renderNext(getNext(sched, schedNow), schedNow);
     }
+
+    fetch('/train/timetable.json')
+      .then(r => r.json())
+      .then(data => { scheduleData = data; tick(); })
+      .catch(() => {
+        document.getElementById('trains-layer').innerHTML =
+          '<div class="no-train-msg">時刻表の読み込みに失敗しました</div>';
+      });
 
     tick();
     setInterval(tick, 1000);

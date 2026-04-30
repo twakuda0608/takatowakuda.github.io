@@ -1,1314 +1,1617 @@
 {
-  "travel_times": {
-    "up": {
-      "sashiogi_to_nishiomiya": 2,
-      "nishiomiya_to_nisshin": 3
-    },
-    "down": {
-      "nisshin_to_nishiomiya": 4,
-      "nishiomiya_to_sashiogi": 2
-    }
-  },
+  "generated": "2026-05-01T00:09:09",
   "timetable": {
     "weekday": {
       "up": [
         {
-          "before": 289,
-          "nishiomiya": 291,
-          "after": 294
+          "dep_before": 289,
+          "arr_nishiomiya": 291,
+          "dep_nishiomiya": 291,
+          "arr_after": 294
         },
         {
-          "before": 300,
-          "nishiomiya": 302,
-          "after": 305
+          "dep_before": 300,
+          "arr_nishiomiya": 302,
+          "dep_nishiomiya": 302,
+          "arr_after": 305
         },
         {
-          "before": 309,
-          "nishiomiya": 311,
-          "after": 314
+          "dep_before": 308,
+          "arr_nishiomiya": 310,
+          "dep_nishiomiya": 311,
+          "arr_after": 314
         },
         {
-          "before": 317,
-          "nishiomiya": 319,
-          "after": 322
+          "dep_before": 316,
+          "arr_nishiomiya": 318,
+          "dep_nishiomiya": 319,
+          "arr_after": 322
         },
         {
-          "before": 326,
-          "nishiomiya": 328,
-          "after": 331
+          "dep_before": 325,
+          "arr_nishiomiya": 327,
+          "dep_nishiomiya": 328,
+          "arr_after": 331
         },
         {
-          "before": 334,
-          "nishiomiya": 336,
-          "after": 339
+          "dep_before": 333,
+          "arr_nishiomiya": 335,
+          "dep_nishiomiya": 336,
+          "arr_after": 339
         },
         {
-          "before": 347,
-          "nishiomiya": 349,
-          "after": 352
+          "dep_before": 347,
+          "arr_nishiomiya": 349,
+          "dep_nishiomiya": 350,
+          "arr_after": 353
         },
         {
-          "before": 357,
-          "nishiomiya": 359,
-          "after": 362
+          "dep_before": 357,
+          "arr_nishiomiya": 359,
+          "dep_nishiomiya": 359,
+          "arr_after": 362
         },
         {
-          "before": 366,
-          "nishiomiya": 368,
-          "after": 371
+          "dep_before": 361,
+          "arr_nishiomiya": 363,
+          "dep_nishiomiya": 364,
+          "arr_after": 367
         },
         {
-          "before": 375,
-          "nishiomiya": 377,
-          "after": 380
+          "dep_before": 365,
+          "arr_nishiomiya": 368,
+          "dep_nishiomiya": 372,
+          "arr_after": 375
         },
         {
-          "before": 385,
-          "nishiomiya": 387,
-          "after": 390
+          "dep_before": 374,
+          "arr_nishiomiya": 376,
+          "dep_nishiomiya": 377,
+          "arr_after": 380
         },
         {
-          "before": 394,
-          "nishiomiya": 396,
-          "after": 399
+          "dep_before": 379,
+          "arr_nishiomiya": 382,
+          "dep_nishiomiya": 382,
+          "arr_after": 385
         },
         {
-          "before": 403,
-          "nishiomiya": 405,
-          "after": 408
+          "dep_before": 389,
+          "arr_nishiomiya": 392,
+          "dep_nishiomiya": 393,
+          "arr_after": 396
         },
         {
-          "before": 412,
-          "nishiomiya": 414,
-          "after": 417
+          "dep_before": 396,
+          "arr_nishiomiya": 399,
+          "dep_nishiomiya": 399,
+          "arr_after": 402
         },
         {
-          "before": 421,
-          "nishiomiya": 423,
-          "after": 426
+          "dep_before": 406,
+          "arr_nishiomiya": 408,
+          "dep_nishiomiya": 409,
+          "arr_after": 412
         },
         {
-          "before": 430,
-          "nishiomiya": 432,
-          "after": 435
+          "dep_before": 411,
+          "arr_nishiomiya": 414,
+          "dep_nishiomiya": 419,
+          "arr_after": 422
         },
         {
-          "before": 439,
-          "nishiomiya": 441,
-          "after": 444
+          "dep_before": 420,
+          "arr_nishiomiya": 422,
+          "dep_nishiomiya": 423,
+          "arr_after": 426
         },
         {
-          "before": 448,
-          "nishiomiya": 450,
-          "after": 453
+          "dep_before": 429,
+          "arr_nishiomiya": 432,
+          "dep_nishiomiya": 433,
+          "arr_after": 436
         },
         {
-          "before": 457,
-          "nishiomiya": 459,
-          "after": 462
+          "dep_before": 436,
+          "arr_nishiomiya": 438,
+          "dep_nishiomiya": 438,
+          "arr_after": 442
         },
         {
-          "before": 466,
-          "nishiomiya": 468,
-          "after": 471
+          "dep_before": 444,
+          "arr_nishiomiya": 447,
+          "dep_nishiomiya": 448,
+          "arr_after": 451
         },
         {
-          "before": 475,
-          "nishiomiya": 477,
-          "after": 480
+          "dep_before": 451,
+          "arr_nishiomiya": 453,
+          "dep_nishiomiya": 454,
+          "arr_after": 457
         },
         {
-          "before": 484,
-          "nishiomiya": 486,
-          "after": 489
+          "dep_before": 459,
+          "arr_nishiomiya": 462,
+          "dep_nishiomiya": 462,
+          "arr_after": 466
         },
         {
-          "before": 493,
-          "nishiomiya": 495,
-          "after": 498
+          "dep_before": 467,
+          "arr_nishiomiya": 469,
+          "dep_nishiomiya": 470,
+          "arr_after": 473
         },
         {
-          "before": 502,
-          "nishiomiya": 504,
-          "after": 507
+          "dep_before": 474,
+          "arr_nishiomiya": 477,
+          "dep_nishiomiya": 478,
+          "arr_after": 481
         },
         {
-          "before": 511,
-          "nishiomiya": 513,
-          "after": 516
+          "dep_before": 483,
+          "arr_nishiomiya": 486,
+          "dep_nishiomiya": 486,
+          "arr_after": 490
         },
         {
-          "before": 520,
-          "nishiomiya": 522,
-          "after": 525
+          "dep_before": 498,
+          "arr_nishiomiya": 501,
+          "dep_nishiomiya": 501,
+          "arr_after": 504
         },
         {
-          "before": 529,
-          "nishiomiya": 531,
-          "after": 534
+          "dep_before": 513,
+          "arr_nishiomiya": 515,
+          "dep_nishiomiya": 516,
+          "arr_after": 519
         },
         {
-          "before": 538,
-          "nishiomiya": 540,
-          "after": 543
+          "dep_before": 527,
+          "arr_nishiomiya": 529,
+          "dep_nishiomiya": 530,
+          "arr_after": 533
         },
         {
-          "before": 550,
-          "nishiomiya": 552,
-          "after": 555
+          "dep_before": 545,
+          "arr_nishiomiya": 547,
+          "dep_nishiomiya": 548,
+          "arr_after": 551
         },
         {
-          "before": 562,
-          "nishiomiya": 564,
-          "after": 567
+          "dep_before": 561,
+          "arr_nishiomiya": 564,
+          "dep_nishiomiya": 565,
+          "arr_after": 568
         },
         {
-          "before": 574,
-          "nishiomiya": 576,
-          "after": 579
+          "dep_before": 582,
+          "arr_nishiomiya": 585,
+          "dep_nishiomiya": 585,
+          "arr_after": 588
         },
         {
-          "before": 586,
-          "nishiomiya": 588,
-          "after": 591
+          "dep_before": 600,
+          "arr_nishiomiya": 602,
+          "dep_nishiomiya": 603,
+          "arr_after": 606
         },
         {
-          "before": 598,
-          "nishiomiya": 600,
-          "after": 603
+          "dep_before": 617,
+          "arr_nishiomiya": 619,
+          "dep_nishiomiya": 623,
+          "arr_after": 626
         },
         {
-          "before": 610,
-          "nishiomiya": 612,
-          "after": 615
+          "dep_before": 638,
+          "arr_nishiomiya": 641,
+          "dep_nishiomiya": 641,
+          "arr_after": 644
         },
         {
-          "before": 622,
-          "nishiomiya": 624,
-          "after": 627
+          "dep_before": 656,
+          "arr_nishiomiya": 659,
+          "dep_nishiomiya": 659,
+          "arr_after": 662
         },
         {
-          "before": 634,
-          "nishiomiya": 636,
-          "after": 639
+          "dep_before": 675,
+          "arr_nishiomiya": 677,
+          "dep_nishiomiya": 679,
+          "arr_after": 682
         },
         {
-          "before": 646,
-          "nishiomiya": 648,
-          "after": 651
+          "dep_before": 695,
+          "arr_nishiomiya": 697,
+          "dep_nishiomiya": 699,
+          "arr_after": 702
         },
         {
-          "before": 658,
-          "nishiomiya": 660,
-          "after": 663
+          "dep_before": 715,
+          "arr_nishiomiya": 717,
+          "dep_nishiomiya": 719,
+          "arr_after": 722
         },
         {
-          "before": 670,
-          "nishiomiya": 672,
-          "after": 675
+          "dep_before": 735,
+          "arr_nishiomiya": 737,
+          "dep_nishiomiya": 739,
+          "arr_after": 742
         },
         {
-          "before": 682,
-          "nishiomiya": 684,
-          "after": 687
+          "dep_before": 755,
+          "arr_nishiomiya": 757,
+          "dep_nishiomiya": 759,
+          "arr_after": 762
         },
         {
-          "before": 694,
-          "nishiomiya": 696,
-          "after": 699
+          "dep_before": 775,
+          "arr_nishiomiya": 777,
+          "dep_nishiomiya": 779,
+          "arr_after": 782
         },
         {
-          "before": 706,
-          "nishiomiya": 708,
-          "after": 711
+          "dep_before": 795,
+          "arr_nishiomiya": 798,
+          "dep_nishiomiya": 799,
+          "arr_after": 802
         },
         {
-          "before": 718,
-          "nishiomiya": 720,
-          "after": 723
+          "dep_before": 815,
+          "arr_nishiomiya": 817,
+          "dep_nishiomiya": 819,
+          "arr_after": 822
         },
         {
-          "before": 730,
-          "nishiomiya": 732,
-          "after": 735
+          "dep_before": 835,
+          "arr_nishiomiya": 837,
+          "dep_nishiomiya": 839,
+          "arr_after": 842
         },
         {
-          "before": 742,
-          "nishiomiya": 744,
-          "after": 747
+          "dep_before": 855,
+          "arr_nishiomiya": 857,
+          "dep_nishiomiya": 859,
+          "arr_after": 862
         },
         {
-          "before": 754,
-          "nishiomiya": 756,
-          "after": 759
+          "dep_before": 875,
+          "arr_nishiomiya": 877,
+          "dep_nishiomiya": 879,
+          "arr_after": 882
         },
         {
-          "before": 766,
-          "nishiomiya": 768,
-          "after": 771
+          "dep_before": 895,
+          "arr_nishiomiya": 897,
+          "dep_nishiomiya": 899,
+          "arr_after": 902
         },
         {
-          "before": 778,
-          "nishiomiya": 780,
-          "after": 783
+          "dep_before": 915,
+          "arr_nishiomiya": 917,
+          "dep_nishiomiya": 919,
+          "arr_after": 922
         },
         {
-          "before": 790,
-          "nishiomiya": 792,
-          "after": 795
+          "dep_before": 935,
+          "arr_nishiomiya": 938,
+          "dep_nishiomiya": 939,
+          "arr_after": 942
         },
         {
-          "before": 802,
-          "nishiomiya": 804,
-          "after": 807
+          "dep_before": 955,
+          "arr_nishiomiya": 957,
+          "dep_nishiomiya": 959,
+          "arr_after": 962
         },
         {
-          "before": 814,
-          "nishiomiya": 816,
-          "after": 819
+          "dep_before": 975,
+          "arr_nishiomiya": 977,
+          "dep_nishiomiya": 979,
+          "arr_after": 982
         },
         {
-          "before": 826,
-          "nishiomiya": 828,
-          "after": 831
+          "dep_before": 995,
+          "arr_nishiomiya": 997,
+          "dep_nishiomiya": 999,
+          "arr_after": 1002
         },
         {
-          "before": 838,
-          "nishiomiya": 840,
-          "after": 843
+          "dep_before": 1004,
+          "arr_nishiomiya": 1006,
+          "dep_nishiomiya": 1007,
+          "arr_after": 1010
         },
         {
-          "before": 850,
-          "nishiomiya": 852,
-          "after": 855
+          "dep_before": 1015,
+          "arr_nishiomiya": 1017,
+          "dep_nishiomiya": 1019,
+          "arr_after": 1022
         },
         {
-          "before": 862,
-          "nishiomiya": 864,
-          "after": 867
+          "dep_before": 1027,
+          "arr_nishiomiya": 1029,
+          "dep_nishiomiya": 1029,
+          "arr_after": 1032
         },
         {
-          "before": 874,
-          "nishiomiya": 876,
-          "after": 879
+          "dep_before": 1035,
+          "arr_nishiomiya": 1037,
+          "dep_nishiomiya": 1039,
+          "arr_after": 1042
         },
         {
-          "before": 886,
-          "nishiomiya": 888,
-          "after": 891
+          "dep_before": 1047,
+          "arr_nishiomiya": 1049,
+          "dep_nishiomiya": 1049,
+          "arr_after": 1052
         },
         {
-          "before": 898,
-          "nishiomiya": 900,
-          "after": 903
+          "dep_before": 1055,
+          "arr_nishiomiya": 1057,
+          "dep_nishiomiya": 1059,
+          "arr_after": 1062
         },
         {
-          "before": 910,
-          "nishiomiya": 912,
-          "after": 915
+          "dep_before": 1075,
+          "arr_nishiomiya": 1078,
+          "dep_nishiomiya": 1079,
+          "arr_after": 1082
         },
         {
-          "before": 922,
-          "nishiomiya": 924,
-          "after": 927
+          "dep_before": 1095,
+          "arr_nishiomiya": 1097,
+          "dep_nishiomiya": 1099,
+          "arr_after": 1102
         },
         {
-          "before": 934,
-          "nishiomiya": 936,
-          "after": 939
+          "dep_before": 1115,
+          "arr_nishiomiya": 1117,
+          "dep_nishiomiya": 1119,
+          "arr_after": 1122
         },
         {
-          "before": 946,
-          "nishiomiya": 948,
-          "after": 951
+          "dep_before": 1135,
+          "arr_nishiomiya": 1137,
+          "dep_nishiomiya": 1139,
+          "arr_after": 1142
         },
         {
-          "before": 958,
-          "nishiomiya": 960,
-          "after": 963
+          "dep_before": 1145,
+          "arr_nishiomiya": 1148,
+          "dep_nishiomiya": 1149,
+          "arr_after": 1152
         },
         {
-          "before": 970,
-          "nishiomiya": 972,
-          "after": 975
+          "dep_before": 1155,
+          "arr_nishiomiya": 1157,
+          "dep_nishiomiya": 1159,
+          "arr_after": 1162
         },
         {
-          "before": 982,
-          "nishiomiya": 984,
-          "after": 987
+          "dep_before": 1175,
+          "arr_nishiomiya": 1177,
+          "dep_nishiomiya": 1179,
+          "arr_after": 1182
         },
         {
-          "before": 994,
-          "nishiomiya": 996,
-          "after": 999
+          "dep_before": 1195,
+          "arr_nishiomiya": 1197,
+          "dep_nishiomiya": 1199,
+          "arr_after": 1202
         },
         {
-          "before": 1006,
-          "nishiomiya": 1008,
-          "after": 1011
+          "dep_before": 1205,
+          "arr_nishiomiya": 1208,
+          "dep_nishiomiya": 1209,
+          "arr_after": 1212
         },
         {
-          "before": 1018,
-          "nishiomiya": 1020,
-          "after": 1023
+          "dep_before": 1215,
+          "arr_nishiomiya": 1217,
+          "dep_nishiomiya": 1219,
+          "arr_after": 1222
         },
         {
-          "before": 1030,
-          "nishiomiya": 1032,
-          "after": 1035
+          "dep_before": 1235,
+          "arr_nishiomiya": 1237,
+          "dep_nishiomiya": 1239,
+          "arr_after": 1242
         },
         {
-          "before": 1042,
-          "nishiomiya": 1044,
-          "after": 1047
+          "dep_before": 1255,
+          "arr_nishiomiya": 1257,
+          "dep_nishiomiya": 1259,
+          "arr_after": 1262
         },
         {
-          "before": 1054,
-          "nishiomiya": 1056,
-          "after": 1059
+          "dep_before": 1266,
+          "arr_nishiomiya": 1269,
+          "dep_nishiomiya": 1269,
+          "arr_after": 1272
         },
         {
-          "before": 1066,
-          "nishiomiya": 1068,
-          "after": 1071
+          "dep_before": 1277,
+          "arr_nishiomiya": 1279,
+          "dep_nishiomiya": 1280,
+          "arr_after": 1283
         },
         {
-          "before": 1078,
-          "nishiomiya": 1080,
-          "after": 1083
+          "dep_before": 1295,
+          "arr_nishiomiya": 1297,
+          "dep_nishiomiya": 1299,
+          "arr_after": 1302
         },
         {
-          "before": 1090,
-          "nishiomiya": 1092,
-          "after": 1095
+          "dep_before": 1315,
+          "arr_nishiomiya": 1317,
+          "dep_nishiomiya": 1319,
+          "arr_after": 1322
         },
         {
-          "before": 1102,
-          "nishiomiya": 1104,
-          "after": 1107
+          "dep_before": 1335,
+          "arr_nishiomiya": 1337,
+          "dep_nishiomiya": 1339,
+          "arr_after": 1342
         },
         {
-          "before": 1114,
-          "nishiomiya": 1116,
-          "after": 1119
+          "dep_before": 1355,
+          "arr_nishiomiya": 1357,
+          "dep_nishiomiya": 1359,
+          "arr_after": 1362
         },
         {
-          "before": 1126,
-          "nishiomiya": 1128,
-          "after": 1131
+          "dep_before": 1374,
+          "arr_nishiomiya": 1377,
+          "dep_nishiomiya": 1379,
+          "arr_after": 1382
         },
         {
-          "before": 1138,
-          "nishiomiya": 1140,
-          "after": 1143
+          "dep_before": 1393,
+          "arr_nishiomiya": 1396,
+          "dep_nishiomiya": 1396,
+          "arr_after": 1399
         },
         {
-          "before": 1150,
-          "nishiomiya": 1152,
-          "after": 1155
-        },
-        {
-          "before": 1162,
-          "nishiomiya": 1164,
-          "after": 1167
-        },
-        {
-          "before": 1174,
-          "nishiomiya": 1176,
-          "after": 1179
-        },
-        {
-          "before": 1186,
-          "nishiomiya": 1188,
-          "after": 1191
-        },
-        {
-          "before": 1198,
-          "nishiomiya": 1200,
-          "after": 1203
-        },
-        {
-          "before": 1210,
-          "nishiomiya": 1212,
-          "after": 1215
-        },
-        {
-          "before": 1222,
-          "nishiomiya": 1224,
-          "after": 1227
-        },
-        {
-          "before": 1234,
-          "nishiomiya": 1236,
-          "after": 1239
-        },
-        {
-          "before": 1246,
-          "nishiomiya": 1248,
-          "after": 1251
-        },
-        {
-          "before": 1258,
-          "nishiomiya": 1260,
-          "after": 1263
-        },
-        {
-          "before": 1270,
-          "nishiomiya": 1272,
-          "after": 1275
-        },
-        {
-          "before": 1282,
-          "nishiomiya": 1284,
-          "after": 1287
-        },
-        {
-          "before": 1294,
-          "nishiomiya": 1296,
-          "after": 1299
-        },
-        {
-          "before": 1306,
-          "nishiomiya": 1308,
-          "after": 1311
-        },
-        {
-          "before": 1318,
-          "nishiomiya": 1320,
-          "after": 1323
-        },
-        {
-          "before": 1330,
-          "nishiomiya": 1332,
-          "after": 1335
-        },
-        {
-          "before": 1342,
-          "nishiomiya": 1344,
-          "after": 1347
-        },
-        {
-          "before": 1354,
-          "nishiomiya": 1356,
-          "after": 1359
-        },
-        {
-          "before": 1366,
-          "nishiomiya": 1368,
-          "after": 1371
-        },
-        {
-          "before": 1383,
-          "nishiomiya": 1385,
-          "after": 1388
-        },
-        {
-          "before": 1396,
-          "nishiomiya": 1398,
-          "after": 1401
-        },
-        {
-          "before": 1410,
-          "nishiomiya": 1412,
-          "after": 1415
-        },
-        {
-          "before": 1425,
-          "nishiomiya": 1427,
-          "after": 1430
+          "dep_before": 1416,
+          "arr_nishiomiya": 1418,
+          "dep_nishiomiya": 1418,
+          "arr_after": 1421
         }
       ],
       "down": [
         {
-          "before": 340,
-          "nishiomiya": 344,
-          "after": 346
+          "dep_before": 341,
+          "arr_nishiomiya": 344,
+          "dep_nishiomiya": 344,
+          "arr_after": 346
         },
         {
-          "before": 367,
-          "nishiomiya": 371,
-          "after": 373
+          "dep_before": 368,
+          "arr_nishiomiya": 371,
+          "dep_nishiomiya": 371,
+          "arr_after": 373
         },
         {
-          "before": 389,
-          "nishiomiya": 393,
-          "after": 395
+          "dep_before": 389,
+          "arr_nishiomiya": 392,
+          "dep_nishiomiya": 393,
+          "arr_after": 395
         },
         {
-          "before": 413,
-          "nishiomiya": 417,
-          "after": 419
+          "dep_before": 414,
+          "arr_nishiomiya": 416,
+          "dep_nishiomiya": 417,
+          "arr_after": 419
         },
         {
-          "before": 429,
-          "nishiomiya": 433,
-          "after": 435
+          "dep_before": 429,
+          "arr_nishiomiya": 432,
+          "dep_nishiomiya": 433,
+          "arr_after": 435
         },
         {
-          "before": 444,
-          "nishiomiya": 448,
-          "after": 450
+          "dep_before": 444,
+          "arr_nishiomiya": 447,
+          "dep_nishiomiya": 448,
+          "arr_after": 450
         },
         {
-          "before": 459,
-          "nishiomiya": 463,
-          "after": 465
+          "dep_before": 459,
+          "arr_nishiomiya": 462,
+          "dep_nishiomiya": 463,
+          "arr_after": 465
         },
         {
-          "before": 474,
-          "nishiomiya": 478,
-          "after": 480
+          "dep_before": 474,
+          "arr_nishiomiya": 477,
+          "dep_nishiomiya": 478,
+          "arr_after": 480
         },
         {
-          "before": 489,
-          "nishiomiya": 493,
-          "after": 495
+          "dep_before": 491,
+          "arr_nishiomiya": 494,
+          "dep_nishiomiya": 495,
+          "arr_after": 497
         },
         {
-          "before": 504,
-          "nishiomiya": 508,
-          "after": 510
+          "dep_before": 505,
+          "arr_nishiomiya": 508,
+          "dep_nishiomiya": 509,
+          "arr_after": 512
         },
         {
-          "before": 519,
-          "nishiomiya": 523,
-          "after": 525
+          "dep_before": 526,
+          "arr_nishiomiya": 529,
+          "dep_nishiomiya": 530,
+          "arr_after": 532
         },
         {
-          "before": 534,
-          "nishiomiya": 538,
-          "after": 540
+          "dep_before": 544,
+          "arr_nishiomiya": 547,
+          "dep_nishiomiya": 548,
+          "arr_after": 550
         },
         {
-          "before": 549,
-          "nishiomiya": 553,
-          "after": 555
+          "dep_before": 561,
+          "arr_nishiomiya": 564,
+          "dep_nishiomiya": 566,
+          "arr_after": 568
         },
         {
-          "before": 564,
-          "nishiomiya": 568,
-          "after": 570
+          "dep_before": 582,
+          "arr_nishiomiya": 585,
+          "dep_nishiomiya": 587,
+          "arr_after": 589
         },
         {
-          "before": 579,
-          "nishiomiya": 583,
-          "after": 585
+          "dep_before": 599,
+          "arr_nishiomiya": 602,
+          "dep_nishiomiya": 603,
+          "arr_after": 605
         },
         {
-          "before": 594,
-          "nishiomiya": 598,
-          "after": 600
+          "dep_before": 619,
+          "arr_nishiomiya": 622,
+          "dep_nishiomiya": 623,
+          "arr_after": 625
         },
         {
-          "before": 609,
-          "nishiomiya": 613,
-          "after": 615
+          "dep_before": 638,
+          "arr_nishiomiya": 641,
+          "dep_nishiomiya": 641,
+          "arr_after": 643
         },
         {
-          "before": 624,
-          "nishiomiya": 628,
-          "after": 630
+          "dep_before": 655,
+          "arr_nishiomiya": 658,
+          "dep_nishiomiya": 660,
+          "arr_after": 662
         },
         {
-          "before": 639,
-          "nishiomiya": 643,
-          "after": 645
+          "dep_before": 675,
+          "arr_nishiomiya": 678,
+          "dep_nishiomiya": 681,
+          "arr_after": 683
         },
         {
-          "before": 654,
-          "nishiomiya": 658,
-          "after": 660
+          "dep_before": 695,
+          "arr_nishiomiya": 698,
+          "dep_nishiomiya": 701,
+          "arr_after": 703
         },
         {
-          "before": 669,
-          "nishiomiya": 673,
-          "after": 675
+          "dep_before": 715,
+          "arr_nishiomiya": 718,
+          "dep_nishiomiya": 721,
+          "arr_after": 723
         },
         {
-          "before": 684,
-          "nishiomiya": 688,
-          "after": 690
+          "dep_before": 735,
+          "arr_nishiomiya": 738,
+          "dep_nishiomiya": 741,
+          "arr_after": 743
         },
         {
-          "before": 699,
-          "nishiomiya": 703,
-          "after": 705
+          "dep_before": 755,
+          "arr_nishiomiya": 758,
+          "dep_nishiomiya": 761,
+          "arr_after": 763
         },
         {
-          "before": 714,
-          "nishiomiya": 718,
-          "after": 720
+          "dep_before": 775,
+          "arr_nishiomiya": 778,
+          "dep_nishiomiya": 781,
+          "arr_after": 783
         },
         {
-          "before": 729,
-          "nishiomiya": 733,
-          "after": 735
+          "dep_before": 795,
+          "arr_nishiomiya": 798,
+          "dep_nishiomiya": 801,
+          "arr_after": 803
         },
         {
-          "before": 744,
-          "nishiomiya": 748,
-          "after": 750
+          "dep_before": 815,
+          "arr_nishiomiya": 818,
+          "dep_nishiomiya": 821,
+          "arr_after": 823
         },
         {
-          "before": 759,
-          "nishiomiya": 763,
-          "after": 765
+          "dep_before": 835,
+          "arr_nishiomiya": 838,
+          "dep_nishiomiya": 841,
+          "arr_after": 843
         },
         {
-          "before": 774,
-          "nishiomiya": 778,
-          "after": 780
+          "dep_before": 855,
+          "arr_nishiomiya": 858,
+          "dep_nishiomiya": 861,
+          "arr_after": 863
         },
         {
-          "before": 789,
-          "nishiomiya": 793,
-          "after": 795
+          "dep_before": 875,
+          "arr_nishiomiya": 878,
+          "dep_nishiomiya": 881,
+          "arr_after": 883
         },
         {
-          "before": 804,
-          "nishiomiya": 808,
-          "after": 810
+          "dep_before": 895,
+          "arr_nishiomiya": 898,
+          "dep_nishiomiya": 901,
+          "arr_after": 903
         },
         {
-          "before": 819,
-          "nishiomiya": 823,
-          "after": 825
+          "dep_before": 915,
+          "arr_nishiomiya": 918,
+          "dep_nishiomiya": 921,
+          "arr_after": 923
         },
         {
-          "before": 834,
-          "nishiomiya": 838,
-          "after": 840
+          "dep_before": 935,
+          "arr_nishiomiya": 938,
+          "dep_nishiomiya": 941,
+          "arr_after": 943
         },
         {
-          "before": 849,
-          "nishiomiya": 853,
-          "after": 855
+          "dep_before": 955,
+          "arr_nishiomiya": 958,
+          "dep_nishiomiya": 961,
+          "arr_after": 963
         },
         {
-          "before": 864,
-          "nishiomiya": 868,
-          "after": 870
+          "dep_before": 975,
+          "arr_nishiomiya": 978,
+          "dep_nishiomiya": 981,
+          "arr_after": 983
         },
         {
-          "before": 879,
-          "nishiomiya": 883,
-          "after": 885
+          "dep_before": 995,
+          "arr_nishiomiya": 998,
+          "dep_nishiomiya": 1001,
+          "arr_after": 1003
         },
         {
-          "before": 894,
-          "nishiomiya": 898,
-          "after": 900
+          "dep_before": 1015,
+          "arr_nishiomiya": 1018,
+          "dep_nishiomiya": 1021,
+          "arr_after": 1023
         },
         {
-          "before": 909,
-          "nishiomiya": 913,
-          "after": 915
+          "dep_before": 1035,
+          "arr_nishiomiya": 1038,
+          "dep_nishiomiya": 1041,
+          "arr_after": 1043
         },
         {
-          "before": 924,
-          "nishiomiya": 928,
-          "after": 930
+          "dep_before": 1055,
+          "arr_nishiomiya": 1059,
+          "dep_nishiomiya": 1061,
+          "arr_after": 1063
         },
         {
-          "before": 939,
-          "nishiomiya": 943,
-          "after": 945
+          "dep_before": 1075,
+          "arr_nishiomiya": 1079,
+          "dep_nishiomiya": 1081,
+          "arr_after": 1083
         },
         {
-          "before": 954,
-          "nishiomiya": 958,
-          "after": 960
+          "dep_before": 1095,
+          "arr_nishiomiya": 1099,
+          "dep_nishiomiya": 1101,
+          "arr_after": 1103
         },
         {
-          "before": 969,
-          "nishiomiya": 973,
-          "after": 975
+          "dep_before": 1105,
+          "arr_nishiomiya": 1108,
+          "dep_nishiomiya": 1109,
+          "arr_after": 1111
         },
         {
-          "before": 984,
-          "nishiomiya": 988,
-          "after": 990
+          "dep_before": 1115,
+          "arr_nishiomiya": 1119,
+          "dep_nishiomiya": 1121,
+          "arr_after": 1123
         },
         {
-          "before": 999,
-          "nishiomiya": 1003,
-          "after": 1005
+          "dep_before": 1135,
+          "arr_nishiomiya": 1139,
+          "dep_nishiomiya": 1141,
+          "arr_after": 1143
         },
         {
-          "before": 1014,
-          "nishiomiya": 1018,
-          "after": 1020
+          "dep_before": 1155,
+          "arr_nishiomiya": 1159,
+          "dep_nishiomiya": 1161,
+          "arr_after": 1163
         },
         {
-          "before": 1029,
-          "nishiomiya": 1033,
-          "after": 1035
+          "dep_before": 1166,
+          "arr_nishiomiya": 1168,
+          "dep_nishiomiya": 1169,
+          "arr_after": 1171
         },
         {
-          "before": 1044,
-          "nishiomiya": 1048,
-          "after": 1050
+          "dep_before": 1175,
+          "arr_nishiomiya": 1179,
+          "dep_nishiomiya": 1181,
+          "arr_after": 1183
         },
         {
-          "before": 1059,
-          "nishiomiya": 1063,
-          "after": 1065
+          "dep_before": 1195,
+          "arr_nishiomiya": 1199,
+          "dep_nishiomiya": 1201,
+          "arr_after": 1203
         },
         {
-          "before": 1074,
-          "nishiomiya": 1078,
-          "after": 1080
+          "dep_before": 1215,
+          "arr_nishiomiya": 1219,
+          "dep_nishiomiya": 1221,
+          "arr_after": 1223
         },
         {
-          "before": 1089,
-          "nishiomiya": 1093,
-          "after": 1095
+          "dep_before": 1225,
+          "arr_nishiomiya": 1228,
+          "dep_nishiomiya": 1229,
+          "arr_after": 1231
         },
         {
-          "before": 1104,
-          "nishiomiya": 1108,
-          "after": 1110
+          "dep_before": 1235,
+          "arr_nishiomiya": 1239,
+          "dep_nishiomiya": 1241,
+          "arr_after": 1243
         },
         {
-          "before": 1119,
-          "nishiomiya": 1123,
-          "after": 1125
+          "dep_before": 1255,
+          "arr_nishiomiya": 1259,
+          "dep_nishiomiya": 1261,
+          "arr_after": 1263
         },
         {
-          "before": 1134,
-          "nishiomiya": 1138,
-          "after": 1140
+          "dep_before": 1275,
+          "arr_nishiomiya": 1279,
+          "dep_nishiomiya": 1281,
+          "arr_after": 1283
         },
         {
-          "before": 1149,
-          "nishiomiya": 1153,
-          "after": 1155
+          "dep_before": 1286,
+          "arr_nishiomiya": 1289,
+          "dep_nishiomiya": 1289,
+          "arr_after": 1292
         },
         {
-          "before": 1164,
-          "nishiomiya": 1168,
-          "after": 1170
+          "dep_before": 1295,
+          "arr_nishiomiya": 1299,
+          "dep_nishiomiya": 1301,
+          "arr_after": 1303
         },
         {
-          "before": 1179,
-          "nishiomiya": 1183,
-          "after": 1185
+          "dep_before": 1314,
+          "arr_nishiomiya": 1317,
+          "dep_nishiomiya": 1318,
+          "arr_after": 1320
         },
         {
-          "before": 1194,
-          "nishiomiya": 1198,
-          "after": 1200
+          "dep_before": 1325,
+          "arr_nishiomiya": 1328,
+          "dep_nishiomiya": 1329,
+          "arr_after": 1331
         },
         {
-          "before": 1209,
-          "nishiomiya": 1213,
-          "after": 1215
+          "dep_before": 1335,
+          "arr_nishiomiya": 1338,
+          "dep_nishiomiya": 1339,
+          "arr_after": 1341
         },
         {
-          "before": 1224,
-          "nishiomiya": 1228,
-          "after": 1230
+          "dep_before": 1345,
+          "arr_nishiomiya": 1348,
+          "dep_nishiomiya": 1349,
+          "arr_after": 1351
         },
         {
-          "before": 1239,
-          "nishiomiya": 1243,
-          "after": 1245
+          "dep_before": 1355,
+          "arr_nishiomiya": 1358,
+          "dep_nishiomiya": 1359,
+          "arr_after": 1361
         },
         {
-          "before": 1254,
-          "nishiomiya": 1258,
-          "after": 1260
+          "dep_before": 1365,
+          "arr_nishiomiya": 1368,
+          "dep_nishiomiya": 1369,
+          "arr_after": 1371
         },
         {
-          "before": 1269,
-          "nishiomiya": 1273,
-          "after": 1275
+          "dep_before": 1375,
+          "arr_nishiomiya": 1378,
+          "dep_nishiomiya": 1380,
+          "arr_after": 1382
         },
         {
-          "before": 1284,
-          "nishiomiya": 1288,
-          "after": 1290
+          "dep_before": 1386,
+          "arr_nishiomiya": 1388,
+          "dep_nishiomiya": 1389,
+          "arr_after": 1391
         },
         {
-          "before": 1299,
-          "nishiomiya": 1303,
-          "after": 1305
+          "dep_before": 1400,
+          "arr_nishiomiya": 1403,
+          "dep_nishiomiya": 1403,
+          "arr_after": 1405
         },
         {
-          "before": 1314,
-          "nishiomiya": 1318,
-          "after": 1320
+          "dep_before": 1412,
+          "arr_nishiomiya": 1415,
+          "dep_nishiomiya": 1419,
+          "arr_after": 1421
         },
         {
-          "before": 1329,
-          "nishiomiya": 1333,
-          "after": 1335
+          "dep_before": 1429,
+          "arr_nishiomiya": 1431,
+          "dep_nishiomiya": 1432,
+          "arr_after": 1434
         },
         {
-          "before": 1344,
-          "nishiomiya": 1348,
-          "after": 1350
+          "dep_before": 1446,
+          "arr_nishiomiya": 1449,
+          "dep_nishiomiya": 1449,
+          "arr_after": 1451
         },
         {
-          "before": 1359,
-          "nishiomiya": 1363,
-          "after": 1365
+          "dep_before": 1458,
+          "arr_nishiomiya": 1460,
+          "dep_nishiomiya": 1461,
+          "arr_after": 1463
         },
         {
-          "before": 1374,
-          "nishiomiya": 1378,
-          "after": 1380
-        },
-        {
-          "before": 1389,
-          "nishiomiya": 1393,
-          "after": 1395
-        },
-        {
-          "before": 1411,
-          "nishiomiya": 1415,
-          "after": 1417
-        },
-        {
-          "before": 1432,
-          "nishiomiya": 1436,
-          "after": 1438
+          "dep_before": 1471,
+          "arr_nishiomiya": 1474,
+          "dep_nishiomiya": 1474,
+          "arr_after": 1476
         }
       ]
     },
     "weekend": {
       "up": [
         {
-          "before": 289,
-          "nishiomiya": 291,
-          "after": 294
+          "dep_before": 289,
+          "arr_nishiomiya": 291,
+          "dep_nishiomiya": 291,
+          "arr_after": 294
         },
         {
-          "before": 309,
-          "nishiomiya": 311,
-          "after": 314
+          "dep_before": 300,
+          "arr_nishiomiya": 302,
+          "dep_nishiomiya": 302,
+          "arr_after": 305
         },
         {
-          "before": 326,
-          "nishiomiya": 328,
-          "after": 331
+          "dep_before": 315,
+          "arr_nishiomiya": 317,
+          "dep_nishiomiya": 317,
+          "arr_after": 320
         },
         {
-          "before": 347,
-          "nishiomiya": 349,
-          "after": 352
+          "dep_before": 333,
+          "arr_nishiomiya": 335,
+          "dep_nishiomiya": 336,
+          "arr_after": 339
         },
         {
-          "before": 366,
-          "nishiomiya": 368,
-          "after": 371
+          "dep_before": 341,
+          "arr_nishiomiya": 344,
+          "dep_nishiomiya": 345,
+          "arr_after": 348
         },
         {
-          "before": 385,
-          "nishiomiya": 387,
-          "after": 390
+          "dep_before": 357,
+          "arr_nishiomiya": 359,
+          "dep_nishiomiya": 360,
+          "arr_after": 363
         },
         {
-          "before": 403,
-          "nishiomiya": 405,
-          "after": 408
+          "dep_before": 362,
+          "arr_nishiomiya": 365,
+          "dep_nishiomiya": 365,
+          "arr_after": 368
         },
         {
-          "before": 421,
-          "nishiomiya": 423,
-          "after": 426
+          "dep_before": 372,
+          "arr_nishiomiya": 374,
+          "dep_nishiomiya": 378,
+          "arr_after": 381
         },
         {
-          "before": 439,
-          "nishiomiya": 441,
-          "after": 444
+          "dep_before": 390,
+          "arr_nishiomiya": 392,
+          "dep_nishiomiya": 397,
+          "arr_after": 400
         },
         {
-          "before": 457,
-          "nishiomiya": 459,
-          "after": 462
+          "dep_before": 405,
+          "arr_nishiomiya": 407,
+          "dep_nishiomiya": 407,
+          "arr_after": 410
         },
         {
-          "before": 475,
-          "nishiomiya": 477,
-          "after": 480
+          "dep_before": 412,
+          "arr_nishiomiya": 415,
+          "dep_nishiomiya": 418,
+          "arr_after": 421
         },
         {
-          "before": 493,
-          "nishiomiya": 495,
-          "after": 498
+          "dep_before": 425,
+          "arr_nishiomiya": 427,
+          "dep_nishiomiya": 427,
+          "arr_after": 430
         },
         {
-          "before": 511,
-          "nishiomiya": 513,
-          "after": 516
+          "dep_before": 435,
+          "arr_nishiomiya": 437,
+          "dep_nishiomiya": 439,
+          "arr_after": 442
         },
         {
-          "before": 529,
-          "nishiomiya": 531,
-          "after": 534
+          "dep_before": 445,
+          "arr_nishiomiya": 447,
+          "dep_nishiomiya": 447,
+          "arr_after": 450
         },
         {
-          "before": 550,
-          "nishiomiya": 552,
-          "after": 555
+          "dep_before": 455,
+          "arr_nishiomiya": 457,
+          "dep_nishiomiya": 459,
+          "arr_after": 462
         },
         {
-          "before": 574,
-          "nishiomiya": 576,
-          "after": 579
+          "dep_before": 465,
+          "arr_nishiomiya": 467,
+          "dep_nishiomiya": 467,
+          "arr_after": 470
         },
         {
-          "before": 598,
-          "nishiomiya": 600,
-          "after": 603
+          "dep_before": 478,
+          "arr_nishiomiya": 481,
+          "dep_nishiomiya": 481,
+          "arr_after": 484
         },
         {
-          "before": 622,
-          "nishiomiya": 624,
-          "after": 627
+          "dep_before": 497,
+          "arr_nishiomiya": 500,
+          "dep_nishiomiya": 500,
+          "arr_after": 503
         },
         {
-          "before": 646,
-          "nishiomiya": 648,
-          "after": 651
+          "dep_before": 515,
+          "arr_nishiomiya": 518,
+          "dep_nishiomiya": 519,
+          "arr_after": 522
         },
         {
-          "before": 670,
-          "nishiomiya": 672,
-          "after": 675
+          "dep_before": 535,
+          "arr_nishiomiya": 537,
+          "dep_nishiomiya": 539,
+          "arr_after": 542
         },
         {
-          "before": 694,
-          "nishiomiya": 696,
-          "after": 699
+          "dep_before": 555,
+          "arr_nishiomiya": 557,
+          "dep_nishiomiya": 559,
+          "arr_after": 562
         },
         {
-          "before": 718,
-          "nishiomiya": 720,
-          "after": 723
+          "dep_before": 575,
+          "arr_nishiomiya": 577,
+          "dep_nishiomiya": 579,
+          "arr_after": 582
         },
         {
-          "before": 742,
-          "nishiomiya": 744,
-          "after": 747
+          "dep_before": 595,
+          "arr_nishiomiya": 597,
+          "dep_nishiomiya": 599,
+          "arr_after": 602
         },
         {
-          "before": 766,
-          "nishiomiya": 768,
-          "after": 771
+          "dep_before": 615,
+          "arr_nishiomiya": 617,
+          "dep_nishiomiya": 619,
+          "arr_after": 622
         },
         {
-          "before": 790,
-          "nishiomiya": 792,
-          "after": 795
+          "dep_before": 635,
+          "arr_nishiomiya": 637,
+          "dep_nishiomiya": 639,
+          "arr_after": 642
         },
         {
-          "before": 814,
-          "nishiomiya": 816,
-          "after": 819
+          "dep_before": 655,
+          "arr_nishiomiya": 657,
+          "dep_nishiomiya": 659,
+          "arr_after": 662
         },
         {
-          "before": 838,
-          "nishiomiya": 840,
-          "after": 843
+          "dep_before": 675,
+          "arr_nishiomiya": 677,
+          "dep_nishiomiya": 679,
+          "arr_after": 682
         },
         {
-          "before": 862,
-          "nishiomiya": 864,
-          "after": 867
+          "dep_before": 695,
+          "arr_nishiomiya": 697,
+          "dep_nishiomiya": 699,
+          "arr_after": 702
         },
         {
-          "before": 886,
-          "nishiomiya": 888,
-          "after": 891
+          "dep_before": 715,
+          "arr_nishiomiya": 717,
+          "dep_nishiomiya": 719,
+          "arr_after": 722
         },
         {
-          "before": 910,
-          "nishiomiya": 912,
-          "after": 915
+          "dep_before": 735,
+          "arr_nishiomiya": 737,
+          "dep_nishiomiya": 739,
+          "arr_after": 742
         },
         {
-          "before": 934,
-          "nishiomiya": 936,
-          "after": 939
+          "dep_before": 755,
+          "arr_nishiomiya": 757,
+          "dep_nishiomiya": 759,
+          "arr_after": 762
         },
         {
-          "before": 958,
-          "nishiomiya": 960,
-          "after": 963
+          "dep_before": 775,
+          "arr_nishiomiya": 777,
+          "dep_nishiomiya": 779,
+          "arr_after": 782
         },
         {
-          "before": 982,
-          "nishiomiya": 984,
-          "after": 987
+          "dep_before": 795,
+          "arr_nishiomiya": 798,
+          "dep_nishiomiya": 799,
+          "arr_after": 802
         },
         {
-          "before": 1006,
-          "nishiomiya": 1008,
-          "after": 1011
+          "dep_before": 815,
+          "arr_nishiomiya": 817,
+          "dep_nishiomiya": 819,
+          "arr_after": 822
         },
         {
-          "before": 1030,
-          "nishiomiya": 1032,
-          "after": 1035
+          "dep_before": 835,
+          "arr_nishiomiya": 837,
+          "dep_nishiomiya": 839,
+          "arr_after": 842
         },
         {
-          "before": 1054,
-          "nishiomiya": 1056,
-          "after": 1059
+          "dep_before": 855,
+          "arr_nishiomiya": 857,
+          "dep_nishiomiya": 859,
+          "arr_after": 862
         },
         {
-          "before": 1078,
-          "nishiomiya": 1080,
-          "after": 1083
+          "dep_before": 875,
+          "arr_nishiomiya": 877,
+          "dep_nishiomiya": 879,
+          "arr_after": 882
         },
         {
-          "before": 1102,
-          "nishiomiya": 1104,
-          "after": 1107
+          "dep_before": 895,
+          "arr_nishiomiya": 897,
+          "dep_nishiomiya": 899,
+          "arr_after": 902
         },
         {
-          "before": 1126,
-          "nishiomiya": 1128,
-          "after": 1131
+          "dep_before": 915,
+          "arr_nishiomiya": 917,
+          "dep_nishiomiya": 919,
+          "arr_after": 922
         },
         {
-          "before": 1150,
-          "nishiomiya": 1152,
-          "after": 1155
+          "dep_before": 935,
+          "arr_nishiomiya": 938,
+          "dep_nishiomiya": 939,
+          "arr_after": 942
         },
         {
-          "before": 1174,
-          "nishiomiya": 1176,
-          "after": 1179
+          "dep_before": 955,
+          "arr_nishiomiya": 957,
+          "dep_nishiomiya": 959,
+          "arr_after": 962
         },
         {
-          "before": 1198,
-          "nishiomiya": 1200,
-          "after": 1203
+          "dep_before": 975,
+          "arr_nishiomiya": 977,
+          "dep_nishiomiya": 979,
+          "arr_after": 982
         },
         {
-          "before": 1222,
-          "nishiomiya": 1224,
-          "after": 1227
+          "dep_before": 995,
+          "arr_nishiomiya": 997,
+          "dep_nishiomiya": 999,
+          "arr_after": 1002
         },
         {
-          "before": 1246,
-          "nishiomiya": 1248,
-          "after": 1251
+          "dep_before": 1015,
+          "arr_nishiomiya": 1017,
+          "dep_nishiomiya": 1019,
+          "arr_after": 1022
         },
         {
-          "before": 1270,
-          "nishiomiya": 1272,
-          "after": 1275
+          "dep_before": 1035,
+          "arr_nishiomiya": 1037,
+          "dep_nishiomiya": 1039,
+          "arr_after": 1042
         },
         {
-          "before": 1294,
-          "nishiomiya": 1296,
-          "after": 1299
+          "dep_before": 1055,
+          "arr_nishiomiya": 1057,
+          "dep_nishiomiya": 1059,
+          "arr_after": 1062
         },
         {
-          "before": 1318,
-          "nishiomiya": 1320,
-          "after": 1323
+          "dep_before": 1076,
+          "arr_nishiomiya": 1078,
+          "dep_nishiomiya": 1079,
+          "arr_after": 1082
         },
         {
-          "before": 1342,
-          "nishiomiya": 1344,
-          "after": 1347
+          "dep_before": 1097,
+          "arr_nishiomiya": 1099,
+          "dep_nishiomiya": 1100,
+          "arr_after": 1103
         },
         {
-          "before": 1366,
-          "nishiomiya": 1368,
-          "after": 1371
+          "dep_before": 1117,
+          "arr_nishiomiya": 1119,
+          "dep_nishiomiya": 1120,
+          "arr_after": 1123
         },
         {
-          "before": 1396,
-          "nishiomiya": 1398,
-          "after": 1401
+          "dep_before": 1135,
+          "arr_nishiomiya": 1138,
+          "dep_nishiomiya": 1139,
+          "arr_after": 1142
         },
         {
-          "before": 1425,
-          "nishiomiya": 1427,
-          "after": 1430
+          "dep_before": 1155,
+          "arr_nishiomiya": 1157,
+          "dep_nishiomiya": 1159,
+          "arr_after": 1162
+        },
+        {
+          "dep_before": 1175,
+          "arr_nishiomiya": 1177,
+          "dep_nishiomiya": 1179,
+          "arr_after": 1182
+        },
+        {
+          "dep_before": 1195,
+          "arr_nishiomiya": 1197,
+          "dep_nishiomiya": 1199,
+          "arr_after": 1202
+        },
+        {
+          "dep_before": 1215,
+          "arr_nishiomiya": 1217,
+          "dep_nishiomiya": 1219,
+          "arr_after": 1222
+        },
+        {
+          "dep_before": 1235,
+          "arr_nishiomiya": 1237,
+          "dep_nishiomiya": 1239,
+          "arr_after": 1242
+        },
+        {
+          "dep_before": 1255,
+          "arr_nishiomiya": 1257,
+          "dep_nishiomiya": 1259,
+          "arr_after": 1262
+        },
+        {
+          "dep_before": 1275,
+          "arr_nishiomiya": 1277,
+          "dep_nishiomiya": 1279,
+          "arr_after": 1282
+        },
+        {
+          "dep_before": 1295,
+          "arr_nishiomiya": 1298,
+          "dep_nishiomiya": 1299,
+          "arr_after": 1302
+        },
+        {
+          "dep_before": 1315,
+          "arr_nishiomiya": 1317,
+          "dep_nishiomiya": 1319,
+          "arr_after": 1322
+        },
+        {
+          "dep_before": 1345,
+          "arr_nishiomiya": 1347,
+          "dep_nishiomiya": 1347,
+          "arr_after": 1350
+        },
+        {
+          "dep_before": 1370,
+          "arr_nishiomiya": 1372,
+          "dep_nishiomiya": 1373,
+          "arr_after": 1376
+        },
+        {
+          "dep_before": 1392,
+          "arr_nishiomiya": 1394,
+          "dep_nishiomiya": 1394,
+          "arr_after": 1397
+        },
+        {
+          "dep_before": 1416,
+          "arr_nishiomiya": 1418,
+          "dep_nishiomiya": 1418,
+          "arr_after": 1421
         }
       ],
       "down": [
         {
-          "before": 340,
-          "nishiomiya": 344,
-          "after": 346
+          "dep_before": 341,
+          "arr_nishiomiya": 344,
+          "dep_nishiomiya": 345,
+          "arr_after": 347
         },
         {
-          "before": 389,
-          "nishiomiya": 393,
-          "after": 395
+          "dep_before": 372,
+          "arr_nishiomiya": 375,
+          "dep_nishiomiya": 375,
+          "arr_after": 377
         },
         {
-          "before": 429,
-          "nishiomiya": 433,
-          "after": 435
+          "dep_before": 393,
+          "arr_nishiomiya": 396,
+          "dep_nishiomiya": 397,
+          "arr_after": 399
         },
         {
-          "before": 459,
-          "nishiomiya": 463,
-          "after": 465
+          "dep_before": 414,
+          "arr_nishiomiya": 417,
+          "dep_nishiomiya": 417,
+          "arr_after": 420
         },
         {
-          "before": 489,
-          "nishiomiya": 493,
-          "after": 495
+          "dep_before": 435,
+          "arr_nishiomiya": 438,
+          "dep_nishiomiya": 441,
+          "arr_after": 443
         },
         {
-          "before": 519,
-          "nishiomiya": 523,
-          "after": 525
+          "dep_before": 455,
+          "arr_nishiomiya": 458,
+          "dep_nishiomiya": 461,
+          "arr_after": 463
         },
         {
-          "before": 549,
-          "nishiomiya": 553,
-          "after": 555
+          "dep_before": 475,
+          "arr_nishiomiya": 478,
+          "dep_nishiomiya": 481,
+          "arr_after": 483
         },
         {
-          "before": 579,
-          "nishiomiya": 583,
-          "after": 585
+          "dep_before": 495,
+          "arr_nishiomiya": 498,
+          "dep_nishiomiya": 501,
+          "arr_after": 503
         },
         {
-          "before": 609,
-          "nishiomiya": 613,
-          "after": 615
+          "dep_before": 515,
+          "arr_nishiomiya": 518,
+          "dep_nishiomiya": 521,
+          "arr_after": 523
         },
         {
-          "before": 639,
-          "nishiomiya": 643,
-          "after": 645
+          "dep_before": 535,
+          "arr_nishiomiya": 538,
+          "dep_nishiomiya": 541,
+          "arr_after": 543
         },
         {
-          "before": 669,
-          "nishiomiya": 673,
-          "after": 675
+          "dep_before": 555,
+          "arr_nishiomiya": 558,
+          "dep_nishiomiya": 561,
+          "arr_after": 563
         },
         {
-          "before": 699,
-          "nishiomiya": 703,
-          "after": 705
+          "dep_before": 575,
+          "arr_nishiomiya": 578,
+          "dep_nishiomiya": 581,
+          "arr_after": 583
         },
         {
-          "before": 729,
-          "nishiomiya": 733,
-          "after": 735
+          "dep_before": 595,
+          "arr_nishiomiya": 598,
+          "dep_nishiomiya": 601,
+          "arr_after": 603
         },
         {
-          "before": 759,
-          "nishiomiya": 763,
-          "after": 765
+          "dep_before": 615,
+          "arr_nishiomiya": 618,
+          "dep_nishiomiya": 621,
+          "arr_after": 623
         },
         {
-          "before": 789,
-          "nishiomiya": 793,
-          "after": 795
+          "dep_before": 635,
+          "arr_nishiomiya": 638,
+          "dep_nishiomiya": 641,
+          "arr_after": 643
         },
         {
-          "before": 819,
-          "nishiomiya": 823,
-          "after": 825
+          "dep_before": 655,
+          "arr_nishiomiya": 658,
+          "dep_nishiomiya": 661,
+          "arr_after": 663
         },
         {
-          "before": 849,
-          "nishiomiya": 853,
-          "after": 855
+          "dep_before": 675,
+          "arr_nishiomiya": 678,
+          "dep_nishiomiya": 681,
+          "arr_after": 683
         },
         {
-          "before": 879,
-          "nishiomiya": 883,
-          "after": 885
+          "dep_before": 695,
+          "arr_nishiomiya": 698,
+          "dep_nishiomiya": 701,
+          "arr_after": 703
         },
         {
-          "before": 909,
-          "nishiomiya": 913,
-          "after": 915
+          "dep_before": 715,
+          "arr_nishiomiya": 718,
+          "dep_nishiomiya": 721,
+          "arr_after": 723
         },
         {
-          "before": 939,
-          "nishiomiya": 943,
-          "after": 945
+          "dep_before": 735,
+          "arr_nishiomiya": 738,
+          "dep_nishiomiya": 741,
+          "arr_after": 743
         },
         {
-          "before": 969,
-          "nishiomiya": 973,
-          "after": 975
+          "dep_before": 755,
+          "arr_nishiomiya": 758,
+          "dep_nishiomiya": 761,
+          "arr_after": 763
         },
         {
-          "before": 999,
-          "nishiomiya": 1003,
-          "after": 1005
+          "dep_before": 775,
+          "arr_nishiomiya": 778,
+          "dep_nishiomiya": 781,
+          "arr_after": 783
         },
         {
-          "before": 1029,
-          "nishiomiya": 1033,
-          "after": 1035
+          "dep_before": 795,
+          "arr_nishiomiya": 798,
+          "dep_nishiomiya": 801,
+          "arr_after": 803
         },
         {
-          "before": 1059,
-          "nishiomiya": 1063,
-          "after": 1065
+          "dep_before": 815,
+          "arr_nishiomiya": 818,
+          "dep_nishiomiya": 821,
+          "arr_after": 823
         },
         {
-          "before": 1089,
-          "nishiomiya": 1093,
-          "after": 1095
+          "dep_before": 835,
+          "arr_nishiomiya": 838,
+          "dep_nishiomiya": 841,
+          "arr_after": 843
         },
         {
-          "before": 1119,
-          "nishiomiya": 1123,
-          "after": 1125
+          "dep_before": 855,
+          "arr_nishiomiya": 858,
+          "dep_nishiomiya": 861,
+          "arr_after": 863
         },
         {
-          "before": 1149,
-          "nishiomiya": 1153,
-          "after": 1155
+          "dep_before": 875,
+          "arr_nishiomiya": 878,
+          "dep_nishiomiya": 881,
+          "arr_after": 883
         },
         {
-          "before": 1179,
-          "nishiomiya": 1183,
-          "after": 1185
+          "dep_before": 895,
+          "arr_nishiomiya": 898,
+          "dep_nishiomiya": 901,
+          "arr_after": 903
         },
         {
-          "before": 1209,
-          "nishiomiya": 1213,
-          "after": 1215
+          "dep_before": 915,
+          "arr_nishiomiya": 918,
+          "dep_nishiomiya": 921,
+          "arr_after": 923
         },
         {
-          "before": 1239,
-          "nishiomiya": 1243,
-          "after": 1245
+          "dep_before": 935,
+          "arr_nishiomiya": 938,
+          "dep_nishiomiya": 941,
+          "arr_after": 943
         },
         {
-          "before": 1269,
-          "nishiomiya": 1273,
-          "after": 1275
+          "dep_before": 955,
+          "arr_nishiomiya": 958,
+          "dep_nishiomiya": 961,
+          "arr_after": 963
         },
         {
-          "before": 1299,
-          "nishiomiya": 1303,
-          "after": 1305
+          "dep_before": 975,
+          "arr_nishiomiya": 978,
+          "dep_nishiomiya": 981,
+          "arr_after": 983
         },
         {
-          "before": 1329,
-          "nishiomiya": 1333,
-          "after": 1335
+          "dep_before": 995,
+          "arr_nishiomiya": 998,
+          "dep_nishiomiya": 1001,
+          "arr_after": 1003
         },
         {
-          "before": 1359,
-          "nishiomiya": 1363,
-          "after": 1365
+          "dep_before": 1015,
+          "arr_nishiomiya": 1018,
+          "dep_nishiomiya": 1021,
+          "arr_after": 1023
         },
         {
-          "before": 1411,
-          "nishiomiya": 1415,
-          "after": 1417
+          "dep_before": 1035,
+          "arr_nishiomiya": 1038,
+          "dep_nishiomiya": 1041,
+          "arr_after": 1043
+        },
+        {
+          "dep_before": 1055,
+          "arr_nishiomiya": 1058,
+          "dep_nishiomiya": 1061,
+          "arr_after": 1063
+        },
+        {
+          "dep_before": 1075,
+          "arr_nishiomiya": 1078,
+          "dep_nishiomiya": 1081,
+          "arr_after": 1083
+        },
+        {
+          "dep_before": 1095,
+          "arr_nishiomiya": 1098,
+          "dep_nishiomiya": 1101,
+          "arr_after": 1103
+        },
+        {
+          "dep_before": 1115,
+          "arr_nishiomiya": 1118,
+          "dep_nishiomiya": 1121,
+          "arr_after": 1123
+        },
+        {
+          "dep_before": 1129,
+          "arr_nishiomiya": 1131,
+          "dep_nishiomiya": 1132,
+          "arr_after": 1134
+        },
+        {
+          "dep_before": 1135,
+          "arr_nishiomiya": 1138,
+          "dep_nishiomiya": 1141,
+          "arr_after": 1143
+        },
+        {
+          "dep_before": 1155,
+          "arr_nishiomiya": 1158,
+          "dep_nishiomiya": 1161,
+          "arr_after": 1163
+        },
+        {
+          "dep_before": 1175,
+          "arr_nishiomiya": 1178,
+          "dep_nishiomiya": 1181,
+          "arr_after": 1183
+        },
+        {
+          "dep_before": 1186,
+          "arr_nishiomiya": 1189,
+          "dep_nishiomiya": 1189,
+          "arr_after": 1191
+        },
+        {
+          "dep_before": 1195,
+          "arr_nishiomiya": 1198,
+          "dep_nishiomiya": 1201,
+          "arr_after": 1203
+        },
+        {
+          "dep_before": 1215,
+          "arr_nishiomiya": 1218,
+          "dep_nishiomiya": 1221,
+          "arr_after": 1223
+        },
+        {
+          "dep_before": 1235,
+          "arr_nishiomiya": 1238,
+          "dep_nishiomiya": 1241,
+          "arr_after": 1243
+        },
+        {
+          "dep_before": 1255,
+          "arr_nishiomiya": 1258,
+          "dep_nishiomiya": 1261,
+          "arr_after": 1263
+        },
+        {
+          "dep_before": 1275,
+          "arr_nishiomiya": 1278,
+          "dep_nishiomiya": 1281,
+          "arr_after": 1283
+        },
+        {
+          "dep_before": 1295,
+          "arr_nishiomiya": 1298,
+          "dep_nishiomiya": 1301,
+          "arr_after": 1303
+        },
+        {
+          "dep_before": 1315,
+          "arr_nishiomiya": 1318,
+          "dep_nishiomiya": 1321,
+          "arr_after": 1323
+        },
+        {
+          "dep_before": 1335,
+          "arr_nishiomiya": 1338,
+          "dep_nishiomiya": 1338,
+          "arr_after": 1341
+        },
+        {
+          "dep_before": 1355,
+          "arr_nishiomiya": 1357,
+          "dep_nishiomiya": 1358,
+          "arr_after": 1360
+        },
+        {
+          "dep_before": 1377,
+          "arr_nishiomiya": 1379,
+          "dep_nishiomiya": 1380,
+          "arr_after": 1382
+        },
+        {
+          "dep_before": 1399,
+          "arr_nishiomiya": 1401,
+          "dep_nishiomiya": 1402,
+          "arr_after": 1404
+        },
+        {
+          "dep_before": 1422,
+          "arr_nishiomiya": 1425,
+          "dep_nishiomiya": 1425,
+          "arr_after": 1427
+        },
+        {
+          "dep_before": 1436,
+          "arr_nishiomiya": 1438,
+          "dep_nishiomiya": 1439,
+          "arr_after": 1441
         }
       ]
     }
