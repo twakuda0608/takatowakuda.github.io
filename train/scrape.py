@@ -13,7 +13,7 @@
   ・リクエスト間に 2〜4 秒のランダム待機（jitter 付き）
   ・requests.Session でコネクション使い回し
   ・HTTP エラー / タイムアウト時は指数バックオフ付きリトライ（最大 2 回）
-  ・区間所要時間はオフピーク時刻（10:00）で取得
+  ・Step 2 の検索起点は実測区間所要時間 + 1分の固定オフセット
 
 【使い方】
   pip install requests beautifulsoup4
@@ -134,17 +134,6 @@ def fetch_route(
     return _parse_dep_arr(text, from_st, to_st)
 
 
-def get_travel_min(
-    from_st: str, to_st: str, date: datetime.date, ref_t: int = T(10, 0)
-) -> int | None:
-    """オフピーク時刻で駅間所要時間(分)を取得する"""
-    dep_str, arr_str = fetch_route(from_st, to_st, date, ref_t)
-    if dep_str is None or arr_str is None:
-        return None
-    dt = parse_time(arr_str) - parse_time(dep_str)
-    print(f"  {from_st} → {to_st}: {dep_str}発 {arr_str}着 = {dt}分")
-    return dt if dt > 0 else None
-
 
 def collect_trains(
     anchors: list[int],
@@ -192,25 +181,27 @@ def collect_trains(
         polite_sleep()
 
         # ── Step 2: 前駅 → 西大宮 ──
-        # dep_nishiomiya より (rough_before + 余裕2分) 前を起点に検索
-        search_anchor = dep_nishi - rough_before - 2
-        dep_before_str, arr_nishi_str = fetch_route(
-            from_before, NISHI, date, search_anchor
-        )
+        # arr_nishiomiya > dep_nishiomiya は物理的に不可能（到着が出発より後）
+        # → 別の列車を拾っているので 5 分ずつ早めてリトライ（最大 2 回）
+        dep_before = arr_nishi = None
+        dep_before_str = arr_nishi_str = None
 
-        dep_before = parse_time(dep_before_str) if dep_before_str else None
-        arr_nishi = parse_time(arr_nishi_str) if arr_nishi_str else None
+        for attempt, extra in enumerate([0, 5, 10]):
+            if attempt > 0:
+                print(f"      ↩ {fmt(arr_nishi)}着 > {dep_nishi_str}発（別列車）→ {extra}分早めて再検索")
+                polite_sleep()
+            search_anchor = dep_nishi - rough_before - 2 - extra
+            dep_before_str, arr_nishi_str = fetch_route(from_before, NISHI, date, search_anchor)
+            dep_before = parse_time(dep_before_str) if dep_before_str else None
+            arr_nishi  = parse_time(arr_nishi_str)  if arr_nishi_str  else None
+            if dep_before is None or arr_nishi is None:
+                break
+            if arr_nishi <= dep_nishi:
+                break
+
         arr_after = parse_time(arr_after_str) if arr_after_str else None
 
-        # 西大宮到着と出発が 10 分以上離れていたら別列車を拾っている可能性あり
-        if arr_nishi is not None and abs(arr_nishi - dep_nishi) > 10:
-            print(
-                f"{prefix} ⚠ 西大宮 {fmt(arr_nishi)}着/{dep_nishi_str}発 — 10分超ズレ、別列車の可能性"
-            )
-        else:
-            print(
-                f"{prefix} {fmt(dep_before)}発 → {fmt(arr_nishi)}着 / {dep_nishi_str}発 → {fmt(arr_after)}着"
-            )
+        print(f"{prefix} {fmt(dep_before)}発 → {fmt(arr_nishi)}着 / {dep_nishi_str}発 → {fmt(arr_after)}着")
 
         results.append(
             {
@@ -328,11 +319,11 @@ NISHIOMIYA: dict[str, dict[str, list[int]]] = {
 # メイン
 # ──────────────────────────────────────────────────────────────
 
-FALLBACK = {
-    "日進_西大宮": 3,
-    "西大宮_指扇": 2,
-    "指扇_西大宮": 2,
-    "西大宮_日進": 3,
+# Step 2 の検索起点オフセット: 実測値 + 1分の余裕
+# (指扇→西大宮: 実測2分 → 3分, 日進→西大宮: 実測3分 → 4分)
+BEFORE_OFFSET = {
+    "up":   3,  # 指扇 → 西大宮
+    "down": 4,  # 日進 → 西大宮
 }
 
 
@@ -341,52 +332,30 @@ def main() -> None:
     weekend_date = next_date(weekday=False)
 
     total_anchors = sum(len(v) for d in NISHIOMIYA.values() for v in d.values())
-    total_req = total_anchors * 2 + 4
+    total_req = total_anchors * 2
     est_lo, est_hi = total_req * 2 // 60, total_req * 4 // 60
     print(f"平日: {weekday_date.isoformat()} / 土休日: {weekend_date.isoformat()}")
-    print(
-        f"合計リクエスト数: 約 {total_req} 回 / 推定所要時間: {est_lo}〜{est_hi} 分\n"
-    )
-
-    # ── 区間所要時間を先に取得（Step 2 の検索起点に使う）──────────
-    print(f"{'─' * 52}")
-    print("  区間所要時間（オフピーク 10:00 基準）")
-    print(f"{'─' * 52}")
-
-    dt: dict[str, int] = {}
-    for from_st, to_st in [
-        ("日進", "西大宮"),
-        ("西大宮", "指扇"),
-        ("指扇", "西大宮"),
-        ("西大宮", "日進"),
-    ]:
-        key = f"{from_st}_{to_st}"
-        val = get_travel_min(from_st, to_st, weekday_date)
-        if val is None:
-            print(f"  ⚠ {key}: フォールバック {FALLBACK[key]} 分を使用")
-            val = FALLBACK[key]
-        dt[key] = val
-        polite_sleep()
+    print(f"合計リクエスト数: 約 {total_req} 回 / 推定所要時間: {est_lo}〜{est_hi} 分\n")
 
     # ── 各方向・日種で列車情報を収集 ───────────────────────────────
     collected: dict[str, dict[str, list[dict]]] = {}
 
     configs = [
-        # (day_type, direction, from_before, to_after, date, rough_before)
-        ("weekday", "up", "指扇", "日進", weekday_date, dt["指扇_西大宮"]),
-        ("weekday", "down", "日進", "指扇", weekday_date, dt["日進_西大宮"]),
-        ("weekend", "up", "指扇", "日進", weekend_date, dt["指扇_西大宮"]),
-        ("weekend", "down", "日進", "指扇", weekend_date, dt["日進_西大宮"]),
+        # (day_type, direction, from_before, to_after, date)
+        ("weekday", "up",   "指扇", "日進", weekday_date),
+        ("weekday", "down", "日進", "指扇", weekday_date),
+        ("weekend", "up",   "指扇", "日進", weekend_date),
+        ("weekend", "down", "日進", "指扇", weekend_date),
     ]
 
-    for day_type, direction, from_before, to_after, date, rough_before in configs:
-        label = "平日" if day_type == "weekday" else "土休日"
+    for day_type, direction, from_before, to_after, date in configs:
+        label     = "平日" if day_type == "weekday" else "土休日"
         dir_label = "上り" if direction == "up" else "下り"
         print(f"\n{'─' * 52}")
         print(f"  {label} {dir_label}  ({from_before} → 西大宮 → {to_after})")
         print(f"{'─' * 52}")
         anchors = NISHIOMIYA[day_type][direction]
-        trains = collect_trains(anchors, from_before, to_after, date, rough_before)
+        trains = collect_trains(anchors, from_before, to_after, date, BEFORE_OFFSET[direction])
         collected.setdefault(day_type, {})[direction] = trains
         polite_sleep()
 
