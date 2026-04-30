@@ -50,15 +50,19 @@ _session.headers.update(HEADERS)
 # ユーティリティ
 # ──────────────────────────────────────────────────────────────
 
+
 def T(h: int, m: int) -> int:
     return h * 60 + m
+
 
 def fmt(t: int | None) -> str:
     return f"{t // 60 % 24:02d}:{t % 60:02d}" if t is not None else "--:--"
 
+
 def parse_time(s: str) -> int:
     h, m = map(int, s.split(":"))
     return h * 60 + m
+
 
 def next_date(weekday: bool) -> datetime.date:
     d = datetime.date.today()
@@ -67,6 +71,7 @@ def next_date(weekday: bool) -> datetime.date:
             return d
         d += datetime.timedelta(days=1)
 
+
 def polite_sleep():
     time.sleep(random.uniform(2.0, 4.0))
 
@@ -74,6 +79,7 @@ def polite_sleep():
 # ──────────────────────────────────────────────────────────────
 # スクレイピング
 # ──────────────────────────────────────────────────────────────
+
 
 def _get(url: str, max_retries: int = 2) -> requests.Response | None:
     for attempt in range(max_retries + 1):
@@ -85,13 +91,15 @@ def _get(url: str, max_retries: int = 2) -> requests.Response | None:
             if attempt == max_retries:
                 print(f"      ✗ HTTP エラー: {e}")
                 return None
-            wait = 5.0 * (2 ** attempt) + random.uniform(0, 2)
+            wait = 5.0 * (2**attempt) + random.uniform(0, 2)
             print(f"      ⚠ リトライ {attempt + 1}/{max_retries}（{wait:.1f}s 後）")
             time.sleep(wait)
     return None
 
 
-def _parse_dep_arr(text: str, from_st: str, to_st: str) -> tuple[str | None, str | None]:
+def _parse_dep_arr(
+    text: str, from_st: str, to_st: str
+) -> tuple[str | None, str | None]:
     # パターン1: "HH:MM 発" / "HH:MM 着"
     deps = re.findall(r"(\d{1,2}:\d{2})\s*発", text)
     arrs = re.findall(r"(\d{1,2}:\d{2})\s*着", text)
@@ -108,7 +116,9 @@ def _parse_dep_arr(text: str, from_st: str, to_st: str) -> tuple[str | None, str
     return dep, arr
 
 
-def fetch_route(from_st: str, to_st: str, date: datetime.date, t: int) -> tuple[str | None, str | None]:
+def fetch_route(
+    from_st: str, to_st: str, date: datetime.date, t: int
+) -> tuple[str | None, str | None]:
     """指定時刻以降の1本を取得して (発時刻 HH:MM, 着時刻 HH:MM) を返す"""
     h, m = t // 60 % 24, t % 60
     url = (
@@ -124,7 +134,9 @@ def fetch_route(from_st: str, to_st: str, date: datetime.date, t: int) -> tuple[
     return _parse_dep_arr(text, from_st, to_st)
 
 
-def get_travel_min(from_st: str, to_st: str, date: datetime.date, ref_t: int = T(10, 0)) -> int | None:
+def get_travel_min(
+    from_st: str, to_st: str, date: datetime.date, ref_t: int = T(10, 0)
+) -> int | None:
     """オフピーク時刻で駅間所要時間(分)を取得する"""
     dep_str, arr_str = fetch_route(from_st, to_st, date, ref_t)
     if dep_str is None or arr_str is None:
@@ -170,7 +182,9 @@ def collect_trains(
         dep_nishi = parse_time(dep_nishi_str)
 
         if dep_nishi in seen:
-            print(f"{prefix} {fmt(anchor)} → 西大宮 {dep_nishi_str}発（重複, スキップ）")
+            print(
+                f"{prefix} {fmt(anchor)} → 西大宮 {dep_nishi_str}発（重複, スキップ）"
+            )
             if i < n:
                 polite_sleep()
             continue
@@ -180,24 +194,32 @@ def collect_trains(
         # ── Step 2: 前駅 → 西大宮 ──
         # dep_nishiomiya より (rough_before + 余裕2分) 前を起点に検索
         search_anchor = dep_nishi - rough_before - 2
-        dep_before_str, arr_nishi_str = fetch_route(from_before, NISHI, date, search_anchor)
+        dep_before_str, arr_nishi_str = fetch_route(
+            from_before, NISHI, date, search_anchor
+        )
 
         dep_before = parse_time(dep_before_str) if dep_before_str else None
-        arr_nishi  = parse_time(arr_nishi_str)  if arr_nishi_str  else None
-        arr_after  = parse_time(arr_after_str)  if arr_after_str  else None
+        arr_nishi = parse_time(arr_nishi_str) if arr_nishi_str else None
+        arr_after = parse_time(arr_after_str) if arr_after_str else None
 
         # 西大宮到着と出発が 10 分以上離れていたら別列車を拾っている可能性あり
         if arr_nishi is not None and abs(arr_nishi - dep_nishi) > 10:
-            print(f"{prefix} ⚠ 西大宮 {fmt(arr_nishi)}着/{dep_nishi_str}発 — 10分超ズレ、別列車の可能性")
+            print(
+                f"{prefix} ⚠ 西大宮 {fmt(arr_nishi)}着/{dep_nishi_str}発 — 10分超ズレ、別列車の可能性"
+            )
         else:
-            print(f"{prefix} {fmt(dep_before)}発 → {fmt(arr_nishi)}着 / {dep_nishi_str}発 → {fmt(arr_after)}着")
+            print(
+                f"{prefix} {fmt(dep_before)}発 → {fmt(arr_nishi)}着 / {dep_nishi_str}発 → {fmt(arr_after)}着"
+            )
 
-        results.append({
-            "dep_before":     dep_before,
-            "arr_nishiomiya": arr_nishi,
-            "dep_nishiomiya": dep_nishi,
-            "arr_after":      arr_after,
-        })
+        results.append(
+            {
+                "dep_before": dep_before,
+                "arr_nishiomiya": arr_nishi,
+                "dep_nishiomiya": dep_nishi,
+                "arr_after": arr_after,
+            }
+        )
         seen.add(dep_nishi)
 
         if i < n:
@@ -209,6 +231,7 @@ def collect_trains(
 # ──────────────────────────────────────────────────────────────
 # アンカー時刻表（西大宮駅出発時刻）
 # ──────────────────────────────────────────────────────────────
+
 
 def make_range(h_start: int, h_end: int, mins: list[int]) -> list[int]:
     return [T(h, m) for h in range(h_start, h_end + 1) for m in mins]
@@ -228,29 +251,68 @@ NISHIOMIYA: dict[str, dict[str, list[int]]] = {
     "weekday": {
         "up": [
             T(4, 51),
-            T(5, 2),  T(5, 11), T(5, 19), T(5, 28), T(5, 36), T(5, 49), T(5, 59),
-            T(6, 8),  T(6, 17), T(6, 27), T(6, 36), T(6, 45), T(6, 54),
-            T(7, 3),  T(7, 12), T(7, 21), T(7, 30), T(7, 39), T(7, 48), T(7, 57),
-            T(8, 6),  T(8, 15), T(8, 24), T(8, 33), T(8, 42), T(8, 51),
+            T(5, 2),
+            T(5, 11),
+            T(5, 19),
+            T(5, 28),
+            T(5, 36),
+            T(5, 49),
+            T(5, 59),
+            T(6, 8),
+            T(6, 17),
+            T(6, 27),
+            T(6, 36),
+            T(6, 45),
+            T(6, 54),
+            T(7, 3),
+            T(7, 12),
+            T(7, 21),
+            T(7, 30),
+            T(7, 39),
+            T(7, 48),
+            T(7, 57),
+            T(8, 6),
+            T(8, 15),
+            T(8, 24),
+            T(8, 33),
+            T(8, 42),
+            T(8, 51),
             *make_range(9, 22, [0, 12, 24, 36, 48]),
-            T(23, 5), T(23, 18), T(23, 32), T(23, 47),
+            T(23, 5),
+            T(23, 18),
+            T(23, 32),
+            T(23, 47),
         ],
         "down": [
             T(5, 44),
-            T(6, 11), T(6, 33), T(6, 57),
+            T(6, 11),
+            T(6, 33),
+            T(6, 57),
             *make_range(7, 22, [13, 28, 43, 58]),
-            T(23, 13), T(23, 35), T(23, 56),
+            T(23, 13),
+            T(23, 35),
+            T(23, 56),
         ],
     },
     "weekend": {
         "up": [
             T(4, 51),
-            T(5, 11), T(5, 28), T(5, 49),
-            T(6, 8),  T(6, 27), T(6, 45),
-            T(7, 3),  T(7, 21), T(7, 39), T(7, 57),
-            T(8, 15), T(8, 33), T(8, 51),
+            T(5, 11),
+            T(5, 28),
+            T(5, 49),
+            T(6, 8),
+            T(6, 27),
+            T(6, 45),
+            T(7, 3),
+            T(7, 21),
+            T(7, 39),
+            T(7, 57),
+            T(8, 15),
+            T(8, 33),
+            T(8, 51),
             *weekend_up_core(),
-            T(23, 18), T(23, 47),
+            T(23, 18),
+            T(23, 47),
         ],
         "down": [
             T(5, 44),
@@ -282,7 +344,9 @@ def main() -> None:
     total_req = total_anchors * 2 + 4
     est_lo, est_hi = total_req * 2 // 60, total_req * 4 // 60
     print(f"平日: {weekday_date.isoformat()} / 土休日: {weekend_date.isoformat()}")
-    print(f"合計リクエスト数: 約 {total_req} 回 / 推定所要時間: {est_lo}〜{est_hi} 分\n")
+    print(
+        f"合計リクエスト数: 約 {total_req} 回 / 推定所要時間: {est_lo}〜{est_hi} 分\n"
+    )
 
     # ── 区間所要時間を先に取得（Step 2 の検索起点に使う）──────────
     print(f"{'─' * 52}")
@@ -290,7 +354,12 @@ def main() -> None:
     print(f"{'─' * 52}")
 
     dt: dict[str, int] = {}
-    for from_st, to_st in [("日進", "西大宮"), ("西大宮", "指扇"), ("指扇", "西大宮"), ("西大宮", "日進")]:
+    for from_st, to_st in [
+        ("日進", "西大宮"),
+        ("西大宮", "指扇"),
+        ("指扇", "西大宮"),
+        ("西大宮", "日進"),
+    ]:
         key = f"{from_st}_{to_st}"
         val = get_travel_min(from_st, to_st, weekday_date)
         if val is None:
@@ -304,14 +373,14 @@ def main() -> None:
 
     configs = [
         # (day_type, direction, from_before, to_after, date, rough_before)
-        ("weekday", "up",   "指扇", "日進", weekday_date, dt["指扇_西大宮"]),
+        ("weekday", "up", "指扇", "日進", weekday_date, dt["指扇_西大宮"]),
         ("weekday", "down", "日進", "指扇", weekday_date, dt["日進_西大宮"]),
-        ("weekend", "up",   "指扇", "日進", weekend_date, dt["指扇_西大宮"]),
+        ("weekend", "up", "指扇", "日進", weekend_date, dt["指扇_西大宮"]),
         ("weekend", "down", "日進", "指扇", weekend_date, dt["日進_西大宮"]),
     ]
 
     for day_type, direction, from_before, to_after, date, rough_before in configs:
-        label     = "平日" if day_type == "weekday" else "土休日"
+        label = "平日" if day_type == "weekday" else "土休日"
         dir_label = "上り" if direction == "up" else "下り"
         print(f"\n{'─' * 52}")
         print(f"  {label} {dir_label}  ({from_before} → 西大宮 → {to_after})")
