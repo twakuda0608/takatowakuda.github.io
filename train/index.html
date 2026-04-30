@@ -144,38 +144,38 @@
       box-shadow: 0 4px 16px rgba(0,0,0,0.18);
       position: relative;
       overflow: hidden;
+      /* JR埼京線: 白車体 + 深緑ライン */
+      background: linear-gradient(
+        to bottom,
+        #f2f2f2 0%,
+        #f2f2f2 46%,
+        #1a6b3a 46%,
+        #1a6b3a 82%,
+        #f2f2f2 82%,
+        #f2f2f2 100%
+      );
     }
-    /* Windows */
+    /* Windows — white section above the green stripe */
     .t-car::before, .t-car::after {
       content: '';
       position: absolute;
-      top: 9px; bottom: 9px;
-      width: 16px;
-      background: rgba(255,255,255,0.45);
+      top: 5px;
+      height: 10px;
+      width: 14px;
+      background: #a0d4f0;
       border-radius: 2px;
     }
     .train.up .t-car {
-      background: var(--up);
       border-radius: 5px 22px 22px 5px;
     }
     .train.up .t-car::before { left: 14px; }
-    .train.up .t-car::after  { left: 38px; }
+    .train.up .t-car::after  { left: 34px; }
 
     .train.down .t-car {
-      background: var(--down);
       border-radius: 22px 5px 5px 22px;
     }
     .train.down .t-car::before { right: 14px; }
-    .train.down .t-car::after  { right: 38px; }
-
-    .no-train-msg {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 1.2rem;
-      color: var(--muted-color);
-      white-space: nowrap;
-    }
+    .train.down .t-car::after  { right: 34px; }
 
     /* Legend */
     .legend {
@@ -228,6 +228,25 @@
     .ni.imminent .ni-time { color: var(--brand); font-weight: 700; }
     .ni.imminent .ni-wait { color: var(--brand); font-weight: 700; }
     .empty-msg { font-size: 1rem; color: var(--muted-color); text-align: center; padding: 10px 0; }
+
+    /* Hover tooltip */
+    .t-tooltip {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.85rem;
+      color: #fff;
+      background: rgba(30, 41, 59, 0.88);
+      padding: 4px 10px;
+      border-radius: 5px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 10;
+    }
+    .train:hover .t-tooltip { opacity: 1; }
   </style>
 </head>
 <body>
@@ -335,7 +354,7 @@
           const span = tr.arr_after - tr.dep_nishiomiya;
           pos = span > 0 ? C + (now - tr.dep_nishiomiya) / span * (R - C) : R;
         }
-        out.push({ id: `u${tr.arr_nishiomiya}`, dir: 'up', pos, t: tr.dep_nishiomiya });
+        out.push({ id: `u${tr.arr_nishiomiya}`, dir: 'up', pos, t: tr.dep_nishiomiya, arr: tr.arr_nishiomiya });
       }
 
       // 下り: 日進(dep_before) → 西大宮(arr/dep_nishiomiya) → 指扇(arr_after)
@@ -351,7 +370,7 @@
           const span = tr.arr_after - tr.dep_nishiomiya;
           pos = span > 0 ? C + (now - tr.dep_nishiomiya) / span * (L - C) : L;
         }
-        out.push({ id: `d${tr.arr_nishiomiya}`, dir: 'down', pos, t: tr.dep_nishiomiya });
+        out.push({ id: `d${tr.arr_nishiomiya}`, dir: 'down', pos, t: tr.dep_nishiomiya, arr: tr.arr_nishiomiya });
       }
 
       return out;
@@ -376,7 +395,7 @@
           const el = document.createElement('div');
           el.className = `train ${tr.dir}`;
           el.style.left = `${tr.pos}%`;
-          el.innerHTML = `<div class="t-label">${fmt(tr.t)}</div><div class="t-car"></div>`;
+          el.innerHTML = `<div class="t-label">${fmt(tr.t)}</div><div class="t-car"></div><div class="t-tooltip">西大宮着 ${fmt(tr.arr)}</div>`;
           layer.appendChild(el);
           trainEls.set(tr.id, el);
           requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('animated')));
@@ -389,17 +408,6 @@
         if (!seen.has(id)) { el.remove(); trainEls.delete(id); }
       }
 
-      let noMsg = layer.querySelector('.no-train-msg');
-      if (trains.length === 0) {
-        if (!noMsg) {
-          noMsg = document.createElement('div');
-          noMsg.className = 'no-train-msg';
-          noMsg.textContent = 'この区間を走行中の列車はありません';
-          layer.appendChild(noMsg);
-        }
-      } else {
-        noMsg?.remove();
-      }
     }
 
     function renderNext(next, now) {
