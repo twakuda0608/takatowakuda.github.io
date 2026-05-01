@@ -229,6 +229,35 @@
 
 .remove-milestone-btn:hover { background: #ffeaea; border-color: #f99; color: #c00; }
 
+/* ===== Calendar buttons ===== */
+.cal-btns {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.cal-btn {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: background .15s, border-color .15s;
+}
+
+.cal-btn--google:hover { background: #e8f0fe; border-color: #4285f4; }
+
+.cal-btn--icloud { color: #555; }
+
+.cal-btn--icloud:hover { background: #f5f5f5; border-color: #999; }
+
 /* ===== Footer ===== */
 .footer {
   margin-top: 32px;
