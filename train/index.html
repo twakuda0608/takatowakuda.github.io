@@ -65,6 +65,7 @@
     .track-wrap {
       position: relative;
       height: 260px;
+      overflow: hidden;
     }
     .rail {
       position: absolute;
@@ -340,35 +341,58 @@
 
     function getOnTrack(sched, now) {
       const out = [];
+      const EDGE = 20; // percentage points beyond station before clipped by overflow:hidden
 
       // 上り: 指扇(dep_before) → 西大宮(arr/dep_nishiomiya) → 日進(arr_after)
       for (const tr of sched.up) {
-        if (now < tr.dep_before || now > tr.arr_after) continue;
+        const speedIn  = tr.arr_nishiomiya > tr.dep_before
+          ? (C - L) / (tr.arr_nishiomiya - tr.dep_before) : 1;
+        const speedOut = tr.arr_after > tr.dep_nishiomiya
+          ? (R - C) / (tr.arr_after - tr.dep_nishiomiya) : 1;
+        const tStart = tr.dep_before - EDGE / speedIn;
+        const tEnd   = tr.arr_after  + EDGE / speedOut;
+        if (now < tStart || now > tEnd) continue;
+
         let pos;
-        if (now <= tr.arr_nishiomiya) {
+        if (now < tr.dep_before) {
+          pos = L - speedIn * (tr.dep_before - now);
+        } else if (now <= tr.arr_nishiomiya) {
           const span = tr.arr_nishiomiya - tr.dep_before;
           pos = span > 0 ? L + (now - tr.dep_before) / span * (C - L) : C;
         } else if (now <= tr.dep_nishiomiya) {
           pos = C;
-        } else {
+        } else if (now <= tr.arr_after) {
           const span = tr.arr_after - tr.dep_nishiomiya;
           pos = span > 0 ? C + (now - tr.dep_nishiomiya) / span * (R - C) : R;
+        } else {
+          pos = R + speedOut * (now - tr.arr_after);
         }
         out.push({ id: `u${tr.arr_nishiomiya}`, dir: 'up', pos, t: tr.dep_nishiomiya, arr: tr.arr_nishiomiya });
       }
 
       // 下り: 日進(dep_before) → 西大宮(arr/dep_nishiomiya) → 指扇(arr_after)
       for (const tr of sched.down) {
-        if (now < tr.dep_before || now > tr.arr_after) continue;
+        const speedIn  = tr.arr_nishiomiya > tr.dep_before
+          ? (R - C) / (tr.arr_nishiomiya - tr.dep_before) : 1;
+        const speedOut = tr.arr_after > tr.dep_nishiomiya
+          ? (C - L) / (tr.arr_after - tr.dep_nishiomiya) : 1;
+        const tStart = tr.dep_before - EDGE / speedIn;
+        const tEnd   = tr.arr_after  + EDGE / speedOut;
+        if (now < tStart || now > tEnd) continue;
+
         let pos;
-        if (now <= tr.arr_nishiomiya) {
+        if (now < tr.dep_before) {
+          pos = R + speedIn * (tr.dep_before - now);
+        } else if (now <= tr.arr_nishiomiya) {
           const span = tr.arr_nishiomiya - tr.dep_before;
           pos = span > 0 ? R + (now - tr.dep_before) / span * (C - R) : C;
         } else if (now <= tr.dep_nishiomiya) {
           pos = C;
-        } else {
+        } else if (now <= tr.arr_after) {
           const span = tr.arr_after - tr.dep_nishiomiya;
           pos = span > 0 ? C + (now - tr.dep_nishiomiya) / span * (L - C) : L;
+        } else {
+          pos = L - speedOut * (now - tr.arr_after);
         }
         out.push({ id: `d${tr.arr_nishiomiya}`, dir: 'down', pos, t: tr.dep_nishiomiya, arr: tr.arr_nishiomiya });
       }
