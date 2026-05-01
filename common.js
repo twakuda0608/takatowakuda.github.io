@@ -15,7 +15,13 @@ document.addEventListener("DOMContentLoaded", () => {
         stroke-linejoin="round"/>
     </svg>
   `;
-  btn.addEventListener("click", () => history.back());
+  btn.addEventListener("click", () => {
+    if (history.length > 1) {
+      history.back();
+    } else {
+      location.href = "/";
+    }
+  });
 
   document.body.appendChild(btn);
 });
