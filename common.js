@@ -16,11 +16,9 @@ document.addEventListener("DOMContentLoaded", () => {
     </svg>
   `;
   btn.addEventListener("click", () => {
-    if (history.length > 1) {
-      history.back();
-    } else {
-      location.href = "/";
-    }
+    const parts = location.pathname.replace(/\/$/, "").split("/");
+    parts.pop();
+    location.href = parts.join("/") + "/" || "/";
   });
 
   document.body.appendChild(btn);
