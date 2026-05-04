@@ -26,20 +26,21 @@
       -webkit-user-select: none;
       user-select: none;
       touch-action: manipulation;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
-    /* Square table: side = narrower viewport dimension (100vw on portrait phones) */
+    /* Square table: side = viewport width; fixed left/right guarantees edge-to-edge on Safari iOS */
     .table {
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
       display: grid;
       grid-template-columns: 110px 1fr 110px;
       grid-template-rows: 110px 1fr 110px;
-      width: 100vw;
+      width: 100%;
       height: 100vw;
       background: #155a26;
-      flex-shrink: 0;
       overflow: hidden;
       --s: clamp(0.35, calc((100vw - 220px) / 250px), 1);
     }
@@ -68,9 +69,15 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
-      padding: 8px 12px;
+      justify-content: space-between;
+      gap: 0;
+      padding: 10px 14px;
     }
+
+    /* All 4 cards share the same CSS dimensions (250px × 110px/--s).
+       After scale(--s): visual size = 250px·--s × 110px for every card.
+       Rotating ±90° swaps width/height, so left/right visually become 110px × 250px·--s — congruent and point-symmetric. */
+    .pcard { height: calc(110px / var(--s)); }
 
     .pz.top .pcard    { transform: translate(-50%, -50%) rotate(180deg) scale(var(--s)); }
     .pz.bottom .pcard { transform: translate(-50%, -50%) scale(var(--s)); }
@@ -85,11 +92,11 @@
     }
 
     .wind {
-      font-size: 17px;
+      font-size: 22px;
       font-weight: 800;
       color: #fbbf24;
-      width: 30px;
-      height: 30px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       border: 2px solid rgba(251, 191, 36, 0.35);
       background: rgba(251, 191, 36, 0.08);
@@ -103,7 +110,7 @@
     .wind:active { background: rgba(251, 191, 36, 0.3); }
 
     .pname {
-      font-size: 12px;
+      font-size: 15px;
       font-weight: 600;
       color: rgba(255, 255, 255, 0.55);
       cursor: pointer;
@@ -131,10 +138,10 @@
     }
 
     .sval {
-      font-size: 22px;
+      font-size: 30px;
       font-weight: 700;
       color: #fff;
-      min-width: 82px;
+      min-width: 100px;
       text-align: center;
       cursor: pointer;
       letter-spacing: -0.5px;
@@ -159,12 +166,11 @@
     .diff-btn {
       background: rgba(255,255,255,0.09);
       border: 1.5px solid rgba(255,255,255,0.22);
-      border-radius: 6px;
+      border-radius: 8px;
       color: rgba(255,255,255,0.55);
-      font-size: 12px;
       font-weight: 800;
-      width: 26px;
-      height: 26px;
+      width: 34px;
+      height: 34px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -172,7 +178,17 @@
       flex-shrink: 0;
       touch-action: none;
       transition: background 0.1s, color 0.1s;
+      position: relative;
+      padding: 0;
     }
+    .diff-btn .plus, .diff-btn .minus {
+      position: absolute;
+      font-size: 10px;
+      line-height: 1;
+    }
+    .diff-btn .plus { top: 5px; left: 5px; }
+    .diff-btn .minus { bottom: 5px; right: 5px; }
+    .diff-btn .slash { font-size: 15px; line-height: 1; }
     .diff-btn.active {
       background: rgba(255,255,255,0.22);
       border-color: rgba(255,255,255,0.55);
@@ -183,11 +199,12 @@
     .rbtn {
       background: rgba(255, 255, 255, 0.09);
       border: 1.5px solid rgba(255, 255, 255, 0.22);
-      border-radius: 20px;
+      border-radius: 22px;
       color: rgba(255, 255, 255, 0.55);
-      font-size: 11px;
+      font-size: 13px;
       font-weight: 700;
-      padding: 4px 18px;
+      padding: 10px 18px;
+      width: 100%;
       letter-spacing: 2px;
       cursor: pointer;
       transition: all 0.12s;
@@ -205,10 +222,10 @@
       border: 1.5px solid rgba(255, 255, 255, 0.35);
       border-radius: 4px;
       color: #fff;
-      font-size: 11px;
+      font-size: 13px;
       font-weight: 900;
-      width: 28px;
-      height: 20px;
+      width: 32px;
+      height: 24px;
       display: none;
       align-items: center;
       justify-content: center;
@@ -581,7 +598,7 @@
           <div class="kicha-mark" id="km2"></div>
         </div>
         <div class="srow">
-          <button class="diff-btn" id="db2">±</button>
+          <button class="diff-btn" id="db2"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>
           <span class="sval" id="sv2">25000</span>
           <input class="sinp" id="si2" type="number" inputmode="numeric">
         </div>
@@ -599,7 +616,7 @@
           <div class="kicha-mark" id="km3"></div>
         </div>
         <div class="srow">
-          <button class="diff-btn" id="db3">±</button>
+          <button class="diff-btn" id="db3"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>
           <span class="sval" id="sv3">25000</span>
           <input class="sinp" id="si3" type="number" inputmode="numeric">
         </div>
@@ -634,7 +651,7 @@
           <div class="kicha-mark" id="km1"></div>
         </div>
         <div class="srow">
-          <button class="diff-btn" id="db1">±</button>
+          <button class="diff-btn" id="db1"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>
           <span class="sval" id="sv1">25000</span>
           <input class="sinp" id="si1" type="number" inputmode="numeric">
         </div>
@@ -652,7 +669,7 @@
           <div class="kicha-mark" id="km0"></div>
         </div>
         <div class="srow">
-          <button class="diff-btn" id="db0">±</button>
+          <button class="diff-btn" id="db0"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>
           <span class="sval" id="sv0">25000</span>
           <input class="sinp" id="si0" type="number" inputmode="numeric">
         </div>
@@ -904,7 +921,7 @@
         document.getElementById(`fs${i}`).classList.toggle('on', p.riichi);
         document.getElementById(`pn${i}`).textContent = p.name;
         const km = document.getElementById(`km${i}`);
-        if (p.wind === '東') {
+        if (i === 0) {
           km.textContent = ROUND_WINDS[state.roundWind];
           km.classList.add('visible');
         } else {
