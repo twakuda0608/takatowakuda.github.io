@@ -14,6 +14,25 @@
   gtag('config', 'G-5XPYDMQ921');
 </script>
   <link rel="stylesheet" href="/common.css">
+  <!-- DEV BANNER — remove this block when ready -->
+  <style>
+    #dev-banner {
+      position: fixed;
+      top: 56px;
+      left: 0;
+      width: 100%;
+      z-index: 9999;
+      background: rgba(0,0,0,0.55);
+      color: #facc15;
+      font-size: 18px;
+      font-family: system-ui, sans-serif;
+      padding: 8px 24px;
+      text-align: center;
+      line-height: 1.5;
+      pointer-events: none;
+    }
+  </style>
+  <!-- END DEV BANNER -->
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -111,6 +130,8 @@
       transition: background 0.1s;
     }
     .wind:active { background: rgba(251, 191, 36, 0.3); }
+    .wind.east { background: #f97316; border-color: #f97316; color: #fff; }
+    .wind.east:active { background: #ea6c0a; }
 
     .pname {
       font-size: 15px;
@@ -268,7 +289,9 @@
     .tcw {
       position: absolute;
       inset: 6px;
-      background: linear-gradient(145deg, #303038 0%, #18181e 100%);
+      background:
+        linear-gradient(135deg, transparent calc(50% - 0.75px), rgba(255,255,255,0.15) calc(50% - 0.75px), rgba(255,255,255,0.15) calc(50% + 0.75px), transparent calc(50% + 0.75px)),
+        linear-gradient(145deg, #303038 0%, #18181e 100%);
       border-radius: 12px;
       border: 2px solid #48484f;
       box-shadow:
@@ -280,40 +303,69 @@
       justify-content: center;
     }
 
-    /* Riichi bars */
-    .tcw-bar {
+    /* Riichi sticks — in center zone, straddling boundary with player zones */
+    .front-stick {
       position: absolute;
-      border-radius: 4px;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.05);
-      transition: background 0.18s, border-color 0.18s, box-shadow 0.18s;
-      pointer-events: none;
-    }
-    .tcw-bar.on {
+      width: 66px;
+      height: 15px;
       background: #f5f5f0;
-      border-color: #ccc;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.7);
+      border-radius: 5px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.7);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+      z-index: 10;
     }
-    .tcw-bar::after {
+    .front-stick.on { opacity: 1; }
+    .front-stick::after {
       content: '';
       position: absolute;
+      width: 9px;
+      height: 9px;
+      background: #dc2626;
+      border-radius: 50%;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: #dc2626;
-      border-radius: 50%;
-      opacity: 0;
-      transition: opacity 0.18s;
     }
-    .tcw-bar.on::after { opacity: 1; }
-    .tcw-top::after, .tcw-bottom::after { height: 65%; aspect-ratio: 1; }
-    .tcw-left::after, .tcw-right::after { width: 65%; aspect-ratio: 1; }
-    .tcw-top, .tcw-bottom { left: 15%; width: 70%; height: 10%; }
-    .tcw-top    { top: 6%; }
-    .tcw-bottom { bottom: 6%; }
-    .tcw-left, .tcw-right { top: 15%; height: 70%; width: 10%; }
-    .tcw-left  { left: 6%; }
-    .tcw-right { right: 6%; }
+    #fs2 { top: 8px;    left: 50%; transform: translateX(-50%); }
+    #fs0 { bottom: 8px; left: 50%; transform: translateX(-50%); }
+    #fs1 { right: 8px;  top: 50%;  transform: translateY(-50%); width: 15px; height: 68px; }
+    #fs3 { left: 8px;   top: 50%;  transform: translateY(-50%); width: 15px; height: 68px; }
+
+    /* 本場 counter — rectangle sitting on the diagonal */
+    .tcw-honba {
+      position: absolute;
+      top: 24%;
+      left: 24%;
+      transform: translate(-50%, -50%) rotate(45deg);
+      display: flex;
+      flex-direction: row;
+      gap: clamp(1px, 0.25vw, 2.5px);
+      padding: clamp(1.5px, 0.35vw, 3px);
+      background: #1c1c20;
+      border: 1.5px solid #58585e;
+      border-radius: 3px;
+      z-index: 3;
+    }
+    .tcw-tick {
+      width:  clamp(5px, 1.2vw, 10px);
+      height: clamp(16px, 3.8vw, 30px);
+      border-radius: 2px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.13);
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .tcw-tick-red.on {
+      background: #dc2626;
+      border-color: #ef4444;
+      box-shadow: 0 0 5px rgba(220,38,38,0.85);
+    }
+    .tcw-tick-yel.on {
+      background: #fbbf24;
+      border-color: #fde68a;
+      box-shadow: 0 0 5px rgba(251,191,36,0.85);
+    }
 
     /* Center circle */
     .tcw-circle {
@@ -647,6 +699,9 @@
   </style>
 </head>
 <body>
+<!-- DEV BANNER — remove this element and the matching style block in <head> when ready -->
+<div id="dev-banner">🚧 開発中 — 一部の機能は正常に機能しない場合があります。</div>
+<!-- END DEV BANNER -->
   <div class="table">
 
     <!-- corners (spacers; top-left hosts the back FAB from common.js) -->
@@ -704,10 +759,17 @@
     <!-- Center -->
     <div class="pz center">
       <div class="tcw">
-        <div class="tcw-bar tcw-top"    id="fs2"></div>
-        <div class="tcw-bar tcw-right"  id="fs1"></div>
-        <div class="tcw-bar tcw-bottom" id="fs0"></div>
-        <div class="tcw-bar tcw-left"   id="fs3"></div>
+        <div class="front-stick" id="fs2"></div>
+        <div class="front-stick" id="fs1"></div>
+        <div class="front-stick" id="fs0"></div>
+        <div class="front-stick" id="fs3"></div>
+        <div class="tcw-honba">
+          <div class="tcw-tick tcw-tick-red" id="ht0"></div>
+          <div class="tcw-tick tcw-tick-red" id="ht1"></div>
+          <div class="tcw-tick tcw-tick-red" id="ht2"></div>
+          <div class="tcw-tick tcw-tick-red" id="ht3"></div>
+          <div class="tcw-tick tcw-tick-yel" id="ht4"></div>
+        </div>
         <div class="tcw-circle">
           <svg class="tcw-die" id="die0" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
             <rect x="1" y="1" width="34" height="34" rx="6" fill="#f0ede8" stroke="#b8b4ae" stroke-width="1.5"/>
@@ -865,8 +927,6 @@
           <div class="han-group">
             <div class="han-row" data-idx="0"><span class="arr">▶</span>1翻</div>
             <div class="fu-children">
-              <div class="fu-row" data-fu="20"><span class="fu-dot"></span>20符</div>
-              <div class="fu-row" data-fu="25"><span class="fu-dot"></span>25符</div>
               <div class="fu-row" data-fu="30"><span class="fu-dot"></span>30符</div>
               <div class="fu-row" data-fu="40"><span class="fu-dot"></span>40符</div>
               <div class="fu-row" data-fu="50"><span class="fu-dot"></span>50符</div>
@@ -1004,7 +1064,9 @@
           svEl.textContent = p.score.toLocaleString();
           svEl.style.color = '';
         }
-        document.getElementById(`w${i}`).textContent = p.wind;
+        const wEl = document.getElementById(`w${i}`);
+        wEl.textContent = p.wind;
+        wEl.classList.toggle('east', p.wind === '東');
         document.getElementById(`r${i}`).classList.toggle('on', p.riichi);
         document.getElementById(`fs${i}`).classList.toggle('on', p.riichi);
         document.getElementById(`pn${i}`).textContent = p.name;
@@ -1018,6 +1080,17 @@
       }
       document.getElementById('topInfo').textContent =
         `${ROUND_WINDS[state.roundWind]}${state.roundNum}局　　${state.honba}本場　　供託${state.kyotaku}本`;
+      renderHonba();
+    }
+
+    function renderHonba() {
+      const h = Math.min(state.honba, 9);
+      const yellowOn = h >= 5;
+      const redOn = yellowOn ? h - 5 : h;
+      for (let i = 0; i < 4; i++) {
+        document.getElementById(`ht${i}`).classList.toggle('on', i < redOn);
+      }
+      document.getElementById('ht4').classList.toggle('on', yellowOn);
     }
 
     // Diff (+/−) buttons: hold to show score differences relative to that player
@@ -1146,6 +1219,7 @@
       document.getElementById('wtTsumo').classList.remove('sel');
       document.getElementById('dealerSec').style.display = 'block';
       repopulateDealerRow();
+      applyFuRestrictions();
 
       document.querySelectorAll('#hanTree .han-row').forEach(r => r.classList.remove('sel', 'open'));
       document.querySelectorAll('#hanTree .fu-children').forEach(fc => fc.classList.remove('open'));
@@ -1162,12 +1236,37 @@
       setBackFabVisible(true);
     });
 
+    function applyFuRestrictions() {
+      const groups = document.querySelectorAll('#hanTree .han-group');
+      const isTsumo = agWinType === 'tsumo';
+      // [hanIdx, fu, hideWhen]
+      const rules = [
+        [1, 25, 'tsumo'],  // 2飜25符: ツモ不可
+        [1, 20, 'ron'],    // 2飜20符: ロン不可
+        [2, 20, 'ron'],    // 3飜20符: ロン不可
+        [3, 20, 'ron'],    // 4飜20符: ロン不可
+      ];
+      rules.forEach(([hi, fu, hideWhen]) => {
+        const g = groups[hi];
+        if (!g) return;
+        const row = g.querySelector(`.fu-row[data-fu="${fu}"]`);
+        if (!row) return;
+        const hide = (hideWhen === 'tsumo') ? isTsumo : !isTsumo;
+        row.style.display = hide ? 'none' : '';
+        if (hide && agHanIdx === hi && agFu === fu) {
+          row.classList.remove('sel');
+          agFu = -1;
+        }
+      });
+    }
+
     document.getElementById('wtRon').addEventListener('click', () => {
       agWinType = 'ron'; agDealer = -1;
       document.getElementById('wtRon').classList.add('sel');
       document.getElementById('wtTsumo').classList.remove('sel');
       document.getElementById('dealerSec').style.display = 'block';
       repopulateDealerRow();
+      applyFuRestrictions();
       tryCalcAgari();
     });
 
@@ -1176,6 +1275,7 @@
       document.getElementById('wtTsumo').classList.add('sel');
       document.getElementById('wtRon').classList.remove('sel');
       document.getElementById('dealerSec').style.display = 'none';
+      applyFuRestrictions();
       tryCalcAgari();
     });
 
@@ -1183,13 +1283,19 @@
     document.querySelectorAll('#hanTree .han-group .han-row').forEach(row => {
       row.addEventListener('click', () => {
         const fuChildren = row.nextElementSibling;
+        const isOpen = row.classList.contains('open');
         document.querySelectorAll('#hanTree .han-row').forEach(r => r.classList.remove('sel', 'open'));
         document.querySelectorAll('#hanTree .fu-children').forEach(fc => fc.classList.remove('open'));
         document.querySelectorAll('#hanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
-        row.classList.add('sel', 'open');
-        fuChildren.classList.add('open');
-        agHanIdx = +row.dataset.idx;
-        agFu = -1;
+        if (!isOpen) {
+          row.classList.add('sel', 'open');
+          fuChildren.classList.add('open');
+          agHanIdx = +row.dataset.idx;
+          agFu = -1;
+        } else {
+          agHanIdx = -1;
+          agFu = -1;
+        }
       });
     });
 
