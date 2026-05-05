@@ -165,7 +165,7 @@
       font-size: 30px;
       font-weight: 700;
       color: #fff;
-      min-width: 100px;
+      width: 140px;
       text-align: center;
       cursor: pointer;
       letter-spacing: -0.5px;
@@ -625,8 +625,17 @@
     .han-row.sel { background:rgba(251,191,36,0.18); border-color:rgba(251,191,36,0.6); color:#fbbf24; }
     .han-row .arr { font-size:9px; color:rgba(255,255,255,0.35); transition:transform 0.15s; flex-shrink:0; }
     .han-row.open .arr { transform:rotate(90deg); }
-    .fu-children { display:none; flex-direction:column; gap:2px; padding:3px 0 2px 24px; }
-    .fu-children.open { display:flex; }
+    .fu-children { display:none; flex-direction:column; gap:2px; padding:3px 0 2px 24px; transform-origin: top center; }
+    .fu-children.open    { display:flex; animation: fuSlideDown 0.2s cubic-bezier(0.25,0.46,0.45,0.94) both; }
+    .fu-children.closing { display:flex; animation: fuSlideUp   0.18s cubic-bezier(0.55,0,0.75,0.05)  both; }
+    @keyframes fuSlideDown {
+      from { opacity:0; transform: scaleY(0.6) translateY(-8px); }
+      to   { opacity:1; transform: scaleY(1)   translateY(0);    }
+    }
+    @keyframes fuSlideUp {
+      from { opacity:1; transform: scaleY(1)   translateY(0);    }
+      to   { opacity:0; transform: scaleY(0.6) translateY(-8px); }
+    }
     .fu-row {
       display:flex; align-items:center; gap:8px;
       padding:8px 10px; border-radius:6px; cursor:pointer;
@@ -636,6 +645,10 @@
     .fu-row.sel { background:rgba(37,99,235,0.22); color:#93c5fd; }
     .fu-dot { width:6px; height:6px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.25); flex-shrink:0; transition:all 0.1s; }
     .fu-row.sel .fu-dot { background:#60a5fa; border-color:#60a5fa; }
+    .fu-score { margin-left:auto; font-size:11px; color:rgba(255,255,255,0.38); font-weight:600; white-space:nowrap; }
+    .fu-row.sel .fu-score { color:#93c5fd; }
+    .han-score { margin-left:auto; font-size:11px; color:rgba(255,255,255,0.38); font-weight:600; white-space:nowrap; }
+    .han-row.sel .han-score { color:#fbbf24; }
     .ag-result {
       background:rgba(255,255,255,0.06);
       border:1px solid rgba(255,255,255,0.12);
@@ -982,6 +995,11 @@
           <div class="han-row" data-idx="6">倍満</div>
           <div class="han-row" data-idx="7">三倍満</div>
           <div class="han-row" data-idx="8">役満</div>
+          <div class="han-row" data-idx="9">二倍役満</div>
+          <div class="han-row" data-idx="10">三倍役満</div>
+          <div class="han-row" data-idx="11">四倍役満</div>
+          <div class="han-row" data-idx="12">五倍役満</div>
+          <div class="han-row" data-idx="13">六倍役満</div>
 
         </div>
       </div>
@@ -1172,7 +1190,12 @@
       { base: 3000, name: '跳満' },
       { base: 4000, name: '倍満' },
       { base: 6000, name: '三倍満' },
-      { base: 8000, name: '役満' },
+      { base: 8000,  name: '役満' },
+      { base: 16000, name: '二倍役満' },
+      { base: 24000, name: '三倍役満' },
+      { base: 32000, name: '四倍役満' },
+      { base: 40000, name: '五倍役満' },
+      { base: 48000, name: '六倍役満' },
     ];
 
     function rotateWinds() {
@@ -1258,6 +1281,8 @@
           agFu = -1;
         }
       });
+      renderFuScores();
+      renderLimitScores();
     }
 
     document.getElementById('wtRon').addEventListener('click', () => {
@@ -1279,19 +1304,27 @@
       tryCalcAgari();
     });
 
+    function closeFuChildren(fc) {
+      if (!fc.classList.contains('open')) return;
+      fc.classList.remove('open');
+      fc.classList.add('closing');
+      fc.addEventListener('animationend', () => fc.classList.remove('closing'), { once: true });
+    }
+
     // Tree: expandable han rows (1–4翻)
     document.querySelectorAll('#hanTree .han-group .han-row').forEach(row => {
       row.addEventListener('click', () => {
         const fuChildren = row.nextElementSibling;
         const isOpen = row.classList.contains('open');
         document.querySelectorAll('#hanTree .han-row').forEach(r => r.classList.remove('sel', 'open'));
-        document.querySelectorAll('#hanTree .fu-children').forEach(fc => fc.classList.remove('open'));
+        document.querySelectorAll('#hanTree .fu-children').forEach(fc => closeFuChildren(fc));
         document.querySelectorAll('#hanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
         if (!isOpen) {
           row.classList.add('sel', 'open');
           fuChildren.classList.add('open');
           agHanIdx = +row.dataset.idx;
           agFu = -1;
+          renderFuScores();
         } else {
           agHanIdx = -1;
           agFu = -1;
@@ -1303,14 +1336,36 @@
     document.querySelectorAll('#hanTree > .han-row').forEach(row => {
       row.addEventListener('click', () => {
         document.querySelectorAll('#hanTree .han-row').forEach(r => r.classList.remove('sel', 'open'));
-        document.querySelectorAll('#hanTree .fu-children').forEach(fc => fc.classList.remove('open'));
+        document.querySelectorAll('#hanTree .fu-children').forEach(fc => closeFuChildren(fc));
         document.querySelectorAll('#hanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
         row.classList.add('sel');
         agHanIdx = +row.dataset.idx;
         agFu = -1;
         tryCalcAgari();
       });
+      const s = document.createElement('span');
+      s.className = 'han-score';
+      row.appendChild(s);
     });
+
+    function renderLimitScores() {
+      if (agWinner < 0) return;
+      const isParent = state.players[agWinner].wind === '東';
+      document.querySelectorAll('#hanTree > .han-row').forEach(row => {
+        const el = row.querySelector('.han-score');
+        if (!el) return;
+        const def = HAN_DEFS[+row.dataset.idx];
+        if (!def || !def.base) return;
+        const base = def.base;
+        if (agWinType === 'ron') {
+          el.textContent = roundUp100(base * (isParent ? 6 : 4)).toLocaleString() + '点';
+        } else if (isParent) {
+          el.textContent = roundUp100(base * 2).toLocaleString() + '点オール';
+        } else {
+          el.textContent = roundUp100(base).toLocaleString() + '-' + roundUp100(base * 2).toLocaleString() + '点';
+        }
+      });
+    }
 
     // Tree: fu rows
     document.querySelectorAll('#hanTree .fu-row').forEach(fuRow => {
@@ -1320,7 +1375,38 @@
         agFu = +fuRow.dataset.fu;
         tryCalcAgari();
       });
+      const s = document.createElement('span');
+      s.className = 'fu-score';
+      fuRow.appendChild(s);
     });
+
+    function calcFuScore(han, fu) {
+      let base = fu * Math.pow(2, han + 2);
+      if (base > 2000) base = 2000;
+      const isParent = state.players[agWinner].wind === '東';
+      if (agWinType === 'ron') {
+        return roundUp100(base * (isParent ? 6 : 4)).toLocaleString() + '点';
+      } else {
+        if (isParent) {
+          return roundUp100(base * 2).toLocaleString() + '点オール';
+        } else {
+          const cp = roundUp100(base);
+          const pp = roundUp100(base * 2);
+          return cp.toLocaleString() + '-' + pp.toLocaleString() + '点';
+        }
+      }
+    }
+
+    function renderFuScores() {
+      const openRow = document.querySelector('#hanTree .han-group .han-row.open');
+      if (!openRow || agWinner < 0) return;
+      const han = +openRow.dataset.idx + 1;
+      openRow.nextElementSibling.querySelectorAll('.fu-row').forEach(fuRow => {
+        if (fuRow.style.display === 'none') return;
+        const el = fuRow.querySelector('.fu-score');
+        if (el) el.textContent = calcFuScore(han, +fuRow.dataset.fu);
+      });
+    }
 
     function tryCalcAgari() {
       const def = HAN_DEFS[agHanIdx];
