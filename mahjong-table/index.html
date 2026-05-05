@@ -264,36 +264,95 @@
       text-align: center;
     }
 
-    /* Riichi sticks — one per player, placed at the edge of the center zone facing that player */
-    .front-stick {
+    /* ── Center widget ─────────────────────────────── */
+    .tcw {
       position: absolute;
-      width: 62px;
-      height: 9px;
-      background: #f5f5f0;
-      border-radius: 5px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.15s;
-      z-index: 10;
+      inset: 6px;
+      background: linear-gradient(145deg, #303038 0%, #18181e 100%);
+      border-radius: 12px;
+      border: 2px solid #48484f;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.05),
+        inset 0 0 30px rgba(0,0,0,0.5),
+        0 6px 24px rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .front-stick.on { opacity: 1; }
-    .front-stick::after {
+
+    /* Riichi bars */
+    .tcw-bar {
+      position: absolute;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.05);
+      transition: background 0.18s, border-color 0.18s, box-shadow 0.18s;
+      pointer-events: none;
+    }
+    .tcw-bar.on {
+      background: #f5f5f0;
+      border-color: #ccc;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.7);
+    }
+    .tcw-bar::after {
       content: '';
       position: absolute;
-      width: 8px;
-      height: 8px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       background: #dc2626;
       border-radius: 50%;
-      top: 0.5px;
-      left: 50%;
-      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.18s;
     }
-    /* Center each stick's midpoint on the boundary between center zone and that player's zone */
-    #fs0 { bottom: 0; left: 50%;  transform: translateX(-50%) translateY(50%); }
-    #fs1 { right:  0; top:  50%;  transform: translateX(50%)  translateY(-50%) rotate(90deg); }
-    #fs2 { top:    0; left: 50%;  transform: translateX(-50%) translateY(-50%); }
-    #fs3 { left:   0; top:  50%;  transform: translateX(-50%) translateY(-50%) rotate(90deg); }
+    .tcw-bar.on::after { opacity: 1; }
+    .tcw-top::after, .tcw-bottom::after { height: 65%; aspect-ratio: 1; }
+    .tcw-left::after, .tcw-right::after { width: 65%; aspect-ratio: 1; }
+    .tcw-top, .tcw-bottom { left: 15%; width: 70%; height: 10%; }
+    .tcw-top    { top: 6%; }
+    .tcw-bottom { bottom: 6%; }
+    .tcw-left, .tcw-right { top: 15%; height: 70%; width: 10%; }
+    .tcw-left  { left: 6%; }
+    .tcw-right { right: 6%; }
+
+    /* Center circle */
+    .tcw-circle {
+      width: 54%;
+      height: 54%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #252528, #080808);
+      border: 2.5px solid #505058;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.04),
+        inset 0 3px 12px rgba(0,0,0,0.8),
+        inset 0 -1px 6px rgba(255,255,255,0.03);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8%;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .tcw-die {
+      width: 32%;
+      height: 32%;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.9));
+    }
+    @keyframes tcwRoll {
+      0%   { transform: rotate(0deg)   scale(1);    }
+      20%  { transform: rotate(-22deg) scale(0.85); }
+      40%  { transform: rotate(18deg)  scale(0.85); }
+      60%  { transform: rotate(-12deg) scale(0.93); }
+      80%  { transform: rotate(8deg)   scale(0.93); }
+      100% { transform: rotate(0deg)   scale(1);    }
+    }
+    .tcw-die.rolling { animation: tcwRoll 0.45s ease-out; }
+
+    @keyframes pcardBlink {
+      0%, 100% { border-color: rgba(255,255,255,0.13); box-shadow: none; }
+      50%       { border-color: #fbbf24; box-shadow: 0 0 24px rgba(251,191,36,0.8), 0 0 48px rgba(251,191,36,0.35); }
+    }
+    .pcard.blink { animation: pcardBlink 0.45s ease-in-out 3; }
 
     /* Honba row */
     .hrow {
@@ -487,6 +546,8 @@
       border-radius:8px; color:rgba(255,255,255,0.6);
       font-size:14px; font-weight:800; cursor:pointer;
       text-align:center; transition:all 0.1s;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     .psel.sel { background:rgba(251,191,36,0.2); border-color:#fbbf24; color:#fbbf24; }
     .psel:disabled { opacity:0.28; cursor:default; }
@@ -606,7 +667,7 @@
 
     <!-- Top: 対面 (西) — rotated 180° -->
     <div class="pz top">
-      <div class="pcard">
+      <div class="pcard" id="pc2">
         <div class="wind-row">
           <div class="wind" id="w2">西</div>
           <span class="pname" id="pn2">P3</span>
@@ -624,7 +685,7 @@
 
     <!-- Left: 上家 (北) — rotated 90° -->
     <div class="pz left">
-      <div class="pcard">
+      <div class="pcard" id="pc3">
         <div class="wind-row">
           <div class="wind" id="w3">北</div>
           <span class="pname" id="pn3">P4</span>
@@ -642,16 +703,25 @@
 
     <!-- Center -->
     <div class="pz center">
-      <!-- riichi sticks: fs0=bottom, fs1=right, fs2=top, fs3=left -->
-      <div class="front-stick" id="fs0"></div>
-      <div class="front-stick" id="fs1"></div>
-      <div class="front-stick" id="fs2"></div>
-      <div class="front-stick" id="fs3"></div>
+      <div class="tcw">
+        <div class="tcw-bar tcw-top"    id="fs2"></div>
+        <div class="tcw-bar tcw-right"  id="fs1"></div>
+        <div class="tcw-bar tcw-bottom" id="fs0"></div>
+        <div class="tcw-bar tcw-left"   id="fs3"></div>
+        <div class="tcw-circle">
+          <svg class="tcw-die" id="die0" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="1" width="34" height="34" rx="6" fill="#f0ede8" stroke="#b8b4ae" stroke-width="1.5"/>
+          </svg>
+          <svg class="tcw-die" id="die1" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="1" width="34" height="34" rx="6" fill="#f0ede8" stroke="#b8b4ae" stroke-width="1.5"/>
+          </svg>
+        </div>
+      </div>
     </div>
 
     <!-- Right: 下家 (南) — rotated −90° -->
     <div class="pz right">
-      <div class="pcard">
+      <div class="pcard" id="pc1">
         <div class="wind-row">
           <div class="wind" id="w1">南</div>
           <span class="pname" id="pn1">P2</span>
@@ -669,7 +739,7 @@
 
     <!-- Bottom: 自分 (東) — normal -->
     <div class="pz bottom">
-      <div class="pcard">
+      <div class="pcard" id="pc0">
         <div class="wind-row">
           <div class="wind" id="w0">東</div>
           <span class="pname" id="pn0">P1</span>
@@ -780,7 +850,12 @@
 
       <div class="ag-sec" id="dealerSec">
         <div class="ag-lbl">放銃者</div>
-        <div class="ag-row" id="dealerRow"></div>
+        <div class="ag-row" id="dealerRow">
+          <button class="psel" id="ad-0"></button>
+          <button class="psel" id="ad-1"></button>
+          <button class="psel" id="ad-2"></button>
+          <button class="psel" id="ad-3"></button>
+        </div>
       </div>
 
       <div class="ag-sec">
@@ -1038,21 +1113,27 @@
     let agHanIdx = -1, agFu = -1, agDeltas = null;
 
     function repopulateDealerRow() {
-      const row = document.getElementById('dealerRow');
-      row.innerHTML = '';
       for (let i = 0; i < 4; i++) {
-        if (i === agWinner) continue;
-        const b = document.createElement('button');
-        b.className = 'psel ad-btn';
-        b.dataset.i = i;
+        const b = document.getElementById(`ad-${i}`);
         b.textContent = state.players[i].wind;
-        b.addEventListener('click', () => {
-          agDealer = +b.dataset.i;
-          row.querySelectorAll('.ad-btn').forEach(x => x.classList.toggle('sel', x === b));
-          tryCalcAgari();
-        });
-        row.appendChild(b);
+        b.classList.remove('sel');
+        b.style.display = i === agWinner ? 'none' : '';
       }
+    }
+
+    for (let i = 0; i < 4; i++) {
+      document.getElementById(`ad-${i}`).addEventListener('pointerup', () => {
+        agDealer = i;
+        for (let j = 0; j < 4; j++) {
+          document.getElementById(`ad-${j}`).classList.toggle('sel', j === i);
+        }
+        tryCalcAgari();
+      });
+    }
+
+    function setBackFabVisible(visible) {
+      const fab = document.querySelector('.back-fab');
+      if (fab) fab.style.display = visible ? '' : 'none';
     }
 
     function openAgariModal(playerIdx) {
@@ -1073,10 +1154,12 @@
       document.getElementById('selScreen').style.display = 'block';
       document.getElementById('confScreen').style.display = 'none';
       document.getElementById('agariModal').style.display = 'flex';
+      setBackFabVisible(false);
     }
 
     document.getElementById('agariCancel').addEventListener('click', () => {
       document.getElementById('agariModal').style.display = 'none';
+      setBackFabVisible(true);
     });
 
     document.getElementById('wtRon').addEventListener('click', () => {
@@ -1230,6 +1313,7 @@
         state.honba = 0;
       }
       document.getElementById('agariModal').style.display = 'none';
+      setBackFabVisible(true);
       render();
     });
 
@@ -1356,16 +1440,91 @@
             gameHistory = gameHistory.slice(0, idx);
             updateHistBadge();
             document.getElementById('historyModal').style.display = 'none';
+            setBackFabVisible(true);
             render();
           });
         });
       }
       document.getElementById('historyModal').style.display = 'flex';
+      setBackFabVisible(false);
     }
 
     document.getElementById('historyBtn').addEventListener('click', openHistoryModal);
     document.getElementById('historyClose').addEventListener('click', () => {
       document.getElementById('historyModal').style.display = 'none';
+      setBackFabVisible(true);
+    });
+
+    // ── Dice roll ────────────────────────────────
+    const DIE_PIPS = [
+      null,
+      ['mc'],
+      ['tr', 'bl'],
+      ['tr', 'mc', 'bl'],
+      ['tl', 'tr', 'bl', 'br'],
+      ['tl', 'tr', 'mc', 'bl', 'br'],
+      ['tl', 'tr', 'ml', 'mr', 'bl', 'br'],
+    ];
+    const PIP_XY = {
+      tl:[10,10], tr:[26,10], ml:[10,18], mc:[18,18],
+      mr:[26,18], bl:[10,26], br:[26,26],
+    };
+    const NS = 'http://www.w3.org/2000/svg';
+
+    function renderDie(svgEl, value) {
+      svgEl.querySelectorAll('circle').forEach(c => c.remove());
+      DIE_PIPS[value].forEach(key => {
+        const [cx, cy] = PIP_XY[key];
+        const c = document.createElementNS(NS, 'circle');
+        c.setAttribute('cx', cx);
+        c.setAttribute('cy', cy);
+        c.setAttribute('r', '3.5');
+        c.setAttribute('fill', '#1a1a1a');
+        svgEl.appendChild(c);
+      });
+    }
+
+    const die0 = document.getElementById('die0');
+    const die1 = document.getElementById('die1');
+    renderDie(die0, 1);
+    renderDie(die1, 1);
+
+    const WIND_MOD = { 1: '東', 2: '南', 3: '西', 0: '北' };
+    function blinkDiceResult(sum) {
+      const targetWind = WIND_MOD[sum % 4];
+      const idx = state.players.findIndex(p => p.wind === targetWind);
+      if (idx < 0) return;
+      const card = document.getElementById(`pc${idx}`);
+      card.classList.remove('blink');
+      void card.offsetWidth;
+      card.classList.add('blink');
+      setTimeout(() => card.classList.remove('blink'), 1500);
+    }
+
+    let diceRolling = false;
+    document.querySelector('.tcw-circle').addEventListener('click', () => {
+      if (diceRolling) return;
+      diceRolling = true;
+      [die0, die1].forEach(d => {
+        d.classList.remove('rolling');
+        void d.offsetWidth;
+        d.classList.add('rolling');
+      });
+      let ticks = 0;
+      const iv = setInterval(() => {
+        renderDie(die0, Math.ceil(Math.random() * 6));
+        renderDie(die1, Math.ceil(Math.random() * 6));
+        if (++ticks >= 8) {
+          clearInterval(iv);
+          const v0 = Math.ceil(Math.random() * 6);
+          const v1 = Math.ceil(Math.random() * 6);
+          renderDie(die0, v0);
+          renderDie(die1, v1);
+          [die0, die1].forEach(d => d.classList.remove('rolling'));
+          blinkDiceResult(v0 + v1);
+          diceRolling = false;
+        }
+      }, 50);
     });
   </script>
 </body>
