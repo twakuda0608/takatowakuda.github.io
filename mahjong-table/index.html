@@ -55,13 +55,13 @@
       top: 50%;
       transform: translateY(-50%);
       display: grid;
-      grid-template-columns: 110px 1fr 110px;
-      grid-template-rows: 110px 1fr 110px;
+      grid-template-columns: 140px 1fr 140px;
+      grid-template-rows: 140px 1fr 140px;
       width: 100%;
       height: 100vw;
       background: #155a26;
       overflow: hidden;
-      --s: clamp(0.35, calc((100vw - 220px) / 250px), 1);
+      --s: clamp(0.35, calc((100vw - 280px) / 250px), 1);
     }
 
     /* Player zones */
@@ -90,13 +90,13 @@
       align-items: center;
       justify-content: space-between;
       gap: 0;
-      padding: 10px 14px;
+      padding: 12px 14px;
     }
 
     /* All 4 cards share the same CSS dimensions (250px × 110px/--s).
        After scale(--s): visual size = 250px·--s × 110px for every card.
        Rotating ±90° swaps width/height, so left/right visually become 110px × 250px·--s — congruent and point-symmetric. */
-    .pcard { height: calc(110px / var(--s)); }
+    .pcard { height: calc(140px / var(--s)); }
 
     .pz.top .pcard    { transform: translate(-50%, -50%) rotate(180deg) scale(var(--s)); }
     .pz.bottom .pcard { transform: translate(-50%, -50%) scale(var(--s)); }
@@ -158,7 +158,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 10px;
     }
 
     .sval {
@@ -193,8 +193,8 @@
       border-radius: 8px;
       color: rgba(255,255,255,0.55);
       font-weight: 800;
-      width: 34px;
-      height: 34px;
+      width: 42px;
+      height: 42px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -227,7 +227,7 @@
       color: rgba(255, 255, 255, 0.55);
       font-size: 13px;
       font-weight: 700;
-      padding: 10px 18px;
+      padding: 13px 18px;
       width: 100%;
       letter-spacing: 2px;
       cursor: pointer;
@@ -765,7 +765,7 @@
       background: rgba(0,0,0,0.35);
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 16px;
-      padding: 14px 14px 6px;
+      padding: 16px 16px 10px;
     }
     .setup-card-lbl {
       font-size: 10px;
@@ -778,7 +778,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 7px 0;
+      padding: 11px 0;
       border-bottom: 1px solid rgba(255,255,255,0.06);
     }
     .player-row:last-child { border-bottom: none; }
@@ -832,7 +832,7 @@
       color: #fff;
       box-shadow: 0 0 8px rgba(249,115,22,0.5);
     }
-    .start-actions { display: flex; justify-content: flex-end; }
+    .start-actions { display: flex; justify-content: flex-end; margin-top: 14px; margin-bottom: 12px; }
     .random-btn {
       background: rgba(255,255,255,0.07);
       border: 1.5px solid rgba(255,255,255,0.16);
@@ -943,8 +943,7 @@
           <div class="setup-card-lbl">PLAYERS</div>
 
           <div class="player-row">
-            <span class="player-pos">↓<br>自分</span>
-            <input class="player-name-inp" id="sn0" placeholder="P1" maxlength="8" list="ph-0" autocomplete="off">
+            <input class="player-name-inp" id="sn0" placeholder="P1" maxlength="8" autocomplete="off">
             <div class="wind-btns" id="wb0">
               <button class="wind-sel-btn" data-player="0" data-wind="東">東</button>
               <button class="wind-sel-btn" data-player="0" data-wind="南">南</button>
@@ -954,8 +953,7 @@
           </div>
 
           <div class="player-row">
-            <span class="player-pos">→<br>下家</span>
-            <input class="player-name-inp" id="sn1" placeholder="P2" maxlength="8" list="ph-1" autocomplete="off">
+            <input class="player-name-inp" id="sn1" placeholder="P2" maxlength="8" autocomplete="off">
             <div class="wind-btns" id="wb1">
               <button class="wind-sel-btn" data-player="1" data-wind="東">東</button>
               <button class="wind-sel-btn" data-player="1" data-wind="南">南</button>
@@ -965,8 +963,7 @@
           </div>
 
           <div class="player-row">
-            <span class="player-pos">↑<br>対面</span>
-            <input class="player-name-inp" id="sn2" placeholder="P3" maxlength="8" list="ph-2" autocomplete="off">
+            <input class="player-name-inp" id="sn2" placeholder="P3" maxlength="8" autocomplete="off">
             <div class="wind-btns" id="wb2">
               <button class="wind-sel-btn" data-player="2" data-wind="東">東</button>
               <button class="wind-sel-btn" data-player="2" data-wind="南">南</button>
@@ -976,8 +973,7 @@
           </div>
 
           <div class="player-row">
-            <span class="player-pos">←<br>上家</span>
-            <input class="player-name-inp" id="sn3" placeholder="P4" maxlength="8" list="ph-3" autocomplete="off">
+            <input class="player-name-inp" id="sn3" placeholder="P4" maxlength="8" autocomplete="off">
             <div class="wind-btns" id="wb3">
               <button class="wind-sel-btn" data-player="3" data-wind="東">東</button>
               <button class="wind-sel-btn" data-player="3" data-wind="南">南</button>
@@ -1340,10 +1336,33 @@
     </div>
   </div>
 
-  <datalist id="ph-0"></datalist>
-  <datalist id="ph-1"></datalist>
-  <datalist id="ph-2"></datalist>
-  <datalist id="ph-3"></datalist>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+    const app = initializeApp({
+      apiKey: "AIzaSyBC0X3taGcEclIO8g7Lg7odIdTwaA6gnGY",
+      authDomain: "wakuda-tools.firebaseapp.com",
+      projectId: "wakuda-tools",
+      storageBucket: "wakuda-tools.firebasestorage.app",
+      messagingSenderId: "812175144918",
+      appId: "1:812175144918:web:e93ea5bec2fcad8810d677"
+    });
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+      try {
+        const snap = await getDoc(doc(db, 'mahjong_records', user.uid, 'settings', 'profile'));
+        if (!snap.exists()) return;
+        const names = snap.data().playerNames || [];
+        if (!names.length) return;
+        try { localStorage.setItem('mahjong_playerHistory', JSON.stringify(names)); } catch {}
+      } catch {}
+    });
+  </script>
 
   <script src="/common.js"></script>
   <script>
@@ -2187,23 +2206,20 @@
     });
 
     // ── mahjong player name autocomplete ──────────
-    function populateNameDatalist() {
+    function getStartNames(excludeIdx) {
       try {
         const names = JSON.parse(localStorage.getItem('mahjong_playerHistory') || '[]');
-        for (let i = 0; i < 4; i++) {
-          const dl = document.getElementById(`ph-${i}`);
-          if (!dl) continue;
-          const others = [0, 1, 2, 3].filter(j => j !== i).map(j => document.getElementById(`sn${j}`)?.value.trim()).filter(Boolean);
-          const othersSet = new Set(others);
-          dl.innerHTML = names.filter(n => !othersSet.has(n)).map(n => `<option value="${n.replace(/"/g, '&quot;')}">`).join('');
-        }
-      } catch {}
+        const taken = new Set([0, 1, 2, 3]
+          .filter(j => j !== excludeIdx)
+          .map(j => document.getElementById(`sn${j}`)?.value.trim())
+          .filter(Boolean));
+        return names.filter(n => !taken.has(n));
+      } catch { return []; }
     }
 
     for (let i = 0; i < 4; i++) {
-      document.getElementById(`sn${i}`).addEventListener('input', populateNameDatalist);
+      makeAutocomplete(document.getElementById(`sn${i}`), () => getStartNames(i));
     }
-    populateNameDatalist();
   </script>
 </body>
 </html>

@@ -78,3 +78,32 @@ h1 {
 .back-fab:focus-visible{
   outline: 3px solid #66ccff;
 }
+
+/* ── Custom autocomplete dropdown ─────────────── */
+.ac-list {
+  background: #fff;
+  border: 1.5px solid var(--border-soft, #e4e4e4);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+  overflow: hidden;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 9999;
+}
+.ac-item {
+  padding: 9px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font, system-ui, -apple-system, sans-serif);
+  color: #1e293b;
+  cursor: pointer;
+  transition: background 0.08s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ac-item:hover,
+.ac-item.ac-active {
+  background: #f0f7ff;
+  color: var(--brand, #0078d7);
+}
