@@ -116,7 +116,7 @@ function calcEarned(from, to, blocks) {
     if (e <= s) continue;
     total += (blk.rate / 3600) * ((e - s) / 1000);
   }
-  return Math.round(total);
+  return total;
 }
 
 const findCurrentBlock = (now, blocks, shiftStart) =>
