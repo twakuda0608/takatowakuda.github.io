@@ -161,6 +161,16 @@ function updateRankNames() {
 }
 
 // ====== Name field helpers (Tab 1) ======
+function getScoreInputNames(rank) {
+  const taken = new Set();
+  [1, 2, 3, 4].forEach(r => {
+    if (r === rank) return;
+    const f = el(`sn${r}_1`);
+    if (f?.tagName === 'INPUT') { const v = f.value.trim(); if (v) taken.add(v); }
+  });
+  return playerHistory.filter(n => !taken.has(n));
+}
+
 // Replaces the 4 name text-inputs with selects populated from session players.
 function ensureNameSelects(players) {
   [1, 2, 3, 4].forEach(rank => {
@@ -215,13 +225,17 @@ function ensureNameInputs() {
       inp.type = 'text';
       inp.className = cur.className;
       inp.placeholder = `プレイヤー${rank}`;
-      inp.setAttribute('list', `phd-s${rank}`);
       inp.autocomplete = 'off';
-      inp.addEventListener('input', () => { updatePlayerHistoryDatalist(); updateRankNames(); });
+      inp.addEventListener('input', updateRankNames);
       cur.replaceWith(inp);
+      makeAutocomplete(inp, () => getScoreInputNames(rank));
     } else {
-      cur.removeEventListener('input', updatePlayerHistoryDatalist);
-      cur.addEventListener('input', () => { updatePlayerHistoryDatalist(); updateRankNames(); });
+      cur.removeEventListener('input', updateRankNames);
+      cur.addEventListener('input', updateRankNames);
+      if (!cur.dataset.acBound) {
+        makeAutocomplete(cur, () => getScoreInputNames(rank));
+        cur.dataset.acBound = '1';
+      }
     }
   });
   updateRankNames();
@@ -406,32 +420,7 @@ async function loadProfile() {
     el('my-name-input').value = myName;
   }
   try { localStorage.setItem('mahjong_playerHistory', JSON.stringify(playerHistory)); } catch {}
-  updatePlayerHistoryDatalist();
   renderPlayerHistory();
-}
-
-function updatePlayerHistoryDatalist() {
-  // Score section text inputs (tab 1) — skip when replaced by selects
-  const scoreTaken = [1, 2, 3, 4].map(r => {
-    const f = el(`sn${r}_1`);
-    return (f && f.tagName === 'INPUT') ? f.value.trim() : '';
-  });
-  [1, 2, 3, 4].forEach(r => {
-    const dl = el(`phd-s${r}`);
-    if (!dl) return;
-    const others = new Set(scoreTaken.filter((v, j) => j !== r - 1 && v !== ''));
-    dl.innerHTML = playerHistory.filter(n => !others.has(n)).map(n => `<option value="${escHtml(n)}">`).join('');
-  });
-
-  // Session creation form (tab 3)
-  const inputIds = ['ns-p1', 'ns-p2', 'ns-p3', 'ns-p4'];
-  const taken = inputIds.map(id => { const inp = el(id); return inp ? inp.value.trim() : ''; });
-  inputIds.forEach((_, i) => {
-    const dl = el(`phd-${i + 1}`);
-    if (!dl) return;
-    const others = new Set(taken.filter((v, j) => j !== i && v !== ''));
-    dl.innerHTML = playerHistory.filter(n => !others.has(n)).map(n => `<option value="${escHtml(n)}">`).join('');
-  });
 }
 
 function updateHistoryWithNames(names) {
@@ -448,7 +437,6 @@ async function savePlayerHistory() {
     { merge: true }
   );
   try { localStorage.setItem('mahjong_playerHistory', JSON.stringify(playerHistory)); } catch {}
-  updatePlayerHistoryDatalist();
   renderPlayerHistory();
 }
 
@@ -505,13 +493,22 @@ el('new-session-toggle').addEventListener('click', () => {
   el('new-session-form').style.display = 'block';
   el('new-session-toggle').style.display = 'none';
   if (myName && !el('ns-p1').value) el('ns-p1').value = myName;
-  updatePlayerHistoryDatalist();
   (myName ? el('ns-p2') : el('ns-p1')).focus();
 });
 
-['ns-p1', 'ns-p2', 'ns-p3', 'ns-p4'].forEach(id => {
-  el(id).addEventListener('input', updatePlayerHistoryDatalist);
+const nsIds = ['ns-p1', 'ns-p2', 'ns-p3', 'ns-p4'];
+nsIds.forEach((id, i) => {
+  makeAutocomplete(el(id), () => {
+    const taken = new Set(nsIds.flatMap((oid, j) => {
+      if (j === i) return [];
+      const v = el(oid)?.value.trim();
+      return v ? [v] : [];
+    }));
+    return playerHistory.filter(n => !taken.has(n));
+  });
 });
+
+makeAutocomplete(el('my-name-input'), () => playerHistory);
 
 el('cancel-session-btn').addEventListener('click', () => {
   el('new-session-form').style.display = 'none';
@@ -701,27 +698,18 @@ function renderSessions(sessions) {
         inp.value = name;
         inp.placeholder = `P${i + 1}`;
         inp.className = 'player-name-input';
-        inp.setAttribute('list', `phd-tbl-${i}`);
         inp.autocomplete = 'off';
         grid.appendChild(inp);
+        makeAutocomplete(inp, () => {
+          const taken = new Set(inputs.flatMap((other, j) => {
+            if (j === i) return [];
+            const v = other.value.trim();
+            return v ? [v] : [];
+          }));
+          return playerHistory.filter(n => !taken.has(n));
+        });
         return inp;
       });
-
-      function updateTblDatalist() {
-        const taken = inputs.map(inp => inp.value.trim());
-        inputs.forEach((inp, i) => {
-          const dl = document.getElementById(`phd-tbl-${i}`);
-          if (!dl) return;
-          const others = new Set(taken.filter((v, j) => j !== i && v !== ''));
-          dl.innerHTML = playerHistory
-            .filter(n => !others.has(n))
-            .map(n => `<option value="${escHtml(n)}">`)
-            .join('');
-        });
-      }
-
-      inputs.forEach(inp => inp.addEventListener('input', updateTblDatalist));
-      updateTblDatalist();
 
       const actions = document.createElement('div');
       actions.className = 'player-edit-actions';
