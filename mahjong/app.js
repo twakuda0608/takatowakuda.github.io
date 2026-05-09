@@ -405,6 +405,7 @@ async function loadProfile() {
     playerHistory = snap.data().playerNames || [];
     el('my-name-input').value = myName;
   }
+  try { localStorage.setItem('mahjong_playerHistory', JSON.stringify(playerHistory)); } catch {}
   updatePlayerHistoryDatalist();
   renderPlayerHistory();
 }
@@ -446,6 +447,7 @@ async function savePlayerHistory() {
     { playerNames: playerHistory },
     { merge: true }
   );
+  try { localStorage.setItem('mahjong_playerHistory', JSON.stringify(playerHistory)); } catch {}
   updatePlayerHistoryDatalist();
   renderPlayerHistory();
 }
@@ -887,6 +889,40 @@ function buildEditRow(session, match, midx, displayRow) {
 
   return tr;
 }
+
+// ====== mahjong-table import ======
+function applyTableImport() {
+  try {
+    const raw = localStorage.getItem('mahjong_table_import');
+    if (!raw) return;
+    localStorage.removeItem('mahjong_table_import');
+
+    const data = JSON.parse(raw);
+    if (!data || !Array.isArray(data.players) || data.players.length !== 4) return;
+
+    // Sort by score descending to get rank order
+    const sorted = data.players.slice().sort((a, b) => b.score - a.score);
+
+    // Fill score inputs (mahjong uses 百点単位: divide by 100)
+    // s1_1 is auto-calculated; fill s2_1, s3_1, s4_1
+    el('s2_1').value = Math.round(sorted[1].score / 100);
+    el('s3_1').value = Math.round(sorted[2].score / 100);
+    el('s4_1').value = Math.round(sorted[3].score / 100);
+
+    // Fill name inputs only if they are text inputs (not selects)
+    [1, 2, 3, 4].forEach((rank, i) => {
+      const inp = el(`sn${rank}_1`);
+      if (inp && inp.tagName === 'INPUT') inp.value = sorted[i].name;
+    });
+
+    computeTab1();
+
+    const banner = el('import-banner');
+    if (banner) banner.style.display = 'flex';
+  } catch {}
+}
+
+applyTableImport();
 
 // ====== Tab 3: All-time totals ======
 function renderAlltimeTotals(sessions) {

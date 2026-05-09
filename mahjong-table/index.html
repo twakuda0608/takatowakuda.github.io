@@ -944,7 +944,7 @@
 
           <div class="player-row">
             <span class="player-pos">↓<br>自分</span>
-            <input class="player-name-inp" id="sn0" placeholder="P1" maxlength="8">
+            <input class="player-name-inp" id="sn0" placeholder="P1" maxlength="8" list="ph-0" autocomplete="off">
             <div class="wind-btns" id="wb0">
               <button class="wind-sel-btn" data-player="0" data-wind="東">東</button>
               <button class="wind-sel-btn" data-player="0" data-wind="南">南</button>
@@ -955,7 +955,7 @@
 
           <div class="player-row">
             <span class="player-pos">→<br>下家</span>
-            <input class="player-name-inp" id="sn1" placeholder="P2" maxlength="8">
+            <input class="player-name-inp" id="sn1" placeholder="P2" maxlength="8" list="ph-1" autocomplete="off">
             <div class="wind-btns" id="wb1">
               <button class="wind-sel-btn" data-player="1" data-wind="東">東</button>
               <button class="wind-sel-btn" data-player="1" data-wind="南">南</button>
@@ -966,7 +966,7 @@
 
           <div class="player-row">
             <span class="player-pos">↑<br>対面</span>
-            <input class="player-name-inp" id="sn2" placeholder="P3" maxlength="8">
+            <input class="player-name-inp" id="sn2" placeholder="P3" maxlength="8" list="ph-2" autocomplete="off">
             <div class="wind-btns" id="wb2">
               <button class="wind-sel-btn" data-player="2" data-wind="東">東</button>
               <button class="wind-sel-btn" data-player="2" data-wind="南">南</button>
@@ -977,7 +977,7 @@
 
           <div class="player-row">
             <span class="player-pos">←<br>上家</span>
-            <input class="player-name-inp" id="sn3" placeholder="P4" maxlength="8">
+            <input class="player-name-inp" id="sn3" placeholder="P4" maxlength="8" list="ph-3" autocomplete="off">
             <div class="wind-btns" id="wb3">
               <button class="wind-sel-btn" data-player="3" data-wind="東">東</button>
               <button class="wind-sel-btn" data-player="3" data-wind="南">南</button>
@@ -1334,10 +1334,16 @@
       <div class="ag-head">対 局 終 了</div>
       <div id="gameEndScores" class="ag-result"></div>
       <div class="ag-actions" style="margin-top:12px">
+        <button class="ag-cancel" id="gameEndRecord" style="flex:2;background:rgba(14,165,233,0.15);border-color:rgba(14,165,233,0.45);color:rgba(14,165,233,0.95)">スコアを記録する</button>
         <button class="ag-apply" id="gameEndNewGame">新 し い 対 局</button>
       </div>
     </div>
   </div>
+
+  <datalist id="ph-0"></datalist>
+  <datalist id="ph-1"></datalist>
+  <datalist id="ph-2"></datalist>
+  <datalist id="ph-3"></datalist>
 
   <script src="/common.js"></script>
   <script>
@@ -2166,10 +2172,38 @@
       state = freshState();
       gameHistory = [];
       updateHistBadge();
-      startEastPos = 0;
+      playerWinds = ['東', '南', '西', '北'];
       renderStartWindBtns();
       document.getElementById('startScreen').style.display = '';
     });
+
+    document.getElementById('gameEndRecord').addEventListener('click', () => {
+      const importData = {
+        players: state.players.map(p => ({ name: p.name, score: p.score })),
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('mahjong_table_import', JSON.stringify(importData));
+      window.location.href = '/mahjong/';
+    });
+
+    // ── mahjong player name autocomplete ──────────
+    function populateNameDatalist() {
+      try {
+        const names = JSON.parse(localStorage.getItem('mahjong_playerHistory') || '[]');
+        for (let i = 0; i < 4; i++) {
+          const dl = document.getElementById(`ph-${i}`);
+          if (!dl) continue;
+          const others = [0, 1, 2, 3].filter(j => j !== i).map(j => document.getElementById(`sn${j}`)?.value.trim()).filter(Boolean);
+          const othersSet = new Set(others);
+          dl.innerHTML = names.filter(n => !othersSet.has(n)).map(n => `<option value="${n.replace(/"/g, '&quot;')}">`).join('');
+        }
+      } catch {}
+    }
+
+    for (let i = 0; i < 4; i++) {
+      document.getElementById(`sn${i}`).addEventListener('input', populateNameDatalist);
+    }
+    populateNameDatalist();
   </script>
 </body>
 </html>
