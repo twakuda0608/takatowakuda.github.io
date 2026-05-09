@@ -239,6 +239,10 @@
       color: #fff;
       box-shadow: 0 0 18px rgba(239, 68, 68, 0.65);
     }
+    .rbtn.blocked {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
 
     /* 起家マーク */
     .kicha-mark {
@@ -610,17 +614,20 @@
     .ag-lbl { font-size:10px; font-weight:700; color:rgba(255,255,255,0.5); letter-spacing:1.5px; margin-bottom:5px; }
     .ag-row { display:flex; gap:5px; }
     .psel {
-      flex:1; padding:7px 2px;
+      flex:1; padding:10px 12px;
       background:rgba(255,255,255,0.08);
       border:1.5px solid rgba(255,255,255,0.15);
       border-radius:8px; color:rgba(255,255,255,0.6);
       font-size:14px; font-weight:800; cursor:pointer;
-      text-align:center; transition:all 0.1s;
+      text-align:left; display:flex; align-items:center; gap:8px;
+      transition:all 0.1s;
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
     .psel.sel { background:rgba(251,191,36,0.2); border-color:#fbbf24; color:#fbbf24; }
     .psel:disabled { opacity:0.28; cursor:default; }
+    .psel-col { display:flex; flex-direction:column; gap:4px; }
+    .psel-col .psel { flex:none; width:100%; }
     .wtype {
       flex:1; padding:9px 4px;
       background:rgba(255,255,255,0.08);
@@ -923,6 +930,18 @@
       appearance: none;
       cursor: pointer;
     }
+
+    /* ── 終局選択 ─────────────────────────────── */
+    .kc-btn {
+      width: 100%; padding: 14px; border-radius: 10px;
+      font-size: 15px; font-weight: 800; letter-spacing: 2px;
+      cursor: pointer; border: 1.5px solid; font-family: inherit;
+      transition: opacity 0.1s;
+    }
+    .kc-btn:active { opacity: 0.7; }
+    .kc-ryuu   { background:rgba(251,191,36,0.12); border-color:rgba(251,191,36,0.45); color:rgba(251,191,36,0.9); }
+    .kc-agari  { background:rgba(74,222,128,0.12); border-color:rgba(74,222,128,0.45); color:rgba(74,222,128,0.9); }
+    .kc-chonbo { background:rgba(239,68,68,0.12);  border-color:rgba(239,68,68,0.45);  color:rgba(239,68,68,0.9); }
   </style>
 </head>
 <body>
@@ -1010,6 +1029,17 @@
             <select id="kijuntenSelect"></select>
           </div>
           <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:10px;line-height:1.7">ONのとき、最終局終了後に基準点以上のプレイヤーがいない場合は次の場へ延長</div>
+        </div>
+
+        <div class="setup-card" style="margin-top:12px">
+          <div class="setup-card-lbl">箱下終了の有無</div>
+          <button class="wtype" id="hakoshitaToggle" style="width:72px">OFF</button>
+          <div id="hakoshitaRiichiWrap" style="display:none;margin-top:12px">
+            <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:6px;letter-spacing:1.5px">箱 下 時 の リ ー チ</div>
+            <button class="wtype" id="hakoshitaRiichiToggle" style="width:72px">OFF</button>
+            <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:8px;line-height:1.7">ONのとき、持ち点が1000点未満でもリーチ可能（一時的にマイナスになる場合あり）</div>
+          </div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:10px;line-height:1.7">ONのとき、局の終了時にいずれかのプレイヤーの持ち点が0点未満になった場合、対局を終了します</div>
         </div>
       </div>
 
@@ -1140,7 +1170,7 @@
 
   <div class="top-info" id="topInfo">東1局 0本場</div>
   <button class="end-btn" id="endBtn">終　了</button>
-  <button class="ryuu-btn" id="ryuuBtn">流局</button>
+  <button class="ryuu-btn" id="ryuuBtn">終局</button>
 
   <!-- 履歴モーダル -->
   <div class="ag-overlay" id="historyModal" style="display:none">
@@ -1232,7 +1262,7 @@
 
       <div class="ag-sec" id="dealerSec">
         <div class="ag-lbl">放銃者</div>
-        <div class="ag-row" id="dealerRow">
+        <div class="psel-col" id="dealerRow">
           <button class="psel" id="ad-0"></button>
           <button class="psel" id="ad-1"></button>
           <button class="psel" id="ad-2"></button>
@@ -1336,6 +1366,117 @@
     </div>
   </div>
 
+  <!-- 終局選択モーダル -->
+  <div class="ag-overlay" id="kyokuChoiceModal" style="display:none">
+    <div class="ag-card" style="max-width:300px">
+      <div class="ag-head">終　局</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="kc-btn kc-ryuu" id="kcRyuu">流　局</button>
+        <button class="kc-btn kc-agari" id="kcAgari">和　了</button>
+        <button class="kc-btn kc-chonbo" id="kcChonbo">チョンボ</button>
+        <button class="ag-cancel" id="kcCancel" style="margin-top:4px;padding:12px;width:100%">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 多人数和了モーダル (ダブロン等) -->
+  <div class="ag-overlay" id="multiWinModal" style="display:none">
+    <div class="ag-card">
+      <div class="ag-head">和　了</div>
+      <div id="mwStep1">
+        <div class="ag-sec">
+          <div class="ag-lbl">和了者（複数可）</div>
+          <div class="psel-col">
+            <button class="psel" id="mww-0"></button>
+            <button class="psel" id="mww-1"></button>
+            <button class="psel" id="mww-2"></button>
+            <button class="psel" id="mww-3"></button>
+          </div>
+        </div>
+        <div class="ag-sec">
+          <div class="ag-lbl">放銃者</div>
+          <div class="psel-col">
+            <button class="psel" id="mwl-0"></button>
+            <button class="psel" id="mwl-1"></button>
+            <button class="psel" id="mwl-2"></button>
+            <button class="psel" id="mwl-3"></button>
+          </div>
+        </div>
+        <div class="ag-actions" style="margin-top:12px">
+          <button class="ag-apply" id="mwStep1Next">次　へ</button>
+          <button class="ag-cancel" id="mwCancel">キャンセル</button>
+        </div>
+      </div>
+      <div id="mwStep2" style="display:none">
+        <div id="mwWinnerLabel" style="font-size:13px;font-weight:800;color:rgba(255,255,255,0.85);margin-bottom:12px;letter-spacing:0.5px"></div>
+        <div class="han-tree" id="mwHanTree"></div>
+        <div class="ag-result" id="mwCalcResult" style="min-height:60px;margin-top:12px;margin-bottom:12px"></div>
+        <div class="ag-actions">
+          <button class="ag-apply" id="mwPickerNext">次　へ</button>
+          <button class="ag-cancel" id="mwPickerBack">戻　る</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- チョンボモーダル -->
+  <div class="ag-overlay" id="chonboModal" style="display:none">
+    <div class="ag-card">
+      <div class="ag-head">チョンボ</div>
+      <div id="cbStep1">
+        <div class="ag-sec">
+          <div class="ag-lbl">チョンボ者</div>
+          <div class="psel-col">
+            <button class="psel" id="cb-p0"></button>
+            <button class="psel" id="cb-p1"></button>
+            <button class="psel" id="cb-p2"></button>
+            <button class="psel" id="cb-p3"></button>
+          </div>
+        </div>
+        <div class="ag-sec">
+          <div class="ag-lbl">罰則</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <button class="wtype" id="cbMangan">満貫払い</button>
+            <button class="wtype" id="cbBaiman">倍満払い</button>
+            <button class="wtype" id="cbOther">その他</button>
+          </div>
+        </div>
+        <div id="cbOtherSel" style="display:none">
+          <div class="ag-sec">
+            <div class="ag-lbl">飜数</div>
+            <div class="ag-row" id="cbHanRow">
+              <button class="wtype" data-han="1">1翻</button>
+              <button class="wtype" data-han="2">2翻</button>
+              <button class="wtype" data-han="3">3翻</button>
+              <button class="wtype" data-han="4">4翻</button>
+            </div>
+          </div>
+          <div class="ag-sec" id="cbFuSec" style="display:none">
+            <div class="ag-lbl">符数</div>
+            <div id="cbFuRow" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+          </div>
+        </div>
+        <div class="ag-result" id="cbPreview" style="min-height:70px;margin-top:12px;margin-bottom:12px"></div>
+        <div class="ag-actions">
+          <button class="ag-apply" id="cbStep1Next">次　へ</button>
+          <button class="ag-cancel" id="cbCancel">キャンセル</button>
+        </div>
+      </div>
+      <div id="cbStep2" style="display:none">
+        <div class="ag-result" id="cbFinalPreview" style="margin-bottom:16px"></div>
+        <div class="ag-lbl" style="margin-bottom:8px">局の扱い</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+          <button class="wtype" id="cbKyokuContinue">局継続</button>
+          <button class="wtype" id="cbKyokuRyuu">流局扱い</button>
+          <button class="wtype" id="cbKyokuYariyari">やり直し</button>
+        </div>
+        <div class="ag-actions">
+          <button class="ag-cancel" id="cbBack" style="width:100%;padding:12px">戻　る</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -1393,6 +1534,8 @@
     const GT_NAMES = ['東風戦', '半荘戦', '全荘戦'];
     let settingEnchosen = false;
     let settingKijunten = 30000;
+    let settingHakoshita = false;
+    let settingHakoshitaRiichi = false;
 
     function captureSnapshot() {
       return {
@@ -1439,7 +1582,9 @@
         const wEl = document.getElementById(`w${i}`);
         wEl.textContent = p.wind;
         wEl.classList.toggle('east', p.wind === '東');
-        document.getElementById(`r${i}`).classList.toggle('on', p.riichi);
+        const rbtn = document.getElementById(`r${i}`);
+        rbtn.classList.toggle('on', p.riichi);
+        rbtn.classList.toggle('blocked', !p.riichi && settingHakoshita && !settingHakoshitaRiichi && p.score < 1000);
         document.getElementById(`fs${i}`).classList.toggle('on', p.riichi);
         document.getElementById(`pn${i}`).textContent = p.name;
         const km = document.getElementById(`km${i}`);
@@ -1486,6 +1631,7 @@
     for (let i = 0; i < 4; i++) {
       document.getElementById(`r${i}`).addEventListener('click', () => {
         const p = state.players[i];
+        if (!p.riichi && settingHakoshita && !settingHakoshitaRiichi && p.score < 1000) return;
         p.riichi = !p.riichi;
         p.score += p.riichi ? -1000 : 1000;
         state.kyotaku += p.riichi ? 1 : -1;
@@ -1585,6 +1731,24 @@
       });
     }
 
+    // ── 設定タブ: 箱下終了 ───────────────────────
+    document.getElementById('hakoshitaToggle').addEventListener('click', () => {
+      settingHakoshita = !settingHakoshita;
+      const btn = document.getElementById('hakoshitaToggle');
+      btn.textContent = settingHakoshita ? 'ON' : 'OFF';
+      btn.classList.toggle('sel', settingHakoshita);
+      document.getElementById('hakoshitaRiichiWrap').style.display = settingHakoshita ? 'block' : 'none';
+      render();
+    });
+
+    document.getElementById('hakoshitaRiichiToggle').addEventListener('click', () => {
+      settingHakoshitaRiichi = !settingHakoshitaRiichi;
+      const btn = document.getElementById('hakoshitaRiichiToggle');
+      btn.textContent = settingHakoshitaRiichi ? 'ON' : 'OFF';
+      btn.classList.toggle('sel', settingHakoshitaRiichi);
+      render();
+    });
+
     // ── 和了スコア計算 ──────────────────────────
     function roundUp100(n) { return Math.ceil(n / 100) * 100; }
 
@@ -1618,7 +1782,7 @@
     function repopulateDealerRow() {
       for (let i = 0; i < 4; i++) {
         const b = document.getElementById(`ad-${i}`);
-        b.textContent = state.players[i].wind;
+        b.innerHTML = `<span style="font-size:11px;opacity:0.5;font-weight:600;flex-shrink:0;min-width:14px;text-align:center">${state.players[i].wind}</span><span style="font-size:14px;font-weight:800">${state.players[i].name}</span>`;
         b.classList.remove('sel');
         b.style.display = i === agWinner ? 'none' : '';
       }
@@ -1901,7 +2065,9 @@
       }
       state.kyotaku = 0;
       let gameEnded = false;
-      if (state.players[agWinner].wind === '東') {
+      if (settingHakoshita && state.players.some(p => p.score < 0)) {
+        gameEnded = true;
+      } else if (state.players[agWinner].wind === '東') {
         state.honba++;
         if (state.inEnchosen && state.players.some(p => p.score >= settingKijunten))
           gameEnded = true;
@@ -2003,7 +2169,7 @@
       document.getElementById('ryuuModal').style.display = 'flex';
     }
 
-    document.getElementById('ryuuBtn').addEventListener('click', openRyuuModal);
+    document.getElementById('ryuuBtn').addEventListener('click', openKyokuChoice);
 
     document.getElementById('ryuuCancel').addEventListener('click', () => {
       document.getElementById('ryuuModal').style.display = 'none';
@@ -2023,7 +2189,9 @@
       const eastTenpai = eastIdx >= 0 && ryuuTenpai[eastIdx];
       state.honba++;
       let gameEnded = false;
-      if (!eastTenpai) {
+      if (settingHakoshita && state.players.some(p => p.score < 0)) {
+        gameEnded = true;
+      } else if (!eastTenpai) {
         rotateWinds();
         state.roundNum++;
         if (state.inEnchosen) {
@@ -2204,6 +2372,536 @@
       localStorage.setItem('mahjong_table_import', JSON.stringify(importData));
       window.location.href = '/mahjong/';
     });
+
+    // ── 終局選択 ──────────────────────────────────
+    function openKyokuChoice() {
+      document.getElementById('kyokuChoiceModal').style.display = 'flex';
+      setBackFabVisible(false);
+    }
+    document.getElementById('kcCancel').addEventListener('click', () => {
+      document.getElementById('kyokuChoiceModal').style.display = 'none';
+      setBackFabVisible(true);
+    });
+    document.getElementById('kcRyuu').addEventListener('click', () => {
+      document.getElementById('kyokuChoiceModal').style.display = 'none';
+      openRyuuModal();
+    });
+    document.getElementById('kcAgari').addEventListener('click', () => {
+      document.getElementById('kyokuChoiceModal').style.display = 'none';
+      openMultiWinModal();
+    });
+    document.getElementById('kcChonbo').addEventListener('click', () => {
+      document.getElementById('kyokuChoiceModal').style.display = 'none';
+      openChonboModal();
+    });
+
+    // ── 多人数和了 (ダブロン等) ──────────────────────
+    let mwWinners = new Set();
+    let mwLoser = -1;
+    let mwSortedWinners = [], mwWinnerStep = 0, mwWinnerData = [];
+    let mwHanIdx = -1, mwFu = -1;
+
+    function calcMwRonScore(winnerIdx, hanIdx, fu) {
+      const def = HAN_DEFS[hanIdx];
+      if (!def) return 0;
+      const isParent = state.players[winnerIdx].wind === '東';
+      let base;
+      if (def.needsFu) {
+        base = fu * Math.pow(2, def.han + 2);
+        if (base > 2000) base = 2000;
+      } else {
+        base = def.base;
+      }
+      return roundUp100(base * (isParent ? 6 : 4)) + state.honba * 300;
+    }
+
+    function buildMwHanTree() {
+      const container = document.getElementById('mwHanTree');
+      container.innerHTML = '';
+      const fuByHan = [
+        [30,40,50,60,70,80,90,100,110],
+        [25,30,40,50,60,70,80,90,100,110],
+        [25,30,40,50,60],
+        [25,30],
+      ];
+      for (let hi = 0; hi < 4; hi++) {
+        const group = document.createElement('div');
+        group.className = 'han-group';
+        const row = document.createElement('div');
+        row.className = 'han-row';
+        row.dataset.idx = hi;
+        row.innerHTML = `<span class="arr">▶</span>${hi+1}翻<span class="han-score"></span>`;
+        const fc = document.createElement('div');
+        fc.className = 'fu-children';
+        fuByHan[hi].forEach(fu => {
+          const fr = document.createElement('div');
+          fr.className = 'fu-row';
+          fr.dataset.fu = fu;
+          fr.innerHTML = `<span class="fu-dot"></span>${fu}符<span class="fu-score"></span>`;
+          fc.appendChild(fr);
+          fr.addEventListener('click', () => {
+            fc.querySelectorAll('.fu-row').forEach(f => f.classList.remove('sel'));
+            fr.classList.add('sel');
+            mwHanIdx = hi; mwFu = fu;
+            mwRenderFuScores(hi, fc);
+            mwTryCalc();
+          });
+        });
+        group.appendChild(row);
+        group.appendChild(fc);
+        container.appendChild(group);
+        row.addEventListener('click', () => {
+          const isOpen = row.classList.contains('open');
+          document.querySelectorAll('#mwHanTree .han-row').forEach(r => r.classList.remove('sel','open'));
+          document.querySelectorAll('#mwHanTree .fu-children').forEach(f => f.classList.remove('open'));
+          document.querySelectorAll('#mwHanTree .fu-row').forEach(f => f.classList.remove('sel'));
+          if (!isOpen) {
+            row.classList.add('sel','open'); fc.classList.add('open');
+            mwHanIdx = hi; mwFu = -1;
+            mwRenderFuScores(hi, fc);
+          } else { mwHanIdx = -1; mwFu = -1; }
+          mwTryCalc();
+        });
+      }
+      HAN_DEFS.slice(4).forEach((def, i) => {
+        const idx = i + 4;
+        const row = document.createElement('div');
+        row.className = 'han-row';
+        row.dataset.idx = idx;
+        row.innerHTML = `${def.name}<span class="han-score"></span>`;
+        container.appendChild(row);
+        row.addEventListener('click', () => {
+          document.querySelectorAll('#mwHanTree .han-row').forEach(r => r.classList.remove('sel','open'));
+          document.querySelectorAll('#mwHanTree .fu-children').forEach(f => f.classList.remove('open'));
+          document.querySelectorAll('#mwHanTree .fu-row').forEach(f => f.classList.remove('sel'));
+          row.classList.add('sel');
+          mwHanIdx = idx; mwFu = -1;
+          mwTryCalc();
+        });
+      });
+      mwRenderLimitScores();
+    }
+
+    function mwRenderFuScores(hi, fc) {
+      const winnerIdx = mwSortedWinners[mwWinnerStep];
+      if (winnerIdx === undefined) return;
+      const isParent = state.players[winnerIdx].wind === '東';
+      fc.querySelectorAll('.fu-row').forEach(fr => {
+        const fu = +fr.dataset.fu;
+        let base = fu * Math.pow(2, hi + 3);
+        if (base > 2000) base = 2000;
+        const el = fr.querySelector('.fu-score');
+        if (el) el.textContent = roundUp100(base * (isParent ? 6 : 4)).toLocaleString() + '点';
+      });
+    }
+
+    function mwRenderLimitScores() {
+      const winnerIdx = mwSortedWinners[mwWinnerStep];
+      if (winnerIdx === undefined) return;
+      const isParent = state.players[winnerIdx].wind === '東';
+      document.querySelectorAll('#mwHanTree > .han-row').forEach(row => {
+        const def = HAN_DEFS[+row.dataset.idx];
+        if (!def || !def.base) return;
+        const el = row.querySelector('.han-score');
+        if (el) el.textContent = roundUp100(def.base * (isParent ? 6 : 4)).toLocaleString() + '点';
+      });
+    }
+
+    function mwTryCalc() {
+      const result = document.getElementById('mwCalcResult');
+      const winnerIdx = mwSortedWinners[mwWinnerStep];
+      const def = HAN_DEFS[mwHanIdx];
+      if (!def) { result.innerHTML = '<div style="color:rgba(255,255,255,0.4)">飜数を選択してください</div>'; return; }
+      if (def.needsFu && mwFu < 0) { result.innerHTML = '<div style="color:rgba(255,255,255,0.4)">符数を選択してください</div>'; return; }
+      const score = calcMwRonScore(winnerIdx, mwHanIdx, mwFu);
+      mwWinnerData[mwWinnerStep] = { hanIdx: mwHanIdx, fu: mwFu, score };
+      const hanName = def.needsFu ? `${def.han}翻${mwFu}符` : def.name;
+      const baseScore = score - state.honba * 300;
+      let html = `<div class="ag-result-hl">${hanName}　${score.toLocaleString()}点</div>`;
+      if (state.honba > 0) html += `<div style="font-size:11px;color:rgba(255,255,255,0.4)">基本 ${baseScore.toLocaleString()} + 本場 ${(state.honba*300).toLocaleString()}</div>`;
+      result.innerHTML = html;
+    }
+
+    function openMwPickerStep() {
+      const winnerIdx = mwSortedWinners[mwWinnerStep];
+      const p = state.players[winnerIdx];
+      const total = mwSortedWinners.length;
+      document.getElementById('mwWinnerLabel').innerHTML =
+        `<span style="font-size:11px;opacity:0.45;margin-right:6px">${mwWinnerStep+1} / ${total}</span><span style="color:#fbbf24">${p.wind}</span>　${p.name}`;
+      mwHanIdx = mwWinnerData[mwWinnerStep].hanIdx;
+      mwFu     = mwWinnerData[mwWinnerStep].fu;
+      document.querySelectorAll('#mwHanTree .han-row').forEach(r => r.classList.remove('sel','open'));
+      document.querySelectorAll('#mwHanTree .fu-children').forEach(fc => fc.classList.remove('open'));
+      document.querySelectorAll('#mwHanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
+      if (mwHanIdx >= 0) {
+        const row = document.querySelector(`#mwHanTree .han-row[data-idx="${mwHanIdx}"]`);
+        if (row) {
+          row.classList.add('sel');
+          const fc = row.nextElementSibling;
+          if (fc && fc.classList.contains('fu-children')) {
+            row.classList.add('open'); fc.classList.add('open');
+            mwRenderFuScores(mwHanIdx, fc);
+            if (mwFu >= 0) fc.querySelector(`.fu-row[data-fu="${mwFu}"]`)?.classList.add('sel');
+          }
+        }
+      }
+      mwRenderLimitScores();
+      document.getElementById('mwPickerNext').textContent = mwWinnerStep === total - 1 ? '適　用' : '次　へ';
+      mwTryCalc();
+    }
+
+    function applyMwAll() {
+      const riichiPot = state.kyotaku * 1000;
+      let total = 0;
+      mwWinnerData.forEach(d => { total += d.score; });
+      const histLabels = mwSortedWinners.map((idx, wi) => {
+        const d = mwWinnerData[wi];
+        const def = HAN_DEFS[d.hanIdx];
+        return `${state.players[idx].wind}(${def ? (def.needsFu ? `${def.han}翻${d.fu}符` : def.name) : ''})`;
+      });
+      pushHistory(`和了: ${histLabels.join('・')} ← ${state.players[mwLoser].wind}`);
+      mwSortedWinners.forEach((idx, wi) => {
+        state.players[idx].score += mwWinnerData[wi].score + (wi === 0 ? riichiPot : 0);
+        state.players[idx].riichi = false;
+      });
+      state.players[mwLoser].score -= total;
+      state.players[mwLoser].riichi = false;
+      for (let i = 0; i < 4; i++) {
+        if (!mwWinners.has(i) && i !== mwLoser) state.players[i].riichi = false;
+      }
+      state.kyotaku = 0;
+      const eastWon = mwSortedWinners.some(i => state.players[i].wind === '東');
+      let gameEnded = false;
+      if (settingHakoshita && state.players.some(p => p.score < 0)) {
+        gameEnded = true;
+      } else if (eastWon) {
+        state.honba++;
+        if (state.inEnchosen && state.players.some(p => p.score >= settingKijunten)) gameEnded = true;
+      } else {
+        rotateWinds();
+        state.roundNum++;
+        if (state.inEnchosen) {
+          if (state.players.some(p => p.score >= settingKijunten)) {
+            gameEnded = true;
+          } else if (state.roundNum > 4) {
+            state.roundNum = 1;
+            state.roundWind = (state.roundWind + 1) % 4;
+          }
+        } else if (state.roundNum > 4) {
+          const isNormalEnd = state.roundWind === GT_MAX_WIND[settingGameType];
+          if (isNormalEnd && settingEnchosen) {
+            state.inEnchosen = true;
+            state.roundNum = 1;
+            state.roundWind = (state.roundWind + 1) % 4;
+          } else if (isNormalEnd) {
+            state.roundNum = 4;
+            gameEnded = true;
+          } else {
+            state.roundNum = 1;
+            state.roundWind = (state.roundWind + 1) % 4;
+          }
+        }
+        state.honba = 0;
+      }
+      document.getElementById('multiWinModal').style.display = 'none';
+      setBackFabVisible(true);
+      render();
+      if (gameEnded) showGameEnd();
+    }
+
+    function openMultiWinModal() {
+      mwWinners = new Set();
+      mwLoser = -1;
+      for (let i = 0; i < 4; i++) {
+        const pHtml = `<span style="font-size:11px;opacity:0.5;font-weight:600;flex-shrink:0;min-width:14px;text-align:center">${state.players[i].wind}</span><span style="font-size:14px;font-weight:800">${state.players[i].name}</span>`;
+        document.getElementById(`mww-${i}`).innerHTML = pHtml;
+        document.getElementById(`mww-${i}`).classList.remove('sel');
+        document.getElementById(`mwl-${i}`).innerHTML = pHtml;
+        document.getElementById(`mwl-${i}`).classList.remove('sel');
+        document.getElementById(`mwl-${i}`).disabled = false;
+        document.getElementById(`mwl-${i}`).style.opacity = '';
+      }
+      document.getElementById('mwStep1').style.display = 'block';
+      document.getElementById('mwStep2').style.display = 'none';
+      document.getElementById('multiWinModal').style.display = 'flex';
+      setBackFabVisible(false);
+    }
+
+    for (let i = 0; i < 4; i++) {
+      document.getElementById(`mww-${i}`).addEventListener('click', () => {
+        if (mwWinners.has(i)) {
+          mwWinners.delete(i);
+          document.getElementById(`mww-${i}`).classList.remove('sel');
+        } else {
+          mwWinners.add(i);
+          document.getElementById(`mww-${i}`).classList.add('sel');
+        }
+        if (mwWinners.has(mwLoser)) {
+          document.getElementById(`mwl-${mwLoser}`).classList.remove('sel');
+          mwLoser = -1;
+        }
+        for (let j = 0; j < 4; j++) {
+          const isWinner = mwWinners.has(j);
+          document.getElementById(`mwl-${j}`).disabled = isWinner;
+          document.getElementById(`mwl-${j}`).style.opacity = isWinner ? '0.28' : '';
+        }
+      });
+      document.getElementById(`mwl-${i}`).addEventListener('click', () => {
+        if (mwWinners.has(i)) return;
+        mwLoser = (mwLoser === i) ? -1 : i;
+        for (let j = 0; j < 4; j++) {
+          document.getElementById(`mwl-${j}`).classList.toggle('sel', j === mwLoser);
+        }
+      });
+    }
+
+    document.getElementById('mwCancel').addEventListener('click', () => {
+      document.getElementById('multiWinModal').style.display = 'none';
+      setBackFabVisible(true);
+    });
+
+    document.getElementById('mwStep1Next').addEventListener('click', () => {
+      if (mwWinners.size === 0) { alert('和了者を選択してください'); return; }
+      if (mwLoser < 0) { alert('放銃者を選択してください'); return; }
+      mwSortedWinners = [...mwWinners].sort((a,b)=>a-b);
+      mwWinnerStep = 0;
+      mwWinnerData = mwSortedWinners.map(() => ({ hanIdx: -1, fu: -1, score: 0 }));
+      buildMwHanTree();
+      openMwPickerStep();
+      document.getElementById('mwStep1').style.display = 'none';
+      document.getElementById('mwStep2').style.display = 'block';
+    });
+
+    document.getElementById('mwPickerNext').addEventListener('click', () => {
+      const def = HAN_DEFS[mwHanIdx];
+      if (!def) { alert('飜数を選択してください'); return; }
+      if (def.needsFu && mwFu < 0) { alert('符数を選択してください'); return; }
+      const winnerIdx = mwSortedWinners[mwWinnerStep];
+      mwWinnerData[mwWinnerStep] = { hanIdx: mwHanIdx, fu: mwFu, score: calcMwRonScore(winnerIdx, mwHanIdx, mwFu) };
+      if (mwWinnerStep < mwSortedWinners.length - 1) {
+        mwWinnerStep++;
+        openMwPickerStep();
+      } else {
+        applyMwAll();
+      }
+    });
+
+    document.getElementById('mwPickerBack').addEventListener('click', () => {
+      if (mwWinnerStep > 0) {
+        mwWinnerStep--;
+        openMwPickerStep();
+      } else {
+        document.getElementById('mwStep2').style.display = 'none';
+        document.getElementById('mwStep1').style.display = 'block';
+      }
+    });
+
+    // ── チョンボ ──────────────────────────────────
+    let cbPlayer = -1, cbPenaltyType = '', cbHan = -1, cbFu = -1, cbDeltas = null;
+
+    function calcChonboDeltas(playerIdx, base) {
+      const deltas = [0, 0, 0, 0];
+      const isParent = state.players[playerIdx].wind === '東';
+      if (isParent) {
+        for (let i = 0; i < 4; i++) {
+          if (i === playerIdx) continue;
+          const pay = roundUp100(base * 2);
+          deltas[playerIdx] -= pay;
+          deltas[i] += pay;
+        }
+      } else {
+        for (let i = 0; i < 4; i++) {
+          if (i === playerIdx) continue;
+          const pay = state.players[i].wind === '東' ? roundUp100(base * 2) : roundUp100(base);
+          deltas[playerIdx] -= pay;
+          deltas[i] += pay;
+        }
+      }
+      return deltas;
+    }
+
+    function updateCbPreview() {
+      const preview = document.getElementById('cbPreview');
+      const nextBtn = document.getElementById('cbStep1Next');
+      cbDeltas = null;
+      nextBtn.disabled = true;
+      nextBtn.style.opacity = '0.4';
+      if (cbPlayer < 0 || cbPenaltyType === '') {
+        preview.innerHTML = '<div style="color:rgba(255,255,255,0.4)">チョンボ者と罰則を選択してください</div>';
+        return;
+      }
+      let base, penaltyName;
+      if (cbPenaltyType === 'mangan') {
+        base = 2000; penaltyName = '満貫払い';
+      } else if (cbPenaltyType === 'baiman') {
+        base = 4000; penaltyName = '倍満払い';
+      } else {
+        if (cbHan < 0) { preview.innerHTML = '<div style="color:rgba(255,255,255,0.4)">飜数を選択してください</div>'; return; }
+        if (cbFu < 0) { preview.innerHTML = '<div style="color:rgba(255,255,255,0.4)">符数を選択してください</div>'; return; }
+        base = Math.min(cbFu * Math.pow(2, cbHan + 2), 2000);
+        penaltyName = `${cbHan}翻${cbFu}符`;
+      }
+      cbDeltas = calcChonboDeltas(cbPlayer, base);
+      let html = `<div class="ag-result-hl">${penaltyName}</div>`;
+      for (let i = 0; i < 4; i++) {
+        const d = cbDeltas[i];
+        if (d === 0) continue;
+        const after = state.players[i].score + d;
+        const sign = d > 0 ? '+' : '';
+        const col = d > 0 ? '#4ade80' : '#f87171';
+        html += `<div>${state.players[i].wind}: ${state.players[i].score.toLocaleString()} → <b>${after.toLocaleString()}</b> <span style="color:${col}">(${sign}${d.toLocaleString()})</span></div>`;
+      }
+      preview.innerHTML = html;
+      nextBtn.disabled = false;
+      nextBtn.style.opacity = '1';
+    }
+
+    function openChonboModal() {
+      cbPlayer = -1; cbPenaltyType = ''; cbHan = -1; cbFu = -1; cbDeltas = null;
+      for (let i = 0; i < 4; i++) {
+        document.getElementById(`cb-p${i}`).innerHTML = `<span style="font-size:11px;opacity:0.5;font-weight:600;flex-shrink:0;min-width:14px;text-align:center">${state.players[i].wind}</span><span style="font-size:14px;font-weight:800">${state.players[i].name}</span>`;
+        document.getElementById(`cb-p${i}`).classList.remove('sel');
+      }
+      document.getElementById('cbMangan').classList.remove('sel');
+      document.getElementById('cbBaiman').classList.remove('sel');
+      document.getElementById('cbOther').classList.remove('sel');
+      document.getElementById('cbOtherSel').style.display = 'none';
+      document.getElementById('cbFuSec').style.display = 'none';
+      document.getElementById('cbPreview').innerHTML = '<div style="color:rgba(255,255,255,0.4)">チョンボ者と罰則を選択してください</div>';
+      const nextBtn = document.getElementById('cbStep1Next');
+      nextBtn.disabled = true;
+      nextBtn.style.opacity = '0.4';
+      document.getElementById('cbStep1').style.display = 'block';
+      document.getElementById('cbStep2').style.display = 'none';
+      document.getElementById('chonboModal').style.display = 'flex';
+      setBackFabVisible(false);
+    }
+
+    for (let i = 0; i < 4; i++) {
+      document.getElementById(`cb-p${i}`).addEventListener('click', () => {
+        cbPlayer = i;
+        for (let j = 0; j < 4; j++) document.getElementById(`cb-p${j}`).classList.toggle('sel', j === i);
+        updateCbPreview();
+      });
+    }
+
+    document.getElementById('cbMangan').addEventListener('click', () => {
+      cbPenaltyType = 'mangan'; cbHan = -1; cbFu = -1;
+      document.getElementById('cbMangan').classList.add('sel');
+      document.getElementById('cbBaiman').classList.remove('sel');
+      document.getElementById('cbOther').classList.remove('sel');
+      document.getElementById('cbOtherSel').style.display = 'none';
+      updateCbPreview();
+    });
+    document.getElementById('cbBaiman').addEventListener('click', () => {
+      cbPenaltyType = 'baiman'; cbHan = -1; cbFu = -1;
+      document.getElementById('cbBaiman').classList.add('sel');
+      document.getElementById('cbMangan').classList.remove('sel');
+      document.getElementById('cbOther').classList.remove('sel');
+      document.getElementById('cbOtherSel').style.display = 'none';
+      updateCbPreview();
+    });
+    document.getElementById('cbOther').addEventListener('click', () => {
+      cbPenaltyType = 'other'; cbHan = -1; cbFu = -1;
+      document.getElementById('cbOther').classList.add('sel');
+      document.getElementById('cbMangan').classList.remove('sel');
+      document.getElementById('cbBaiman').classList.remove('sel');
+      document.getElementById('cbOtherSel').style.display = 'block';
+      document.querySelectorAll('#cbHanRow [data-han]').forEach(b => b.classList.remove('sel'));
+      document.getElementById('cbFuSec').style.display = 'none';
+      updateCbPreview();
+    });
+
+    document.querySelectorAll('#cbHanRow [data-han]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        cbHan = +btn.dataset.han; cbFu = -1;
+        document.querySelectorAll('#cbHanRow [data-han]').forEach(b => b.classList.remove('sel'));
+        btn.classList.add('sel');
+        const fuOptions = { 1:[30,40,50,60,70,80,90,100,110], 2:[20,25,30,40,50,60,70,80,90,100,110], 3:[20,25,30,40,50,60], 4:[20,25,30] }[cbHan] || [];
+        const fuRow = document.getElementById('cbFuRow');
+        fuRow.innerHTML = '';
+        fuOptions.forEach(fu => {
+          const b = document.createElement('button');
+          b.className = 'wtype';
+          b.dataset.fu = fu;
+          b.textContent = fu + '符';
+          b.style.cssText = 'flex:0 0 auto;padding:7px 10px;font-size:12px';
+          b.addEventListener('click', () => {
+            cbFu = fu;
+            fuRow.querySelectorAll('[data-fu]').forEach(fb => fb.classList.remove('sel'));
+            b.classList.add('sel');
+            updateCbPreview();
+          });
+          fuRow.appendChild(b);
+        });
+        document.getElementById('cbFuSec').style.display = 'block';
+        updateCbPreview();
+      });
+    });
+
+    document.getElementById('cbCancel').addEventListener('click', () => {
+      document.getElementById('chonboModal').style.display = 'none';
+      setBackFabVisible(true);
+    });
+    document.getElementById('cbStep1Next').addEventListener('click', () => {
+      if (!cbDeltas) return;
+      document.getElementById('cbFinalPreview').innerHTML = document.getElementById('cbPreview').innerHTML;
+      document.getElementById('cbStep1').style.display = 'none';
+      document.getElementById('cbStep2').style.display = 'block';
+    });
+    document.getElementById('cbBack').addEventListener('click', () => {
+      document.getElementById('cbStep2').style.display = 'none';
+      document.getElementById('cbStep1').style.display = 'block';
+    });
+
+    function applyChonbo(kyokuAction) {
+      if (!cbDeltas) return;
+      const penaltyName = cbPenaltyType === 'mangan' ? '満貫払い' : cbPenaltyType === 'baiman' ? '倍満払い' : `${cbHan}翻${cbFu}符`;
+      pushHistory(`チョンボ: ${state.players[cbPlayer].wind}(${state.players[cbPlayer].name}) ${penaltyName}`);
+      for (let i = 0; i < 4; i++) {
+        state.players[i].score += cbDeltas[i];
+        state.players[i].riichi = false;
+      }
+      let gameEnded = false;
+      if (settingHakoshita && state.players.some(p => p.score < 0)) {
+        gameEnded = true;
+      } else if (kyokuAction === 'ryuu') {
+        state.honba++;
+        rotateWinds();
+        state.roundNum++;
+        if (state.inEnchosen) {
+          if (state.players.some(p => p.score >= settingKijunten)) {
+            gameEnded = true;
+          } else if (state.roundNum > 4) {
+            state.roundNum = 1;
+            state.roundWind = (state.roundWind + 1) % 4;
+          }
+        } else if (state.roundNum > 4) {
+          const isNormalEnd = state.roundWind === GT_MAX_WIND[settingGameType];
+          if (isNormalEnd && settingEnchosen) {
+            state.inEnchosen = true;
+            state.roundNum = 1;
+            state.roundWind = (state.roundWind + 1) % 4;
+          } else if (isNormalEnd) {
+            state.roundNum = 4;
+            gameEnded = true;
+          } else {
+            state.roundNum = 1;
+            state.roundWind = (state.roundWind + 1) % 4;
+          }
+        }
+      } else if (kyokuAction === 'yariyari') {
+        state.honba++;
+      }
+      document.getElementById('chonboModal').style.display = 'none';
+      setBackFabVisible(true);
+      render();
+      if (gameEnded) showGameEnd();
+    }
+
+    document.getElementById('cbKyokuContinue').addEventListener('click', () => applyChonbo('continue'));
+    document.getElementById('cbKyokuRyuu').addEventListener('click', () => applyChonbo('ryuu'));
+    document.getElementById('cbKyokuYariyari').addEventListener('click', () => applyChonbo('yariyari'));
 
     // ── mahjong player name autocomplete ──────────
     function getStartNames(excludeIdx) {
