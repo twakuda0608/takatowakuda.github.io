@@ -560,3 +560,27 @@ input[type="checkbox"]{ width:auto; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* =========================
+   テーブルタブ — full-screen overlay
+========================= */
+#t0.tab.active {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+}
+#t0 iframe {
+  flex: 1;
+  width: 100%;
+  border: none;
+  display: block;
+  min-height: 0;
+}
+body.table-tab-active {
+  overflow: hidden;
+}
+body.table-tab-active .back-fab {
+  display: none;
+}

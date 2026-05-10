@@ -34,14 +34,82 @@ let myName = '';
 let playerHistory = [];
 
 
-// ====== Tab switching ======
+// ====== Tab switching + テーブルタブ ======
+let tableIframe = null;
+
+function getSharedPlayerNames() {
+  return [
+    el('sn1_1').value || '',
+    el('sn2_1').value || '',
+    el('sn3_1').value || '',
+    el('sn4_1').value || '',
+  ];
+}
+
+function sendToTable(msg) {
+  if (tableIframe && tableIframe.contentWindow) {
+    tableIframe.contentWindow.postMessage(msg, location.origin);
+  }
+}
+
+function activateTab(tabId) {
+  document.querySelectorAll('.tabbtn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const btn = document.querySelector(`[data-tab="${tabId}"]`);
+  if (btn) btn.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+
+  if (tabId === 't0') {
+    document.body.classList.add('table-tab-active');
+    if (!tableIframe) {
+      tableIframe = document.createElement('iframe');
+      tableIframe.src = '/mahjong-table/?embedded=1';
+      tableIframe.style.cssText = 'width:100%;height:100%;border:none;display:block';
+      document.getElementById('t0').appendChild(tableIframe);
+    } else {
+      sendToTable({ type: 'update_players', names: getSharedPlayerNames() });
+    }
+  } else {
+    document.body.classList.remove('table-tab-active');
+  }
+}
+
 document.querySelectorAll('.tabbtn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tabbtn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.tab).classList.add('active');
-  });
+  btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+});
+
+if (location.hash === '#table') activateTab('t0');
+
+window.addEventListener('message', (e) => {
+  if (e.origin !== location.origin) return;
+  const msg = e.data;
+  if (!msg || typeof msg !== 'object') return;
+
+  if (msg.type === 'table_ready') {
+    sendToTable({ type: 'init_players', names: getSharedPlayerNames() });
+    return;
+  }
+
+  if (msg.type === 'return_to_seisan') {
+    activateTab('t1');
+    return;
+  }
+
+  if (msg.type === 'game_end') {
+    const players = msg.players;
+    if (!Array.isArray(players) || players.length !== 4) return;
+    el('s2_1').value = Math.round(players[1].score / 100);
+    el('s3_1').value = Math.round(players[2].score / 100);
+    el('s4_1').value = Math.round(players[3].score / 100);
+    [1, 2, 3, 4].forEach((rank, i) => {
+      const inp = el(`sn${rank}_1`);
+      if (inp) inp.value = players[i].name;
+    });
+    computeTab1();
+    const banner = el('import-banner');
+    if (banner) banner.style.display = 'flex';
+    activateTab('t1');
+  }
 });
 
 // ====== Tab 1: ウマ/オカ精算 ======
