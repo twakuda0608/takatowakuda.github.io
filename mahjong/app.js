@@ -32,6 +32,7 @@ let sessions = [];
 let activeSession = null;
 let myName = '';
 let playerHistory = [];
+let pendingTableGame = null;
 
 
 // ====== Tab switching + テーブルタブ ======
@@ -98,6 +99,7 @@ window.addEventListener('message', (e) => {
   if (msg.type === 'game_end') {
     const players = msg.players;
     if (!Array.isArray(players) || players.length !== 4) return;
+    pendingTableGame = msg.tableGame || null;
     el('s2_1').value = Math.round(players[1].score / 100);
     el('s3_1').value = Math.round(players[2].score / 100);
     el('s4_1').value = Math.round(players[3].score / 100);
@@ -367,6 +369,7 @@ el('record-btn').addEventListener('click', async () => {
   }));
 
   const matchRecord = { recordedAt: new Date().toISOString(), players: playerRecords };
+  if (pendingTableGame) matchRecord.tableGame = pendingTableGame;
 
   const btn = el('record-btn');
   const msg = el('record-success');
@@ -380,6 +383,7 @@ el('record-btn').addEventListener('click', async () => {
     );
     updateHistoryWithNames(names);
     await savePlayerHistory();
+    pendingTableGame = null;
     msg.textContent = '記録しました！';
     msg.className = 'record-msg success';
     setTimeout(() => { msg.textContent = ''; msg.className = 'record-msg'; }, 3000);
@@ -971,6 +975,7 @@ function applyTableImport() {
       if (inp && inp.tagName === 'INPUT') inp.value = sorted[i].name;
     });
 
+    pendingTableGame = data.tableGame || null;
     computeTab1();
 
     const banner = el('import-banner');
