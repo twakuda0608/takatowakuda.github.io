@@ -2364,10 +2364,6 @@
         sgmHakuPlayer = -1;
         sgmPickStep = 0;
         sgmTileData = ['東','南','西','北','白'].map(w => ({ wind:w, el:null, picked:false, aside:false }));
-        for (let i = 4; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [sgmTileData[i], sgmTileData[j]] = [sgmTileData[j], sgmTileData[i]];
-        }
         const overlay = document.getElementById('sekigimeOverlay');
         overlay.style.display = 'flex';
         document.getElementById('sgmOkBtn').classList.remove('vis');
@@ -2376,8 +2372,14 @@
         resultList.className = 'sgm-result-list';
         resultList.innerHTML = '';
         buildTiles();
-        document.getElementById('sgmInstr').textContent = 'シャッフル中...';
-        runShuffle(() => promptPicker());
+        document.getElementById('sgmInstr').textContent = '';
+        // Phase 1: show face-up for 700ms, then flip all face-down
+        setTimeout(() => {
+          document.getElementById('sgmInstr').textContent = '';
+          sgmTileData.forEach(t => t.el.classList.remove('flipped'));
+          // Phase 2: wait for flip animation, then shuffle
+          setTimeout(() => runShuffle(() => promptPicker()), 550);
+        }, 700);
       }
 
       function buildTiles() {
@@ -2385,7 +2387,7 @@
         container.innerHTML = '';
         sgmTileData.forEach(t => {
           const tile = document.createElement('div');
-          tile.className = 'sgm-tile';
+          tile.className = 'sgm-tile flipped';
           tile.innerHTML = `<div class="sgm-tile-inner"><div class="sgm-tile-back"></div><div class="sgm-tile-front${t.wind === '白' ? ' haku' : ''}"><span>${t.wind}</span><div class="tile-owner"></div></div></div>`;
           t.el = tile;
           container.appendChild(tile);
@@ -2394,18 +2396,54 @@
 
       function runShuffle(onDone) {
         const container = document.getElementById('sgmTiles');
-        const total = 14 + Math.floor(Math.random() * 8);
+        const total = 10 + Math.floor(Math.random() * 6);
+        const ANI = 220;
         let count = 0;
+        let busy = false;
+
         sgmShuffleTimer = setInterval(() => {
+          if (busy) return;
+          busy = true;
+
           const a = Math.floor(Math.random() * 5);
           let b; do { b = Math.floor(Math.random() * 5); } while (b === a);
+
+          // FLIP — record positions before reorder
+          const rA = sgmTileData[a].el.getBoundingClientRect();
+          const rB = sgmTileData[b].el.getBoundingClientRect();
+
+          // Swap data + reorder DOM
           [sgmTileData[a], sgmTileData[b]] = [sgmTileData[b], sgmTileData[a]];
           sgmTileData.forEach(t => container.appendChild(t.el));
+
+          // FLIP — read new positions (forces reflow)
+          const nA = sgmTileData[a].el.getBoundingClientRect();
+          const nB = sgmTileData[b].el.getBoundingClientRect();
+
+          // FLIP — apply inverse offset instantly
+          sgmTileData[a].el.style.transition = 'none';
+          sgmTileData[a].el.style.transform = `translateX(${rB.left - nA.left}px)`;
+          sgmTileData[b].el.style.transition = 'none';
+          sgmTileData[b].el.style.transform = `translateX(${rA.left - nB.left}px)`;
+
+          void sgmTileData[a].el.offsetWidth; // force reflow before enabling transition
+
+          // FLIP — animate to final position
+          sgmTileData[a].el.style.transition = `transform ${ANI}ms ease-in-out`;
+          sgmTileData[a].el.style.transform = '';
+          sgmTileData[b].el.style.transition = `transform ${ANI}ms ease-in-out`;
+          sgmTileData[b].el.style.transform = '';
+
+          setTimeout(() => { busy = false; }, ANI);
+
           if (++count >= total) {
             clearInterval(sgmShuffleTimer); sgmShuffleTimer = null;
-            setTimeout(onDone, 180);
+            setTimeout(() => {
+              sgmTileData.forEach(t => { t.el.style.transition = ''; t.el.style.transform = ''; });
+              onDone();
+            }, ANI + 100);
           }
-        }, 75);
+        }, 300);
       }
 
       function promptPicker() {
