@@ -135,10 +135,10 @@ input[readonly]{
 .sp-br { display: none; }
 
 @media (max-width: 460px) {
-  .page-card { padding: 16px; }
-  .tabbtn { font-size: 13px; padding: 7px 10px; }
+  .page-card { padding: 12px; }
+  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; }
+  .tabbtn { font-size: 10px; padding: 7px 2px; white-space: nowrap; text-align: center; box-sizing: border-box; width: 100%; }
   .score-row .score-num { width: 70px; }
-  .sp-br { display: inline; }
   .sumline { font-size: 13px; }
 }
 
