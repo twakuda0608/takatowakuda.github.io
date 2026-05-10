@@ -1065,6 +1065,11 @@
   </style>
 </head>
 <body>
+<script>
+  if (!new URLSearchParams(location.search).get('embedded')) {
+    window.location.replace('/mahjong/');
+  }
+</script>
 <!-- DEV BANNER — remove this element and the matching style block in <head> when ready -->
 <div id="dev-banner">🚧 開発中 — 一部の機能は正常に機能しない場合があります。</div>
 <!-- END DEV BANNER -->
@@ -1127,6 +1132,7 @@
         </div>
 
         <button class="start-game-btn" id="startGameBtn">対 局 開 始</button>
+        <button id="returnToSeisanBtn" style="display:none;width:100%;margin-top:10px;padding:12px;background:none;border:1px solid rgba(255,255,255,0.18);border-radius:14px;color:rgba(255,255,255,0.45);font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;font-family:inherit;">← 精 算 に 戻 る</button>
       </div>
 
       <!-- 設定タブ -->
@@ -1666,6 +1672,12 @@
 
   <script src="/common.js"></script>
   <script>
+    const isEmbedded = new URLSearchParams(location.search).get('embedded') === '1';
+    if (isEmbedded) {
+      const banner = document.getElementById('dev-banner');
+      if (banner) banner.style.display = 'none';
+    }
+
     const WINDS = ['東', '南', '西', '北'];
     const ROUND_WINDS = ['東', '南', '西', '北'];
 
@@ -2524,12 +2536,20 @@
     });
 
     document.getElementById('gameEndRecord').addEventListener('click', () => {
-      const importData = {
-        players: state.players.map(p => ({ name: p.name, score: p.score })),
-        timestamp: new Date().toISOString()
-      };
-      localStorage.setItem('mahjong_table_import', JSON.stringify(importData));
-      window.location.href = '/mahjong/';
+      if (isEmbedded) {
+        const sorted = state.players.slice().sort((a, b) => b.score - a.score);
+        window.parent.postMessage({
+          type: 'game_end',
+          players: sorted.map(p => ({ name: p.name, score: p.score }))
+        }, '*');
+      } else {
+        const importData = {
+          players: state.players.map(p => ({ name: p.name, score: p.score })),
+          timestamp: new Date().toISOString()
+        };
+        localStorage.setItem('mahjong_table_import', JSON.stringify(importData));
+        window.location.href = '/mahjong/';
+      }
     });
 
     // ── 終局選択 ──────────────────────────────────
@@ -3174,6 +3194,28 @@
       setBackFabVisible(true);
       render();
     });
+
+    // ── Embedded mode: postMessage bridge ─────────────────────
+    if (isEmbedded) {
+      document.getElementById('returnToSeisanBtn').style.display = '';
+      document.getElementById('returnToSeisanBtn').addEventListener('click', () => {
+        window.parent.postMessage({ type: 'return_to_seisan' }, '*');
+      });
+
+      window.addEventListener('message', (e) => {
+        if (!e.data || typeof e.data !== 'object') return;
+        if (e.data.type !== 'init_players' && e.data.type !== 'update_players') return;
+        const names = e.data.names;
+        if (!Array.isArray(names) || names.length !== 4) return;
+        const ss = document.getElementById('startScreen');
+        if (!ss || ss.style.display === 'none') return;
+        for (let i = 0; i < 4; i++) {
+          const inp = document.getElementById(`sn${i}`);
+          if (inp && names[i]) inp.value = names[i];
+        }
+      });
+      window.parent.postMessage({ type: 'table_ready' }, '*');
+    }
   </script>
 </body>
 </html>
