@@ -858,7 +858,44 @@
     .wind-sel-btn.wind-settle {
       animation: windSettle 0.4s ease 3;
     }
-    .start-actions { display: flex; justify-content: flex-end; margin-top: 14px; margin-bottom: 12px; }
+    .start-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; margin-bottom: 12px; }
+    /* 席ぎめ */
+    #sekigimeOverlay { position:fixed; inset:0; background:rgba(8,24,14,0.97); z-index:900; flex-direction:column; align-items:center; justify-content:center; padding:28px 20px; gap:0; }
+    .sgm-title { font-size:22px; font-weight:900; color:#fff; letter-spacing:4px; margin-bottom:6px; }
+    .sgm-instr { font-size:13px; color:rgba(255,255,255,0.68); letter-spacing:0.5px; margin-bottom:28px; min-height:18px; text-align:center; line-height:1.5; }
+    .sgm-tiles { display:flex; gap:10px; justify-content:center; margin-bottom:28px; }
+    .sgm-tile { width:52px; height:76px; perspective:500px; flex-shrink:0; touch-action:manipulation; }
+    .sgm-tile.pickable { cursor:pointer; }
+    .sgm-tile.pickable:hover .sgm-tile-inner { transform:translateY(-7px) scale(1.06); }
+    .sgm-tile-inner { width:100%; height:100%; position:relative; transform-style:preserve-3d; transition:transform 0.45s cubic-bezier(0.34,1.56,0.64,1); border-radius:8px; }
+    .sgm-tile.flipped .sgm-tile-inner { transform:rotateY(180deg); }
+    .sgm-tile-back, .sgm-tile-front { position:absolute; inset:0; border-radius:8px; backface-visibility:hidden; display:flex; align-items:center; justify-content:center; }
+    .sgm-tile-back { background:linear-gradient(150deg,#1e7a3a,#0f4a22); border:2px solid rgba(255,255,255,0.2); box-shadow:0 4px 14px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.12); }
+    .sgm-tile-back::after { content:''; display:block; width:36px; height:50px; border:1.5px solid rgba(255,255,255,0.18); border-radius:4px; }
+    .sgm-tile-front { background:linear-gradient(160deg,#faf5eb,#ede0c8); transform:rotateY(180deg); border:1.5px solid rgba(0,0,0,0.12); box-shadow:0 4px 14px rgba(0,0,0,0.45); font-size:26px; font-weight:900; color:#1a1a1a; }
+    .sgm-tile-front.haku { color:#2d7a4a; }
+    .sgm-tile.aside { opacity:0.25; pointer-events:none; }
+    .sgm-result-list { display:flex; flex-direction:column; gap:7px; width:100%; max-width:260px; min-height:116px; margin-bottom:18px; }
+    .sgm-result-row { display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.07); border-radius:10px; padding:10px 16px; animation:sgmRowIn 0.3s ease; }
+    @keyframes sgmRowIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+    .sgm-seat-layout { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; width:100%; max-width:280px; margin-bottom:18px; }
+    .sgm-seat { background:rgba(255,255,255,0.08); border-radius:12px; padding:8px 6px; text-align:center; height:84px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; overflow:hidden; }
+    .sgm-seat.top    { grid-column:2; grid-row:1; }
+    .sgm-seat.left   { grid-column:1; grid-row:2; }
+    .sgm-seat.right  { grid-column:3; grid-row:2; }
+    .sgm-seat.bottom { grid-column:2; grid-row:3; background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.25); }
+    .sgm-seat-label { font-size:10px; color:rgba(255,255,255,0.4); letter-spacing:1px; }
+    .sgm-seat-name { font-size:12px; color:rgba(255,255,255,0.82); font-weight:700; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 4px; }
+    .sgm-result-name { font-size:13px; color:rgba(255,255,255,0.82); font-weight:700; }
+    .sgm-result-wind { font-size:18px; font-weight:900; }
+    .sgm-result-wind.east  { color:#fbbf24; }
+    .sgm-result-wind.south { color:#34d399; }
+    .sgm-result-wind.west  { color:#60a5fa; }
+    .sgm-result-wind.north { color:#f472b6; }
+    .sgm-result-wind.haku-w { font-size:12px; color:rgba(255,255,255,0.38); font-weight:600; }
+    .sgm-apply-btn { display:none; width:100%; max-width:260px; padding:14px; background:#15803d; border:none; border-radius:14px; color:#fff; font-size:15px; font-weight:800; letter-spacing:2px; cursor:pointer; font-family:inherit; margin-bottom:10px; }
+    .sgm-apply-btn.vis { display:block; }
+    .sgm-cancel-btn { background:none; border:none; color:rgba(255,255,255,0.3); font-size:12px; cursor:pointer; font-family:inherit; letter-spacing:1px; padding:8px; }
     .random-btn {
       background: rgba(255,255,255,0.07);
       border: 1.5px solid rgba(255,255,255,0.16);
@@ -1186,6 +1223,7 @@
         </div>
 
         <div class="start-actions">
+          <button class="random-btn" id="sekigimeBtn">🀅 席ぎめ</button>
           <button class="random-btn" id="randomWindBtn">🎲 ランダム</button>
         </div>
 
@@ -2022,6 +2060,16 @@
     }
   </script>
 
+  <!-- 席ぎめオーバーレイ -->
+  <div id="sekigimeOverlay" style="display:none">
+    <div class="sgm-title">席 ぎ め</div>
+    <div class="sgm-instr" id="sgmInstr">シャッフル中...</div>
+    <div class="sgm-tiles" id="sgmTiles"></div>
+    <div class="sgm-result-list" id="sgmResultList"></div>
+    <button class="sgm-apply-btn" id="sgmOkBtn">OK</button>
+    <button class="sgm-cancel-btn" id="sgmCancelBtn">キャンセル</button>
+  </div>
+
   <script src="/common.js"></script>
   <script>
     const isEmbedded = new URLSearchParams(location.search).get('embedded') === '1';
@@ -2276,6 +2324,181 @@
 
       randomTimeouts = [500, 800, 1100, 1400].map((delay, pi) => setTimeout(() => lockPlayer(pi), delay));
     });
+
+    // ── 席ぎめ ────────────────────────────────────────────────────────────
+    (function() {
+      const WIND_CLASS = { '東':'east', '南':'south', '西':'west', '北':'north' };
+      let sgmTileData = [];
+      let sgmPickSeq = [1, 2, 3, 0]; // P2→P3→P4→P1
+      let sgmPickStep = 0;
+      let sgmAssigned = {};
+      let sgmShuffleTimer = null;
+
+      function playerName(idx) {
+        const v = document.getElementById(`sn${idx}`).value.trim();
+        return v || `P${idx + 1}`;
+      }
+
+      // Single delegated handler — no per-tile listeners that accumulate across turns
+      document.getElementById('sgmTiles').addEventListener('click', e => {
+        const tileEl = e.target.closest('.sgm-tile');
+        if (!tileEl || !tileEl.classList.contains('pickable')) return;
+        const t = sgmTileData.find(td => td.el === tileEl);
+        if (!t) return;
+        onPick(t, sgmPickSeq[sgmPickStep]);
+      });
+
+      document.getElementById('sekigimeBtn').addEventListener('click', openSekigime);
+      document.getElementById('sgmCancelBtn').addEventListener('click', closeSekigime);
+
+      function closeSekigime() {
+        if (sgmShuffleTimer) { clearInterval(sgmShuffleTimer); sgmShuffleTimer = null; }
+        document.getElementById('sekigimeOverlay').style.display = 'none';
+      }
+
+      function openSekigime() {
+        sgmAssigned = {};
+        sgmPickStep = 0;
+        sgmTileData = ['東','南','西','北','白'].map(w => ({ wind:w, el:null, picked:false, aside:false }));
+        for (let i = 4; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [sgmTileData[i], sgmTileData[j]] = [sgmTileData[j], sgmTileData[i]];
+        }
+        const overlay = document.getElementById('sekigimeOverlay');
+        overlay.style.display = 'flex';
+        document.getElementById('sgmOkBtn').classList.remove('vis');
+        document.getElementById('sgmResultList').innerHTML = '';
+        buildTiles();
+        document.getElementById('sgmInstr').textContent = 'シャッフル中...';
+        runShuffle(() => promptPicker());
+      }
+
+      function buildTiles() {
+        const container = document.getElementById('sgmTiles');
+        container.innerHTML = '';
+        sgmTileData.forEach(t => {
+          const tile = document.createElement('div');
+          tile.className = 'sgm-tile';
+          tile.innerHTML = `<div class="sgm-tile-inner"><div class="sgm-tile-back"></div><div class="sgm-tile-front${t.wind === '白' ? ' haku' : ''}">${t.wind}</div></div>`;
+          t.el = tile;
+          container.appendChild(tile);
+        });
+      }
+
+      function runShuffle(onDone) {
+        const container = document.getElementById('sgmTiles');
+        const total = 14 + Math.floor(Math.random() * 8);
+        let count = 0;
+        sgmShuffleTimer = setInterval(() => {
+          const a = Math.floor(Math.random() * 5);
+          let b; do { b = Math.floor(Math.random() * 5); } while (b === a);
+          [sgmTileData[a], sgmTileData[b]] = [sgmTileData[b], sgmTileData[a]];
+          sgmTileData.forEach(t => container.appendChild(t.el));
+          if (++count >= total) {
+            clearInterval(sgmShuffleTimer); sgmShuffleTimer = null;
+            setTimeout(onDone, 180);
+          }
+        }, 75);
+      }
+
+      function promptPicker() {
+        if (sgmPickStep >= sgmPickSeq.length) { showFinal(); return; }
+        const pIdx = sgmPickSeq[sgmPickStep];
+        const isLast = sgmPickStep === sgmPickSeq.length - 1;
+
+        if (isLast) {
+          const remaining = sgmTileData.filter(t => !t.picked);
+          const winner = remaining.find(t => t.wind !== '白') || remaining[0];
+          if (winner) {
+            winner.picked = true;
+            winner.el.classList.add('flipped');
+            if (winner.wind !== '白') sgmAssigned[pIdx] = winner.wind;
+            setTimeout(() => { addResultRow(pIdx, winner.wind); sgmPickStep++; setTimeout(showFinal, 400); }, 300);
+          } else {
+            showFinal();
+          }
+          return;
+        }
+
+        document.getElementById('sgmInstr').textContent = `${playerName(pIdx)}さん、牌を選んでください`;
+        sgmTileData.forEach(t => {
+          if (!t.picked && !t.aside) t.el.classList.add('pickable');
+        });
+      }
+
+      function onPick(t, pIdx) {
+        // Immediately remove pickable from all tiles so the delegated handler ignores further clicks
+        sgmTileData.forEach(t2 => t2.el.classList.remove('pickable'));
+        t.picked = true;
+        t.el.classList.add('flipped');
+
+        setTimeout(() => {
+          if (t.wind === '白') {
+            t.aside = true;
+            t.el.classList.add('aside');
+            document.getElementById('sgmInstr').textContent = `${playerName(pIdx)}さんは白です。もう一度選んでください`;
+            setTimeout(() => {
+              document.getElementById('sgmInstr').textContent = `${playerName(pIdx)}さん、もう一度選んでください`;
+              sgmTileData.forEach(t2 => {
+                if (!t2.picked && !t2.aside) t2.el.classList.add('pickable');
+              });
+            }, 1400);
+          } else {
+            sgmAssigned[pIdx] = t.wind;
+            addResultRow(pIdx, t.wind);
+            sgmPickStep++;
+            setTimeout(promptPicker, 350);
+          }
+        }, 480);
+      }
+
+      function addResultRow(pIdx, wind) {
+        const list = document.getElementById('sgmResultList');
+        const row = document.createElement('div');
+        row.className = 'sgm-result-row';
+        const isHaku = wind === '白';
+        const cls = isHaku ? 'haku-w' : (WIND_CLASS[wind] || '');
+        const label = isHaku ? '白（席固定）' : wind;
+        row.innerHTML = `<span class="sgm-result-name">${playerName(pIdx)}</span><span class="sgm-result-wind ${cls}">${label}</span>`;
+        list.appendChild(row);
+      }
+
+      function makeSeat({ wind, pIdx }, pos) {
+        const div = document.createElement('div');
+        div.className = `sgm-seat ${pos}`;
+        const posLabel = { top:'上家', right:'下家', bottom:'自分', left:'対面' };
+        div.innerHTML = `<div class="sgm-seat-label">${posLabel[pos]}</div><div class="sgm-seat-name">${playerName(pIdx)}</div><div class="sgm-result-wind ${WIND_CLASS[wind] || ''}">${wind}</div>`;
+        return div;
+      }
+
+      document.getElementById('sgmOkBtn').addEventListener('click', closeSekigime);
+
+      function showFinal() {
+        for (const [idx, wind] of Object.entries(sgmAssigned)) playerWinds[+idx] = wind;
+        renderStartWindBtns();
+        document.getElementById('sgmInstr').textContent = '席が決まりました！';
+
+        const W = ['東','南','西','北'];
+        const base = W.indexOf(sgmAssigned[0]);
+        const seats = [0, 1, 2, 3].map(offset => ({
+          wind: W[(base + offset) % 4],
+          pIdx: +Object.keys(sgmAssigned).find(k => sgmAssigned[k] === W[(base + offset) % 4])
+        }));
+
+        const container = document.getElementById('sgmResultList');
+        container.innerHTML = '';
+        container.className = 'sgm-seat-layout';
+
+        container.append(
+          makeSeat(seats[2], 'top'),
+          makeSeat(seats[3], 'left'),
+          makeSeat(seats[1], 'right'),
+          makeSeat(seats[0], 'bottom')
+        );
+
+        document.getElementById('sgmOkBtn').classList.add('vis');
+      }
+    })();
 
     document.querySelectorAll('.start-tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -3720,5 +3943,6 @@
       window.parent.postMessage({ type: 'table_ready' }, '*');
     }
   </script>
+
 </body>
 </html>
