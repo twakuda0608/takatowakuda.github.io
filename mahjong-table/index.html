@@ -2113,7 +2113,7 @@
         document.getElementById(`fs${i}`).classList.toggle('on', p.riichi);
         document.getElementById(`pn${i}`).textContent = p.name;
         const km = document.getElementById(`km${i}`);
-        if (i === 0) {
+        if (p.wind === '東') {
           km.textContent = ROUND_WINDS[state.roundWind];
           km.classList.add('visible');
         } else {
@@ -2273,10 +2273,19 @@
     });
 
     document.getElementById('startGameBtn').addEventListener('click', () => {
+      // Collect setup entries; P1 (index 0) always sits at bottom
+      const setup = [];
       for (let i = 0; i < 4; i++) {
         const v = document.getElementById(`sn${i}`).value.trim();
-        state.players[i].name = v || `P${i + 1}`;
-        state.players[i].wind = playerWinds[i];
+        setup.push({ name: v || `P${i + 1}`, wind: playerWinds[i] });
+      }
+      // Seats: bottom=P1, then right/top/left follow 東→南→西→北 counterclockwise
+      const p1WindIdx = WINDS.indexOf(setup[0].wind);
+      for (let pos = 0; pos < 4; pos++) {
+        const neededWind = WINDS[(p1WindIdx + pos) % 4];
+        const player = pos === 0 ? setup[0] : setup.find(p => p.wind === neededWind);
+        state.players[pos].name = player.name;
+        state.players[pos].wind = player.wind;
       }
       tableRoundLog = [];
       riichiCounts = [0, 0, 0, 0];
