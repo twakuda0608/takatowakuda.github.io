@@ -843,6 +843,21 @@
       color: #fff;
       box-shadow: 0 0 8px rgba(249,115,22,0.5);
     }
+    @keyframes windLock {
+      0%   { transform:scale(1.3); background:#fff; color:#f97316; border-color:#fff; box-shadow:0 0 18px rgba(249,115,22,1); }
+      65%  { transform:scale(0.92); }
+      100% { transform:scale(1); }
+    }
+    .wind-sel-btn.wind-lock {
+      animation: windLock 0.22s ease forwards;
+    }
+    @keyframes windSettle {
+      0%,100% { background:#f97316; border-color:#f97316; color:#fff; box-shadow:0 0 14px rgba(249,115,22,0.9); }
+      50%     { background:#fff3ec; border-color:#f97316; color:#f97316; box-shadow:0 0 22px rgba(249,115,22,1); }
+    }
+    .wind-sel-btn.wind-settle {
+      animation: windSettle 0.4s ease 3;
+    }
     .start-actions { display: flex; justify-content: flex-end; margin-top: 14px; margin-bottom: 12px; }
     .random-btn {
       background: rgba(255,255,255,0.07);
@@ -2184,11 +2199,66 @@
     });
 
     document.getElementById('randomWindBtn').addEventListener('click', () => {
+      const btn = document.getElementById('randomWindBtn');
+      if (btn.disabled) return;
+      btn.disabled = true;
+
+      // Compute final result upfront
+      const finalWinds = ['東','南','西','北'];
       for (let i = 3; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [playerWinds[i], playerWinds[j]] = [playerWinds[j], playerWinds[i]];
+        [finalWinds[i], finalWinds[j]] = [finalWinds[j], finalWinds[i]];
       }
+
+      const WINDS = ['東','南','西','北'];
+      const locked = [false, false, false, false];
+      let tick = 0;
+      let locksCompleted = 0;
+
+      // All players start at 東 and spin in sync
+      for (let i = 0; i < 4; i++) playerWinds[i] = '東';
       renderStartWindBtns();
+
+      const spinInterval = setInterval(() => {
+        tick++;
+        for (let i = 0; i < 4; i++) {
+          if (!locked[i]) playerWinds[i] = WINDS[tick % 4];
+        }
+        renderStartWindBtns();
+      }, 100);
+
+      // Lock players one by one: P1 → P2 → P3 → P4
+      function lockPlayer(pi) {
+        locked[pi] = true;
+        playerWinds[pi] = finalWinds[pi];
+        if (locked.every(Boolean)) clearInterval(spinInterval);
+        renderStartWindBtns();
+
+        const selBtn = document.querySelector(`#wb${pi} .wind-sel-btn.selected`);
+        if (selBtn) {
+          selBtn.classList.add('wind-lock');
+          selBtn.addEventListener('animationend', () => {
+            selBtn.classList.remove('wind-lock');
+            if (++locksCompleted === 4) startSettle();
+          }, { once: true });
+        } else {
+          if (++locksCompleted === 4) startSettle();
+        }
+      }
+
+      function startSettle() {
+        const settleBtns = [...document.querySelectorAll('.wind-sel-btn.selected')];
+        let settled = 0;
+        settleBtns.forEach(b => {
+          b.classList.add('wind-settle');
+          b.addEventListener('animationend', () => {
+            b.classList.remove('wind-settle');
+            if (++settled === settleBtns.length) btn.disabled = false;
+          }, { once: true });
+        });
+      }
+
+      [500, 800, 1100, 1400].forEach((delay, pi) => setTimeout(() => lockPlayer(pi), delay));
     });
 
     document.querySelectorAll('.start-tab-btn').forEach(btn => {
