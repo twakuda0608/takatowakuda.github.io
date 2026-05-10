@@ -1062,6 +1062,47 @@
       line-height: 1;
     }
     .se-auto-btn:active { background: rgba(21,128,61,0.4); }
+
+    /* ── 戦績タブ ──────────────────────────────────── */
+    .rec-login-wall { display:flex; flex-direction:column; align-items:center; gap:14px; padding:80px 0; color:rgba(255,255,255,0.28); font-size:13px; font-weight:600; letter-spacing:1px; }
+    .rec-login-btn { padding:11px 28px; background:#15803d; border:none; border-radius:10px; color:#fff; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; letter-spacing:1px; }
+    .rec-user-bar { display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.08); }
+    .rec-avatar { width:28px; height:28px; border-radius:50%; }
+    .rec-username { flex:1; font-size:13px; color:rgba(255,255,255,0.55); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .rec-logout-btn { padding:5px 10px; background:none; border:1px solid rgba(255,255,255,0.2); border-radius:6px; color:rgba(255,255,255,0.45); font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; }
+    .rec-session-card { background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; margin-bottom:10px; overflow:hidden; }
+    .rec-session-header { padding:10px 14px; background:rgba(255,255,255,0.04); border-bottom:1px solid rgba(255,255,255,0.07); }
+    .rec-session-date { font-size:11px; color:rgba(255,255,255,0.4); letter-spacing:0.5px; }
+    .rec-session-players { font-size:13px; font-weight:700; color:rgba(255,255,255,0.8); margin-top:2px; }
+    .rec-match-row { display:flex; align-items:center; gap:8px; padding:9px 14px; cursor:pointer; border-top:1px solid rgba(255,255,255,0.05); transition:background 0.1s; }
+    .rec-match-row:active { background:rgba(255,255,255,0.06); }
+    .rec-match-num { font-size:11px; color:rgba(255,255,255,0.35); width:42px; flex-shrink:0; }
+    .rec-match-pts { flex:1; font-size:11px; color:rgba(255,255,255,0.6); line-height:1.5; }
+    .rec-match-detail-badge { font-size:10px; background:rgba(21,128,61,0.3); border:1px solid rgba(74,222,128,0.4); color:#4ade80; border-radius:4px; padding:2px 5px; flex-shrink:0; }
+    .rec-match-arrow { color:rgba(255,255,255,0.25); font-size:14px; flex-shrink:0; }
+    .rec-empty { color:rgba(255,255,255,0.28); font-size:13px; text-align:center; padding:60px 0; letter-spacing:1px; }
+    /* Detail overlay */
+    #matchDetailOverlay { position:fixed; inset:0; background:#0b2e14; z-index:700; flex-direction:column; overflow:hidden; }
+    .detail-header { display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.1); flex-shrink:0; background:rgba(0,0,0,0.25); }
+    .detail-back-btn { background:none; border:1px solid rgba(255,255,255,0.22); border-radius:6px; color:rgba(255,255,255,0.65); font-size:12px; font-weight:700; padding:6px 12px; cursor:pointer; font-family:inherit; }
+    .detail-title { font-size:14px; font-weight:800; color:rgba(255,255,255,0.9); letter-spacing:1px; }
+    .detail-body { flex:1; overflow-y:auto; padding:16px; -webkit-overflow-scrolling:touch; }
+    .detail-sec-lbl { font-size:10px; font-weight:700; color:rgba(255,255,255,0.4); letter-spacing:2px; margin-bottom:8px; }
+    .detail-graph-wrap { background:rgba(0,0,0,0.3); border-radius:10px; padding:10px 8px 6px; margin-bottom:14px; }
+    .detail-legend { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; padding:0 4px; }
+    .detail-legend-item { display:flex; align-items:center; gap:4px; font-size:11px; color:rgba(255,255,255,0.65); }
+    .detail-legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .detail-stats-table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px; }
+    .detail-stats-table th { color:rgba(255,255,255,0.4); font-weight:600; padding:4px 3px 6px; text-align:center; font-size:10px; border-bottom:1px solid rgba(255,255,255,0.12); }
+    .detail-stats-table th:first-child { text-align:left; }
+    .detail-stats-table td { padding:7px 3px; text-align:center; color:rgba(255,255,255,0.75); border-bottom:1px solid rgba(255,255,255,0.06); }
+    .detail-stats-table td:first-child { text-align:left; font-weight:700; }
+    .detail-roundlog { display:flex; flex-direction:column; gap:4px; }
+    .detail-round-item { background:rgba(0,0,0,0.2); border-radius:6px; padding:8px 10px; border:1px solid rgba(255,255,255,0.07); }
+    .detail-round-label { font-size:10px; color:rgba(255,255,255,0.35); letter-spacing:0.5px; margin-bottom:3px; }
+    .detail-round-text { font-size:12px; color:rgba(255,255,255,0.78); font-weight:600; }
+    .detail-round-scores { font-size:10px; color:rgba(255,255,255,0.4); margin-top:3px; line-height:1.6; }
+    .detail-result-row { display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
   </style>
 </head>
 <body>
@@ -1169,11 +1210,28 @@
         </div>
       </div>
 
+      <!-- 戦績タブ -->
+      <div id="tabRecords" style="display:none">
+        <div id="rec-login-wall" class="rec-login-wall">
+          <div>ログインして戦績を確認</div>
+          <button class="rec-login-btn" id="rec-login-btn">Googleでログイン</button>
+        </div>
+        <div id="rec-content" style="display:none">
+          <div class="rec-user-bar">
+            <img class="rec-avatar" id="rec-avatar" src="" alt="">
+            <span class="rec-username" id="rec-username"></span>
+            <button class="rec-logout-btn" id="rec-logout-btn">ログアウト</button>
+          </div>
+          <div id="rec-sessions-list"></div>
+        </div>
+      </div>
+
     </div>
 
     <div id="startTabBar">
       <button class="start-tab-btn active" data-tab="kyoku">対局</button>
       <button class="start-tab-btn" data-tab="settings">設定</button>
+      <button class="start-tab-btn" data-tab="records">戦績</button>
     </div>
   </div>
 
@@ -1642,10 +1700,23 @@
     </div>
   </div>
 
+  <!-- 対局詳細オーバーレイ -->
+  <div id="matchDetailOverlay" style="display:none">
+    <div class="detail-header">
+      <button class="detail-back-btn" id="detailBackBtn">← 戻る</button>
+      <div class="detail-title" id="detailTitle"></div>
+    </div>
+    <div class="detail-body" id="detailBody"></div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    import {
+      getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
     const app = initializeApp({
       apiKey: "AIzaSyBC0X3taGcEclIO8g7Lg7odIdTwaA6gnGY",
@@ -1657,17 +1728,266 @@
     });
     const db = getFirestore(app);
     const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    let sessionsUnsub = null;
+    const COLORS = ['#fbbf24', '#4ade80', '#60a5fa', '#f87171'];
+
+    function escH(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function fmtPt(pt) {
+      if (typeof pt !== 'number' || isNaN(pt)) return '—';
+      const abs = Math.abs(pt).toFixed(1);
+      return pt > 0 ? `+${abs}` : pt < 0 ? `▲${abs}` : abs;
+    }
+
+    function updateRecordsUI(user) {
+      const wall = document.getElementById('rec-login-wall');
+      const content = document.getElementById('rec-content');
+      if (!wall || !content) return;
+      if (user) {
+        wall.style.display = 'none';
+        content.style.display = 'block';
+        const av = document.getElementById('rec-avatar');
+        const un = document.getElementById('rec-username');
+        if (av) av.src = user.photoURL || '';
+        if (un) un.textContent = user.displayName || user.email;
+      } else {
+        wall.style.display = 'flex';
+        content.style.display = 'none';
+      }
+    }
+
+    document.getElementById('rec-login-btn').addEventListener('click', () => {
+      signInWithPopup(auth, provider).catch(console.error);
+    });
+    document.getElementById('rec-logout-btn').addEventListener('click', () => signOut(auth));
 
     onAuthStateChanged(auth, async (user) => {
-      if (!user) return;
-      try {
-        const snap = await getDoc(doc(db, 'mahjong_records', user.uid, 'settings', 'profile'));
-        if (!snap.exists()) return;
-        const names = snap.data().playerNames || [];
-        if (!names.length) return;
-        try { localStorage.setItem('mahjong_playerHistory', JSON.stringify(names)); } catch {}
-      } catch {}
+      if (user) {
+        // load player names for autocomplete
+        try {
+          const snap = await getDoc(doc(db, 'mahjong_records', user.uid, 'settings', 'profile'));
+          if (snap.exists()) {
+            const names = snap.data().playerNames || [];
+            if (names.length) try { localStorage.setItem('mahjong_playerHistory', JSON.stringify(names)); } catch {}
+          }
+        } catch {}
+      }
+
+      updateRecordsUI(user);
+
+      if (sessionsUnsub) { sessionsUnsub(); sessionsUnsub = null; }
+      if (!user) { renderSessions([]); return; }
+
+      const q = query(collection(db, 'mahjong_records', user.uid, 'sessions'), orderBy('createdAt', 'desc'));
+      sessionsUnsub = onSnapshot(q, snap => {
+        renderSessions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
     });
+
+    function renderSessions(sessions) {
+      const container = document.getElementById('rec-sessions-list');
+      if (!container) return;
+      if (sessions.length === 0) {
+        container.innerHTML = '<div class="rec-empty">まだ記録がありません</div>';
+        return;
+      }
+      container.innerHTML = sessions.map(session => {
+        const date = session.createdAt
+          ? session.createdAt.toDate().toLocaleDateString('ja-JP', { year:'numeric', month:'numeric', day:'numeric', weekday:'short' })
+          : '?';
+        const players = session.players || [];
+        const matches = (session.matches || []).slice().sort((a,b) => a.recordedAt < b.recordedAt ? -1 : 1);
+        const matchRows = matches.length === 0
+          ? '<div class="rec-match-row"><div class="rec-match-num">—</div><div class="rec-match-pts" style="color:rgba(255,255,255,0.3)">まだ試合なし</div></div>'
+          : matches.map((m, mi) => {
+              const hasDetail = !!m.tableGame;
+              const ptsStr = (m.players || []).slice().sort((a,b)=>(a.rank||9)-(b.rank||9))
+                .map(p => `${escH(p.name||'')} ${fmtPt(p.pt)}`).join('　');
+              return `<div class="rec-match-row" data-sid="${escH(session.id)}" data-midx="${mi}">
+                <div class="rec-match-num">${mi+1}試合目</div>
+                <div class="rec-match-pts">${ptsStr}</div>
+                ${hasDetail ? '<div class="rec-match-detail-badge">詳細</div>' : ''}
+                <div class="rec-match-arrow">›</div>
+              </div>`;
+            }).join('');
+        return `<div class="rec-session-card">
+          <div class="rec-session-header">
+            <div class="rec-session-date">${escH(date)}</div>
+            <div class="rec-session-players">${players.map(escH).join(' · ')}</div>
+          </div>
+          ${matchRows}
+        </div>`;
+      }).join('');
+
+      container.querySelectorAll('.rec-match-row[data-sid]').forEach(row => {
+        row.addEventListener('click', () => {
+          const session = sessions.find(s => s.id === row.dataset.sid);
+          if (!session) return;
+          const sorted = (session.matches || []).slice().sort((a,b)=>a.recordedAt<b.recordedAt?-1:1);
+          const match = sorted[Number(row.dataset.midx)];
+          if (match) openMatchDetail(session, match, Number(row.dataset.midx));
+        });
+      });
+    }
+
+    function openMatchDetail(session, match, matchIdx) {
+      const overlay = document.getElementById('matchDetailOverlay');
+      const body = document.getElementById('detailBody');
+      const title = document.getElementById('detailTitle');
+      const date = session.createdAt
+        ? session.createdAt.toDate().toLocaleDateString('ja-JP', { month:'numeric', day:'numeric' })
+        : '?';
+      title.textContent = `${date}　${matchIdx + 1}試合目`;
+      body.innerHTML = buildDetailContent(match);
+      overlay.style.display = 'flex';
+    }
+
+    document.getElementById('detailBackBtn').addEventListener('click', () => {
+      document.getElementById('matchDetailOverlay').style.display = 'none';
+    });
+
+    function buildDetailContent(match) {
+      const tg = match.tableGame;
+      const rankPlayers = (match.players || []).slice().sort((a,b)=>(a.rank||9)-(b.rank||9));
+
+      // Final result section
+      const resultRows = rankPlayers.map(p => {
+        const col = p.pt > 0 ? '#4ade80' : p.pt < 0 ? '#f87171' : 'rgba(255,255,255,0.6)';
+        return `<div class="detail-result-row">
+          <span style="width:24px;font-size:11px;color:rgba(255,255,255,0.4)">${p.rank||'?'}位</span>
+          <span style="flex:1;font-size:13px;font-weight:700;color:rgba(255,255,255,0.85)">${escH(p.name||'?')}</span>
+          <span style="font-size:14px;font-weight:800;color:${col}">${fmtPt(p.pt)}</span>
+        </div>`;
+      }).join('');
+      let html = `<div style="margin-bottom:16px">${resultRows}</div>`;
+
+      if (!tg) {
+        html += `<div style="color:rgba(255,255,255,0.25);font-size:12px;text-align:center;padding:32px 0;line-height:2">
+          このゲームの詳細データはありません<br>
+          <span style="font-size:11px">麻雀テーブルで対局すると詳細が記録されます</span>
+        </div>`;
+        return html;
+      }
+
+      const roundLog = tg.roundLog || [];
+      const riichiCounts = tg.riichiCounts || [0,0,0,0];
+      const seatNames = tg.playerNames || rankPlayers.map(p=>p.name);
+      const n = seatNames.length;
+      const initial = roundLog.length > 0 ? roundLog[0].scoresBefore.slice() : Array(n).fill(25000);
+
+      // Build score timeline
+      const timeline = [initial.slice()];
+      let cur = initial.slice();
+      for (const ev of roundLog) {
+        for (let i = 0; i < n; i++) cur[i] += (ev.deltas||[])[i] || 0;
+        timeline.push(cur.slice());
+      }
+
+      // Line graph
+      html += `<div class="detail-sec-lbl">スコア推移</div>
+        <div class="detail-graph-wrap">
+          ${buildLineGraph(timeline, n)}
+          <div class="detail-legend">
+            ${seatNames.map((name, i) => `<div class="detail-legend-item"><div class="detail-legend-dot" style="background:${COLORS[i]}"></div><span>${escH(name)}</span></div>`).join('')}
+          </div>
+        </div>`;
+
+      // Per-player stats
+      const stats = Array.from({length:n}, () => ({ ron:0, tsumo:0, houju:0 }));
+      for (const ev of roundLog) {
+        if (ev.type === 'agari') {
+          const winners = ev.winnerIdxs || (ev.winnerIdx >= 0 ? [ev.winnerIdx] : []);
+          if (ev.winType === 'ron') {
+            winners.forEach(wi => { if (wi >= 0 && wi < n) stats[wi].ron++; });
+            if (ev.loserIdx >= 0 && ev.loserIdx < n) stats[ev.loserIdx].houju++;
+          } else {
+            winners.forEach(wi => { if (wi >= 0 && wi < n) stats[wi].tsumo++; });
+          }
+        }
+      }
+      const totalRounds = roundLog.filter(e => e.type === 'agari' || e.type === 'ryukyoku').length || 1;
+
+      html += `<div class="detail-sec-lbl" style="margin-top:16px">プレイヤー統計</div>
+        <table class="detail-stats-table">
+          <thead><tr>
+            <th>名前</th><th>和了(R)</th><th>和了(T)</th><th>放銃</th><th>リーチ</th><th>和了率</th><th>放銃率</th>
+          </tr></thead>
+          <tbody>${seatNames.map((name,i) => {
+            const s = stats[i];
+            const agari = s.ron + s.tsumo;
+            return `<tr>
+              <td>${escH(name)}</td>
+              <td>${s.ron}</td><td>${s.tsumo}</td><td>${s.houju}</td>
+              <td>${riichiCounts[i] ?? '—'}</td>
+              <td>${Math.round(agari/totalRounds*100)}%</td>
+              <td>${Math.round(s.houju/totalRounds*100)}%</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>`;
+
+      // Round history
+      if (roundLog.length > 0) {
+        html += `<div class="detail-sec-lbl" style="margin-top:16px">ラウンド履歴</div>
+          <div class="detail-roundlog">${roundLog.map((ev, i) => {
+            let text = '';
+            if (ev.type === 'agari') {
+              const winners = ev.winnerIdxs || (ev.winnerIdx >= 0 ? [ev.winnerIdx] : []);
+              const wNames = winners.map(wi => escH(seatNames[wi]||'?')).join('・');
+              const wt = ev.winType === 'ron' ? 'ロン' : 'ツモ';
+              const loser = ev.loserIdx >= 0 ? ` ← ${escH(seatNames[ev.loserIdx]||'?')}` : '';
+              text = `和了: ${wNames} (${wt})${loser}`;
+            } else if (ev.type === 'ryukyoku') {
+              const t = (ev.tenpai||[]).map((b,j)=>b?escH(seatNames[j]||j):null).filter(Boolean);
+              text = t.length===0 ? '流局 (全ノーテン)' : t.length===4 ? '流局 (全聴牌)' : `流局: ${t.join('・')}聴牌`;
+            } else if (ev.type === 'chonbo') {
+              text = `チョンボ: ${escH(seatNames[ev.playerIdx]||'?')}`;
+            } else {
+              text = ev.type || '—';
+            }
+            const scoreStr = (ev.scoresBefore||[]).map((s,j)=>`${escH(seatNames[j]||j)}: ${s.toLocaleString()}`).join('　');
+            return `<div class="detail-round-item">
+              <div class="detail-round-label">${escH(ev.roundLabel||'')}　#${i+1}</div>
+              <div class="detail-round-text">${text}</div>
+              <div class="detail-round-scores">${scoreStr}</div>
+            </div>`;
+          }).join('')}</div>`;
+      }
+
+      return html;
+    }
+
+    function buildLineGraph(timeline, n) {
+      const W = 300, H = 130;
+      const PX = 6, PY = 8;
+      const iW = W - 2*PX, iH = H - 2*PY;
+      const steps = timeline.length - 1;
+      const xStep = steps > 0 ? iW / steps : iW;
+      const all = timeline.flat();
+      let minS = Math.min(...all), maxS = Math.max(...all);
+      const rng = (maxS - minS) || 5000;
+      minS -= rng * 0.08; maxS += rng * 0.08;
+      const yRng = maxS - minS;
+      const tx = i => PX + i * xStep;
+      const ty = s => PY + (1 - (s - minS) / yRng) * iH;
+
+      const initAvg = timeline[0].reduce((a,b)=>a+b,0) / n;
+      const zy = ty(initAvg);
+      let svg = '';
+      if (zy > PY && zy < H - PY) {
+        svg += `<line x1="${PX}" y1="${zy.toFixed(1)}" x2="${W-PX}" y2="${zy.toFixed(1)}" stroke="rgba(255,255,255,0.1)" stroke-width="1" stroke-dasharray="3,3"/>`;
+      }
+      for (let pi = 0; pi < n && pi < COLORS.length; pi++) {
+        const pts = timeline.map((row, ri) => `${tx(ri).toFixed(1)},${ty(row[pi]).toFixed(1)}`).join(' ');
+        svg += `<polyline points="${pts}" fill="none" stroke="${COLORS[pi]}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+        timeline.forEach((row, ri) => {
+          svg += `<circle cx="${tx(ri).toFixed(1)}" cy="${ty(row[pi]).toFixed(1)}" r="2.5" fill="${COLORS[pi]}"/>`;
+        });
+      }
+      return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block">${svg}</svg>`;
+    }
   </script>
 
   <script src="/common.js"></script>
@@ -1707,6 +2027,8 @@
     let settingKijunten = 30000;
     let settingHakoshita = false;
     let settingHakoshitaRiichi = false;
+    let tableRoundLog = [];
+    let riichiCounts = [0, 0, 0, 0];
 
     function captureSnapshot() {
       return {
@@ -1804,6 +2126,7 @@
         const p = state.players[i];
         if (!p.riichi && settingHakoshita && !settingHakoshitaRiichi && p.score < 1000) return;
         p.riichi = !p.riichi;
+        if (p.riichi) riichiCounts[i]++;
         p.score += p.riichi ? -1000 : 1000;
         state.kyotaku += p.riichi ? 1 : -1;
         render();
@@ -1858,6 +2181,7 @@
         btn.classList.add('active');
         document.getElementById('tabKyoku').style.display = tab === 'kyoku' ? '' : 'none';
         document.getElementById('tabSettings').style.display = tab === 'settings' ? '' : 'none';
+        document.getElementById('tabRecords').style.display = tab === 'records' ? '' : 'none';
       });
     });
 
@@ -1867,6 +2191,8 @@
         state.players[i].name = v || `P${i + 1}`;
         state.players[i].wind = playerWinds[i];
       }
+      tableRoundLog = [];
+      riichiCounts = [0, 0, 0, 0];
       document.getElementById('startScreen').style.display = 'none';
       render();
     });
@@ -2229,6 +2555,16 @@
         ? (def.needsFu ? `${def.han}翻${agFu}符` : def.name)
         : '';
       const wLabel = agWinType === 'ron' ? 'ロン' : 'ツモ';
+      tableRoundLog.push({
+        type: 'agari',
+        roundLabel: `${ROUND_WINDS[state.roundWind]}${state.roundNum}局 ${state.honba}本場`,
+        winnerIdx: agWinner,
+        loserIdx: agWinType === 'ron' ? agDealer : -1,
+        winType: agWinType,
+        scoresBefore: state.players.map(p => p.score),
+        deltas: agDeltas.slice(),
+        riichiAtStart: state.players.map(p => p.riichi),
+      });
       pushHistory(`和了: ${state.players[agWinner].name}(${state.players[agWinner].wind}) ${wLabel} ${hanName}`);
       for (let i = 0; i < 4; i++) {
         state.players[i].score += agDeltas[i];
@@ -2351,6 +2687,14 @@
       const ryuuLabel = tenpaiWinds.length === 0 ? '流局 (全ノーテン)'
         : tenpaiWinds.length === 4 ? '流局 (全聴牌)'
         : `流局: ${tenpaiWinds.join('・')}聴牌`;
+      tableRoundLog.push({
+        type: 'ryukyoku',
+        roundLabel: `${ROUND_WINDS[state.roundWind]}${state.roundNum}局 ${state.honba}本場`,
+        tenpai: ryuuTenpai.slice(),
+        scoresBefore: state.players.map(p => p.score),
+        deltas: ryuuDeltas.slice(),
+        riichiAtStart: state.players.map(p => p.riichi),
+      });
       pushHistory(ryuuLabel);
       for (let i = 0; i < 4; i++) {
         state.players[i].score += ryuuDeltas[i];
@@ -2529,6 +2873,8 @@
       document.getElementById('gameEndModal').style.display = 'none';
       state = freshState();
       gameHistory = [];
+      tableRoundLog = [];
+      riichiCounts = [0, 0, 0, 0];
       updateHistBadge();
       playerWinds = ['東', '南', '西', '北'];
       renderStartWindBtns();
@@ -2536,16 +2882,23 @@
     });
 
     document.getElementById('gameEndRecord').addEventListener('click', () => {
+      const tableGameData = {
+        playerNames: state.players.map(p => p.name),
+        roundLog: tableRoundLog,
+        riichiCounts: riichiCounts.slice(),
+      };
       if (isEmbedded) {
         const sorted = state.players.slice().sort((a, b) => b.score - a.score);
         window.parent.postMessage({
           type: 'game_end',
-          players: sorted.map(p => ({ name: p.name, score: p.score }))
+          players: sorted.map(p => ({ name: p.name, score: p.score })),
+          tableGame: tableGameData,
         }, '*');
       } else {
         const importData = {
           players: state.players.map(p => ({ name: p.name, score: p.score })),
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          tableGame: tableGameData,
         };
         localStorage.setItem('mahjong_table_import', JSON.stringify(importData));
         window.location.href = '/mahjong/';
@@ -2738,6 +3091,21 @@
         const def = HAN_DEFS[d.hanIdx];
         return `${state.players[idx].wind}(${def ? (def.needsFu ? `${def.han}翻${d.fu}符` : def.name) : ''})`;
       });
+      {
+        const mwDeltas = [0, 0, 0, 0];
+        mwSortedWinners.forEach((idx, wi) => { mwDeltas[idx] = mwWinnerData[wi].score + (wi === 0 ? riichiPot : 0); });
+        mwDeltas[mwLoser] -= total;
+        tableRoundLog.push({
+          type: 'agari',
+          roundLabel: `${ROUND_WINDS[state.roundWind]}${state.roundNum}局 ${state.honba}本場`,
+          winnerIdxs: mwSortedWinners.slice(),
+          loserIdx: mwLoser,
+          winType: 'ron',
+          scoresBefore: state.players.map(p => p.score),
+          deltas: mwDeltas,
+          riichiAtStart: state.players.map(p => p.riichi),
+        });
+      }
       pushHistory(`和了: ${histLabels.join('・')} ← ${state.players[mwLoser].wind}`);
       mwSortedWinners.forEach((idx, wi) => {
         state.players[idx].score += mwWinnerData[wi].score + (wi === 0 ? riichiPot : 0);
@@ -3036,6 +3404,14 @@
     function applyChonbo(kyokuAction) {
       if (!cbDeltas) return;
       const penaltyName = cbPenaltyType === 'mangan' ? '満貫払い' : cbPenaltyType === 'baiman' ? '倍満払い' : `${cbHan}翻${cbFu}符`;
+      tableRoundLog.push({
+        type: 'chonbo',
+        roundLabel: `${ROUND_WINDS[state.roundWind]}${state.roundNum}局 ${state.honba}本場`,
+        playerIdx: cbPlayer,
+        scoresBefore: state.players.map(p => p.score),
+        deltas: cbDeltas.slice(),
+        riichiAtStart: state.players.map(p => p.riichi),
+      });
       pushHistory(`チョンボ: ${state.players[cbPlayer].wind}(${state.players[cbPlayer].name}) ${penaltyName}`);
       for (let i = 0; i < 4; i++) {
         state.players[i].score += cbDeltas[i];
