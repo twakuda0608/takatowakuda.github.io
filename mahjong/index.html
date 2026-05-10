@@ -108,11 +108,7 @@
         <div id="record-needs-login" class="login-hint">
           <p class="muted">記録するには「戦績記録」タブでログインしてください。</p>
         </div>
-        <div id="record-no-session" class="login-hint" style="display:none">
-          <p class="muted">「戦績記録」タブでゲームを作成してください。</p>
-        </div>
         <div id="record-logged-in" style="display:none">
-          <p id="active-session-label" class="note session-label"></p>
           <div class="record-actions">
             <button id="record-btn" class="record-btn">この試合を記録する</button>
             <span id="record-success" class="record-msg"></span>
@@ -184,28 +180,7 @@
           <span id="my-name-msg" class="record-msg"></span>
         </div>
 
-        <!-- 新しいゲーム作成 -->
-        <div class="sessions-header">
-          <button id="new-session-toggle" class="record-btn">+ 新しいゲームを作成</button>
-        </div>
-
-        <div id="new-session-form" style="display:none">
-          <fieldset>
-            <legend>プレイヤー名を入力</legend>
-            <div class="player-grid">
-              <label>P1<input id="ns-p1" placeholder="プレイヤー1" autocomplete="off"></label>
-              <label>P2<input id="ns-p2" placeholder="プレイヤー2" autocomplete="off"></label>
-              <label>P3<input id="ns-p3" placeholder="プレイヤー3" autocomplete="off"></label>
-              <label>P4<input id="ns-p4" placeholder="プレイヤー4" autocomplete="off"></label>
-            </div>
-            <div class="record-actions" style="margin-top:12px">
-              <button id="create-session-btn" class="record-btn">作成</button>
-              <button id="cancel-session-btn" class="logout-btn">キャンセル</button>
-            </div>
-          </fieldset>
-        </div>
-
-        <!-- セッション一覧 -->
+        <!-- 試合一覧 -->
         <div id="sessions-list"></div>
 
         <!-- 全期間集計 -->

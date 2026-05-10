@@ -1,8 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, onSnapshot,
-  orderBy, query, serverTimestamp, deleteDoc, doc,
-  updateDoc, arrayUnion, arrayRemove, getDoc, setDoc
+  orderBy, query, deleteDoc, doc,
+  updateDoc, getDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup,
@@ -27,9 +27,8 @@ const el = id => document.getElementById(id);
 
 let currentUser = null;
 let lastResult = null;
-let sessionsUnsubscribe = null;
-let sessions = [];
-let activeSession = null;
+let matchesUnsubscribe = null;
+let matches = [];
 let myName = '';
 let playerHistory = [];
 let pendingTableGame = null;
@@ -119,7 +118,6 @@ const init1 = el('init1'), oka1 = el('oka1'), uma1 = el('uma1'), rate1 = el('rat
 const s1_1 = el('s1_1'), s2_1 = el('s2_1'), s3_1 = el('s3_1'), s4_1 = el('s4_1');
 const r1_1 = el('r1_1'), r2_1 = el('r2_1'), r3_1 = el('r3_1'), r4_1 = el('r4_1');
 const decimal1 = el('decimal1'), tie1 = el('tie1');
-let rankPrevVals = ['0', '1', '2', '3'];
 
 function thousandRoundPt1(realScore) {
   const score = Number(realScore) || 0;
@@ -223,150 +221,42 @@ function updateRankNames() {
     if (!nameEl) return;
     const field = el(`sn${i}_1`);
     if (!field) { nameEl.textContent = ''; return; }
-    const name = field.tagName === 'SELECT'
-      ? (activeSession?.players || [])[Number(field.value)] || ''
-      : field.value.trim();
+    const name = field.value.trim();
     nameEl.textContent = name ? ` · ${name}` : '';
   });
 }
 
-// ====== Name field helpers (Tab 1) ======
+// ====== Name field autocomplete init (Tab 1) ======
 function getScoreInputNames(rank) {
   const taken = new Set();
   [1, 2, 3, 4].forEach(r => {
     if (r === rank) return;
     const f = el(`sn${r}_1`);
-    if (f?.tagName === 'INPUT') { const v = f.value.trim(); if (v) taken.add(v); }
+    if (f) { const v = f.value.trim(); if (v) taken.add(v); }
   });
   return playerHistory.filter(n => !taken.has(n));
 }
 
-// Replaces the 4 name text-inputs with selects populated from session players.
-function ensureNameSelects(players) {
-  [1, 2, 3, 4].forEach(rank => {
-    const id = `sn${rank}_1`;
-    const cur = el(id);
-    if (!cur) return;
-    const idx = rank - 1;
-
-    if (cur.tagName !== 'SELECT') {
-      const sel = document.createElement('select');
-      sel.id = id;
-      sel.className = cur.className;
-      cur.replaceWith(sel);
-
-      sel.addEventListener('change', () => {
-        const newVal = sel.value;
-        const oldVal = rankPrevVals[idx];
-        if (newVal === oldVal) return;
-        const conflictIdx = rankPrevVals.findIndex((v, j) => j !== idx && v === newVal);
-        if (conflictIdx >= 0) {
-          const conflictSel = el(`sn${conflictIdx + 1}_1`);
-          if (conflictSel) conflictSel.value = oldVal;
-          rankPrevVals[conflictIdx] = oldVal;
-        }
-        rankPrevVals[idx] = newVal;
-        updateRankNames();
-      });
-    }
-
-    const sel = el(id);
-    const prevVal = sel.value;
-    sel.innerHTML = players.map((n, i) => `<option value="${i}">${escHtml(n)}</option>`).join('');
-    const validPrev = prevVal !== '' && Number(prevVal) < players.length;
-    sel.value = validPrev ? prevVal : String(idx);
-    if (sel.value === '') sel.value = String(idx);
-  });
-
-  rankPrevVals = [1, 2, 3, 4].map(r => el(`sn${r}_1`)?.value ?? String(r - 1));
-  updateRankNames();
-}
-
-// Replaces the 4 name selects back to free-text inputs.
-function ensureNameInputs() {
-  [1, 2, 3, 4].forEach(rank => {
-    const id = `sn${rank}_1`;
-    const cur = el(id);
-    if (!cur) return;
-
-    if (cur.tagName === 'SELECT') {
-      const inp = document.createElement('input');
-      inp.id = id;
-      inp.type = 'text';
-      inp.className = cur.className;
-      inp.placeholder = `プレイヤー${rank}`;
-      inp.autocomplete = 'off';
-      inp.addEventListener('input', updateRankNames);
-      cur.replaceWith(inp);
-      makeAutocomplete(inp, () => getScoreInputNames(rank));
-    } else {
-      cur.removeEventListener('input', updateRankNames);
-      cur.addEventListener('input', updateRankNames);
-      if (!cur.dataset.acBound) {
-        makeAutocomplete(cur, () => getScoreInputNames(rank));
-        cur.dataset.acBound = '1';
-      }
-    }
-  });
-  updateRankNames();
-}
+[1, 2, 3, 4].forEach(rank => {
+  const inp = el(`sn${rank}_1`);
+  if (!inp) return;
+  inp.addEventListener('input', updateRankNames);
+  makeAutocomplete(inp, () => getScoreInputNames(rank));
+});
 
 // ====== Record section (Tab 1 bottom) ======
 function updateRecordSection() {
   const needsLogin = el('record-needs-login');
-  const noSession  = el('record-no-session');
   const loggedIn   = el('record-logged-in');
-
-  if (!currentUser) {
-    needsLogin.style.display = 'block';
-    noSession.style.display  = 'none';
-    loggedIn.style.display   = 'none';
-    ensureNameInputs();
-    return;
-  }
-  if (!activeSession) {
-    needsLogin.style.display = 'none';
-    noSession.style.display  = 'block';
-    loggedIn.style.display   = 'none';
-    ensureNameInputs();
-    return;
-  }
-
-  needsLogin.style.display = 'none';
-  noSession.style.display  = 'none';
-  loggedIn.style.display   = 'block';
-
-  const date = activeSession.createdAt
-    ? activeSession.createdAt.toDate().toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })
-    : '?';
-  el('active-session-label').textContent =
-    `記録先: ${date} — ${(activeSession.players || []).join(' / ')}`;
-
-  ensureNameSelects(activeSession.players || ['P1', 'P2', 'P3', 'P4']);
+  needsLogin.style.display = currentUser ? 'none' : 'block';
+  loggedIn.style.display   = currentUser ? 'block' : 'none';
 }
 
 el('record-btn').addEventListener('click', async () => {
-  if (!currentUser || !activeSession || !lastResult) return;
+  if (!currentUser || !lastResult) return;
 
-  const players = activeSession.players || ['P1', 'P2', 'P3', 'P4'];
-  // names[i] = the player chosen for rank i+1 (rank-ordered)
-  const names = [1, 2, 3, 4].map(rank => {
-    const field = el(`sn${rank}_1`);
-    if (!field) return `P${rank}`;
-    if (field.tagName === 'SELECT') return players[Number(field.value)] || `P${rank}`;
-    return field.value.trim() || `P${rank}`;
-  });
-
-  // Build a lookup: playerName → { pt, rank }
-  const rankLookup = {};
-  names.forEach((name, i) => { rankLookup[name] = { pt: lastResult.pts[i], rank: i + 1 }; });
-
-  // Store in session player order so each column index matches session.players
-  const playerRecords = players.map(name => ({
-    name,
-    pt: rankLookup[name]?.pt ?? 0,
-    rank: rankLookup[name]?.rank ?? 0
-  }));
+  const names = [1, 2, 3, 4].map(rank => el(`sn${rank}_1`)?.value.trim() || `P${rank}`);
+  const playerRecords = names.map((name, i) => ({ name, pt: lastResult.pts[i], rank: i + 1 }));
 
   const matchRecord = { recordedAt: new Date().toISOString(), players: playerRecords };
   if (pendingTableGame) matchRecord.tableGame = pendingTableGame;
@@ -377,10 +267,7 @@ el('record-btn').addEventListener('click', async () => {
   btn.textContent = '記録中...';
 
   try {
-    await updateDoc(
-      doc(db, 'mahjong_records', currentUser.uid, 'sessions', activeSession.id),
-      { matches: arrayUnion(matchRecord) }
-    );
+    await addDoc(collection(db, 'mahjong_records', currentUser.uid, 'matches'), matchRecord);
     updateHistoryWithNames(names);
     await savePlayerHistory();
     pendingTableGame = null;
@@ -459,11 +346,10 @@ onAuthStateChanged(auth, async (user) => {
   updateAuthUI();
   if (user) {
     await loadProfile();
-    subscribeSessions();
+    subscribeMatches();
   } else {
-    if (sessionsUnsubscribe) { sessionsUnsubscribe(); sessionsUnsubscribe = null; }
-    sessions = [];
-    activeSession = null;
+    if (matchesUnsubscribe) { matchesUnsubscribe(); matchesUnsubscribe = null; }
+    matches = [];
     playerHistory = [];
     el('sessions-list').innerHTML = '';
     el('alltime-section').style.display = 'none';
@@ -560,73 +446,16 @@ el('my-name-save').addEventListener('click', async () => {
   }
 });
 
-// ====== Tab 3: Session management ======
-el('new-session-toggle').addEventListener('click', () => {
-  el('new-session-form').style.display = 'block';
-  el('new-session-toggle').style.display = 'none';
-  if (myName && !el('ns-p1').value) el('ns-p1').value = myName;
-  (myName ? el('ns-p2') : el('ns-p1')).focus();
-});
-
-const nsIds = ['ns-p1', 'ns-p2', 'ns-p3', 'ns-p4'];
-nsIds.forEach((id, i) => {
-  makeAutocomplete(el(id), () => {
-    const taken = new Set(nsIds.flatMap((oid, j) => {
-      if (j === i) return [];
-      const v = el(oid)?.value.trim();
-      return v ? [v] : [];
-    }));
-    return playerHistory.filter(n => !taken.has(n));
-  });
-});
-
 makeAutocomplete(el('my-name-input'), () => playerHistory);
 
-el('cancel-session-btn').addEventListener('click', () => {
-  el('new-session-form').style.display = 'none';
-  el('new-session-toggle').style.display = 'block';
-});
-
-el('create-session-btn').addEventListener('click', async () => {
-  const rawNames = ['ns-p1', 'ns-p2', 'ns-p3', 'ns-p4'].map(id => el(id).value.trim());
-  const filledNames = rawNames.filter(n => n !== '');
-  if (new Set(filledNames).size < filledNames.length) {
-    alert('プレイヤー名が重複しています。それぞれ異なる名前を入力してください。');
-    return;
-  }
-  const players = rawNames.map((n, i) => n || `P${i + 1}`);
-
-  const btn = el('create-session-btn');
-  btn.disabled = true;
-  btn.textContent = '作成中...';
-
-  try {
-    await addDoc(
-      collection(db, 'mahjong_records', currentUser.uid, 'sessions'),
-      { createdAt: serverTimestamp(), players, matches: [] }
-    );
-    updateHistoryWithNames(players);
-    await savePlayerHistory();
-    ['ns-p1', 'ns-p2', 'ns-p3', 'ns-p4'].forEach(id => { el(id).value = ''; });
-    el('new-session-form').style.display = 'none';
-    el('new-session-toggle').style.display = 'block';
-  } catch (err) {
-    console.error('セッション作成エラー:', err);
-    alert('ゲームの作成に失敗しました。');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '作成';
-  }
-});
-
-function subscribeSessions() {
-  const ref = collection(db, 'mahjong_records', currentUser.uid, 'sessions');
-  const q = query(ref, orderBy('createdAt', 'desc'));
-  sessionsUnsubscribe = onSnapshot(q, (snap) => {
-    sessions = [];
-    snap.forEach(d => sessions.push({ id: d.id, ...d.data() }));
-    activeSession = sessions[0] || null;
-    renderSessions(sessions);
+function subscribeMatches() {
+  if (matchesUnsubscribe) matchesUnsubscribe();
+  const ref = collection(db, 'mahjong_records', currentUser.uid, 'matches');
+  const q = query(ref, orderBy('recordedAt', 'desc'));
+  matchesUnsubscribe = onSnapshot(q, (snap) => {
+    matches = [];
+    snap.forEach(d => matches.push({ id: d.id, ...d.data() }));
+    renderMatches(matches);
     updateRecordSection();
   });
 }
@@ -658,61 +487,83 @@ function fmtPt(pt) {
 
 const ptClass = pt => pt > 0 ? 'pt-pos' : pt < 0 ? 'pt-neg' : '';
 
-// ====== Tab 3: Render sessions ======
-function renderSessions(sessions) {
+// ====== Tab 3: Group matches by date + player set ======
+function groupMatches(allMatches) {
+  const groups = [];
+  const keyToGroup = new Map();
+
+  allMatches.forEach(m => {
+    const date = m.recordedAt
+      ? new Date(m.recordedAt).toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' })
+      : '?';
+    const sortedNames = (m.players || []).map(p => p.name).sort().join('|');
+    const key = `${date}||${sortedNames}`;
+
+    if (!keyToGroup.has(key)) {
+      const colPlayers = (m.players || []).map(p => p.name).sort();
+      const group = { date, key, colPlayers, matches: [] };
+      keyToGroup.set(key, group);
+      groups.push(group);
+    }
+    keyToGroup.get(key).matches.push(m);
+  });
+
+  groups.forEach(g => g.matches.sort((a, b) => (a.recordedAt || '') < (b.recordedAt || '') ? -1 : 1));
+  return groups;
+}
+
+// ====== Tab 3: Render matches ======
+function renderMatches(allMatches) {
   const container = el('sessions-list');
 
-  if (sessions.length === 0) {
-    container.innerHTML = '<p class="muted sessions-empty">まだゲームがありません。</p>';
+  if (allMatches.length === 0) {
+    container.innerHTML = '<p class="muted sessions-empty">まだ試合がありません。</p>';
     el('alltime-section').style.display = 'none';
     return;
   }
 
-  container.innerHTML = sessions.map(session => {
-    const date = session.createdAt
-      ? session.createdAt.toDate().toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' })
-      : '?';
-    const players = session.players || [];
-    const matches = (session.matches || []).slice().sort((a, b) => a.recordedAt < b.recordedAt ? -1 : 1);
+  const groups = groupMatches(allMatches);
 
-    const totals = players.map(() => 0);
-    matches.forEach(m => {
-      (m.players || []).forEach((p, i) => { totals[i] += (p && typeof p.pt === 'number') ? p.pt : 0; });
+  container.innerHTML = groups.map(group => {
+    const { date, colPlayers, matches: gMatches } = group;
+
+    const totals = colPlayers.map(() => 0);
+    gMatches.forEach(m => {
+      colPlayers.forEach((pname, ci) => {
+        const found = (m.players || []).find(p => p.name === pname);
+        if (found && typeof found.pt === 'number') totals[ci] += found.pt;
+      });
     });
 
-    const matchRows = matches.length === 0
-      ? '<tr><td colspan="99" class="muted" style="text-align:center;padding:12px">まだ試合がありません</td></tr>'
-      : matches.map((m, mi) => {
-          const mPlayers = m.players || [];
-          return `<tr data-rid="${escHtml(session.id)}" data-midx="${mi}">
-            <td class="date-cell match-label" data-time="${escHtml(formatMatchTime(m.recordedAt))}">${mi + 1}試合目</td>
-            ${mPlayers.map(p => {
-              const pt = (p && typeof p.pt === 'number') ? p.pt : 0;
-              return `<td class="${ptClass(pt)}">${fmtPt(pt)}</td>`;
-            }).join('')}
-            <td class="match-actions-cell">
-              <button class="rec-del-btn match-edit-btn" data-sid="${escHtml(session.id)}" data-midx="${mi}" title="編集">✎</button>
-              <button class="rec-del-btn match-del-btn"  data-sid="${escHtml(session.id)}" data-midx="${mi}" title="削除">×</button>
-            </td>
-          </tr>`;
-        }).join('');
+    const matchRows = gMatches.map((m, mi) => `
+      <tr>
+        <td class="date-cell match-label" data-time="${escHtml(formatMatchTime(m.recordedAt))}">${mi + 1}試合目</td>
+        ${colPlayers.map(pname => {
+          const found = (m.players || []).find(p => p.name === pname);
+          const pt = found && typeof found.pt === 'number' ? found.pt : 0;
+          return `<td class="${ptClass(pt)}">${fmtPt(pt)}</td>`;
+        }).join('')}
+        <td class="match-actions-cell">
+          <button class="rec-del-btn match-edit-btn" data-mid="${escHtml(m.id)}" title="編集">✎</button>
+          <button class="rec-del-btn match-del-btn"  data-mid="${escHtml(m.id)}" title="削除">×</button>
+        </td>
+      </tr>`).join('');
 
     return `
     <fieldset class="session-card">
       <legend class="session-legend">${escHtml(date)}</legend>
-      <div class="session-players-row" data-sid="${escHtml(session.id)}">
-        <span class="session-players-text">${players.map(escHtml).join(' · ')}</span>
-        <button class="players-edit-btn rec-del-btn" data-sid="${escHtml(session.id)}" title="名前を編集">✎</button>
+      <div class="session-players-row">
+        <span class="session-players-text">${colPlayers.map(escHtml).join(' · ')}</span>
       </div>
       <div class="records-scroll">
         <table class="records-tbl">
           <thead><tr>
             <th></th>
-            ${players.map(n => `<th>${escHtml(n)}</th>`).join('')}
+            ${colPlayers.map(n => `<th>${escHtml(n)}</th>`).join('')}
             <th></th>
           </tr></thead>
           <tbody>${matchRows}</tbody>
-          <tfoot><tr class="totals-row">
+          <tfoot><tr>
             <th>合計</th>
             ${totals.map(t => `<th class="${ptClass(t)}">${fmtPt(t)}</th>`).join('')}
             <th></th>
@@ -720,186 +571,63 @@ function renderSessions(sessions) {
         </table>
       </div>
       <div class="session-footer">
-        <span class="muted" style="font-size:12px">${matches.length}試合</span>
-        <button class="session-del-btn" data-id="${escHtml(session.id)}">このゲームを削除</button>
+        <span class="muted" style="font-size:12px">${gMatches.length}試合</span>
       </div>
     </fieldset>`;
   }).join('');
 
-  // Delete session
-  container.querySelectorAll('.session-del-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      if (!confirm('このゲームとすべての試合記録を削除しますか？')) return;
-      await deleteDoc(doc(db, 'mahjong_records', currentUser.uid, 'sessions', btn.dataset.id));
-    });
-  });
-
-  // Delete match
   container.querySelectorAll('.match-del-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       if (!confirm('この試合の記録を削除しますか？')) return;
-      const sid = btn.dataset.sid;
-      const midx = Number(btn.dataset.midx);
-      const session = sessions.find(s => s.id === sid);
-      if (!session) return;
-      const sorted = (session.matches || []).slice().sort((a, b) => a.recordedAt < b.recordedAt ? -1 : 1);
-      const target = sorted[midx];
-      if (!target) return;
-      await updateDoc(
-        doc(db, 'mahjong_records', currentUser.uid, 'sessions', sid),
-        { matches: arrayRemove(target) }
-      );
+      await deleteDoc(doc(db, 'mahjong_records', currentUser.uid, 'matches', btn.dataset.mid));
     });
   });
 
-  // Edit player names
-  container.querySelectorAll('.players-edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const sid = btn.dataset.sid;
-      const session = sessions.find(s => s.id === sid);
-      if (!session) return;
-
-      const row = btn.closest('.session-players-row');
-      const players = session.players || [];
-      row.innerHTML = '';
-
-      const grid = document.createElement('div');
-      grid.className = 'player-edit-grid';
-      const inputs = players.map((name, i) => {
-        const inp = document.createElement('input');
-        inp.value = name;
-        inp.placeholder = `P${i + 1}`;
-        inp.className = 'player-name-input';
-        inp.autocomplete = 'off';
-        grid.appendChild(inp);
-        makeAutocomplete(inp, () => {
-          const taken = new Set(inputs.flatMap((other, j) => {
-            if (j === i) return [];
-            const v = other.value.trim();
-            return v ? [v] : [];
-          }));
-          return playerHistory.filter(n => !taken.has(n));
-        });
-        return inp;
-      });
-
-      const actions = document.createElement('div');
-      actions.className = 'player-edit-actions';
-      const saveBtn = document.createElement('button');
-      saveBtn.textContent = '保存';
-      saveBtn.className = 'edit-save-btn';
-      const cancelBtn = document.createElement('button');
-      cancelBtn.textContent = 'キャンセル';
-      cancelBtn.className = 'logout-btn';
-      actions.append(saveBtn, cancelBtn);
-      row.append(grid, actions);
-
-      cancelBtn.addEventListener('click', () => renderSessions(sessions));
-
-      saveBtn.addEventListener('click', async () => {
-        const rawInputs = inputs.map(inp => inp.value.trim());
-        const filled = rawInputs.filter(n => n !== '');
-        if (new Set(filled).size < filled.length) {
-          alert('プレイヤー名が重複しています。');
-          return;
-        }
-        const oldPlayers = players; // same list used to build inputs (may be reconstructed)
-        const newPlayers = rawInputs.map((n, i) => n || `P${i + 1}`);
-
-        // Rename player names inside match records by position
-        const newMatches = (session.matches || []).map(m => ({
-          ...m,
-          players: (m.players || []).map((p, i) => ({
-            ...p,
-            name: newPlayers[i] !== undefined ? newPlayers[i] : p.name
-          }))
-        }));
-
-        saveBtn.disabled = true;
-        saveBtn.textContent = '保存中...';
-        try {
-          await updateDoc(
-            doc(db, 'mahjong_records', currentUser.uid, 'sessions', sid),
-            { players: newPlayers, matches: newMatches }
-          );
-
-          // Rename existing entries in playerHistory (old→new)
-          oldPlayers.forEach((oldName, i) => {
-            const newName = newPlayers[i];
-            if (oldName !== newName)
-              playerHistory = playerHistory.map(n => n === oldName ? newName : n);
-          });
-          // Add any new names that weren't already in history
-          updateHistoryWithNames(newPlayers);
-          await savePlayerHistory();
-        } catch (err) {
-          console.error(err);
-          alert('保存に失敗しました。');
-          saveBtn.disabled = false;
-          saveBtn.textContent = '保存';
-        }
-      });
-    });
-  });
-
-  // Edit match
   container.querySelectorAll('.match-edit-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const sid  = btn.dataset.sid;
-      const midx = Number(btn.dataset.midx);
-      const session = sessions.find(s => s.id === sid);
-      if (!session) return;
-      const sorted = (session.matches || []).slice().sort((a, b) => a.recordedAt < b.recordedAt ? -1 : 1);
-      const match = sorted[midx];
+      const match = matches.find(m => m.id === btn.dataset.mid);
       if (!match) return;
-
       const displayRow = btn.closest('tr');
-      const editRow = buildEditRow(session, match, midx, displayRow);
-      displayRow.replaceWith(editRow);
+      displayRow.replaceWith(buildEditRow(match, displayRow));
     });
   });
 
-  renderAlltimeTotals(sessions);
+  renderAlltimeTotals(allMatches);
 }
 
 // Build an inline edit <tr> for a match
-function buildEditRow(session, match, midx, displayRow) {
+function buildEditRow(match, displayRow) {
   const tr = document.createElement('tr');
   tr.className = 'edit-row';
 
-  // Label cell
+  const colPlayers = (match.players || []).slice().sort((a, b) => a.name < b.name ? -1 : 1);
+
   const labelTd = document.createElement('td');
   labelTd.className = 'date-cell';
-  labelTd.textContent = `${midx + 1}試合目`;
+  labelTd.textContent = formatMatchTime(match.recordedAt);
   tr.appendChild(labelTd);
 
-  // One input per player
-  const inputs = (match.players || []).map((p, i) => {
+  const inputs = colPlayers.map(p => {
     const td = document.createElement('td');
     const inp = document.createElement('input');
     inp.type = 'number';
-    inp.value = (p && typeof p.pt === 'number') ? p.pt : 0;
+    inp.value = typeof p.pt === 'number' ? p.pt : 0;
     inp.className = 'pt-edit-input';
     td.appendChild(inp);
     tr.appendChild(td);
     return inp;
   });
 
-  // Actions cell: sum indicator + save + cancel
   const actionTd = document.createElement('td');
   actionTd.className = 'match-actions-cell';
-
   const sumSpan = document.createElement('span');
   sumSpan.className = 'edit-sum';
-
   const saveBtn = document.createElement('button');
   saveBtn.textContent = '保存';
   saveBtn.className = 'edit-save-btn';
-
   const cancelBtn = document.createElement('button');
   cancelBtn.textContent = '×';
   cancelBtn.className = 'rec-del-btn';
-
   actionTd.append(sumSpan, saveBtn, cancelBtn);
   tr.appendChild(actionTd);
 
@@ -910,7 +638,6 @@ function buildEditRow(session, match, midx, displayRow) {
     sumSpan.textContent = ok ? '合計: 0 ✓' : `合計: ${rounded > 0 ? '+' : ''}${rounded.toFixed(1)}`;
     sumSpan.className = 'edit-sum ' + (ok ? 'sum-ok' : 'sum-ng');
     saveBtn.disabled = !ok;
-    return rounded;
   }
 
   inputs.forEach(inp => inp.addEventListener('input', checkSum));
@@ -919,26 +646,15 @@ function buildEditRow(session, match, midx, displayRow) {
   cancelBtn.addEventListener('click', () => tr.replaceWith(displayRow));
 
   saveBtn.addEventListener('click', async () => {
-    if (Math.abs(Math.round(inputs.reduce((s, inp) => s + (Number(inp.value) || 0), 0) * 10) / 10) >= 1e-9) return;
-
-    const updatedPlayers = (match.players || []).map((p, i) => ({
-      ...p,
-      pt: Number(inputs[i].value) || 0
-    }));
-    const updatedMatch = { ...match, players: updatedPlayers };
-    const allMatches = (session.matches || []).map(m =>
-      m.recordedAt === match.recordedAt ? updatedMatch : m
-    );
+    if (inputs.reduce((s, inp) => s + (Number(inp.value) || 0), 0) !== 0) return;
+    const ptByName = {};
+    colPlayers.forEach((p, i) => { ptByName[p.name] = Number(inputs[i].value) || 0; });
+    const updatedPlayers = (match.players || []).map(p => ({ ...p, pt: ptByName[p.name] ?? p.pt }));
 
     saveBtn.disabled = true;
     saveBtn.textContent = '保存中...';
-
     try {
-      await updateDoc(
-        doc(db, 'mahjong_records', currentUser.uid, 'sessions', session.id),
-        { matches: allMatches }
-      );
-      // onSnapshot re-renders everything automatically
+      await updateDoc(doc(db, 'mahjong_records', currentUser.uid, 'matches', match.id), { players: updatedPlayers });
     } catch (err) {
       console.error('保存エラー:', err);
       alert('保存に失敗しました。');
@@ -969,13 +685,11 @@ function applyTableImport() {
     el('s3_1').value = Math.round(sorted[2].score / 100);
     el('s4_1').value = Math.round(sorted[3].score / 100);
 
-    // Fill name inputs only if they are text inputs (not selects)
+    pendingTableGame = data.tableGame || null;
     [1, 2, 3, 4].forEach((rank, i) => {
       const inp = el(`sn${rank}_1`);
-      if (inp && inp.tagName === 'INPUT') inp.value = sorted[i].name;
+      if (inp) inp.value = sorted[i].name;
     });
-
-    pendingTableGame = data.tableGame || null;
     computeTab1();
 
     const banner = el('import-banner');
@@ -986,17 +700,15 @@ function applyTableImport() {
 applyTableImport();
 
 // ====== Tab 3: All-time totals ======
-function renderAlltimeTotals(sessions) {
+function renderAlltimeTotals(allMatches) {
   const totalsMap = {};
   let totalMatches = 0;
 
-  sessions.forEach(session => {
-    (session.matches || []).forEach(m => {
-      totalMatches++;
-      (m.players || []).forEach(p => {
-        if (!p || !p.name) return;
-        totalsMap[p.name] = (totalsMap[p.name] || 0) + (typeof p.pt === 'number' ? p.pt : 0);
-      });
+  allMatches.forEach(m => {
+    totalMatches++;
+    (m.players || []).forEach(p => {
+      if (!p || !p.name) return;
+      totalsMap[p.name] = (totalsMap[p.name] || 0) + (typeof p.pt === 'number' ? p.pt : 0);
     });
   });
 
