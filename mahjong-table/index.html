@@ -107,10 +107,8 @@
     .wind-row {
       display: flex;
       align-items: center;
-      justify-content: center;
       gap: 7px;
       width: 100%;
-      position: relative;
     }
 
     .wind {
@@ -139,6 +137,12 @@
       color: rgba(255, 255, 255, 0.55);
       cursor: pointer;
       letter-spacing: 0.5px;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: center;
     }
     .pname-inp {
       display: none;
@@ -254,16 +258,15 @@
       font-weight: 900;
       width: 32px;
       height: 24px;
-      display: none;
+      display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
       box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
       letter-spacing: 0;
-      position: absolute;
-      right: 0;
+      visibility: hidden;
     }
-    .kicha-mark.visible { display: flex; }
+    .kicha-mark.visible { visibility: visible; }
 
     /* ── Center panel ────────────────────────────── */
     .center-inner {
@@ -962,7 +965,7 @@
           <div class="setup-card-lbl">PLAYERS</div>
 
           <div class="player-row">
-            <input class="player-name-inp" id="sn0" placeholder="P1" maxlength="8" autocomplete="off">
+            <input class="player-name-inp" id="sn0" placeholder="P1" maxlength="12" autocomplete="off">
             <div class="wind-btns" id="wb0">
               <button class="wind-sel-btn" data-player="0" data-wind="東">東</button>
               <button class="wind-sel-btn" data-player="0" data-wind="南">南</button>
@@ -972,7 +975,7 @@
           </div>
 
           <div class="player-row">
-            <input class="player-name-inp" id="sn1" placeholder="P2" maxlength="8" autocomplete="off">
+            <input class="player-name-inp" id="sn1" placeholder="P2" maxlength="12" autocomplete="off">
             <div class="wind-btns" id="wb1">
               <button class="wind-sel-btn" data-player="1" data-wind="東">東</button>
               <button class="wind-sel-btn" data-player="1" data-wind="南">南</button>
@@ -982,7 +985,7 @@
           </div>
 
           <div class="player-row">
-            <input class="player-name-inp" id="sn2" placeholder="P3" maxlength="8" autocomplete="off">
+            <input class="player-name-inp" id="sn2" placeholder="P3" maxlength="12" autocomplete="off">
             <div class="wind-btns" id="wb2">
               <button class="wind-sel-btn" data-player="2" data-wind="東">東</button>
               <button class="wind-sel-btn" data-player="2" data-wind="南">南</button>
@@ -992,7 +995,7 @@
           </div>
 
           <div class="player-row">
-            <input class="player-name-inp" id="sn3" placeholder="P4" maxlength="8" autocomplete="off">
+            <input class="player-name-inp" id="sn3" placeholder="P4" maxlength="12" autocomplete="off">
             <div class="wind-btns" id="wb3">
               <button class="wind-sel-btn" data-player="3" data-wind="東">東</button>
               <button class="wind-sel-btn" data-player="3" data-wind="南">南</button>
@@ -1075,7 +1078,7 @@
         <div class="wind-row">
           <div class="wind" id="w2">西</div>
           <span class="pname" id="pn2">P3</span>
-          <input class="pname-inp" id="pi2" type="text" maxlength="8">
+          <input class="pname-inp" id="pi2" type="text" maxlength="12">
           <div class="kicha-mark" id="km2"></div>
         </div>
         <div class="srow">
@@ -1093,7 +1096,7 @@
         <div class="wind-row">
           <div class="wind" id="w3">北</div>
           <span class="pname" id="pn3">P4</span>
-          <input class="pname-inp" id="pi3" type="text" maxlength="8">
+          <input class="pname-inp" id="pi3" type="text" maxlength="12">
           <div class="kicha-mark" id="km3"></div>
         </div>
         <div class="srow">
@@ -1136,7 +1139,7 @@
         <div class="wind-row">
           <div class="wind" id="w1">南</div>
           <span class="pname" id="pn1">P2</span>
-          <input class="pname-inp" id="pi1" type="text" maxlength="8">
+          <input class="pname-inp" id="pi1" type="text" maxlength="12">
           <div class="kicha-mark" id="km1"></div>
         </div>
         <div class="srow">
@@ -1154,7 +1157,7 @@
         <div class="wind-row">
           <div class="wind" id="w0">東</div>
           <span class="pname" id="pn0">P1</span>
-          <input class="pname-inp" id="pi0" type="text" maxlength="8">
+          <input class="pname-inp" id="pi0" type="text" maxlength="12">
           <div class="kicha-mark" id="km0"></div>
         </div>
         <div class="srow">
