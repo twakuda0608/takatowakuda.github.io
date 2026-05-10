@@ -888,6 +888,7 @@
       transition: background 0.1s;
     }
     .start-game-btn:active { background: #166534; }
+    .start-game-btn:disabled { background: #1e4d2b; color: rgba(255,255,255,0.35); cursor: default; }
     #startTabBar {
       display: flex;
       border-top: 1px solid rgba(255,255,255,0.08);
@@ -2061,6 +2062,9 @@
     let tableRoundLog = [];
     let riichiCounts = [0, 0, 0, 0];
     let gameRecorded = false;
+    let kiichaSlot = 0;
+    let randomSpinInterval = null;
+    let randomTimeouts = [];
 
     function captureSnapshot() {
       return {
@@ -2113,7 +2117,7 @@
         document.getElementById(`fs${i}`).classList.toggle('on', p.riichi);
         document.getElementById(`pn${i}`).textContent = p.name;
         const km = document.getElementById(`km${i}`);
-        if (p.wind === '東') {
+        if (i === kiichaSlot) {
           km.textContent = ROUND_WINDS[state.roundWind];
           km.classList.add('visible');
         } else {
@@ -2198,10 +2202,22 @@
       });
     });
 
+    function cancelRandomAnimation() {
+      if (randomSpinInterval !== null) { clearInterval(randomSpinInterval); randomSpinInterval = null; }
+      randomTimeouts.forEach(id => clearTimeout(id));
+      randomTimeouts = [];
+      document.querySelectorAll('.wind-sel-btn').forEach(b => {
+        b.classList.remove('wind-lock', 'wind-settle');
+      });
+      document.getElementById('randomWindBtn').disabled = false;
+      document.getElementById('startGameBtn').disabled = false;
+    }
+
     document.getElementById('randomWindBtn').addEventListener('click', () => {
       const btn = document.getElementById('randomWindBtn');
       if (btn.disabled) return;
       btn.disabled = true;
+      document.getElementById('startGameBtn').disabled = true;
 
       // Compute final result upfront
       const finalWinds = ['東','南','西','北'];
@@ -2219,7 +2235,7 @@
       for (let i = 0; i < 4; i++) playerWinds[i] = '東';
       renderStartWindBtns();
 
-      const spinInterval = setInterval(() => {
+      randomSpinInterval = setInterval(() => {
         tick++;
         for (let i = 0; i < 4; i++) {
           if (!locked[i]) playerWinds[i] = WINDS[tick % 4];
@@ -2231,7 +2247,7 @@
       function lockPlayer(pi) {
         locked[pi] = true;
         playerWinds[pi] = finalWinds[pi];
-        if (locked.every(Boolean)) clearInterval(spinInterval);
+        if (locked.every(Boolean)) { clearInterval(randomSpinInterval); randomSpinInterval = null; }
         renderStartWindBtns();
 
         const selBtn = document.querySelector(`#wb${pi} .wind-sel-btn.selected`);
@@ -2253,12 +2269,12 @@
           b.classList.add('wind-settle');
           b.addEventListener('animationend', () => {
             b.classList.remove('wind-settle');
-            if (++settled === settleBtns.length) btn.disabled = false;
+            if (++settled === settleBtns.length) { btn.disabled = false; document.getElementById('startGameBtn').disabled = false; }
           }, { once: true });
         });
       }
 
-      [500, 800, 1100, 1400].forEach((delay, pi) => setTimeout(() => lockPlayer(pi), delay));
+      randomTimeouts = [500, 800, 1100, 1400].map((delay, pi) => setTimeout(() => lockPlayer(pi), delay));
     });
 
     document.querySelectorAll('.start-tab-btn').forEach(btn => {
@@ -2273,6 +2289,7 @@
     });
 
     document.getElementById('startGameBtn').addEventListener('click', () => {
+      cancelRandomAnimation();
       // Collect setup entries; P1 (index 0) always sits at bottom
       const setup = [];
       for (let i = 0; i < 4; i++) {
@@ -2287,6 +2304,7 @@
         state.players[pos].name = player.name;
         state.players[pos].wind = player.wind;
       }
+      kiichaSlot = state.players.findIndex(p => p.wind === '東');
       tableRoundLog = [];
       riichiCounts = [0, 0, 0, 0];
       gameRecorded = false;
