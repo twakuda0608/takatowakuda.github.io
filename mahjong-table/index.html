@@ -1779,66 +1779,81 @@
       updateRecordsUI(user);
 
       if (sessionsUnsub) { sessionsUnsub(); sessionsUnsub = null; }
-      if (!user) { renderSessions([]); return; }
+      if (!user) { renderMatches([]); return; }
 
-      const q = query(collection(db, 'mahjong_records', user.uid, 'sessions'), orderBy('createdAt', 'desc'));
+      const q = query(collection(db, 'mahjong_records', user.uid, 'matches'), orderBy('recordedAt', 'desc'));
       sessionsUnsub = onSnapshot(q, snap => {
-        renderSessions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        renderMatches(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       });
     });
 
-    function renderSessions(sessions) {
+    function groupMatches(allMatches) {
+      const groups = [];
+      const keyToGroup = new Map();
+      allMatches.forEach(m => {
+        const date = m.recordedAt
+          ? new Date(m.recordedAt).toLocaleDateString('ja-JP', { year:'numeric', month:'numeric', day:'numeric', weekday:'short' })
+          : '?';
+        const sortedNames = (m.players || []).map(p => p.name).sort().join('|');
+        const key = `${date}||${sortedNames}`;
+        if (!keyToGroup.has(key)) {
+          const colPlayers = (m.players || []).map(p => p.name).sort();
+          const group = { date, colPlayers, matches: [] };
+          keyToGroup.set(key, group);
+          groups.push(group);
+        }
+        keyToGroup.get(key).matches.push(m);
+      });
+      groups.forEach(g => g.matches.sort((a, b) => (a.recordedAt||'') < (b.recordedAt||'') ? -1 : 1));
+      return groups;
+    }
+
+    function renderMatches(allMatches) {
       const container = document.getElementById('rec-sessions-list');
       if (!container) return;
-      if (sessions.length === 0) {
+      if (allMatches.length === 0) {
         container.innerHTML = '<div class="rec-empty">まだ記録がありません</div>';
         return;
       }
-      container.innerHTML = sessions.map(session => {
-        const date = session.createdAt
-          ? session.createdAt.toDate().toLocaleDateString('ja-JP', { year:'numeric', month:'numeric', day:'numeric', weekday:'short' })
-          : '?';
-        const players = session.players || [];
-        const matches = (session.matches || []).slice().sort((a,b) => a.recordedAt < b.recordedAt ? -1 : 1);
-        const matchRows = matches.length === 0
-          ? '<div class="rec-match-row"><div class="rec-match-num">—</div><div class="rec-match-pts" style="color:rgba(255,255,255,0.3)">まだ試合なし</div></div>'
-          : matches.map((m, mi) => {
-              const hasDetail = !!m.tableGame;
-              const ptsStr = (m.players || []).slice().sort((a,b)=>(a.rank||9)-(b.rank||9))
-                .map(p => `${escH(p.name||'')} ${fmtPt(p.pt)}`).join('　');
-              return `<div class="rec-match-row" data-sid="${escH(session.id)}" data-midx="${mi}">
-                <div class="rec-match-num">${mi+1}試合目</div>
-                <div class="rec-match-pts">${ptsStr}</div>
-                ${hasDetail ? '<div class="rec-match-detail-badge">詳細</div>' : ''}
-                <div class="rec-match-arrow">›</div>
-              </div>`;
-            }).join('');
+      const groups = groupMatches(allMatches);
+      container.innerHTML = groups.map(group => {
+        const { date, colPlayers, matches: gMatches } = group;
+        const matchRows = gMatches.map((m, mi) => {
+          const hasDetail = !!m.tableGame;
+          const ptsStr = (m.players || []).slice().sort((a,b)=>(a.rank||9)-(b.rank||9))
+            .map(p => `${escH(p.name||'')} ${fmtPt(p.pt)}`).join('　');
+          return `<div class="rec-match-row" data-mid="${escH(m.id)}" data-midx="${mi}">
+            <div class="rec-match-num">${mi+1}試合目</div>
+            <div class="rec-match-pts">${ptsStr}</div>
+            ${hasDetail ? '<div class="rec-match-detail-badge">詳細</div>' : ''}
+            <div class="rec-match-arrow">›</div>
+          </div>`;
+        }).join('');
         return `<div class="rec-session-card">
           <div class="rec-session-header">
             <div class="rec-session-date">${escH(date)}</div>
-            <div class="rec-session-players">${players.map(escH).join(' · ')}</div>
+            <div class="rec-session-players">${colPlayers.map(escH).join(' · ')}</div>
           </div>
           ${matchRows}
         </div>`;
       }).join('');
 
-      container.querySelectorAll('.rec-match-row[data-sid]').forEach(row => {
+      const matchMap = {};
+      allMatches.forEach(m => { matchMap[m.id] = m; });
+      container.querySelectorAll('.rec-match-row[data-mid]').forEach(row => {
         row.addEventListener('click', () => {
-          const session = sessions.find(s => s.id === row.dataset.sid);
-          if (!session) return;
-          const sorted = (session.matches || []).slice().sort((a,b)=>a.recordedAt<b.recordedAt?-1:1);
-          const match = sorted[Number(row.dataset.midx)];
-          if (match) openMatchDetail(session, match, Number(row.dataset.midx));
+          const match = matchMap[row.dataset.mid];
+          if (match) openMatchDetail(match, Number(row.dataset.midx));
         });
       });
     }
 
-    function openMatchDetail(session, match, matchIdx) {
+    function openMatchDetail(match, matchIdx) {
       const overlay = document.getElementById('matchDetailOverlay');
       const body = document.getElementById('detailBody');
       const title = document.getElementById('detailTitle');
-      const date = session.createdAt
-        ? session.createdAt.toDate().toLocaleDateString('ja-JP', { month:'numeric', day:'numeric' })
+      const date = match.recordedAt
+        ? new Date(match.recordedAt).toLocaleDateString('ja-JP', { month:'numeric', day:'numeric' })
         : '?';
       title.textContent = `${date}　${matchIdx + 1}試合目`;
       body.innerHTML = buildDetailContent(match);
