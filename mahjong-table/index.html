@@ -2396,54 +2396,50 @@
 
       function runShuffle(onDone) {
         const container = document.getElementById('sgmTiles');
-        const total = 10 + Math.floor(Math.random() * 6);
-        const ANI = 220;
+        const STEPS = 5;
+        const ANI = 260;
+        const INTERVAL = 370; // > ANI so each animation finishes before the next step
         let count = 0;
-        let busy = false;
 
-        sgmShuffleTimer = setInterval(() => {
-          if (busy) return;
-          busy = true;
+        function doStep() {
+          // FLIP — record all 5 positions before reorder
+          const oldRects = new Map(sgmTileData.map(t => [t.el, t.el.getBoundingClientRect()]));
 
-          const a = Math.floor(Math.random() * 5);
-          let b; do { b = Math.floor(Math.random() * 5); } while (b === a);
-
-          // FLIP — record positions before reorder
-          const rA = sgmTileData[a].el.getBoundingClientRect();
-          const rB = sgmTileData[b].el.getBoundingClientRect();
-
-          // Swap data + reorder DOM
-          [sgmTileData[a], sgmTileData[b]] = [sgmTileData[b], sgmTileData[a]];
+          // Shuffle all 5
+          for (let i = 4; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [sgmTileData[i], sgmTileData[j]] = [sgmTileData[j], sgmTileData[i]];
+          }
           sgmTileData.forEach(t => container.appendChild(t.el));
 
           // FLIP — read new positions (forces reflow)
-          const nA = sgmTileData[a].el.getBoundingClientRect();
-          const nB = sgmTileData[b].el.getBoundingClientRect();
+          const newRects = new Map(sgmTileData.map(t => [t.el, t.el.getBoundingClientRect()]));
 
-          // FLIP — apply inverse offset instantly
-          sgmTileData[a].el.style.transition = 'none';
-          sgmTileData[a].el.style.transform = `translateX(${rB.left - nA.left}px)`;
-          sgmTileData[b].el.style.transition = 'none';
-          sgmTileData[b].el.style.transform = `translateX(${rA.left - nB.left}px)`;
+          // FLIP — apply inverse offsets instantly for all 5
+          sgmTileData.forEach(t => {
+            t.el.style.transition = 'none';
+            t.el.style.transform = `translateX(${oldRects.get(t.el).left - newRects.get(t.el).left}px)`;
+          });
 
-          void sgmTileData[a].el.offsetWidth; // force reflow before enabling transition
+          void sgmTileData[0].el.offsetWidth; // force reflow
 
-          // FLIP — animate to final position
-          sgmTileData[a].el.style.transition = `transform ${ANI}ms ease-in-out`;
-          sgmTileData[a].el.style.transform = '';
-          sgmTileData[b].el.style.transition = `transform ${ANI}ms ease-in-out`;
-          sgmTileData[b].el.style.transform = '';
+          // FLIP — animate all 5 to their new positions simultaneously
+          sgmTileData.forEach(t => {
+            t.el.style.transition = `transform ${ANI}ms ease-in-out`;
+            t.el.style.transform = '';
+          });
 
-          setTimeout(() => { busy = false; }, ANI);
-
-          if (++count >= total) {
+          if (++count >= STEPS) {
             clearInterval(sgmShuffleTimer); sgmShuffleTimer = null;
             setTimeout(() => {
               sgmTileData.forEach(t => { t.el.style.transition = ''; t.el.style.transform = ''; });
               onDone();
-            }, ANI + 100);
+            }, ANI + 80);
           }
-        }, 300);
+        }
+
+        doStep(); // fire first step immediately
+        sgmShuffleTimer = setInterval(doStep, INTERVAL);
       }
 
       function promptPicker() {
