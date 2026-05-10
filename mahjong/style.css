@@ -4,7 +4,7 @@
 :root { --max: 480px; }
 
 body{ padding: 0 20px 40px; }
-.wrap{ max-width: var(--max); margin: 0 auto; }
+.wrap{ max-width: var(--max); margin: 0 auto; width: 100%; box-sizing: border-box; overflow-x: hidden; }
 
 /* =========================
    Fieldset / form controls
@@ -15,6 +15,9 @@ fieldset{
   padding:16px;
   margin:12px 0;
   background: transparent;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 legend{ padding:0 6px; font-weight:600; color:var(--brand); }
 
@@ -88,6 +91,11 @@ input[readonly]{
 
 .rank{
   font-weight:600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .rank-name {
   font-weight: normal;
@@ -99,7 +107,8 @@ input[readonly]{
 .sumline{
   font-variant-numeric: tabular-nums;
   text-align:right;
-  min-width:170px;  
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .muted{ color:#666; }
 .footer{ font-size:12px; color:#666; margin-top:16px; text-align:center; }
@@ -128,8 +137,9 @@ input[readonly]{
 @media (max-width: 460px) {
   .page-card { padding: 16px; }
   .tabbtn { font-size: 13px; padding: 7px 10px; }
-  .score-row .score-num { width: 90px; }
+  .score-row .score-num { width: 70px; }
   .sp-br { display: inline; }
+  .sumline { font-size: 13px; }
 }
 
 /* =========================
@@ -191,7 +201,7 @@ input[type="checkbox"]{ width:auto; }
   margin: 0;
 }
 .score-row .score-num {
-  width: 110px;
+  width: 80px;
   flex-shrink: 0;
   margin: 0;
 }
