@@ -580,6 +580,23 @@ body[data-view="view-detail"] .back-fab { display: none; }
   height: 40px;
 }
 
+/* 外部リンクボタン（ラベル横） */
+.item-link {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--brand);
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 5px;
+  padding: 1px 7px;
+  text-decoration: none;
+  vertical-align: middle;
+  white-space: nowrap;
+  transition: background 0.12s;
+}
+.item-link:hover { background: #dbeafe; }
+
 /* btns タイプ：サブパネル（配線方式→詳細展開） */
 .btns-sub {
   width: 100%;
