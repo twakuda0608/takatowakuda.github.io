@@ -58,7 +58,7 @@ const CHECKLIST = [
         name: '🟡 WANT（あると嬉しい）',
         items: [
           {
-            id: 'pre_want_washlet', type: 'btns', label: 'ウォッシュレット（トイレ内コンセント）',
+            id: 'v_washlet', type: 'btns', label: 'ウォッシュレット ⭐',
             opts: [
               { value: 'yes',    label: '○ あり' },
               { value: 'outlet', label: '△ コンセントのみ' },
@@ -67,7 +67,7 @@ const CHECKLIST = [
             bad: ['no'], warn: ['outlet']
           },
           { id: 'pre_want_closet',    type: 'check', label: 'クローゼット広め' },
-          { id: 'pre_want_garbage24', type: 'check', label: '24時間ゴミ出し', noNote: { id: 'pre_want_garbage24_reason', ph: '理由・備考（収集曜日など）' } },
+          { id: 'v_garbage24', type: 'check', label: '24時間ゴミ出し ⭐', noNote: { id: 'v_garbage_how', ph: 'ゴミの出し方（曜日・場所・方法など）' } },
           { id: 'pre_want_shower',    type: 'check', label: 'シンクのシャワーヘッド動く' },
           { id: 'pre_want_kitchen',   type: 'check', label: 'キッチン周りのスペースあり' },
         ]
@@ -87,8 +87,46 @@ const CHECKLIST = [
             opts: [{ value: '都市ガス', label: '都市ガス' }, { value: 'LPG', label: 'LPG' }, { value: '不明', label: '不明' }],
             bad: ['LPG']
           },
-          { id: 'v_fiber', type: 'check', label: '光コンセント確認（VDSLでない）' },
           { id: 'v_flets', type: 'check', label: 'フレッツ光で住所検索済み（ファミリータイプ注意）' },
+        ]
+      },
+      {
+        name: '🌐 インターネット回線',
+        items: [
+          {
+            id: 'v_net_type', type: 'btns', label: '配線方式',
+            opts: [
+              { value: 'fiber',   label: '光配線' },
+              { value: 'lan',     label: 'LAN' },
+              { value: 'vdsl',    label: 'VDSL' },
+              { value: 'unknown', label: '不明' },
+            ],
+            bad: [], warn: ['lan', 'vdsl', 'unknown'],
+            subGroups: [
+              {
+                showFor: ['fiber'],
+                hint: '光配線（FTTH）：ファイバーが室内まで直結。\n個人型 → 自由にプロバイダーを選択可。\n一括型 → 建物が一括契約したISPのみ。',
+                items: [
+                  {
+                    id: 'v_net_contract', type: 'btns', label: '契約形態',
+                    opts: [
+                      { value: 'indiv', label: '個人型' },
+                      { value: 'bulk',  label: '一括型' },
+                      { value: 'unk',   label: '不明' },
+                    ],
+                    bad: [], warn: ['bulk', 'unk']
+                  },
+                ]
+              },
+              {
+                showFor: ['lan', 'vdsl'],
+                hint: 'LAN・VDSL方式は速度に制限あり。\n個人で光ファイバーの新規工事を依頼できれば高速回線が使える。\n管理会社に許可されているか確認しよう。',
+                items: [
+                  { id: 'v_net_indiv_ok', type: 'check', label: '個人で光ファイバー工事を依頼できる（管理会社確認済）' },
+                ]
+              },
+            ],
+          },
         ]
       },
       {
@@ -233,7 +271,9 @@ function esc(s) {
 }
 
 function calcProgress(checks) {
-  const all   = CHECKLIST.flatMap(s => getAllItems(s)).filter(i => i.type === 'check');
+  const seen = new Set();
+  const all  = CHECKLIST.flatMap(s => getAllItems(s))
+    .filter(i => i.type === 'check' && !seen.has(i.id) && seen.add(i.id));
   const total = all.length;
   const done  = all.filter(i => checks[i.id] === true || checks[i.id] === false).length;
   return { done, total, pct: total ? Math.round(done / total * 100) : 0 };
@@ -554,10 +594,22 @@ function renderItem(item, checks) {
       const btnCls     = isSelected ? (isBadOpt ? ' yn-no-on' : isWarnOpt ? ' yn-warn-on' : ' yn-yes-on') : '';
       return `<button class="yn-btn multi-btn${btnCls}" data-id="${esc(item.id)}" data-val="${esc(o.value)}" data-bad="${isBadOpt}" data-warn="${isWarnOpt}">${esc(o.label)}</button>`;
     }).join('');
+    const subHtml = (item.subGroups ?? []).map(sg => {
+      const visible = v != null && sg.showFor.includes(v);
+      const hintHtml = sg.hint
+        ? `<div class="btns-sub-hint">${sg.hint.replace(/\n/g, '<br>')}</div>`
+        : '';
+      return `
+        <div class="btns-sub${visible ? '' : ' btns-sub--hidden'}" data-show-for="${esc(sg.showFor.join(','))}">
+          ${hintHtml}
+          ${(sg.items ?? []).map(si => renderItem(si, checks)).join('')}
+        </div>`;
+    }).join('');
     return `
       <div class="row-yn row-yn--btns${rowCls}">
         <span class="yn-label">${item.label}</span>
         <div class="yn-btns">${btns}</div>
+        ${subHtml}
       </div>`;
   }
 
@@ -684,6 +736,21 @@ function bindChecklistEvents(wrap) {
       const noteWrap = row.querySelector('.yn-note');
       if (noteWrap) noteWrap.classList.toggle('hidden', newVal !== false);
 
+      // 同じIDが別セクションにある場合は同期
+      wrap.querySelectorAll(`.yn-btn[data-id="${id}"][data-yn]`).forEach(otherBtn => {
+        const otherRow = otherBtn.closest('.row-yn');
+        if (otherRow === row) return;
+        otherRow.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('yn-yes-on', 'yn-no-on'));
+        if (newVal !== null) {
+          otherRow.querySelector(`.yn-btn[data-yn="${newVal}"]`)
+            ?.classList.add(newVal ? 'yn-yes-on' : 'yn-no-on');
+        }
+        otherRow.classList.toggle('row-on', newVal === true);
+        otherRow.classList.toggle('row-no', newVal === false);
+        const otherNote = otherRow.querySelector('.yn-note');
+        if (otherNote) otherNote.classList.toggle('hidden', newVal !== false);
+      });
+
       saveCheck(id, newVal);
       updateSectionCounter(btn);
     });
@@ -715,13 +782,17 @@ function bindChecklistEvents(wrap) {
   // ボタン多択
   wrap.querySelectorAll('.multi-btn[data-id]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const id    = btn.dataset.id;
-      const v     = btn.dataset.val;
-      const isBad = btn.dataset.bad === 'true';
-      const row   = btn.closest('.row-yn');
+      const id     = btn.dataset.id;
+      const v      = btn.dataset.val;
+      const isBad  = btn.dataset.bad === 'true';
       const isWarn = btn.dataset.warn === 'true';
-      const wasOn = btn.classList.contains('yn-yes-on') || btn.classList.contains('yn-warn-on') || btn.classList.contains('yn-no-on');
-      row.querySelectorAll('.multi-btn').forEach(b => b.classList.remove('yn-yes-on', 'yn-warn-on', 'yn-no-on'));
+      const row    = btn.closest('.row-yn');
+      const wasOn  = btn.classList.contains('yn-yes-on') || btn.classList.contains('yn-warn-on') || btn.classList.contains('yn-no-on');
+
+      // サブパネル内のボタンを巻き込まないよう直下の .yn-btns のみクリア
+      const directBtns = row.querySelector(':scope > .yn-btns');
+      (directBtns ?? row).querySelectorAll('.multi-btn')
+        .forEach(b => b.classList.remove('yn-yes-on', 'yn-warn-on', 'yn-no-on'));
 
       let newVal = null;
       if (!wasOn) {
@@ -731,6 +802,36 @@ function bindChecklistEvents(wrap) {
       row.classList.toggle('row-on',   newVal != null && !isBad && !isWarn);
       row.classList.toggle('row-warn', newVal != null && isWarn);
       row.classList.toggle('row-no',   newVal != null && isBad);
+
+      // サブパネルの表示切替
+      row.querySelectorAll(':scope > .btns-sub').forEach(panel => {
+        const showFor = panel.dataset.showFor.split(',');
+        panel.classList.toggle('btns-sub--hidden', newVal == null || !showFor.includes(newVal));
+      });
+
+      // 同じIDが別セクションにある場合は同期
+      wrap.querySelectorAll(`.multi-btn[data-id="${id}"]`).forEach(otherBtn => {
+        const otherRow = otherBtn.closest('.row-yn');
+        if (otherRow === row) return;
+        const oBtns = otherRow.querySelector(':scope > .yn-btns');
+        (oBtns ?? otherRow).querySelectorAll('.multi-btn')
+          .forEach(b => b.classList.remove('yn-yes-on', 'yn-warn-on', 'yn-no-on'));
+        if (newVal != null) {
+          const matchBtn = (oBtns ?? otherRow).querySelector(`.multi-btn[data-val="${newVal}"]`);
+          if (matchBtn) {
+            const mb = matchBtn.dataset.bad === 'true';
+            const mw = matchBtn.dataset.warn === 'true';
+            matchBtn.classList.add(mb ? 'yn-no-on' : mw ? 'yn-warn-on' : 'yn-yes-on');
+            otherRow.classList.toggle('row-on',   !mb && !mw);
+            otherRow.classList.toggle('row-warn', mw);
+            otherRow.classList.toggle('row-no',   mb);
+          } else {
+            otherRow.classList.remove('row-on', 'row-warn', 'row-no');
+          }
+        } else {
+          otherRow.classList.remove('row-on', 'row-warn', 'row-no');
+        }
+      });
 
       saveCheck(id, newVal);
       updateSectionCounter(btn);
@@ -801,7 +902,12 @@ function bindChecklistEvents(wrap) {
 
   // テキストエリア
   wrap.querySelectorAll('textarea.area-inp[data-id]').forEach(ta => {
-    ta.addEventListener('input', () => saveCheck(ta.dataset.id, ta.value));
+    ta.addEventListener('input', () => {
+      saveCheck(ta.dataset.id, ta.value);
+      wrap.querySelectorAll(`textarea.area-inp[data-id="${ta.dataset.id}"]`).forEach(other => {
+        if (other !== ta) other.value = ta.value;
+      });
+    });
   });
 
   // セレクト
@@ -848,9 +954,10 @@ function updateSectionCounter(el) {
   if (!card) return;
   const pctEl = card.querySelector('.section-pct');
   if (!pctEl) return;
-  const rows  = card.querySelectorAll('.row-yn');
+  // サブパネル内の行は集計から除外
+  const rows  = [...card.querySelectorAll('.row-yn')].filter(r => !r.closest('.btns-sub'));
   const total = rows.length;
-  const done  = [...rows].filter(r => r.querySelector('.yn-yes-on, .yn-no-on')).length;
+  const done  = rows.filter(r => r.querySelector('.yn-yes-on, .yn-no-on')).length;
   pctEl.textContent = `${done}/${total}`;
   pctEl.classList.toggle('all-done', done === total && total > 0);
 }
