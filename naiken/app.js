@@ -87,12 +87,33 @@ const CHECKLIST = [
             opts: [{ value: '都市ガス', label: '都市ガス' }, { value: 'LPG', label: 'LPG' }, { value: '不明', label: '不明' }],
             bad: ['LPG']
           },
-          { id: 'v_flets', type: 'check', label: 'フレッツ光で住所検索済み（ファミリータイプ注意）' },
         ]
       },
       {
         name: '🌐 インターネット回線',
         items: [
+          {
+            id: 'v_flets', type: 'btns', label: 'フレッツ光 住所検索',
+            href: 'https://flets.com/app2/cao/',
+            opts: [
+              { value: 'mansion', label: 'マンション型' },
+              { value: 'family',  label: 'ファミリー型' },
+              { value: 'none',    label: '対象外' },
+            ],
+            bad: ['none'], warn: ['family'],
+            subGroups: [
+              {
+                showFor: ['family'],
+                hint: 'ファミリー型：建物への一括引き込みなし。個別の光工事が必要な可能性が高い。下の配線方式と合わせて管理会社に確認しよう。',
+                items: []
+              },
+              {
+                showFor: ['none'],
+                hint: 'フレッツ光の提供対象外。別プロバイダーで確認するか、下の配線方式を現地で確認しよう。',
+                items: []
+              },
+            ]
+          },
           {
             id: 'v_net_type', type: 'btns', label: '配線方式',
             opts: [
@@ -605,9 +626,12 @@ function renderItem(item, checks) {
           ${(sg.items ?? []).map(si => renderItem(si, checks)).join('')}
         </div>`;
     }).join('');
+    const linkHtml = item.href
+      ? ` <a href="${esc(item.href)}" target="_blank" rel="noopener noreferrer" class="item-link">↗ 開く</a>`
+      : '';
     return `
       <div class="row-yn row-yn--btns${rowCls}">
-        <span class="yn-label">${item.label}</span>
+        <span class="yn-label">${item.label}${linkHtml}</span>
         <div class="yn-btns">${btns}</div>
         ${subHtml}
       </div>`;
