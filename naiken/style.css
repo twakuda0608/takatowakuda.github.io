@@ -562,6 +562,31 @@ body[data-view="view-detail"] .back-fab { display: none; }
 .yn-btn:hover        { background: #f1f5f9; border-color: #cbd5e1; }
 .yn-btn.yn-yes-on    { background: #dcfce7; border-color: #16a34a; color: #16a34a; }
 .yn-btn.yn-no-on     { background: #fee2e2; border-color: #dc2626; color: #dc2626; }
+.str-btn             { width: auto; padding: 0 12px; }
+
+/* 徒歩スライダー */
+.walk-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.walk-range,
+.age-range {
+  flex: 1;
+  cursor: pointer;
+  height: 4px;
+}
+.walk-badge {
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  min-width: 72px;
+  text-align: right;
+}
+.walk-empty { color: #94a3b8; font-weight: 400; }
+.walk-good  { color: #16a34a; }
+.walk-warn  { color: #d97706; }
+.walk-bad   { color: #dc2626; }
 
 /* テキスト・数値・テキストエリア・セレクト行 */
 .row-input {
