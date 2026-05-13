@@ -57,9 +57,17 @@ const CHECKLIST = [
       {
         name: '🟡 WANT（あると嬉しい）',
         items: [
-          { id: 'pre_want_washlet',   type: 'check', label: 'ウォッシュレット（トイレ内コンセント）' },
+          {
+            id: 'pre_want_washlet', type: 'btns', label: 'ウォッシュレット（トイレ内コンセント）',
+            opts: [
+              { value: 'yes',    label: '○ あり' },
+              { value: 'outlet', label: '△ コンセントのみ' },
+              { value: 'no',     label: '×' },
+            ],
+            bad: ['no'], warn: ['outlet']
+          },
           { id: 'pre_want_closet',    type: 'check', label: 'クローゼット広め' },
-          { id: 'pre_want_garbage24', type: 'check', label: '24時間ゴミ出し' },
+          { id: 'pre_want_garbage24', type: 'check', label: '24時間ゴミ出し', noNote: { id: 'pre_want_garbage24_reason', ph: '理由・備考（収集曜日など）' } },
           { id: 'pre_want_shower',    type: 'check', label: 'シンクのシャワーヘッド動く' },
           { id: 'pre_want_kitchen',   type: 'check', label: 'キッチン周りのスペースあり' },
         ]
@@ -71,39 +79,16 @@ const CHECKLIST = [
     title: '🔍 内見チェック',
     desc: 'この順番に確認していこう',
     groups: [
-{
+      {
         name: '⚠️ 最初に確認（致命的）',
         items: [
           {
-            id: 'v_gas', type: 'select', label: 'ガスの種類',
-            opts: ['（未確認）', '都市ガス', 'プロパン（LPG）', '不明'],
-            bad: ['プロパン（LPG）']
+            id: 'v_gas', type: 'btns', label: 'ガスの種類',
+            opts: [{ value: '都市ガス', label: '都市ガス' }, { value: 'LPG', label: 'LPG' }, { value: '不明', label: '不明' }],
+            bad: ['LPG']
           },
           { id: 'v_fiber', type: 'check', label: '光コンセント確認（VDSLでない）' },
           { id: 'v_flets', type: 'check', label: 'フレッツ光で住所検索済み（ファミリータイプ注意）' },
-        ]
-      },
-      {
-        name: '🔧 設備・基本',
-        items: [
-          { id: 'v_ac_age',     type: 'text', label: 'エアコン年式', ph: '例: 2020年製' },
-          { id: 'v_leftover',   type: 'check', label: '残置物なし（あれば↓に記載）' },
-          { id: 'v_leftover_n', type: 'area',  label: '残置物の詳細', ph: '種類・サイズなど' },
-          {
-            id: 'v_breaker', type: 'num', label: 'ブレーカー電流数', suffix: 'A',
-            hint: '30A以上が目安', warn: v => v < 30 ? '30A未満：電力不足の可能性あり' : ''
-          },
-        ]
-      },
-      {
-        name: '🧱 床・壁（防音）',
-        items: [
-          { id: 'v_floor', type: 'check', label: '床が硬い（フワフワしていない）' },
-          { id: 'v_knock', type: 'check', label: '壁ノック → 重く鈍い音（防音良好）' },
-          {
-            id: 'v_wall_mm', type: 'num', label: '壁厚', suffix: 'mm',
-            hint: '180mm以上が目安', warn: v => v < 180 ? '180mm未満：防音に不安あり' : ''
-          },
         ]
       },
       {
@@ -112,6 +97,38 @@ const CHECKLIST = [
           { id: 'v_shoe_box',   type: 'check', label: 'シューズボックスあり' },
           { id: 'v_shoe_depth', type: 'text',  label: 'シューズボックス奥行き', ph: '例: 28cm' },
           { id: 'v_shoe_adj',   type: 'check', label: '棚の高さ調整可' },
+          {
+            id: 'v_interphone', type: 'btns', label: 'インターホン',
+            opts: [{ value: 'monitor', label: 'モニター' }, { value: 'voice', label: '音声のみ' }, { value: 'none', label: '×' }],
+            bad: ['none']
+          },
+        ]
+      },
+      {
+        name: '🏠 リビング・部屋',
+        items: [
+          { id: 'v_floor', type: 'check', label: '床が硬い（フワフワしていない）' },
+          { id: 'v_knock', type: 'check', label: '壁ノック → 重く鈍い音（防音良好）' },
+          {
+            id: 'v_wall_mm', type: 'num', label: '壁厚', suffix: 'mm',
+            hint: '180mm以上が目安', warn: v => v < 180 ? '180mm未満：防音に不安あり' : ''
+          },
+          { id: 'v_room_size',  type: 'text',  label: '寝室・リビングの実測', ph: '例: W3.2m×D4.5m' },
+          { id: 'v_bed_ok',     type: 'check', label: 'ベッドが置けるか（メジャーで計測）' },
+          { id: 'v_closet',     type: 'text',  label: 'クローゼットサイズ', ph: '例: W180×D80cm' },
+          { id: 'v_screen',     type: 'check', label: '網戸あり' },
+        ]
+      },
+      {
+        name: '🔧 設備・基本',
+        items: [
+          { id: 'v_ac_age',     type: 'text', label: 'エアコン年式', ph: '例: 2020年製' },
+          {
+            id: 'v_breaker', type: 'num', label: 'ブレーカー電流数', suffix: 'A',
+            hint: '30A以上が目安', warn: v => v < 30 ? '30A未満：電力不足の可能性あり' : ''
+          },
+          { id: 'v_leftover',   type: 'check', label: '残置物なし（あれば↓に記載）' },
+          { id: 'v_leftover_n', type: 'area',  label: '残置物の詳細', ph: '種類・サイズなど' },
         ]
       },
       {
@@ -139,27 +156,24 @@ const CHECKLIST = [
       {
         name: '🚽 トイレ',
         items: [
-          { id: 'v_washlet',    type: 'check', label: 'ウォッシュレットあり ⭐' },
-          { id: 'v_toilet_out', type: 'check', label: 'トイレ内コンセントあり' },
+          {
+            id: 'v_washlet', type: 'btns', label: 'ウォッシュレット ⭐',
+            opts: [
+              { value: 'yes',    label: '○ あり' },
+              { value: 'outlet', label: '△ コンセントのみ' },
+              { value: 'no',     label: '×' },
+            ],
+            bad: ['no'], warn: ['outlet']
+          },
         ]
       },
       {
-        name: '🏠 その他設備',
+        name: '🏢 共用部・外',
         items: [
-          { id: 'v_interphone', type: 'check', label: 'インターホン動作確認' },
-          { id: 'v_screen',     type: 'check', label: '網戸あり' },
-          { id: 'v_closet',     type: 'text',  label: 'クローゼットサイズ', ph: '例: W180×D80cm' },
-          { id: 'v_bed_ok',     type: 'check', label: 'ベッドが置けるか（メジャーで計測）' },
-          { id: 'v_room_size',  type: 'text',  label: '寝室・リビングの実測', ph: '例: W3.2m×D4.5m' },
-        ]
-      },
-      {
-        name: '🏢 共用部・環境',
-        items: [
-          { id: 'v_garbage24', type: 'check', label: '24時間ゴミ出しOK ⭐' },
+          { id: 'v_board_ok',  type: 'check', label: '共用部の掲示板に問題なし' },
+          { id: 'v_garbage24', type: 'check', label: '24時間ゴミ出しOK ⭐', noNote: { id: 'v_garbage_how', ph: 'ゴミの出し方（曜日・場所・方法など）' } },
           { id: 'v_garbage_n', type: 'text',  label: 'ゴミ置き場', ph: '場所・出し方・曜日' },
           { id: 'v_bike',      type: 'text',  label: '駐輪場', ph: '有無・台数・料金' },
-          { id: 'v_board_ok',  type: 'check', label: '共用部の掲示板に問題なし' },
         ]
       },
     ]
@@ -483,13 +497,33 @@ function renderItem(item, checks) {
   if (item.type === 'check') {
     const isYes = val === true;
     const isNo  = val === false;
+    const rowState = isYes ? ' row-on' : isNo ? ' row-no' : '';
+    const btnsHtml = `
+      <div class="yn-btns">
+        <button class="yn-btn${isYes ? ' yn-yes-on' : ''}" data-id="${item.id}" data-yn="true">○</button>
+        <button class="yn-btn${isNo  ? ' yn-no-on'  : ''}" data-id="${item.id}" data-yn="false">×</button>
+      </div>`;
+
+    if (item.noNote) {
+      const noteHtml = `
+        <div class="yn-note${isNo ? '' : ' hidden'}">
+          <textarea class="area-inp" data-id="${esc(item.noNote.id)}"
+                    placeholder="${esc(item.noNote.ph ?? '')}" rows="2">${esc(String(checks[item.noNote.id] ?? ''))}</textarea>
+        </div>`;
+      return `
+        <div class="row-yn${rowState} row-yn--hasnote">
+          <div class="yn-main">
+            <span class="yn-label">${item.label}</span>
+            ${btnsHtml}
+          </div>
+          ${noteHtml}
+        </div>`;
+    }
+
     return `
-      <div class="row-yn${isYes ? ' row-on' : isNo ? ' row-no' : ''}">
+      <div class="row-yn${rowState}">
         <span class="yn-label">${item.label}</span>
-        <div class="yn-btns">
-          <button class="yn-btn${isYes ? ' yn-yes-on' : ''}" data-id="${item.id}" data-yn="true">○</button>
-          <button class="yn-btn${isNo  ? ' yn-no-on'  : ''}" data-id="${item.id}" data-yn="false">×</button>
-        </div>
+        ${btnsHtml}
       </div>`;
   }
 
@@ -504,6 +538,26 @@ function renderItem(item, checks) {
           <button class="yn-btn str-btn${v === 'SRC' ? ' yn-yes-on' : ''}" data-id="${item.id}" data-str="SRC">○ SRC</button>
           <button class="yn-btn str-btn${v === 'bad' ? ' yn-no-on'  : ''}" data-id="${item.id}" data-str="bad">×</button>
         </div>
+      </div>`;
+  }
+
+  // ── ボタン多択 ──
+  if (item.type === 'btns') {
+    const v       = val ?? null;
+    const isBad   = v != null && (item.bad  ?? []).includes(v);
+    const isWarn  = v != null && (item.warn ?? []).includes(v);
+    const rowCls  = v == null ? '' : isBad ? ' row-no' : isWarn ? ' row-warn' : ' row-on';
+    const btns    = (item.opts ?? []).map(o => {
+      const isSelected = v === o.value;
+      const isBadOpt   = (item.bad  ?? []).includes(o.value);
+      const isWarnOpt  = (item.warn ?? []).includes(o.value);
+      const btnCls     = isSelected ? (isBadOpt ? ' yn-no-on' : isWarnOpt ? ' yn-warn-on' : ' yn-yes-on') : '';
+      return `<button class="yn-btn multi-btn${btnCls}" data-id="${esc(item.id)}" data-val="${esc(o.value)}" data-bad="${isBadOpt}" data-warn="${isWarnOpt}">${esc(o.label)}</button>`;
+    }).join('');
+    return `
+      <div class="row-yn row-yn--btns${rowCls}">
+        <span class="yn-label">${item.label}</span>
+        <div class="yn-btns">${btns}</div>
       </div>`;
   }
 
@@ -627,6 +681,9 @@ function bindChecklistEvents(wrap) {
       row.classList.toggle('row-on', newVal === true);
       row.classList.toggle('row-no', newVal === false);
 
+      const noteWrap = row.querySelector('.yn-note');
+      if (noteWrap) noteWrap.classList.toggle('hidden', newVal !== false);
+
       saveCheck(id, newVal);
       updateSectionCounter(btn);
     });
@@ -649,6 +706,31 @@ function bindChecklistEvents(wrap) {
       }
       row.classList.toggle('row-on', newVal === 'RC' || newVal === 'SRC');
       row.classList.toggle('row-no', newVal === 'bad');
+
+      saveCheck(id, newVal);
+      updateSectionCounter(btn);
+    });
+  });
+
+  // ボタン多択
+  wrap.querySelectorAll('.multi-btn[data-id]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id    = btn.dataset.id;
+      const v     = btn.dataset.val;
+      const isBad = btn.dataset.bad === 'true';
+      const row   = btn.closest('.row-yn');
+      const isWarn = btn.dataset.warn === 'true';
+      const wasOn = btn.classList.contains('yn-yes-on') || btn.classList.contains('yn-warn-on') || btn.classList.contains('yn-no-on');
+      row.querySelectorAll('.multi-btn').forEach(b => b.classList.remove('yn-yes-on', 'yn-warn-on', 'yn-no-on'));
+
+      let newVal = null;
+      if (!wasOn) {
+        btn.classList.add(isBad ? 'yn-no-on' : isWarn ? 'yn-warn-on' : 'yn-yes-on');
+        newVal = v;
+      }
+      row.classList.toggle('row-on',   newVal != null && !isBad && !isWarn);
+      row.classList.toggle('row-warn', newVal != null && isWarn);
+      row.classList.toggle('row-no',   newVal != null && isBad);
 
       saveCheck(id, newVal);
       updateSectionCounter(btn);
