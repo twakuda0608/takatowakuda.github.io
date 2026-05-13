@@ -37,27 +37,33 @@ const CHECKLIST = [
     id: 'pre',
     title: '📋 図面確認',
     desc: '内見前に図面・募集情報で確認しよう',
-    items: [
-      { id: 'pre_area',     type: 'check', label: '中央線沿線（新宿〜西国分寺間）' },
-      { id: 'pre_walk',     type: 'check', label: '駅徒歩15分以内' },
-{ id: 'pre_layout',   type: 'check', label: '1DK以上（部屋が2つ確保できる）' },
-      { id: 'pre_2person',  type: 'check', label: '2人入居OK（同棲可）' },
+    groups: [
       {
-        id: 'pre_rent', type: 'num', label: '賃料（管理費込）', suffix: '円',
-        warn: v => v > 135000 ? '13.5万円超えています！' : ''
+        name: '🔴 MUST（必須条件）',
+        items: [
+          { id: 'pre_area',      type: 'check',  label: '中央線沿線（新宿〜西国分寺間）' },
+          { id: 'pre_station',   type: 'text',   label: '最寄り駅', ph: '例: 吉祥寺' },
+          { id: 'pre_walk',      type: 'walk',   label: '駅徒歩' },
+          { id: 'pre_layout',    type: 'check',  label: '1DK以上（部屋が2つ確保できる）' },
+          { id: 'pre_2person',   type: 'check',  label: '2人入居OK（同棲可）' },
+          { id: 'pre_rent',      type: 'num',    label: '賃料（管理費込）', suffix: '円', warn: v => v > 135000 ? '13.5万円超えています！' : '' },
+          { id: 'pre_age',       type: 'age',    label: '築年数' },
+          { id: 'pre_structure', type: 'structure', label: '構造' },
+          { id: 'pre_bath',      type: 'check',  label: 'バス・トイレ別' },
+          { id: 'pre_kitchen',   type: 'check',  label: 'キッチンにまな板スペースあり（図面確認）' },
+          { id: 'pre_fiber',     type: 'check',  label: '光回線利用可（VDSLでないか確認）' },
+        ]
       },
       {
-        id: 'pre_age', type: 'num', label: '築年数', suffix: '年築',
-        warn: v => v > 25 ? '築25年超えています！' : ''
+        name: '🟡 WANT（あると嬉しい）',
+        items: [
+          { id: 'pre_want_washlet',   type: 'check', label: 'ウォッシュレット（トイレ内コンセント）' },
+          { id: 'pre_want_closet',    type: 'check', label: 'クローゼット広め' },
+          { id: 'pre_want_garbage24', type: 'check', label: '24時間ゴミ出し' },
+          { id: 'pre_want_shower',    type: 'check', label: 'シンクのシャワーヘッド動く' },
+          { id: 'pre_want_kitchen',   type: 'check', label: 'キッチン周りのスペースあり' },
+        ]
       },
-      {
-        id: 'pre_structure', type: 'select', label: '構造',
-        opts: ['（未選択）', 'RC造', 'SRC造', 'その他'],
-        bad: ['その他']
-      },
-      { id: 'pre_bath',    type: 'check', label: 'バス・トイレ別' },
-      { id: 'pre_kitchen', type: 'check', label: 'キッチンにまな板スペースあり（図面確認）' },
-      { id: 'pre_fiber',   type: 'check', label: '光回線利用可（VDSLでないか確認）' },
     ]
   },
   {
@@ -402,13 +408,9 @@ function openProperty(id) {
 
   const infoEl = document.getElementById('prop-info');
   if (infoEl) {
-    const overBudget = prop.rent && Number(prop.rent) > 135000;
     infoEl.innerHTML = `
       <input class="pi-name-inp" data-meta="name" value="${esc(prop.name)}" placeholder="物件名を入力">
       <div class="pi-rows">
-        <div class="pi-row"><span class="pi-lbl">最寄り駅</span><input class="pi-inp" data-meta="station" value="${esc(prop.station ?? '')}" placeholder="例: 吉祥寺"></div>
-        <div class="pi-row pi-row-walk"><span class="pi-lbl">駅徒歩</span><div class="pi-walk-w"><input class="pi-walk-range" type="range" data-meta="walkMin" value="${prop.walkMin ?? 0}" min="0" max="15" step="1"><span class="pi-walk-val">${prop.walkMin ? `${prop.walkMin}分` : '未入力'}</span></div></div>
-        <div class="pi-row"><span class="pi-lbl">賃料</span><div class="pi-inp-w"><input class="pi-inp pi-num" type="number" data-meta="rent" value="${prop.rent ?? ''}" placeholder="128000"><span class="pi-sfx">円</span>${overBudget ? '<span class="pi-over">⚠️ 予算オーバー</span>' : ''}</div></div>
         <div class="pi-row"><span class="pi-lbl">住所</span><input class="pi-inp" data-meta="address" value="${esc(prop.address ?? '')}" placeholder="例: 武蔵野市吉祥寺..."></div>
       </div>`;
     bindMetaEvents(infoEl);
@@ -491,6 +493,60 @@ function renderItem(item, checks) {
       </div>`;
   }
 
+  // ── 構造3択 ──
+  if (item.type === 'structure') {
+    const v = val ?? null;
+    return `
+      <div class="row-yn${v === 'RC' || v === 'SRC' ? ' row-on' : v === 'bad' ? ' row-no' : ''}">
+        <span class="yn-label">${item.label}</span>
+        <div class="yn-btns">
+          <button class="yn-btn str-btn${v === 'RC'  ? ' yn-yes-on' : ''}" data-id="${item.id}" data-str="RC">○ RC</button>
+          <button class="yn-btn str-btn${v === 'SRC' ? ' yn-yes-on' : ''}" data-id="${item.id}" data-str="SRC">○ SRC</button>
+          <button class="yn-btn str-btn${v === 'bad' ? ' yn-no-on'  : ''}" data-id="${item.id}" data-str="bad">×</button>
+        </div>
+      </div>`;
+  }
+
+  // ── 徒歩スライダー ──
+  if (item.type === 'walk') {
+    const v = val != null ? Number(val) : 0;
+    let cls = 'walk-empty', icon = '—';
+    if      (v > 0 && v <= 10) { cls = 'walk-good'; icon = '○'; }
+    else if (v <= 15)           { cls = 'walk-warn'; icon = '△'; }
+    else if (v === 16)          { cls = 'walk-bad';  icon = '×'; }
+    const dispLabel = v === 0 ? '未入力' : v >= 16 ? '16分以上' : `${v}分`;
+    const accentColor = cls === 'walk-good' ? '#16a34a' : cls === 'walk-warn' ? '#d97706' : cls === 'walk-bad' ? '#dc2626' : '#94a3b8';
+    return `
+      <div class="row-input">
+        <div class="row-label">${item.label}</div>
+        <div class="walk-wrap">
+          <input type="range" class="walk-range" data-id="${item.id}"
+                 value="${v}" min="0" max="16" step="1" style="accent-color:${accentColor}">
+          <span class="walk-badge ${cls}">${icon} ${dispLabel}</span>
+        </div>
+      </div>`;
+  }
+
+  // ── 築年数スライダー ──
+  if (item.type === 'age') {
+    const v = val != null ? Number(val) : 0;
+    let cls = 'walk-empty', icon = '—';
+    if      (v > 0 && v <= 20) { cls = 'walk-good'; icon = '○'; }
+    else if (v <= 25)           { cls = 'walk-warn'; icon = '△'; }
+    else if (v > 25)            { cls = 'walk-bad';  icon = '×'; }
+    const dispLabel = v === 0 ? '未入力' : v >= 26 ? '26年以上' : `築${v}年`;
+    const accentColor = cls === 'walk-good' ? '#16a34a' : cls === 'walk-warn' ? '#d97706' : cls === 'walk-bad' ? '#dc2626' : '#94a3b8';
+    return `
+      <div class="row-input">
+        <div class="row-label">${item.label}</div>
+        <div class="walk-wrap">
+          <input type="range" class="age-range" data-id="${item.id}"
+                 value="${v}" min="0" max="26" step="1" style="accent-color:${accentColor}">
+          <span class="walk-badge ${cls}">${icon} ${dispLabel}</span>
+        </div>
+      </div>`;
+  }
+
   // ── テキスト入力 ──
   if (item.type === 'text') {
     const v = val != null ? esc(String(val)) : '';
@@ -557,7 +613,7 @@ function renderItem(item, checks) {
 
 function bindChecklistEvents(wrap) {
   // ○/×ボタン
-  wrap.querySelectorAll('.yn-btn[data-id]').forEach(btn => {
+  wrap.querySelectorAll('.yn-btn[data-yn]').forEach(btn => {
     btn.addEventListener('click', () => {
       const id    = btn.dataset.id;
       const isYes = btn.dataset.yn === 'true';
@@ -573,6 +629,61 @@ function bindChecklistEvents(wrap) {
 
       saveCheck(id, newVal);
       updateSectionCounter(btn);
+    });
+  });
+
+  // 構造3択
+  wrap.querySelectorAll('.str-btn[data-id]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id  = btn.dataset.id;
+      const str = btn.dataset.str;
+      const row = btn.closest('.row-yn');
+      const wasOn = btn.classList.contains('yn-yes-on') || btn.classList.contains('yn-no-on');
+
+      row.querySelectorAll('.str-btn').forEach(b => b.classList.remove('yn-yes-on', 'yn-no-on'));
+
+      let newVal = null;
+      if (!wasOn) {
+        btn.classList.add(str === 'bad' ? 'yn-no-on' : 'yn-yes-on');
+        newVal = str;
+      }
+      row.classList.toggle('row-on', newVal === 'RC' || newVal === 'SRC');
+      row.classList.toggle('row-no', newVal === 'bad');
+
+      saveCheck(id, newVal);
+      updateSectionCounter(btn);
+    });
+  });
+
+  // 徒歩スライダー
+  wrap.querySelectorAll('input.walk-range[data-id]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const v = Number(inp.value);
+      saveCheck(inp.dataset.id, v || null);
+      let cls = 'walk-empty', icon = '—';
+      if      (v > 0 && v <= 10) { cls = 'walk-good'; icon = '○'; }
+      else if (v <= 15)           { cls = 'walk-warn'; icon = '△'; }
+      else if (v === 16)          { cls = 'walk-bad';  icon = '×'; }
+      const dispLabel = v === 0 ? '未入力' : v >= 16 ? '16分以上' : `${v}分`;
+      inp.style.accentColor = cls === 'walk-good' ? '#16a34a' : cls === 'walk-warn' ? '#d97706' : cls === 'walk-bad' ? '#dc2626' : '#94a3b8';
+      const badge = inp.closest('.walk-wrap')?.querySelector('.walk-badge');
+      if (badge) { badge.className = `walk-badge ${cls}`; badge.textContent = `${icon} ${dispLabel}`; }
+    });
+  });
+
+  // 築年数スライダー
+  wrap.querySelectorAll('input.age-range[data-id]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const v = Number(inp.value);
+      saveCheck(inp.dataset.id, v || null);
+      let cls = 'walk-empty', icon = '—';
+      if      (v > 0 && v <= 20) { cls = 'walk-good'; icon = '○'; }
+      else if (v <= 25)           { cls = 'walk-warn'; icon = '△'; }
+      else if (v > 25)            { cls = 'walk-bad';  icon = '×'; }
+      const dispLabel = v === 0 ? '未入力' : v >= 26 ? '26年以上' : `築${v}年`;
+      inp.style.accentColor = cls === 'walk-good' ? '#16a34a' : cls === 'walk-warn' ? '#d97706' : cls === 'walk-bad' ? '#dc2626' : '#94a3b8';
+      const badge = inp.closest('.walk-wrap')?.querySelector('.walk-badge');
+      if (badge) { badge.className = `walk-badge ${cls}`; badge.textContent = `${icon} ${dispLabel}`; }
     });
   });
 
