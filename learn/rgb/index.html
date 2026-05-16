@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/common.css">
+  <link rel="stylesheet" href="style.css">
+  <title>RGB カラーを学ぼう</title>
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5XPYDMQ921"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-5XPYDMQ921');
+</script>
+</head>
+<body>
+  <div class="wrap">
+    <h1>RGB カラーを学ぼう</h1>
+    <div class="page-card">
+
+      <div class="color-preview-wrap">
+        <div class="color-preview" id="colorPreview"></div>
+        <div class="hex-display" id="hexDisplay">#FF0000</div>
+      </div>
+
+      <div class="sliders">
+
+        <div class="slider-row">
+          <div class="channel-label r-label">R</div>
+          <div class="slider-track-wrap">
+            <input type="range" class="slider r-slider" id="sliderR" min="0" max="255" value="255">
+          </div>
+          <input type="number" class="value-input" id="valueR" min="0" max="255" value="255">
+        </div>
+
+        <div class="slider-row">
+          <div class="channel-label g-label">G</div>
+          <div class="slider-track-wrap">
+            <input type="range" class="slider g-slider" id="sliderG" min="0" max="255" value="0">
+          </div>
+          <input type="number" class="value-input" id="valueG" min="0" max="255" value="0">
+        </div>
+
+        <div class="slider-row">
+          <div class="channel-label b-label">B</div>
+          <div class="slider-track-wrap">
+            <input type="range" class="slider b-slider" id="sliderB" min="0" max="255" value="0">
+          </div>
+          <input type="number" class="value-input" id="valueB" min="0" max="255" value="0">
+        </div>
+
+      </div>
+
+      <div class="bars-section">
+        <div class="bar-row">
+          <span class="bar-label r-label">R</span>
+          <div class="bar-track"><div class="bar r-bar" id="barR"></div></div>
+          <span class="bar-value" id="barValR">255</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label g-label">G</span>
+          <div class="bar-track"><div class="bar g-bar" id="barG"></div></div>
+          <span class="bar-value" id="barValG">0</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label b-label">B</span>
+          <div class="bar-track"><div class="bar b-bar" id="barB"></div></div>
+          <span class="bar-value" id="barValB">0</span>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h2 class="info-title">RGB とは？</h2>
+        <p class="info-text">
+          画面の色は <strong>赤（Red）・緑（Green）・青（Blue）</strong> の 3 色の光を混ぜて作られます。
+          それぞれ <strong>0〜255</strong> の 256 段階で強さを指定でき、組み合わせると
+          <strong>256<sup>3</sup> = 約 1677 万色</strong> を表現できます。
+        </p>
+        <div class="tips-grid">
+          <div class="tip-card">
+            <div class="tip-swatch" style="background:#ff0000"></div>
+            <div class="tip-body">
+              <div class="tip-name">赤</div>
+              <div class="tip-code">R:255 G:0 B:0</div>
+            </div>
+          </div>
+          <div class="tip-card">
+            <div class="tip-swatch" style="background:#00ff00"></div>
+            <div class="tip-body">
+              <div class="tip-name">緑</div>
+              <div class="tip-code">R:0 G:255 B:0</div>
+            </div>
+          </div>
+          <div class="tip-card">
+            <div class="tip-swatch" style="background:#0000ff"></div>
+            <div class="tip-body">
+              <div class="tip-name">青</div>
+              <div class="tip-code">R:0 G:0 B:255</div>
+            </div>
+          </div>
+          <div class="tip-card">
+            <div class="tip-swatch" style="background:#ffffff; border:1px solid #ddd"></div>
+            <div class="tip-body">
+              <div class="tip-name">白</div>
+              <div class="tip-code">R:255 G:255 B:255</div>
+            </div>
+          </div>
+          <div class="tip-card">
+            <div class="tip-swatch" style="background:#000000"></div>
+            <div class="tip-body">
+              <div class="tip-name">黒</div>
+              <div class="tip-code">R:0 G:0 B:0</div>
+            </div>
+          </div>
+          <div class="tip-card">
+            <div class="tip-swatch" style="background:#ffff00"></div>
+            <div class="tip-body">
+              <div class="tip-name">黄</div>
+              <div class="tip-code">R:255 G:255 B:0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="app.js" defer></script>
+  <script src="/common.js"></script>
+</body>
+</html>
