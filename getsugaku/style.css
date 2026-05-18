@@ -634,6 +634,28 @@ body {
 }
 .add-payer-btn:hover { border-color: var(--brand); color: var(--brand); }
 
+/* ===== Global split section ===== */
+#global-split-container:not(:empty) {
+  border-top: 1px solid var(--border);
+}
+
+.gs-section {
+  padding: 14px 20px 16px;
+}
+
+.gs-title {
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 12px;
+}
+
+.gs-valid-icon { font-weight: 700; margin-left: 4px; }
+.gs-valid-icon.ok { color: #16a34a; }
+.gs-valid-icon.ng { color: #dc2626; }
+
 /* ===== Split inputs ===== */
 /* ===== Split mode toggle ===== */
 .split-mode-toggle {
