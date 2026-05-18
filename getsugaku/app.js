@@ -394,6 +394,105 @@ const CAT_COLORS = {
 };
 const CAT_ORDER = ['賃貸', 'インフラ', 'サブスク', '保険', 'その他'];
 
+// ===== Forecast chart =====
+function fmtYenCompact(n) {
+  if (n >= 10000) {
+    const m = n / 10000;
+    return `¥${Number.isInteger(m) ? m : m.toFixed(1)}万`;
+  }
+  return fmtYen(n);
+}
+
+function renderForecastChart() {
+  const panel = document.getElementById('forecast-panel');
+  if (!panel) return;
+  if (payments.length === 0) {
+    panel.innerHTML = '<p class="empty-msg">項目を追加するとグラフが表示されます</p>';
+    return;
+  }
+
+  const MONTHS = 24;
+  const now    = new Date();
+  const data   = [];
+
+  for (let i = 1; i <= MONTHS; i++) {
+    const d0     = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const mStart = d0;
+    const mEnd   = new Date(d0.getFullYear(), d0.getMonth() + 1, 0);
+    const catAmts = {};
+    let total = 0;
+
+    payments.forEach(p => {
+      const freq = p.frequencyMonths || 1;
+      let d = new Date(p.nextPaymentDate + 'T00:00:00');
+      while (d < mStart) d = new Date(d.getFullYear(), d.getMonth() + freq, d.getDate());
+      if (d >= mStart && d <= mEnd) {
+        const cat = CAT_ORDER.includes(p.category) ? p.category : 'その他';
+        catAmts[cat] = (catAmts[cat] || 0) + p.amount;
+        total += p.amount;
+      }
+    });
+
+    data.push({
+      year: d0.getFullYear(), month: d0.getMonth() + 1,
+      showYear: d0.getMonth() === 0 || i === 1,
+      total, catAmts, isNext: i === 1,
+    });
+  }
+
+  const max  = Math.max(...data.map(d => d.total), 1);
+  const BAR_H = 120;
+
+  const bars = data.map(d => {
+    const totalH = d.total > 0 ? Math.max(4, Math.round(d.total / max * BAR_H)) : 0;
+    const segments = CAT_ORDER
+      .filter(cat => d.catAmts[cat] > 0)
+      .map(cat => {
+        const h = Math.max(2, Math.round(d.catAmts[cat] / d.total * totalH));
+        return `<div class="forecast-seg" style="height:${h}px;background:${CAT_COLORS[cat]}"></div>`;
+      }).join('');
+
+    return `
+      <div class="forecast-col${d.isNext ? ' forecast-col-next' : ''}">
+        <div class="forecast-amount">${d.total > 0 ? fmtYenCompact(d.total) : ''}</div>
+        <div class="forecast-bar-wrap">
+          <div class="forecast-bar" style="height:${totalH}px">${segments}</div>
+        </div>
+        <div class="forecast-baseline"></div>
+        <div class="forecast-month">${d.month}月</div>
+        <div class="forecast-year">${d.showYear ? d.year : ''}</div>
+      </div>`;
+  }).join('');
+
+  panel.innerHTML = `
+    <div class="forecast-header">
+      <span class="forecast-title">月別支払い予測（24ヶ月）</span>
+      <div class="forecast-legend">
+        ${CAT_ORDER.map(cat => `
+          <span class="forecast-leg-item">
+            <span class="forecast-leg-dot" style="background:${CAT_COLORS[cat]}"></span>${cat}
+          </span>`).join('')}
+      </div>
+    </div>
+    <div class="forecast-scroll">
+      <div class="forecast-chart">${bars}</div>
+    </div>`;
+}
+
+function setupForecastToggle() {
+  const card  = document.getElementById('next-month-card');
+  const panel = document.getElementById('forecast-panel');
+  if (!card || !panel) return;
+  card.addEventListener('click', () => {
+    const open = panel.style.display !== 'none';
+    panel.style.display = open ? 'none' : '';
+    card.classList.toggle('forecast-open', !open);
+    if (!open) renderForecastChart();
+  });
+}
+
+setupForecastToggle();
+
 // ===== Sorting & reordering =====
 function catIndex(cat) {
   const i = CAT_ORDER.indexOf(cat);
@@ -625,6 +724,11 @@ function render() {
 
   // 円グラフ
   renderPieChart();
+
+  // 月別予測グラフ（開いているときのみ再描画）
+  if (document.getElementById('forecast-panel')?.style.display !== 'none') {
+    renderForecastChart();
+  }
 
   // 件数
   document.getElementById('item-count').textContent = payments.length ? `${payments.length}件` : '';
