@@ -51,6 +51,16 @@
       </div>
     </div>
 
+    <div id="chart-card" class="chart-card" style="display:none;">
+      <div class="chart-header">カテゴリ別 月額内訳</div>
+      <div class="chart-body">
+        <div class="chart-donut-wrap">
+          <svg id="pie-chart" viewBox="0 0 200 200"></svg>
+        </div>
+        <div id="chart-legend" class="chart-legend"></div>
+      </div>
+    </div>
+
     <div id="breakdown-card" class="breakdown-card" style="display:none;">
       <table class="breakdown-table">
         <thead>
@@ -73,6 +83,7 @@
         <div id="payers-list" class="payers-list"></div>
         <button type="button" id="add-payer-btn" class="add-payer-btn">+ 追加</button>
       </div>
+      <div id="movein-container"></div>
       <div id="global-split-container"></div>
     </section>
 
@@ -120,6 +131,7 @@
           <div class="form-group">
             <label for="f-next-date">次回支払日</label>
             <input type="date" id="f-next-date" required>
+            <div class="date-shortcuts" id="f-next-date-shortcuts"></div>
           </div>
           <div class="form-group">
             <label for="f-category">カテゴリ</label>
@@ -129,6 +141,12 @@
               <option value="サブスク">サブスク</option>
               <option value="保険">保険</option>
               <option value="その他">その他</option>
+            </select>
+          </div>
+          <div class="form-group" id="add-payer-override-group" style="display:none;">
+            <label for="f-payer-override">誰が払う？</label>
+            <select id="f-payer-override">
+              <option value="">両方（設定通り）</option>
             </select>
           </div>
           <div class="form-group form-group-wide">
@@ -145,6 +163,7 @@
         <h2 class="section-title">全項目一覧</h2>
         <span id="item-count" class="item-count"></span>
       </div>
+      <div id="freq-summary" class="freq-summary"></div>
       <div id="payments-list" class="payments-list">
         <p class="empty-msg">まだ項目がありません</p>
       </div>
@@ -188,6 +207,7 @@
           <div class="form-group">
             <label for="e-next-date">次回支払日</label>
             <input type="date" id="e-next-date" required>
+            <div class="date-shortcuts" id="e-next-date-shortcuts"></div>
           </div>
           <div class="form-group">
             <label for="e-category">カテゴリ</label>
@@ -197,6 +217,12 @@
               <option value="サブスク">サブスク</option>
               <option value="保険">保険</option>
               <option value="その他">その他</option>
+            </select>
+          </div>
+          <div class="form-group" id="edit-payer-override-group" style="display:none;">
+            <label for="e-payer-override">誰が払う？</label>
+            <select id="e-payer-override">
+              <option value="">両方（設定通り）</option>
             </select>
           </div>
           <div class="form-group form-group-wide">
