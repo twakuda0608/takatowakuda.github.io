@@ -26,11 +26,15 @@ const provider = new GoogleAuthProvider();
 const DEFAULT_COLORS = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b'];
 
 // ===== State =====
-let currentUser = null;
-let payments    = [];
-let payers      = [
+let currentUser  = null;
+let payments     = [];
+let payers       = [
   { name: '自分',       color: DEFAULT_COLORS[0] },
-  { name: 'パートナー', color: DEFAULT_COLORS[1] }
+  { name: 'パートナー', color: DEFAULT_COLORS[1] },
+];
+let globalSplits = [
+  { name: '自分',       numer: 50, denom: 100 },
+  { name: 'パートナー', numer: 50, denom: 100 },
 ];
 let editingId = null;
 let unsub     = null;
@@ -77,7 +81,7 @@ onAuthStateChanged(auth, async user => {
     userNameEl.textContent    = user.displayName || user.email;
     loginScreen.style.display = 'none';
     mainContent.style.display = 'block';
-    await loadPayers(user.uid);
+    await loadSettings(user.uid);
     subscribePayments(user.uid);
   } else {
     loginBtn.style.display    = 'inline-flex';
@@ -86,38 +90,63 @@ onAuthStateChanged(auth, async user => {
     mainContent.style.display = 'none';
     if (unsub) { unsub(); unsub = null; }
     payments = [];
-    payers   = [
-      { name: '自分',       color: DEFAULT_COLORS[0] },
-      { name: 'パートナー', color: DEFAULT_COLORS[1] }
-    ];
+    resetDefaults();
   }
 });
 
-// ===== Payers =====
-async function loadPayers(uid) {
+function resetDefaults() {
+  payers = [
+    { name: '自分',       color: DEFAULT_COLORS[0] },
+    { name: 'パートナー', color: DEFAULT_COLORS[1] },
+  ];
+  globalSplits = equalSplits();
+}
+
+// ===== Settings (payers + globalSplits) =====
+
+function equalSplits() {
+  const n = payers.length;
+  const share = Math.round(100 / n);
+  return payers.map((p, i) => ({
+    name:  p.name,
+    numer: i === n - 1 ? 100 - share * (n - 1) : share,
+    denom: 100,
+  }));
+}
+
+async function loadSettings(uid) {
   try {
     const snap = await getDoc(doc(db, 'users', uid));
-    if (snap.exists() && Array.isArray(snap.data().payers) && snap.data().payers.length > 0) {
-      payers = snap.data().payers.map((p, i) =>
-        typeof p === 'string' ? { name: p, color: DEFAULT_COLORS[i] || '#64748b' } : p
-      );
+    if (snap.exists()) {
+      const d = snap.data();
+      if (Array.isArray(d.payers) && d.payers.length > 0) {
+        payers = d.payers.map((p, i) =>
+          typeof p === 'string' ? { name: p, color: DEFAULT_COLORS[i] || '#64748b' } : p
+        );
+      }
+      if (Array.isArray(d.globalSplits) && d.globalSplits.length > 0) {
+        globalSplits = d.globalSplits;
+      } else {
+        globalSplits = equalSplits();
+      }
     }
   } catch { /* ルール未設定時はデフォルト */ }
   renderPayerSettings();
-  buildSplitContainer('add-split-container', null);
+  renderGlobalSplits();
 }
 
-async function savePayers() {
+async function saveSettings() {
   try {
-    await setDoc(doc(db, 'users', currentUser.uid), { payers }, { merge: true });
-  } catch { alert('支払い者の保存に失敗しました。'); }
+    await setDoc(doc(db, 'users', currentUser.uid), { payers, globalSplits }, { merge: true });
+  } catch { alert('設定の保存に失敗しました。Firestoreのルールを確認してください。'); }
 }
 
+// ===== Payer settings =====
 function renderPayerSettings() {
   payersList.innerHTML = payers.map((p, i) => `
     <div class="payer-item">
       <input type="color" class="payer-color-input" value="${p.color}" data-index="${i}" title="色を変更">
-      <input type="text" class="payer-name-input" value="${esc(p.name)}" data-index="${i}" maxlength="20" placeholder="名前">
+      <input type="text"  class="payer-name-input"  value="${esc(p.name)}" data-index="${i}" maxlength="20" placeholder="名前">
       ${payers.length > 1
         ? `<button type="button" class="payer-del-btn" data-index="${i}" title="削除">×</button>`
         : ''}
@@ -125,21 +154,25 @@ function renderPayerSettings() {
   `).join('');
 
   payersList.querySelectorAll('.payer-color-input').forEach(input => {
-    input.addEventListener('input', () => {
+    input.addEventListener('input',  () => {
       payers[parseInt(input.dataset.index)].color = input.value;
-      buildSplitContainer('add-split-container', null);
+      renderGlobalSplits();
       render();
     });
-    input.addEventListener('change', () => savePayers());
+    input.addEventListener('change', () => saveSettings());
   });
 
   payersList.querySelectorAll('.payer-name-input').forEach(input => {
     input.addEventListener('change', () => {
-      const val = input.value.trim();
-      if (!val) { input.value = payers[parseInt(input.dataset.index)].name; return; }
-      payers[parseInt(input.dataset.index)].name = val;
-      savePayers();
-      buildSplitContainer('add-split-container', null);
+      const idx     = parseInt(input.dataset.index);
+      const val     = input.value.trim();
+      if (!val) { input.value = payers[idx].name; return; }
+      const oldName = payers[idx].name;
+      payers[idx].name = val;
+      const gs = globalSplits.find(s => s.name === oldName);
+      if (gs) gs.name = val;
+      saveSettings();
+      renderGlobalSplits();
       render();
     });
   });
@@ -147,9 +180,10 @@ function renderPayerSettings() {
   payersList.querySelectorAll('.payer-del-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       payers.splice(parseInt(btn.dataset.index), 1);
-      savePayers();
+      globalSplits = equalSplits();
+      saveSettings();
       renderPayerSettings();
-      buildSplitContainer('add-split-container', null);
+      renderGlobalSplits();
       render();
     });
   });
@@ -160,235 +194,133 @@ function renderPayerSettings() {
 addPayerBtn.addEventListener('click', () => {
   if (payers.length >= 4) return;
   payers.push({ name: `メンバー${payers.length + 1}`, color: DEFAULT_COLORS[payers.length] || '#64748b' });
-  savePayers();
+  globalSplits = equalSplits();
+  saveSettings();
   renderPayerSettings();
-  buildSplitContainer('add-split-container', null);
+  renderGlobalSplits();
   render();
 });
 
-// ===== Split inputs =====
-// splits は { name, numer, denom } で保存。
-// 割合モード: denom=100, numer=入力した%値
-// 金額モード: denom=合計金額, numer=入力した円
-// → computeShare(total, split) = Math.round(total * numer / denom) で必ず整数
+// ===== Global split UI =====
+function renderGlobalSplits() {
+  const container = document.getElementById('global-split-container');
+  if (!container) return;
 
-function computeShare(totalAmount, split) {
-  if (split?.numer !== undefined && split.denom > 0) {
-    return Math.round(totalAmount * split.numer / split.denom);
-  }
-  // 旧フォーマット (ratio %) の後方互換
-  return Math.round(totalAmount * (split?.ratio || 0) / 100);
-}
+  if (payers.length <= 1) { container.innerHTML = ''; return; }
 
-function splitPct(split) {
-  if (split?.numer !== undefined && split.denom > 0) {
-    return Math.round(split.numer / split.denom * 100);
-  }
-  return Math.round(split?.ratio || 0);
-}
-
-function buildSplitContainer(containerId, existingSplits) {
-  const container = document.getElementById(containerId);
-  if (!container || payers.length <= 1) {
-    if (container) container.innerHTML = '';
-    return;
-  }
-
-  const amtId    = containerId === 'add-split-container' ? 'f-amount' : 'e-amount';
-  const getTotal = () => Math.round(parseFloat(document.getElementById(amtId)?.value) || 0);
-
-  // 既存splits から初期%値を取得
-  const initPct = name => {
-    if (existingSplits) {
-      const s = existingSplits.find(s => s.name === name);
-      if (s?.numer !== undefined && s.denom > 0) return s.numer / s.denom * 100;
-      if (s?.ratio !== undefined) return s.ratio;
-    }
-    return 100 / payers.length;
+  const getPct = name => {
+    const s = globalSplits.find(s => s.name === name);
+    return s ? Math.round(s.numer / s.denom * 100) : Math.round(100 / payers.length);
   };
 
-  container.dataset.mode = 'percent';
-
-  function draw(overrideVals) {
-    const mode  = container.dataset.mode;
-    const total = getTotal();
-    const vals  = payers.map((p, i) =>
-      overrideVals?.[i] ??
-      (mode === 'percent' ? Math.round(initPct(p.name)) : Math.round(total * initPct(p.name) / 100))
-    );
-
-    container.innerHTML = `
-      <label class="split-label">支払い分担</label>
-      <div class="split-mode-toggle">
-        <button type="button" class="mode-btn ${mode === 'percent' ? 'active' : ''}" data-mode="percent">割合</button>
-        <button type="button" class="mode-btn ${mode === 'amount'  ? 'active' : ''}" data-mode="amount">金額</button>
-      </div>
+  container.innerHTML = `
+    <div class="gs-section">
+      <div class="gs-title">全体の分担割合</div>
       <div class="split-presets">
-        <button type="button" class="split-preset" data-action="equal">均等</button>
+        <button type="button" class="split-preset" id="gs-equal">均等</button>
         ${payers.map(p => `
-          <button type="button" class="split-preset" data-action="sole" data-payer="${esc(p.name)}">
+          <button type="button" class="split-preset gs-sole" data-payer="${esc(p.name)}">
             <span class="preset-dot" style="background:${p.color}"></span>${esc(p.name)}のみ
           </button>
         `).join('')}
       </div>
       <div class="split-rows">
-        ${payers.map((p, i) => `
+        ${payers.map(p => `
           <div class="split-row">
             <span class="split-color-dot" style="background:${p.color}"></span>
             <span class="split-name">${esc(p.name)}</span>
-            <input type="number" class="split-input" data-payer="${esc(p.name)}"
-              min="0" step="1" value="${vals[i]}">
-            <span class="split-unit">${mode === 'percent' ? '%' : '円'}</span>
+            <input type="number" class="split-input gs-input" data-payer="${esc(p.name)}"
+              min="0" max="100" step="1" value="${getPct(p.name)}">
+            <span class="split-unit">%</span>
           </div>
         `).join('')}
       </div>
       <div class="split-footer">
-        ${mode === 'amount' ? `<span class="split-total-ref">合計金額: ${fmtYen(total)}</span>` : ''}
-        <span class="split-total-line">合計: <span class="split-total-num">0</span>${mode === 'percent' ? '%' : '円'} <span class="split-valid-icon"></span></span>
+        <span class="split-total-line">
+          合計: <span class="gs-total-num">0</span>%
+          <span class="gs-valid-icon"></span>
+        </span>
       </div>
-    `;
+    </div>
+  `;
 
-    bind();
-    refresh();
-  }
+  container.querySelector('#gs-equal').addEventListener('click', () => {
+    const inputs = container.querySelectorAll('.gs-input');
+    const n = inputs.length, share = Math.round(100 / n);
+    inputs.forEach((inp, i) => { inp.value = i === n - 1 ? 100 - share * (n - 1) : share; });
+    gsRefresh(container);
+    commitGlobalSplits(container);
+  });
 
-  function bind() {
-    // モード切替
-    container.querySelectorAll('.mode-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const oldMode = container.dataset.mode;
-        const newMode = btn.dataset.mode;
-        if (oldMode === newMode) return;
-
-        // 現在値を%に変換してから新モードの値を計算
-        const inputs  = container.querySelectorAll('.split-input');
-        const total   = getTotal();
-        const newVals = payers.map(p => {
-          const inp = Array.from(inputs).find(i => i.dataset.payer === p.name);
-          const val = parseFloat(inp?.value) || 0;
-          const pct = oldMode === 'percent' ? val : (total > 0 ? val / total * 100 : 0);
-          return Math.round(newMode === 'percent' ? pct : total * pct / 100);
-        });
-
-        container.dataset.mode = newMode;
-        draw(newVals);
+  container.querySelectorAll('.gs-sole').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sole = btn.dataset.payer;
+      container.querySelectorAll('.gs-input').forEach(inp => {
+        inp.value = inp.dataset.payer === sole ? 100 : 0;
       });
+      gsRefresh(container);
+      commitGlobalSplits(container);
     });
+  });
 
-    // プリセットボタン
-    container.querySelectorAll('.split-preset').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const mode   = container.dataset.mode;
-        const total  = getTotal();
-        const inputs = container.querySelectorAll('.split-input');
-        const n      = inputs.length;
-
-        if (btn.dataset.action === 'equal') {
-          if (mode === 'percent') {
-            const share = Math.round(100 / n);
-            inputs.forEach((inp, i) => { inp.value = i === n - 1 ? 100 - share * (n - 1) : share; });
-          } else {
-            // 整数の等分: 最後の人が端数を引き受ける
-            const share = Math.floor(total / n);
-            inputs.forEach((inp, i) => { inp.value = i === n - 1 ? total - share * (n - 1) : share; });
-          }
-        } else {
-          const sole = btn.dataset.payer;
-          inputs.forEach(inp => {
-            inp.value = inp.dataset.payer === sole ? (mode === 'percent' ? 100 : total) : 0;
-          });
-        }
-        refresh();
-      });
+  container.querySelectorAll('.gs-input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      if (payers.length === 2) {
+        const other = Array.from(container.querySelectorAll('.gs-input')).find(i => i !== inp);
+        if (other) other.value = Math.max(0, 100 - (parseFloat(inp.value) || 0));
+      }
+      gsRefresh(container);
     });
+    inp.addEventListener('change', () => commitGlobalSplits(container));
+  });
 
-    // 入力イベント: 2人の時は片方が決まればもう片方を自動計算
-    container.querySelectorAll('.split-input').forEach(inp => {
-      inp.addEventListener('input', () => {
-        if (payers.length === 2) {
-          const mode  = container.dataset.mode;
-          const val   = parseFloat(inp.value) || 0;
-          const other = Array.from(container.querySelectorAll('.split-input')).find(i => i !== inp);
-          if (other) other.value = Math.max(0, mode === 'percent' ? 100 - val : getTotal() - val);
-        }
-        refresh();
-      });
-    });
-
-    // 合計金額フィールドが変わったら参照表示を更新
-    const amtEl = document.getElementById(amtId);
-    if (amtEl) {
-      if (amtEl._splitCleanup) amtEl._splitCleanup();
-      const handler = () => {
-        if (container.dataset.mode !== 'amount') return;
-        const refEl = container.querySelector('.split-total-ref');
-        if (refEl) refEl.textContent = `合計金額: ${fmtYen(getTotal())}`;
-        refresh();
-      };
-      amtEl.addEventListener('input', handler);
-      amtEl._splitCleanup = () => amtEl.removeEventListener('input', handler);
-    }
-  }
-
-  function refresh() {
-    const mode   = container.dataset.mode;
-    const inputs = container.querySelectorAll('.split-input');
-    const sum    = Array.from(inputs).reduce((s, i) => s + (parseFloat(i.value) || 0), 0);
-    const numEl  = container.querySelector('.split-total-num');
-    const icon   = container.querySelector('.split-valid-icon');
-
-    if (numEl) {
-      numEl.textContent = mode === 'percent'
-        ? (Math.round(sum * 10) / 10)
-        : Math.round(sum).toLocaleString('ja-JP');
-    }
-    if (icon) {
-      const ok = mode === 'percent'
-        ? Math.abs(sum - 100) < 0.6
-        : (getTotal() > 0 && Math.abs(sum - getTotal()) < 1);
-      icon.textContent = ok ? '✓' : '✗';
-      icon.className   = ok ? 'split-valid-icon ok' : 'split-valid-icon ng';
-    }
-  }
-
-  draw();
+  gsRefresh(container);
 }
 
-function getSplits(containerId) {
-  const container = document.getElementById(containerId);
-  const mode      = container?.dataset.mode || 'percent';
-  const inputs    = container ? Array.from(container.querySelectorAll('.split-input')) : [];
-
-  if (!inputs.length) return [{ name: payers[0]?.name || '自分', numer: 1, denom: 1 }];
-
-  if (mode === 'amount') {
-    const amtId = containerId === 'add-split-container' ? 'f-amount' : 'e-amount';
-    const total = Math.round(parseFloat(document.getElementById(amtId)?.value) || 0);
-
-    const arr = payers.map(p => {
-      const inp = inputs.find(i => i.dataset.payer === p.name);
-      return { name: p.name, numer: Math.round(parseFloat(inp?.value) || 0), denom: total };
-    });
-
-    // 最後の人に端数を割り当て: total - Σ(他の人) で整数演算を保証
-    if (arr.length >= 2) {
-      const sumOthers = arr.slice(0, -1).reduce((s, x) => s + x.numer, 0);
-      arr[arr.length - 1].numer = total - sumOthers;
-    }
-    return arr;
-  } else {
-    // 割合モード: denom=100
-    return payers.map(p => {
-      const inp = inputs.find(i => i.dataset.payer === p.name);
-      return { name: p.name, numer: Math.round(parseFloat(inp?.value) || 0), denom: 100 };
-    });
+function gsRefresh(container) {
+  const inputs = container.querySelectorAll('.gs-input');
+  const sum    = Array.from(inputs).reduce((s, i) => s + (parseFloat(i.value) || 0), 0);
+  const numEl  = container.querySelector('.gs-total-num');
+  const icon   = container.querySelector('.gs-valid-icon');
+  if (numEl) numEl.textContent = Math.round(sum * 10) / 10;
+  if (icon) {
+    const ok = Math.abs(sum - 100) < 0.6;
+    icon.textContent = ok ? '✓' : '✗';
+    icon.className   = ok ? 'gs-valid-icon ok' : 'gs-valid-icon ng';
   }
 }
+
+function commitGlobalSplits(container) {
+  const inputs = Array.from(container.querySelectorAll('.gs-input'));
+  globalSplits = payers.map(p => {
+    const inp = inputs.find(i => i.dataset.payer === p.name);
+    return { name: p.name, numer: Math.round(parseFloat(inp?.value) || 0), denom: 100 };
+  });
+  if (globalSplits.length >= 2) {
+    const sumOthers = globalSplits.slice(0, -1).reduce((s, x) => s + x.numer, 0);
+    globalSplits[globalSplits.length - 1].numer = 100 - sumOthers;
+  }
+  saveSettings();
+  render();
+}
+
+// ===== Split helpers =====
+function computeShare(totalAmount, split) {
+  if (split?.numer !== undefined && split.denom > 0) {
+    return Math.round(totalAmount * split.numer / split.denom);
+  }
+  return Math.round(totalAmount * (split?.ratio || 0) / 100);
+}
+
+function splitPct(split) {
+  if (split?.numer !== undefined && split.denom > 0) return Math.round(split.numer / split.denom * 100);
+  return Math.round(split?.ratio || 0);
+}
+
+function payerColor(name) { return payers.find(p => p.name === name)?.color || '#64748b'; }
 
 // ===== Firestore =====
-function colRef(uid) {
-  return collection(db, 'users', uid, 'payments');
-}
+function colRef(uid) { return collection(db, 'users', uid, 'payments'); }
 
 function subscribePayments(uid) {
   if (unsub) unsub();
@@ -421,11 +353,11 @@ function isInNextMonth(date) {
   return date >= start && date <= end;
 }
 
-function fmtDate(date) {
-  return `${date.getFullYear()}/${String(date.getMonth()+1).padStart(2,'0')}/${String(date.getDate()).padStart(2,'0')}`;
+function fmtDate(d) {
+  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
 }
-
-function fmtYen(n) { return '¥' + Math.round(n).toLocaleString('ja-JP'); }
+function fmtYen(n)  { return '¥' + Math.round(n).toLocaleString('ja-JP'); }
+function esc(str)   { return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function freqLabel(months) {
   const map = { 1:'毎月', 2:'2ヶ月ごと', 3:'3ヶ月ごと', 6:'半年ごと', 12:'年1回', 24:'2年ごと', 36:'3年ごと' };
@@ -435,9 +367,6 @@ function freqLabel(months) {
 const CAT_COLORS = {
   '賃貸':'#2563eb', 'インフラ':'#0891b2', 'サブスク':'#7c3aed', '保険':'#ea580c', 'その他':'#64748b'
 };
-
-function payerColor(name) { return payers.find(p => p.name === name)?.color || '#64748b'; }
-function esc(str) { return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ===== Render =====
 function render() {
@@ -458,14 +387,14 @@ function render() {
     const dueNext = isInNextMonth(eff);
     if (dueNext) { totalNextMonth += p.amount; nextItems.push({ ...p, eff }); }
 
-    const splits = normSplits(p.splits);
-    splits.forEach(s => {
+    globalSplits.forEach(s => {
       if (!perPayer[s.name]) return;
       perPayer[s.name].monthly += computeShare(p.amount, s) / freq;
       if (dueNext) perPayer[s.name].nextMonth += computeShare(p.amount, s);
     });
   });
 
+  // サマリー
   document.getElementById('monthly-total').textContent    = fmtYen(totalMonthly);
   document.getElementById('next-month-total').textContent = fmtYen(totalNextMonth);
   document.getElementById('next-month-label').textContent = nextMLabel;
@@ -478,7 +407,7 @@ function render() {
     document.getElementById('breakdown-body').innerHTML = payers.map(p => `
       <tr>
         <td class="bd-name"><span class="payer-dot" style="background:${p.color}"></span>${esc(p.name)}</td>
-        <td class="bd-val">${fmtYen(perPayer[p.name]?.monthly ?? 0)}</td>
+        <td class="bd-val">${fmtYen(perPayer[p.name]?.monthly   ?? 0)}</td>
         <td class="bd-val">${fmtYen(perPayer[p.name]?.nextMonth ?? 0)}</td>
       </tr>
     `).join('');
@@ -488,28 +417,33 @@ function render() {
 
   // 来月リスト
   const nml = document.getElementById('next-month-list');
-  nml.innerHTML = nextItems.length === 0
-    ? '<p class="empty-msg">来月の支払い予定はありません</p>'
-    : nextItems.map(p => {
-        const splits    = normSplits(p.splits);
-        const splitHint = payers.length > 1
-          ? splits.filter(s => splitPct(s) > 0).map(s =>
-              `<span class="split-chip"><span class="chip-dot" style="background:${payerColor(s.name)}"></span>${esc(s.name)} ${fmtYen(computeShare(p.amount, s))}</span>`
-            ).join('')
-          : '';
-        return `
-          <div class="next-item">
-            <span class="cat-badge" style="background:${CAT_COLORS[p.category]||'#64748b'}">${esc(p.category)}</span>
-            <div class="next-item-body">
-              <span class="next-item-name">${esc(p.name)}</span>
-              ${splitHint ? `<span class="next-item-split">${splitHint}</span>` : ''}
-            </div>
-            <span class="next-item-amount">${fmtYen(p.amount)}</span>
-            <span class="next-item-date">${fmtDate(p.eff)}</span>
+  if (nextItems.length === 0) {
+    nml.innerHTML = '<p class="empty-msg">来月の支払い予定はありません</p>';
+  } else {
+    nml.innerHTML = nextItems.map(p => {
+      const splitHint = payers.length > 1
+        ? globalSplits.filter(s => splitPct(s) > 0).map(s =>
+            `<span class="split-chip">
+               <span class="chip-dot" style="background:${payerColor(s.name)}"></span>
+               ${esc(s.name)} ${fmtYen(computeShare(p.amount, s))}
+             </span>`
+          ).join('')
+        : '';
+      return `
+        <div class="next-item">
+          <span class="cat-badge" style="background:${CAT_COLORS[p.category]||'#64748b'}">${esc(p.category)}</span>
+          <div class="next-item-body">
+            <span class="next-item-name">${esc(p.name)}</span>
+            ${splitHint ? `<span class="next-item-split">${splitHint}</span>` : ''}
           </div>
-        `;
-      }).join('');
+          <span class="next-item-amount">${fmtYen(p.amount)}</span>
+          <span class="next-item-date">${fmtDate(p.eff)}</span>
+        </div>
+      `;
+    }).join('');
+  }
 
+  // 件数
   document.getElementById('item-count').textContent = payments.length ? `${payments.length}件` : '';
 
   // 全項目リスト
@@ -523,12 +457,14 @@ function render() {
     const freq    = p.frequencyMonths || 1;
     const eff     = effectiveNextDate(p.nextPaymentDate, freq);
     const dueNext = isInNextMonth(eff);
-    const splits  = normSplits(p.splits);
     const splitText = payers.length > 1
-      ? splits.filter(s => splitPct(s) > 0).map(s => {
-          const pct       = splitPct(s);
+      ? globalSplits.filter(s => splitPct(s) > 0).map(s => {
+          const pct        = splitPct(s);
           const monthlyAmt = Math.round(computeShare(p.amount, s) / freq);
-          return `<span class="split-chip"><span class="chip-dot" style="background:${payerColor(s.name)}"></span>${esc(s.name)} ${pct}% (${fmtYen(monthlyAmt)}/月)</span>`;
+          return `<span class="split-chip">
+            <span class="chip-dot" style="background:${payerColor(s.name)}"></span>
+            ${esc(s.name)} ${pct}% (${fmtYen(monthlyAmt)}/月)
+          </span>`;
         }).join('')
       : '';
 
@@ -539,7 +475,7 @@ function render() {
           <span class="payment-name">${esc(p.name)}${dueNext ? '<span class="due-badge">来月</span>' : ''}</span>
           <div class="payment-actions">
             <button class="edit-btn" data-id="${p.id}">編集</button>
-            <button class="del-btn" data-id="${p.id}">削除</button>
+            <button class="del-btn"  data-id="${p.id}">削除</button>
           </div>
         </div>
         <div class="payment-item-detail">
@@ -561,12 +497,6 @@ function render() {
       if (confirm(`「${name}」を削除しますか？`)) deletePayment(btn.dataset.id);
     });
   });
-}
-
-// 旧フォーマット { ratio } と新フォーマット { numer, denom } を統一
-function normSplits(splits) {
-  if (!splits?.length) return [{ name: payers[0]?.name || '自分', numer: 1, denom: 1 }];
-  return splits;
 }
 
 // ===== Frequency select =====
@@ -593,12 +523,10 @@ addForm.addEventListener('submit', async e => {
       nextPaymentDate: document.getElementById('f-next-date').value,
       category:        document.getElementById('f-category').value,
       note:            document.getElementById('f-note').value.trim(),
-      splits:          getSplits('add-split-container'),
     });
     addForm.reset();
     fFreq.value = '1';
     addCustomGroup.style.display = 'none';
-    buildSplitContainer('add-split-container', null);
   } catch { alert('追加に失敗しました'); }
   btn.disabled = false;
 });
@@ -616,14 +544,12 @@ function openEditModal(id) {
   document.getElementById('e-note').value      = p.note || '';
 
   const freq = p.frequencyMonths || 1;
-  const presets = [1, 2, 3, 6, 12, 24, 36];
-  if (presets.includes(freq)) {
+  if ([1,2,3,6,12,24,36].includes(freq)) {
     eFreq.value = String(freq); editCustomGroup.style.display = 'none';
   } else {
     eFreq.value = 'custom'; eFreqCustom.value = freq; editCustomGroup.style.display = 'block';
   }
 
-  buildSplitContainer('edit-split-container', p.splits || null);
   editModal.style.display = 'flex';
 }
 
@@ -645,7 +571,6 @@ editForm.addEventListener('submit', async e => {
       nextPaymentDate: document.getElementById('e-next-date').value,
       category:        document.getElementById('e-category').value,
       note:            document.getElementById('e-note').value.trim(),
-      splits:          getSplits('edit-split-container'),
     });
     closeModal();
   } catch { alert('保存に失敗しました'); }
