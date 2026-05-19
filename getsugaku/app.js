@@ -36,10 +36,11 @@ let globalSplits = [
   { name: '自分',       numer: 50, denom: 100 },
   { name: 'パートナー', numer: 50, denom: 100 },
 ];
-let moveInDate = '';
-let itemOrder  = [];
-let editingId  = null;
-let unsub      = null;
+let moveInDate    = '';
+let itemOrder     = [];
+let editingId     = null;
+let unsub         = null;
+let selectedPayer = null;
 
 // ===== DOM refs =====
 const loginBtn        = document.getElementById('login-btn');
@@ -101,7 +102,8 @@ function resetDefaults() {
     { name: '自分',       color: DEFAULT_COLORS[0] },
     { name: 'パートナー', color: DEFAULT_COLORS[1] },
   ];
-  globalSplits = equalSplits();
+  globalSplits  = equalSplits();
+  selectedPayer = null;
 }
 
 // ===== Settings (payers + globalSplits) =====
@@ -186,7 +188,9 @@ function renderPayerSettings() {
 
   payersList.querySelectorAll('.payer-del-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      payers.splice(parseInt(btn.dataset.index), 1);
+      const idx = parseInt(btn.dataset.index);
+      if (selectedPayer === payers[idx].name) selectedPayer = null;
+      payers.splice(idx, 1);
       globalSplits = equalSplits();
       saveSettings();
       renderPayerSettings();
@@ -213,6 +217,33 @@ function updatePayerOverrideSelects() {
     selEl.innerHTML = '<option value="">両方（設定通り）</option>' +
       payers.map(p => `<option value="${esc(p.name)}">${esc(p.name)}のみ</option>`).join('');
     if (cur && payers.find(p => p.name === cur)) selEl.value = cur;
+  });
+}
+
+function renderPayerFilter() {
+  const el = document.getElementById('payer-filter');
+  if (!el) return;
+  if (payers.length <= 1) {
+    el.style.display = 'none';
+    selectedPayer = null;
+    return;
+  }
+  el.style.display = 'flex';
+  el.innerHTML = [
+    `<button class="pf-btn${!selectedPayer ? ' pf-active pf-all' : ''}" data-payer="">全員</button>`,
+    ...payers.map(p => {
+      const active = selectedPayer === p.name;
+      return `<button class="pf-btn${active ? ' pf-active' : ''}" data-payer="${esc(p.name)}"
+                      style="${active ? `background:${p.color};border-color:${p.color};` : ''}">
+                <span class="pf-dot" style="background:${p.color}"></span>${esc(p.name)}
+              </button>`;
+    }),
+  ].join('');
+  el.querySelectorAll('.pf-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedPayer = btn.dataset.payer || null;
+      render();
+    });
   });
 }
 
@@ -403,7 +434,7 @@ function fmtYenCompact(n) {
   return fmtYen(n);
 }
 
-function renderForecastChart() {
+function renderForecastChart(payerFilter) {
   const panel = document.getElementById('forecast-panel');
   if (!panel) return;
   if (payments.length === 0) {
@@ -428,8 +459,21 @@ function renderForecastChart() {
       while (d < mStart) d = new Date(d.getFullYear(), d.getMonth() + freq, d.getDate());
       if (d >= mStart && d <= mEnd) {
         const cat = CAT_ORDER.includes(p.category) ? p.category : 'その他';
-        catAmts[cat] = (catAmts[cat] || 0) + p.amount;
-        total += p.amount;
+        let amt;
+        if (payerFilter) {
+          if (p.payerOverride) {
+            amt = p.payerOverride === payerFilter ? p.amount : 0;
+          } else {
+            const s = globalSplits.find(gs => gs.name === payerFilter);
+            amt = s ? computeShare(p.amount, s) : 0;
+          }
+        } else {
+          amt = p.amount;
+        }
+        if (amt > 0) {
+          catAmts[cat] = (catAmts[cat] || 0) + amt;
+          total += amt;
+        }
       }
     });
 
@@ -588,17 +632,32 @@ function renderDateShortcuts(inputId) {
 }
 
 // ===== Pie chart =====
-function renderPieChart() {
+function renderPieChart(payerFilter) {
   const catTotals = {};
   payments.forEach(p => {
-    const cat = p.category || 'その他';
-    catTotals[cat] = (catTotals[cat] || 0) + p.amount / (p.frequencyMonths || 1);
+    const cat  = p.category || 'その他';
+    const freq = p.frequencyMonths || 1;
+    let amt;
+    if (payerFilter) {
+      if (p.payerOverride) {
+        amt = p.payerOverride === payerFilter ? p.amount / freq : 0;
+      } else {
+        const s = globalSplits.find(gs => gs.name === payerFilter);
+        amt = s ? computeShare(p.amount, s) / freq : 0;
+      }
+    } else {
+      amt = p.amount / freq;
+    }
+    if (amt > 0) catTotals[cat] = (catTotals[cat] || 0) + amt;
   });
 
   const total = Object.values(catTotals).reduce((a, b) => a + b, 0);
   const chartCard = document.getElementById('chart-card');
   if (total === 0) { chartCard.style.display = 'none'; return; }
   chartCard.style.display = '';
+
+  const hdr = document.getElementById('chart-card-header');
+  if (hdr) hdr.textContent = payerFilter ? `カテゴリ別 月額内訳（${payerFilter}）` : 'カテゴリ別 月額内訳';
 
   const cx = 100, cy = 100, R = 82, r = 52;
   let angle = -Math.PI / 2;
@@ -637,6 +696,52 @@ function renderPieChart() {
   `).join('');
 }
 
+// ===== Personal bar chart =====
+function renderPersonalBarChart(payerName) {
+  const card = document.getElementById('personal-chart-card');
+  if (!card) return;
+  if (!payerName) { card.style.display = 'none'; return; }
+
+  const items = payments.map(p => {
+    const freq = p.frequencyMonths || 1;
+    let monthlyAmt;
+    if (p.payerOverride) {
+      monthlyAmt = p.payerOverride === payerName ? p.amount / freq : 0;
+    } else {
+      const s = globalSplits.find(gs => gs.name === payerName);
+      monthlyAmt = s ? computeShare(p.amount, s) / freq : 0;
+    }
+    return { ...p, monthlyAmt };
+  }).filter(p => p.monthlyAmt > 0).sort((a, b) => b.monthlyAmt - a.monthlyAmt);
+
+  if (items.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  const color = payers.find(p => p.name === payerName)?.color || '#3b82f6';
+  const max   = items[0].monthlyAmt;
+
+  card.innerHTML = `
+    <div class="chart-header">${esc(payerName)}の支払い内訳（月額換算）</div>
+    <div class="personal-bar-list">
+      ${items.map(p => {
+        const pct = Math.max(3, Math.round(p.monthlyAmt / max * 100));
+        return `
+          <div class="pb-row">
+            <div class="pb-meta">
+              <span class="pb-name">${esc(p.name)}</span>
+              <span class="pb-cat" style="background:${CAT_COLORS[p.category]||'#64748b'}">${esc(p.category)}</span>
+            </div>
+            <div class="pb-bar-wrap">
+              <div class="pb-bar" style="width:${pct}%;background:${color}"></div>
+            </div>
+            <span class="pb-amt">${fmtYen(p.monthlyAmt)}<span class="pb-unit">/月</span></span>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
 // ===== Render =====
 function render() {
   const now        = new Date();
@@ -669,14 +774,20 @@ function render() {
   });
 
   // サマリー
-  document.getElementById('monthly-total').textContent    = fmtYen(totalMonthly);
-  document.getElementById('next-month-total').textContent = fmtYen(totalNextMonth);
-  document.getElementById('next-month-label').textContent = nextMLabel;
-  document.getElementById('next-month-badge').textContent = nextMLabel;
+  renderPayerFilter();
+  const displayMonthly   = selectedPayer ? (perPayer[selectedPayer]?.monthly   ?? 0) : totalMonthly;
+  const displayNextMonth = selectedPayer ? (perPayer[selectedPayer]?.nextMonth ?? 0) : totalNextMonth;
 
-  // 内訳テーブル
+  document.getElementById('monthly-total').textContent    = fmtYen(displayMonthly);
+  document.getElementById('next-month-total').textContent = fmtYen(displayNextMonth);
+  document.getElementById('next-month-label').textContent = selectedPayer ? `${nextMLabel} / ${selectedPayer}` : nextMLabel;
+  document.getElementById('next-month-badge').textContent = nextMLabel;
+  const monthlyNote = document.getElementById('monthly-note');
+  if (monthlyNote) monthlyNote.textContent = selectedPayer ? `${selectedPayer}の月割り` : '全項目の月割り';
+
+  // 内訳テーブル（個人ビュー時は非表示）
   const bdCard = document.getElementById('breakdown-card');
-  if (payers.length > 1) {
+  if (payers.length > 1 && !selectedPayer) {
     bdCard.style.display = '';
     document.getElementById('breakdown-body').innerHTML = payers.map(p => `
       <tr>
@@ -691,12 +802,29 @@ function render() {
 
   // 来月リスト
   const nml = document.getElementById('next-month-list');
-  if (nextItems.length === 0) {
+  const displayNextItems = selectedPayer
+    ? nextItems.filter(p => {
+        if (p.payerOverride) return p.payerOverride === selectedPayer;
+        const s = globalSplits.find(gs => gs.name === selectedPayer);
+        return s && s.numer > 0;
+      })
+    : nextItems;
+
+  if (displayNextItems.length === 0) {
     nml.innerHTML = '<p class="empty-msg">来月の支払い予定はありません</p>';
   } else {
-    nml.innerHTML = nextItems.map(p => {
-      const splitHint = payers.length > 1
-        ? p.payerOverride
+    nml.innerHTML = displayNextItems.map(p => {
+      let displayAmt = p.amount;
+      let splitHint  = '';
+      if (selectedPayer) {
+        if (p.payerOverride) {
+          displayAmt = p.amount;
+        } else {
+          const s = globalSplits.find(gs => gs.name === selectedPayer);
+          displayAmt = s ? computeShare(p.amount, s) : p.amount;
+        }
+      } else if (payers.length > 1) {
+        splitHint = p.payerOverride
           ? `<span class="split-chip">
                <span class="chip-dot" style="background:${payerColor(p.payerOverride)}"></span>
                ${esc(p.payerOverride)}が支払い
@@ -706,8 +834,8 @@ function render() {
                  <span class="chip-dot" style="background:${payerColor(s.name)}"></span>
                  ${esc(s.name)} ${fmtYen(computeShare(p.amount, s))}
                </span>`
-            ).join('')
-        : '';
+            ).join('');
+      }
       return `
         <div class="next-item" style="border-left: 4px solid ${CAT_COLORS[p.category]||'#64748b'}">
           <span class="cat-badge" style="background:${CAT_COLORS[p.category]||'#64748b'}">${esc(p.category)}</span>
@@ -715,7 +843,7 @@ function render() {
             <span class="next-item-name">${esc(p.name)}</span>
             ${splitHint ? `<span class="next-item-split">${splitHint}</span>` : ''}
           </div>
-          <span class="next-item-amount">${fmtYen(p.amount)}</span>
+          <span class="next-item-amount">${fmtYen(displayAmt)}</span>
           <span class="next-item-date">${fmtDate(p.eff)}</span>
         </div>
       `;
@@ -723,11 +851,14 @@ function render() {
   }
 
   // 円グラフ
-  renderPieChart();
+  renderPieChart(selectedPayer);
+
+  // 個人バーチャート
+  renderPersonalBarChart(selectedPayer);
 
   // 月別予測グラフ（開いているときのみ再描画）
   if (document.getElementById('forecast-panel')?.style.display !== 'none') {
-    renderForecastChart();
+    renderForecastChart(selectedPayer);
   }
 
   // 件数
