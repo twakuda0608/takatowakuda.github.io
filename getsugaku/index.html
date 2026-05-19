@@ -38,11 +38,13 @@
 
   <main id="main-content" class="main-content" style="display:none;">
 
+    <div id="payer-filter" class="payer-filter" style="display:none;"></div>
+
     <div class="summary-row">
       <div class="summary-card">
         <div class="summary-label">月額換算合計</div>
         <div class="summary-value" id="monthly-total">¥0</div>
-        <div class="summary-note">全項目の月割り</div>
+        <div class="summary-note" id="monthly-note">全項目の月割り</div>
       </div>
       <div class="summary-card next-month-card" id="next-month-card">
         <div class="summary-label">来月の支払い</div>
@@ -55,7 +57,7 @@
     <div id="forecast-panel" class="forecast-panel" style="display:none;"></div>
 
     <div id="chart-card" class="chart-card" style="display:none;">
-      <div class="chart-header">カテゴリ別 月額内訳</div>
+      <div class="chart-header" id="chart-card-header">カテゴリ別 月額内訳</div>
       <div class="chart-body">
         <div class="chart-donut-wrap">
           <svg id="pie-chart" viewBox="0 0 200 200"></svg>
@@ -63,6 +65,8 @@
         <div id="chart-legend" class="chart-legend"></div>
       </div>
     </div>
+
+    <div id="personal-chart-card" class="chart-card" style="display:none;"></div>
 
     <div id="breakdown-card" class="breakdown-card" style="display:none;">
       <table class="breakdown-table">
