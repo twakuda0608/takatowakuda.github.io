@@ -455,10 +455,19 @@ textarea {
   padding: 10px 12px;
   font-size: 0.95rem;
   font-family: inherit;
-  resize: vertical;
+  resize: none;
+  overflow: hidden;
+  min-height: 96px;
   outline: none;
   transition: border-color 0.15s;
   color: var(--text);
+}
+
+.shortcut-hint {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-align: right;
+  margin-top: -4px;
 }
 
 textarea:focus { border-color: var(--brand); }

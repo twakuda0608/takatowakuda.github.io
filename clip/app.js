@@ -266,8 +266,16 @@ postBtn.addEventListener("click", async () => {
     });
   }
   textInput.value  = "";
+  autoGrow(textInput);
   postBtn.disabled = false;
 });
+
+function autoGrow(el) {
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+}
+
+textInput.addEventListener("input", () => autoGrow(textInput));
 
 textInput.addEventListener("keydown", e => {
   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") postBtn.click();
