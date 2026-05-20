@@ -1,7 +1,7 @@
 .wrap {
   max-width: 720px;
   margin: 0 auto;
-  padding: 0 20px 40px;
+  padding: 20px 20px 40px;
 }
 
 /* page-card 内の fieldset は内枠なのでスタイルを軽くする */
