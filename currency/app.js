@@ -21,21 +21,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 通貨一覧：必要なら増やしてOK
   const CURRENCIES = [
-    { code:"JPY", name:"日本円" },
-    { code:"USD", name:"米ドル" },
-    { code:"EUR", name:"ユーロ" },
-    { code:"GBP", name:"英ポンド" },
-    { code:"AUD", name:"豪ドル" },
-    { code:"CAD", name:"カナダドル" },
-    { code:"CHF", name:"スイスフラン" },
-    { code:"CNY", name:"人民元" },
-    { code:"HKD", name:"香港ドル" },
-    { code:"SGD", name:"シンガポールドル" },
-    { code:"SEK", name:"スウェーデンクローナ" },
-    { code:"NOK", name:"ノルウェークローネ" },
-    { code:"DKK", name:"デンマーククローネ" },
-    { code:"NZD", name:"NZドル" }
+    { code:"JPY", name:"日本円",               cc:"jp" },
+    { code:"USD", name:"米ドル",               cc:"us" },
+    { code:"EUR", name:"ユーロ",               cc:"eu" },
+    { code:"GBP", name:"英ポンド",             cc:"gb" },
+    { code:"AUD", name:"豪ドル",               cc:"au" },
+    { code:"CAD", name:"カナダドル",           cc:"ca" },
+    { code:"CHF", name:"スイスフラン",         cc:"ch" },
+    { code:"CNY", name:"人民元",               cc:"cn" },
+    { code:"HKD", name:"香港ドル",             cc:"hk" },
+    { code:"SGD", name:"シンガポールドル",     cc:"sg" },
+    { code:"SEK", name:"スウェーデンクローナ", cc:"se" },
+    { code:"NOK", name:"ノルウェークローネ",   cc:"no" },
+    { code:"DKK", name:"デンマーククローネ",   cc:"dk" },
+    { code:"NZD", name:"NZドル",               cc:"nz" }
   ];
+
+  const flagHTML = (cc) => `<span class="fi fi-${cc}"></span>`;
 
   const fmt = (n, maxFrac=6) =>
     new Intl.NumberFormat("ja-JP", { maximumFractionDigits: maxFrac }).format(n);
@@ -53,17 +55,24 @@ document.addEventListener("DOMContentLoaded", () => {
     toHidden.value = JSON.stringify(uniq);
   }
 
+  function curHTML(code) {
+    const cur = CURRENCIES.find(c => c.code === code);
+    return cur ? `${flagHTML(cur.cc)} ${cur.code} - ${cur.name}` : code;
+  }
+
   function setFrom(code) {
     fromHidden.value = code;
-    const cur = CURRENCIES.find(c => c.code === code);
-    fromLabel.textContent = cur ? `${cur.code} - ${cur.name}` : code;
+    fromLabel.innerHTML = curHTML(code);
   }
 
   function refreshToLabel() {
     const arr = getToArray();
-    const head = arr.slice(0, 3).join(", ");
+    const head = arr.slice(0, 3).map(c => {
+      const cur = CURRENCIES.find(x => x.code === c);
+      return cur ? `${flagHTML(cur.cc)} ${cur.code}` : c;
+    }).join(", ");
     const suffix = arr.length > 3 ? `, ...（${arr.length}件）` : `（${arr.length}件）`;
-    toLabel.textContent = (arr.length ? head + suffix : "未選択（0件）");
+    toLabel.innerHTML = arr.length ? head + suffix : "未選択（0件）";
     toCountEl.textContent = `選択: ${arr.length}`;
   }
 
@@ -107,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const li = document.createElement("li");
           li.className = "dd-item";
           li.dataset.code = c.code;
-          li.textContent = `${c.code} - ${c.name}`;
+          li.innerHTML = `${flagHTML(c.cc)} ${c.code} - ${c.name}`;
           list.appendChild(li);
         });
       } else {
@@ -126,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
           cb.addEventListener("click", (e) => e.stopPropagation());
 
           const sp = document.createElement("span");
-          sp.textContent = `${c.code} - ${c.name}`;
+          sp.innerHTML = `${flagHTML(c.cc)} ${c.code} - ${c.name}`;
 
           wrap.appendChild(cb);
           wrap.appendChild(sp);
@@ -255,8 +264,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const rows = [];
 
+    const flagOf = (code) => {
+      const cur = CURRENCIES.find(c => c.code === code);
+      return cur ? flagHTML(cur.cc) : "";
+    };
+
     rows.push({
-      sym: base + "（基準）",
+      sym: `${flagOf(base)} ${base}（基準）`,
       converted: amount,
       r: 1
     });
@@ -265,7 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const r = rates[sym];
       if (typeof r !== "number") continue;
       rows.push({
-        sym,
+        sym: `${flagOf(sym)} ${sym}`,
         converted: amount * r,
         r
       });
