@@ -42,6 +42,12 @@ const mainRoomBtn     = document.getElementById("main-room-btn");
 const mainRoomSection = document.getElementById("main-room-section");
 const roomSwitchInput   = document.getElementById("room-switch-input");
 const roomSwitchConfirm = document.getElementById("room-switch-confirm");
+const qrBtn             = document.getElementById("qr-btn");
+const qrModal           = document.getElementById("qr-modal");
+const qrContainer       = document.getElementById("qr-container");
+const qrCardUrl         = document.getElementById("qr-card-url");
+const qrCloseBtn        = document.getElementById("qr-close-btn");
+const qrBackdrop        = document.getElementById("qr-backdrop");
 const postTargetRow   = document.getElementById("post-target-row");
 const targetUserBtn   = document.getElementById("target-user-btn");
 const targetRoomBtn   = document.getElementById("target-room-btn");
@@ -49,11 +55,30 @@ const targetRoomBtn   = document.getElementById("target-room-btn");
 let currentUser      = null;
 let roomCode         = null;
 let postTarget       = "user"; // "user" | "room"
+const initialHash    = location.hash.slice(1).toLowerCase(); // room code from URL, if any
+let   hashHandled    = false;
 let unsubscribeUser  = null;
 let unsubscribeRoom  = null;
 let tickInterval     = null;
 let userClips        = [];
 let roomClips        = [];
+
+// ---- QR code ----
+qrBtn.addEventListener("click", showQR);
+qrCloseBtn.addEventListener("click", hideQR);
+qrBackdrop.addEventListener("click", hideQR);
+
+function showQR() {
+  const url = `${location.origin}${location.pathname}#${roomCode}`;
+  qrCardUrl.textContent = url;
+  qrModal.style.display = "flex";   // show modal first
+  qrContainer.innerHTML = "";        // clear previous QR
+  new QRCode(qrContainer, { text: url, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M });
+}
+
+function hideQR() {
+  qrModal.style.display = "none";
+}
 
 // ---- Room label inline edit ----
 roomLabel.addEventListener("click", openRoomSwitchUI);
@@ -125,12 +150,17 @@ logoutBtn.addEventListener("click", () => {
 leaveRoomBtn.addEventListener("click", leaveRoom);
 
 onAuthStateChanged(auth, user => {
-  if (roomCode) {
-    // entering/leaving auth while already in room mode — just track the user, don't rebuild UI
-    currentUser = user;
+  currentUser = user;
+
+  // Auto-join from URL hash on first auth resolution
+  if (!hashHandled && initialHash) {
+    hashHandled = true;
+    enterRoom(initialHash);
     return;
   }
-  currentUser = user;
+
+  if (roomCode) return; // already in room mode — don't rebuild UI
+
   if (user) {
     showMain();
     userAvatar.src                = user.photoURL || "";
@@ -164,14 +194,21 @@ function enterRoom(raw) {
   roomClips = [];
   roomCode  = code;
   showMain();
+  history.replaceState(null, "", `#${code}`);
   roomLabel.textContent         = `🔑 ${code}`;
   roomLabel.style.display       = "inline";
+  qrBtn.style.display           = "inline";
   mainRoomSection.style.display = "none";
 
   if (currentUser) {
     // combined mode: keep avatar + logout btn; add ✕ to leave room only
     leaveRoomBtn.style.display = "inline";
     updatePostTargetRow();
+    if (!unsubscribeUser) {
+      // not yet listening (e.g. joined via URL hash before auth resolved)
+      startListeningUser(currentUser.uid);
+      startTick();
+    }
   } else {
     // room-only mode: no avatar, logout btn becomes 退出
     userAvatar.style.display   = "none";
@@ -186,9 +223,12 @@ function enterRoom(raw) {
 function leaveRoom() {
   roomCode = null;
   stopRoomListener();
-  roomClips        = [];
-  roomInput.value  = "";
+  roomClips           = [];
+  roomInput.value     = "";
   mainRoomInput.value = "";
+  history.replaceState(null, "", location.pathname);
+  hideQR();
+  qrBtn.style.display = "none";
 
   if (currentUser) {
     // combined → personal only
@@ -378,8 +418,50 @@ function buildClipEl(clip, showSource) {
 
   actions.append(copyBtn, delBtn);
   footer.append(timer, extBtn, actions);
-  item.append(textEl, footer);
+  const previews = buildLinkPreviews(clip.text);
+  item.append(textEl, ...previews, footer);
   return item;
+}
+
+const URL_RE = /https?:\/\/[^\s]+|www\.[^\s]+/g;
+
+function extractUrls(text) {
+  return [...new Set(
+    (text.match(URL_RE) || []).map(u => u.replace(/[.,;:!?)'"]+$/, ""))
+  )];
+}
+
+function buildLinkPreviews(text) {
+  const urls = extractUrls(text);
+  return urls.slice(0, 3).map(url => {
+    const href = url.startsWith("http") ? url : `https://${url}`;
+    let domain = href;
+    try { domain = new URL(href).hostname.replace(/^www\./, ""); } catch {}
+
+    const a = document.createElement("a");
+    a.href      = href;
+    a.target    = "_blank";
+    a.rel       = "noopener noreferrer";
+    a.className = "link-preview";
+
+    const favicon = document.createElement("img");
+    favicon.src    = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+    favicon.width  = 16;
+    favicon.height = 16;
+    favicon.className = "link-favicon";
+    favicon.onerror   = () => { favicon.style.display = "none"; };
+
+    const domainEl = document.createElement("span");
+    domainEl.className   = "link-domain";
+    domainEl.textContent = domain;
+
+    const urlEl = document.createElement("span");
+    urlEl.className   = "link-url";
+    urlEl.textContent = href.length > 60 ? href.slice(0, 60) + "…" : href;
+
+    a.append(favicon, domainEl, urlEl);
+    return a;
+  });
 }
 
 function updateTimers() {

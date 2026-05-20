@@ -141,6 +141,89 @@ body {
   text-align: left;
 }
 
+.qr-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.qr-btn:hover {
+  background: var(--bg);
+  border-color: #aaa;
+  color: var(--text);
+}
+
+.qr-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+}
+
+.qr-card {
+  position: relative;
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 28px 24px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  max-width: 280px;
+  width: 90%;
+}
+
+.qr-card-title {
+  font-size: 0.88rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+#qr-container {
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  line-height: 0; /* removes gap under the img qrcodejs injects */
+}
+
+.qr-card-url {
+  font-size: 0.68rem;
+  font-family: 'Courier New', monospace;
+  color: var(--muted);
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.qr-close-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 24px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--text);
+  transition: background 0.15s;
+  width: 100%;
+}
+
+.qr-close-btn:hover { background: #e2e8f0; }
+
 .leave-room-btn {
   background: none;
   border: none;
@@ -386,6 +469,47 @@ textarea:focus { border-color: var(--brand); }
   line-height: 1.65;
   white-space: pre-wrap;
   word-break: break-all;
+}
+
+.link-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  text-decoration: none;
+  color: var(--text);
+  transition: background 0.15s, border-color 0.15s;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.link-preview:hover {
+  background: #eff6ff;
+  border-color: var(--brand);
+}
+
+.link-favicon {
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+
+.link-domain {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--brand);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.link-url {
+  font-size: 0.72rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .clip-footer {
