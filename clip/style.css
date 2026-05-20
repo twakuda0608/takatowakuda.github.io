@@ -420,5 +420,9 @@ textarea:focus { border-color: var(--brand); }
 .copy-btn { color: var(--brand); }
 .copy-btn:hover { background: #eff6ff; }
 
+.extend-btn { color: #0891b2; }
+.extend-btn:hover { background: #ecfeff; }
+.extend-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
 .delete-btn { color: var(--danger); }
 .delete-btn:hover { background: #fef2f2; }
