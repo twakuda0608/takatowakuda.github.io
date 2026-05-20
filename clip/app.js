@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc,
-  query, where, orderBy, serverTimestamp
+  query, where, orderBy, serverTimestamp, Timestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
@@ -40,6 +40,8 @@ const roomBtn         = document.getElementById("room-btn");
 const mainRoomInput   = document.getElementById("main-room-input");
 const mainRoomBtn     = document.getElementById("main-room-btn");
 const mainRoomSection = document.getElementById("main-room-section");
+const roomSwitchInput   = document.getElementById("room-switch-input");
+const roomSwitchConfirm = document.getElementById("room-switch-confirm");
 const postTargetRow   = document.getElementById("post-target-row");
 const targetUserBtn   = document.getElementById("target-user-btn");
 const targetRoomBtn   = document.getElementById("target-room-btn");
@@ -52,6 +54,49 @@ let unsubscribeRoom  = null;
 let tickInterval     = null;
 let userClips        = [];
 let roomClips        = [];
+
+// ---- Room label inline edit ----
+roomLabel.addEventListener("click", openRoomSwitchUI);
+
+roomSwitchConfirm.addEventListener("mousedown", e => e.preventDefault()); // prevent blur on input
+roomSwitchConfirm.addEventListener("click", confirmRoomSwitch);
+
+roomSwitchInput.addEventListener("keydown", e => {
+  if (e.key === "Enter")  confirmRoomSwitch();
+  if (e.key === "Escape") cancelRoomSwitch();
+});
+
+roomSwitchInput.addEventListener("blur", cancelRoomSwitch);
+
+function openRoomSwitchUI() {
+  roomLabel.style.display         = "none";
+  roomSwitchInput.value           = roomCode || "";
+  roomSwitchInput.style.display   = "inline";
+  roomSwitchConfirm.style.display = "inline";
+  roomSwitchInput.select();
+  roomSwitchInput.focus();
+}
+
+function confirmRoomSwitch() {
+  const newCode = roomSwitchInput.value.trim().toLowerCase();
+  closeRoomSwitchUI();
+  if (newCode && newCode !== roomCode) {
+    roomClips = [];
+    enterRoom(newCode);
+  } else {
+    roomLabel.style.display = "inline";
+  }
+}
+
+function cancelRoomSwitch() {
+  closeRoomSwitchUI();
+  roomLabel.style.display = "inline";
+}
+
+function closeRoomSwitchUI() {
+  roomSwitchInput.style.display   = "none";
+  roomSwitchConfirm.style.display = "none";
+}
 
 // ---- Post target toggle ----
 targetUserBtn.addEventListener("click", () => setPostTarget("user"));
@@ -116,7 +161,8 @@ mainRoomInput.addEventListener("keydown", e => { if (e.key === "Enter") enterRoo
 function enterRoom(raw) {
   const code = (raw || "").trim().toLowerCase();
   if (!code) return;
-  roomCode = code;
+  roomClips = [];
+  roomCode  = code;
   showMain();
   roomLabel.textContent         = `🔑 ${code}`;
   roomLabel.style.display       = "inline";
@@ -163,17 +209,20 @@ postBtn.addEventListener("click", async () => {
   const text = textInput.value.trim();
   if (!text || (!currentUser && !roomCode)) return;
   postBtn.disabled = true;
+  const expireAt = Timestamp.fromMillis(Date.now() + EXPIRE_MS);
   if (currentUser && (!roomCode || postTarget === "user")) {
     await addDoc(collection(db, "clips"), {
       uid: currentUser.uid,
       text,
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      expireAt
     });
   } else {
     // room-only mode, or logged in + chose room
     await addDoc(collection(db, "rooms", roomCode, "clips"), {
       text,
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      expireAt
     });
   }
   textInput.value  = "";

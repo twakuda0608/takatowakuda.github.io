@@ -177,7 +177,35 @@ body {
   color: #16a34a;
 }
 
+.room-switch-confirm {
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 2px;
+  transition: background 0.15s;
+}
+
+.room-switch-confirm:hover { background: var(--brand-dark); }
+
+.room-switch-input {
+  font-size: 0.8rem;
+  font-family: 'Courier New', monospace;
+  border: 1.5px solid var(--brand);
+  border-radius: 6px;
+  padding: 3px 8px;
+  outline: none;
+  width: 130px;
+  background: #eff6ff;
+  color: var(--brand);
+}
+
 .room-label {
+  cursor: pointer;
   font-size: 0.8rem;
   font-family: 'Courier New', monospace;
   background: #eff6ff;
@@ -190,7 +218,10 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: opacity 0.15s;
 }
+
+.room-label:hover { opacity: 0.75; }
 
 /* ---- App Header ---- */
 .app-header {
