@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc,
-  query, where, orderBy, serverTimestamp, Timestamp
+  query, where, orderBy, serverTimestamp, Timestamp, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
@@ -242,14 +242,7 @@ function startListeningUser(uid) {
     orderBy("createdAt", "desc")
   );
   unsubscribeUser = onSnapshot(q, snapshot => {
-    userClips = snapshot.docs
-      .filter(d => d.data().createdAt)
-      .map(d => ({
-        id:        d.id,
-        source:    "user",
-        text:      d.data().text,
-        createdAt: d.data().createdAt.toMillis()
-      }));
+    userClips = snapshot.docs.filter(d => d.data().createdAt).map(mapClip("user"));
     purgeExpired();
     renderClips();
   });
@@ -262,17 +255,21 @@ function startListeningRoom(code) {
     orderBy("createdAt", "desc")
   );
   unsubscribeRoom = onSnapshot(q, snapshot => {
-    roomClips = snapshot.docs
-      .filter(d => d.data().createdAt)
-      .map(d => ({
-        id:        d.id,
-        source:    "room",
-        text:      d.data().text,
-        createdAt: d.data().createdAt.toMillis()
-      }));
+    roomClips = snapshot.docs.filter(d => d.data().createdAt).map(mapClip("room"));
     purgeExpired();
     renderClips();
   });
+}
+
+function mapClip(source) {
+  return d => {
+    const data      = d.data();
+    const createdAt = data.createdAt.toMillis();
+    const expireAt  = data.expireAt
+      ? data.expireAt.toMillis()
+      : createdAt + EXPIRE_MS;
+    return { id: d.id, source, text: data.text, createdAt, expireAt };
+  };
 }
 
 function stopUserListener() {
@@ -296,11 +293,11 @@ function stopTick() {
 // ---- Expiry ----
 async function purgeExpired() {
   const now = Date.now();
-  for (const c of userClips.filter(c => now - c.createdAt >= EXPIRE_MS)) {
+  for (const c of userClips.filter(c => now >= c.expireAt)) {
     await deleteDoc(doc(db, "clips", c.id));
   }
   if (roomCode) {
-    for (const c of roomClips.filter(c => now - c.createdAt >= EXPIRE_MS)) {
+    for (const c of roomClips.filter(c => now >= c.expireAt)) {
       await deleteDoc(doc(db, "rooms", roomCode, "clips", c.id));
     }
   }
@@ -318,7 +315,7 @@ function renderClips() {
   const now      = Date.now();
   const combined = currentUser && roomCode; // show source badges only when both are active
   const alive    = [...userClips, ...roomClips]
-    .filter(c => now - c.createdAt < EXPIRE_MS)
+    .filter(c => now < c.expireAt)
     .sort((a, b) => b.createdAt - a.createdAt);
   emptyMsg.style.display = alive.length === 0 ? "block" : "none";
   for (const clip of alive) {
@@ -346,9 +343,9 @@ function buildClipEl(clip, showSource) {
   footer.className = "clip-footer";
 
   const timer = document.createElement("span");
-  timer.className       = "clip-timer";
-  timer.dataset.created = clip.createdAt;
-  refreshTimer(timer, clip.createdAt);
+  timer.className      = "clip-timer";
+  timer.dataset.expire = clip.expireAt;
+  refreshTimer(timer, clip.expireAt);
 
   const actions = document.createElement("div");
   actions.className = "clip-actions";
@@ -363,25 +360,36 @@ function buildClipEl(clip, showSource) {
     });
   });
 
+  const extBtn = document.createElement("button");
+  extBtn.className   = "extend-btn";
+  extBtn.textContent = "+3分";
+  extBtn.addEventListener("click", async () => {
+    extBtn.disabled = true;
+    await updateDoc(clipRef(clip), {
+      expireAt: Timestamp.fromMillis(Date.now() + EXPIRE_MS)
+    });
+    extBtn.disabled = false;
+  });
+
   const delBtn = document.createElement("button");
   delBtn.className   = "delete-btn";
   delBtn.textContent = "削除";
   delBtn.addEventListener("click", () => deleteDoc(clipRef(clip)));
 
   actions.append(copyBtn, delBtn);
-  footer.append(timer, actions);
+  footer.append(timer, extBtn, actions);
   item.append(textEl, footer);
   return item;
 }
 
 function updateTimers() {
-  clipsList.querySelectorAll(".clip-timer[data-created]").forEach(el => {
-    refreshTimer(el, Number(el.dataset.created));
+  clipsList.querySelectorAll(".clip-timer[data-expire]").forEach(el => {
+    refreshTimer(el, Number(el.dataset.expire));
   });
 }
 
-function refreshTimer(el, createdMs) {
-  const remaining = EXPIRE_MS - (Date.now() - createdMs);
+function refreshTimer(el, expireMs) {
+  const remaining = expireMs - Date.now();
   if (remaining <= 0) { el.textContent = "期限切れ"; return; }
   const sec = Math.ceil(remaining / 1000);
   const m   = Math.floor(sec / 60);
