@@ -41,7 +41,7 @@ body {
 .ui-list {
   max-width: 720px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 20px 16px 0;
   display: flex;
   flex-direction: column;
   gap: 24px;
