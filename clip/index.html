@@ -17,6 +17,7 @@
 </script>
   <link rel="stylesheet" href="/common.css">
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -49,6 +50,7 @@
         <span id="room-label" class="room-label" style="display:none;" title="タップして変更"></span>
         <input id="room-switch-input" class="room-switch-input" style="display:none;" maxlength="32" autocomplete="off" spellcheck="false" placeholder="新しいコードを入力">
         <button id="room-switch-confirm" class="room-switch-confirm" style="display:none;" title="確定">✓</button>
+        <button id="qr-btn" class="qr-btn" style="display:none;" title="QRコードで参加">QR</button>
         <button id="leave-room-btn" class="leave-room-btn" style="display:none;" title="ルームを退出">✕</button>
         <img id="user-avatar" class="user-avatar" src="" alt="">
         <button id="logout-btn" class="logout-btn">ログアウト</button>
@@ -75,6 +77,17 @@
       <div id="clips-list" class="clips-list">
         <div id="empty-msg" class="empty-msg" style="display:none;">投稿はありません</div>
       </div>
+    </div>
+  </div>
+
+  <!-- QR modal -->
+  <div id="qr-modal" class="qr-modal" style="display:none;">
+    <div class="qr-backdrop" id="qr-backdrop"></div>
+    <div class="qr-card">
+      <p class="qr-card-title">QRコードをスキャンして参加</p>
+      <div id="qr-container"></div>
+      <p class="qr-card-url" id="qr-card-url"></p>
+      <button id="qr-close-btn" class="qr-close-btn">閉じる</button>
     </div>
   </div>
 
