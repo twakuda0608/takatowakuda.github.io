@@ -131,7 +131,43 @@ function calculate() {
   const totalDays = Math.floor(diffMs / msPerDay);
 
   if (totalDays < 0) {
-    resultDiv.textContent = "未来の日付です．";
+    const futureDays = -totalDays;
+    const fWeeks = Math.floor(futureDays / 7);
+    const fDaysAfterWeeks = futureDays % 7;
+
+    let fYears = 0, fMonths = 0;
+    let fTemp = new Date(today);
+    while (true) {
+      const next = new Date(fTemp);
+      next.setFullYear(next.getFullYear() + 1);
+      if (next <= startDate) { fYears++; fTemp = next; } else break;
+    }
+    const fDaysAfterYears = Math.floor((startDate - fTemp) / msPerDay);
+    while (true) {
+      const next = new Date(fTemp);
+      next.setMonth(next.getMonth() + 1);
+      if (next <= startDate) { fMonths++; fTemp = next; } else break;
+    }
+    const fRemaining = Math.floor((startDate - fTemp) / msPerDay);
+
+    resultDiv.innerHTML = `
+      <div class="result-card">
+        <div class="result-title">入力した日付</div>
+        <div class="result-body">
+          <p>${formatDate(startDate)}</p>
+          <p>（${wareki}）</p>
+        </div>
+      </div>
+      <div class="result-card">
+        <div class="result-title">残り期間</div>
+        <div class="result-body">
+          <p class="sumline">あと ${futureDays} 日</p>
+          <p>${fWeeks} 週間 ${fDaysAfterWeeks} 日</p>
+          <p>${fYears} 年 ${fMonths} ヶ月 ${fRemaining} 日</p>
+          <p>${fYears} 年 + ${fDaysAfterYears} 日</p>
+        </div>
+      </div>
+    `;
     milestoneSection.hidden = true;
     return;
   }
