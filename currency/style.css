@@ -1,6 +1,6 @@
-body { padding: 0 20px 40px; }
+body { padding-bottom: 40px; }
 .fi { vertical-align: middle; margin-right: 4px; }
-.wrap { max-width: 720px; margin: 0 auto; }
+.wrap { max-width: 720px; margin: 0 auto; padding: 0 20px; }
 h1 { font-size: 1.4rem; }
 
 .row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px; }

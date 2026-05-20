@@ -27,7 +27,7 @@ body {
 
 h1 {
   font-size: 1.4rem;
-  margin: 52px 0 20px;   /* 上部は fixed back-fab (56px) をかわす余白 */
+  margin: 16px 0 20px;
   color: var(--brand);
   letter-spacing: 2px;
   text-shadow: 1px 1px 3px rgba(0,0,0,.10);
@@ -48,7 +48,7 @@ h1 {
 .back-fab{
   position: fixed;
   left: 16px;
-  top: 16px;
+  top: 6px;
   z-index: 1000;
   width: 40px;
   height: 40px;
@@ -106,4 +106,84 @@ h1 {
 .ac-item.ac-active {
   background: #f0f7ff;
   color: var(--brand, #0078d7);
+}
+
+/* ── Page header (sticky bar, all sub-pages) ─────────────── */
+.page-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: saturate(1.2) blur(6px);
+  border-bottom: 1px solid var(--border-soft);
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  height: 52px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px 0 68px;
+  gap: 10px;
+}
+
+.page-header-title {
+  flex: 1;
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a202c;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.page-header-auth {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Shared auth elements ────────────────────────────────── */
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-soft);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.logout-btn {
+  background: none;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  color: var(--muted-color);
+  transition: background 0.15s;
+}
+.logout-btn:hover { background: #f1f5f9; }
+
+.google-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1.5px solid #dadce0;
+  border-radius: 8px;
+  padding: 11px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: var(--font);
+  color: #3c4043;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.google-btn:hover {
+  background: #f8f8f8;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
 }

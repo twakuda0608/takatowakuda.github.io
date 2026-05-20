@@ -59,25 +59,6 @@ body {
   margin-bottom: 28px;
 }
 
-.google-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: #fff;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: box-shadow 0.15s, border-color 0.15s;
-  color: var(--text);
-}
-
-.google-btn:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-  border-color: #bbb;
-}
 
 .or-divider {
   display: flex;
@@ -312,40 +293,19 @@ body {
 
 .room-label:hover { opacity: 0.75; }
 
-/* ---- App Header ---- */
-.app-header {
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
-  padding: 10px 16px 10px 68px; /* 68px clears the fixed back-fab on all screen sizes */
+/* ---- Room bar (below page-header) ---- */
+.room-bar {
   position: sticky;
-  top: 0;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  top: 52px;
+  z-index: 99;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 6px 16px;
+  min-height: 0;
 }
 
-/* mobile: two rows — title+user on top, room controls below */
-.header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.app-title {
-  font-size: 1rem;
-  font-weight: 700;
-  white-space: nowrap;
-  flex: 1;
-  text-align: center;
-}
-
-.user-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+.room-bar:has(.room-controls > :not([style*="display:none"])) {
+  display: block;
 }
 
 .room-controls {
@@ -354,47 +314,6 @@ body {
   gap: 6px;
   flex-wrap: wrap;
 }
-
-/* desktop: restore original single-row layout */
-@media (min-width: 600px) {
-  .app-header {
-    flex-direction: row;
-    align-items: center;
-    padding: 12px 20px 12px 68px; /* 68px clears the fixed back-fab (16px + 40px + 12px) */
-    gap: 10px;
-  }
-
-  /* dissolve header-top so its children join the header flex row directly */
-  .header-top {
-    display: contents;
-  }
-
-  .app-title     { order: 1; flex: 1; text-align: center; }
-  .room-controls { order: 2; flex-wrap: nowrap; }
-  .user-controls { order: 3; flex-shrink: 0; }
-}
-
-.user-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1.5px solid var(--border);
-  flex-shrink: 0;
-}
-
-.logout-btn {
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 4px 10px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  color: var(--muted);
-  white-space: nowrap;
-  transition: background 0.15s;
-}
-
-.logout-btn:hover { background: var(--bg); }
 
 /* ---- Content ---- */
 .content-wrap {

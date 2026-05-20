@@ -20,27 +20,6 @@ body {
   min-height: 100vh;
 }
 
-/* ===== Header ===== */
-.g-header {
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  padding: 12px 20px 12px 68px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 1px 4px rgba(0,0,0,.06);
-}
-
-.g-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-
-.auth-area { display: flex; align-items: center; gap: 8px; }
-
 .user-info { display: flex; align-items: center; gap: 8px; }
 
 .user-info img {
@@ -59,40 +38,6 @@ body {
   white-space: nowrap;
 }
 
-.google-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #fff;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  padding: 7px 14px;
-  font-size: .85rem;
-  font-weight: 600;
-  font-family: inherit;
-  color: var(--text);
-  cursor: pointer;
-  transition: background .15s;
-}
-.google-btn:hover { background: #f8fafc; }
-
-.google-btn.large {
-  padding: 12px 24px;
-  font-size: 1rem;
-  border-radius: 10px;
-}
-
-.logout-btn {
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 4px 10px;
-  font-size: .78rem;
-  cursor: pointer;
-  color: var(--muted);
-  font-family: inherit;
-}
-.logout-btn:hover { background: #f1f5f9; }
 
 /* ===== Login screen ===== */
 .login-screen {
