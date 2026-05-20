@@ -33,10 +33,15 @@ body {
   background: var(--panel);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 48px 40px;
+  padding: 40px 28px;
   text-align: center;
   max-width: 380px;
   width: 100%;
+}
+
+@media (max-width: 480px) {
+  .login-card { padding: 32px 20px; }
+  .login-title { font-size: 1.3rem; }
 }
 
 .login-icon { font-size: 48px; margin-bottom: 16px; }
@@ -282,7 +287,8 @@ body {
   border-radius: 6px;
   padding: 3px 8px;
   outline: none;
-  width: 130px;
+  width: 140px;
+  max-width: 45vw;
   background: #eff6ff;
   color: var(--brand);
 }
@@ -310,31 +316,70 @@ body {
 .app-header {
   background: var(--panel);
   border-bottom: 1px solid var(--border);
-  padding: 12px 20px 12px 68px; /* left: clear the 40px back-fab (16px left + 40px + 12px gap) */
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  padding: 10px 16px 10px 68px; /* 68px clears the fixed back-fab on all screen sizes */
   position: sticky;
   top: 0;
   z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* mobile: two rows — title+user on top, room controls below */
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .app-title {
   font-size: 1rem;
   font-weight: 700;
+  white-space: nowrap;
+  flex: 1;
+  text-align: center;
 }
 
-.user-area {
+.user-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.room-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* desktop: restore original single-row layout */
+@media (min-width: 600px) {
+  .app-header {
+    flex-direction: row;
+    align-items: center;
+    padding: 12px 20px 12px 68px; /* 68px clears the fixed back-fab (16px + 40px + 12px) */
+    gap: 10px;
+  }
+
+  /* dissolve header-top so its children join the header flex row directly */
+  .header-top {
+    display: contents;
+  }
+
+  .app-title     { order: 1; flex: 1; text-align: center; }
+  .room-controls { order: 2; flex-wrap: nowrap; }
+  .user-controls { order: 3; flex-shrink: 0; }
 }
 
 .user-avatar {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 1.5px solid var(--border);
+  flex-shrink: 0;
 }
 
 .logout-btn {
@@ -345,6 +390,7 @@ body {
   font-size: 0.8rem;
   cursor: pointer;
   color: var(--muted);
+  white-space: nowrap;
   transition: background 0.15s;
 }
 
