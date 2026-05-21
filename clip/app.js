@@ -30,6 +30,7 @@ const loginBtn        = document.getElementById("login-btn");
 const logoutBtn       = document.getElementById("logout-btn");
 const leaveRoomBtn    = document.getElementById("leave-room-btn");
 const userAvatar      = document.getElementById("user-avatar");
+const userNameEl      = document.getElementById("user-name");
 const roomLabel       = document.getElementById("room-label");
 const textInput       = document.getElementById("text-input");
 const postBtn         = document.getElementById("post-btn");
@@ -164,6 +165,7 @@ onAuthStateChanged(auth, user => {
   if (user) {
     showMain();
     userAvatar.src                = user.photoURL || "";
+    userNameEl.textContent        = user.displayName || user.email;
     userAvatar.style.display      = "";
     roomLabel.style.display       = "none";
     leaveRoomBtn.style.display    = "none";
