@@ -69,3 +69,16 @@ valueG.addEventListener('change', () => syncFromInput(valueG, sliderG));
 valueB.addEventListener('change', () => syncFromInput(valueB, sliderB));
 
 update();
+
+document.querySelectorAll('.tip-card[data-r]').forEach(card => {
+  const apply = () => {
+    sliderR.value = card.dataset.r;
+    sliderG.value = card.dataset.g;
+    sliderB.value = card.dataset.b;
+    update();
+  };
+  card.addEventListener('click', apply);
+  card.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); apply(); }
+  });
+});
