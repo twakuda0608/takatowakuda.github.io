@@ -19,7 +19,13 @@
 </script>
 </head>
 <body>
-  <h1>HTML / JS 練習用プレイグラウンド</h1>
+  <button class="back-fab" onclick="location.href='/'" aria-label="トップに戻る">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <header class="page-header">
+    <span class="page-header-title">HTML / JS 練習用プレイグラウンド</span>
+  </header>
+  <div class="wrap">
   <p class="note">いろいろ触って動作を確認できます。最低限のJSで実装。</p>
 
   <!-- 数字入力 × 2倍表示 -->
@@ -181,6 +187,7 @@
       <div id="player" aria-label="プレイヤー" title="矢印/WASDで動きます"></div>
     </div>
   </section>
+  </div>
 
   <script src="app.js" defer></script>
   <script src="/common.js"></script>

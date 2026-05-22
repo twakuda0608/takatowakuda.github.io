@@ -1,5 +1,6 @@
 :root { --w: 720px; }
-body{ max-width:var(--w); margin:0 auto; padding:0 20px 40px; line-height:1.7; }
+body{ padding-bottom: 40px; line-height:1.7; }
+.wrap { max-width:var(--w); margin:0 auto; padding:20px 20px 0; }
 section{
   background:#fff;
   border:1px solid var(--border-soft);

@@ -320,6 +320,8 @@ onAuthStateChanged(auth, user => {
   if (user) {
     const av = document.getElementById('user-avatar');
     if (av) av.src = user.photoURL ?? '';
+    const un = document.getElementById('user-name');
+    if (un) un.textContent = user.displayName || user.email;
     loadProperties();
   } else {
     showView('view-login');

@@ -17,8 +17,12 @@
 </script>
   <link rel="stylesheet" href="/common.css">
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
+  <button class="back-fab" onclick="location.href='/'" aria-label="トップに戻る">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
 
   <!-- ログイン前 -->
   <div id="login-screen" class="login-screen" style="display:none;">
@@ -30,28 +34,69 @@
         <svg viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
         Googleでログイン
       </button>
+
+      <div class="or-divider"><span>または</span></div>
+
+      <div class="room-entry">
+        <input type="text" id="room-input" class="room-input" placeholder="ルームコードを入力" maxlength="32" autocomplete="off" spellcheck="false">
+        <button id="room-btn" class="room-btn">入室</button>
+      </div>
+      <p class="room-hint">同じコードを両デバイスで入力すると、ログインなしで共有できます</p>
     </div>
   </div>
 
   <!-- ログイン後 -->
   <div id="main-screen" class="main-screen" style="display:none;">
-    <header class="app-header">
-      <span class="app-title">📋 クリップボード</span>
-      <div class="user-area">
+    <header class="page-header" id="app-header">
+      <span class="page-header-title">📋 クリップボード</span>
+      <div class="page-header-auth">
         <img id="user-avatar" class="user-avatar" src="" alt="">
+        <span id="user-name" class="user-name"></span>
         <button id="logout-btn" class="logout-btn">ログアウト</button>
       </div>
     </header>
+    <div class="room-bar">
+      <div class="room-controls">
+        <span id="room-label" class="room-label" style="display:none;" title="タップして変更"></span>
+        <input id="room-switch-input" class="room-switch-input" style="display:none;" maxlength="32" autocomplete="off" spellcheck="false" placeholder="新しいコードを入力">
+        <button id="room-switch-confirm" class="room-switch-confirm" style="display:none;" title="確定">✓</button>
+        <button id="qr-btn" class="qr-btn" style="display:none;" title="QRコードで参加">QR</button>
+        <button id="leave-room-btn" class="leave-room-btn" style="display:none;" title="ルームを退出">✕</button>
+      </div>
+    </div>
 
     <div class="content-wrap">
+      <div id="main-room-section" class="main-room-section" style="display:none;">
+        <div class="room-entry">
+          <input type="text" id="main-room-input" class="room-input" placeholder="ルームコードを入力して共有..." maxlength="32" autocomplete="off" spellcheck="false">
+          <button id="main-room-btn" class="room-btn">入室</button>
+        </div>
+      </div>
+
       <div class="post-area">
-        <textarea id="text-input" placeholder="テキストを入力してください..." rows="4"></textarea>
+        <div id="post-target-row" class="post-target-row" style="display:none;">
+          <button id="target-user-btn" class="target-btn active">👤 アカウント</button>
+          <button id="target-room-btn" class="target-btn">🔑 ルーム</button>
+        </div>
+        <textarea id="text-input" placeholder="テキストを入力してください..."></textarea>
+        <p class="shortcut-hint">Ctrl+Enter で送信</p>
         <button id="post-btn" class="post-btn">送信</button>
       </div>
 
       <div id="clips-list" class="clips-list">
         <div id="empty-msg" class="empty-msg" style="display:none;">投稿はありません</div>
       </div>
+    </div>
+  </div>
+
+  <!-- QR modal -->
+  <div id="qr-modal" class="qr-modal" style="display:none;">
+    <div class="qr-backdrop" id="qr-backdrop"></div>
+    <div class="qr-card">
+      <p class="qr-card-title">QRコードをスキャンして参加</p>
+      <div id="qr-container"></div>
+      <p class="qr-card-url" id="qr-card-url"></p>
+      <button id="qr-close-btn" class="qr-close-btn">閉じる</button>
     </div>
   </div>
 

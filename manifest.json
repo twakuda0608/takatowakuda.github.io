@@ -1,0 +1,10 @@
+{
+  "name": "Takato Wakuda",
+  "short_name": "Takato",
+  "icons": [
+    { "src": "/favicon-32.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "/icon.png", "sizes": "180x180", "type": "image/png" }
+  ],
+  "start_url": "/",
+  "display": "browser"
+}
