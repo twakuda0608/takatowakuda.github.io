@@ -856,7 +856,7 @@ function revCell4(required, mode, honba, tsumoOppIsOya = false, tieOk = false, s
       myGain  = act;
       oppLoss = scores.oppPays ? act : 0;
     }
-    const myFinal  = scores.my  + myGain;
+    const myFinal  = scores.my  + myGain + (scores.kyoutaku || 0);
     const oppFinal = scores.opp - oppLoss;
     return `<span class="rev-final">→ 自分 ${myFinal.toLocaleString()}点 / 相手 ${oppFinal.toLocaleString()}点</span>`;
   }
@@ -869,9 +869,18 @@ function revCell4(required, mode, honba, tsumoOppIsOya = false, tieOk = false, s
 }
 
 function computeTab4() {
-  const honba = Number(el('honba4').value || 0);
+  const honba    = Number(el('honba4').value    || 0);
+  const kyoutaku = Number(el('kyoutaku4').value || 0) * 1000;
   const tieOk = el('tie4').checked;
   const myScore = Number(el('my-score4').value || 0) * 100;
+  // Keep auto opponent score in sync (100,000 − me − manual opponents)
+  const autoRow = document.querySelector('#opponents4 .opp-row[data-auto]');
+  if (autoRow) {
+    const manualTotal = Array.from(
+      document.querySelectorAll('#opponents4 .opp-row:not([data-auto]) .opp-score')
+    ).reduce((s, inp) => s + Number(inp.value || 0) * 100, 0);
+    autoRow.querySelector('.opp-score').value = (100000 - myScore - manualTotal) / 100;
+  }
   const isMyOya = el('my-role4').value === 'oya';
   const opponents = Array.from(document.querySelectorAll('#opponents4 .opp-row')).map((row, i) => ({
     name: row.querySelector('.opp-name').value.trim() || `相手${i + 1}`,
@@ -899,9 +908,9 @@ function computeTab4() {
     // 必要な基本支払い（本場なし）
     // 親ツモ: 4x > diff - h400   子ツモ vs親: 6x   子ツモ vs子: 5x
     // tsumoOya: 3 players each pay same amount; tsumoKo: pass raw diff for actual net-change check
-    const tsumoBase  = isMyOya ? ceilTo100((diff - h400) / 4) : (diff - h400);
-    const ronElseBase = ceilTo100(diff - h300);
-    const ronDirBase  = ceilTo100((diff - h600) / 2);
+    const tsumoBase  = isMyOya ? ceilTo100((diff - h400 - kyoutaku) / 4) : (diff - h400 - kyoutaku);
+    const ronElseBase = ceilTo100(diff - h300 - kyoutaku);
+    const ronDirBase  = ceilTo100((diff - h600 - kyoutaku) / 2);
 
     const tsumoMode = isMyOya ? 'tsumoOya' : 'tsumoKo';
     const ronMode   = isMyOya ? 'ronOya'   : 'ronKo';
@@ -914,15 +923,15 @@ function computeTab4() {
         <tbody>
           <tr>
             <td class="rev-method">ツモ</td>
-            <td class="rev-amount">${revCell4(tsumoBase, tsumoMode, honba, opp.isOya, tieOk, { my: myScore, opp: opp.score, oppPays: true })}</td>
+            <td class="rev-amount">${revCell4(tsumoBase, tsumoMode, honba, opp.isOya, tieOk, { my: myScore, opp: opp.score, oppPays: true,  kyoutaku })}</td>
           </tr>
           <tr>
             <td class="rev-method">他家ロン</td>
-            <td class="rev-amount">${revCell4(ronElseBase, ronMode, honba, false, tieOk, { my: myScore, opp: opp.score, oppPays: false })}</td>
+            <td class="rev-amount">${revCell4(ronElseBase, ronMode, honba, false, tieOk, { my: myScore, opp: opp.score, oppPays: false, kyoutaku })}</td>
           </tr>
           <tr>
             <td class="rev-method">直撃</td>
-            <td class="rev-amount">${revCell4(ronDirBase, ronMode, honba, false, tieOk, { my: myScore, opp: opp.score, oppPays: true })}</td>
+            <td class="rev-amount">${revCell4(ronDirBase, ronMode, honba, false, tieOk, { my: myScore, opp: opp.score, oppPays: true,  kyoutaku })}</td>
           </tr>
         </tbody>
       </table>
@@ -942,23 +951,82 @@ function addOppRow4(idx) {
     </select>
     <button class="opp-del-btn rec-del-btn" title="削除">×</button>
   `;
-  div.querySelector('.opp-del-btn').addEventListener('click', () => { div.remove(); computeTab4(); });
+  div.querySelector('.opp-del-btn').addEventListener('click', () => {
+    div.remove();
+    document.querySelector('#opponents4 .opp-row[data-auto]')?.remove();
+    updateDeleteButtons4();
+    updateAddButton4();
+    computeTab4();
+  });
   ['input', 'change'].forEach(ev => {
     div.querySelector('.opp-name').addEventListener(ev, computeTab4);
     div.querySelector('.opp-score').addEventListener(ev, computeTab4);
-    div.querySelector('.opp-role').addEventListener(ev, computeTab4);
   });
+  const roleEl = div.querySelector('.opp-role');
+  roleEl.addEventListener('change', () => { enforceOya4(roleEl); computeTab4(); });
   el('opponents4').appendChild(div);
 }
 
-addOppRow4(++oppIdx4);
+function addAutoOpp4(idx) {
+  const div = document.createElement('div');
+  div.className = 'opp-row opp-row-auto';
+  div.dataset.auto = 'true';
+  div.innerHTML = `
+    <input class="opp-name player-name-input" placeholder="相手${idx}" autocomplete="off">
+    <input class="opp-score score-num" type="number" value="0" readonly tabindex="-1">
+    <select class="opp-role">
+      <option value="ko">子</option>
+      <option value="oya">親</option>
+    </select>
+    <span class="opp-del-placeholder"></span>
+  `;
+  ['input', 'change'].forEach(ev =>
+    div.querySelector('.opp-name').addEventListener(ev, computeTab4)
+  );
+  const roleEl = div.querySelector('.opp-role');
+  roleEl.addEventListener('change', () => { enforceOya4(roleEl); computeTab4(); });
+  el('opponents4').appendChild(div);
+}
 
-el('add-opp4').addEventListener('click', () => { addOppRow4(++oppIdx4); computeTab4(); });
+function updateDeleteButtons4() {
+  const manualRows = document.querySelectorAll('#opponents4 .opp-row:not([data-auto])');
+  const show = manualRows.length > 1;
+  manualRows.forEach(row => {
+    const btn = row.querySelector('.opp-del-btn');
+    if (btn) btn.style.display = show ? '' : 'none';
+  });
+}
+
+function updateAddButton4() {
+  const hasAuto = !!document.querySelector('#opponents4 .opp-row[data-auto]');
+  el('add-opp4').style.display = hasAuto ? 'none' : '';
+}
+
+function enforceOya4(changedEl) {
+  if (changedEl.value !== 'oya') return;
+  const myRole = el('my-role4');
+  if (myRole !== changedEl) myRole.value = 'ko';
+  document.querySelectorAll('#opponents4 .opp-role').forEach(sel => {
+    if (sel !== changedEl) sel.value = 'ko';
+  });
+}
+
+addOppRow4(++oppIdx4);
+updateDeleteButtons4();
+
+el('add-opp4').addEventListener('click', () => {
+  addOppRow4(++oppIdx4);
+  addAutoOpp4(++oppIdx4);
+  updateDeleteButtons4();
+  updateAddButton4();
+  computeTab4();
+});
 ['input', 'change'].forEach(ev => {
   el('honba4').addEventListener(ev, computeTab4);
+  el('kyoutaku4').addEventListener(ev, computeTab4);
   el('my-score4').addEventListener(ev, computeTab4);
-  el('my-role4').addEventListener(ev, computeTab4);
 });
+el('my-role4').addEventListener('change', () => { enforceOya4(el('my-role4')); computeTab4(); });
 el('tie4').addEventListener('change', computeTab4);
 computeTab4();
 
