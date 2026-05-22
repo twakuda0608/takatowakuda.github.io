@@ -136,8 +136,8 @@ input[readonly]{
 
 @media (max-width: 460px) {
   .page-card { padding: 12px; }
-  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; }
-  .tabbtn { font-size: 10px; padding: 7px 2px; white-space: nowrap; text-align: center; box-sizing: border-box; width: 100%; }
+  .tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+  .tabbtn { font-size: 9px; padding: 7px 2px; white-space: nowrap; text-align: center; box-sizing: border-box; width: 100%; }
   .score-row .score-num { width: 70px; }
   .sumline { font-size: 13px; }
 }
@@ -583,4 +583,90 @@ body.table-tab-active {
 }
 body.table-tab-active .back-fab {
   display: none;
+}
+
+/* =========================
+   Tab4: 逆転計算
+========================= */
+.opp-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.opp-row .opp-name {
+  flex: 1;
+  min-width: 0;
+}
+.opp-row .opp-score {
+  width: 72px;
+  flex-shrink: 0;
+  margin: 0;
+}
+.opp-row .opp-role {
+  width: 58px;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 7px 4px;
+}
+
+.rev-card { margin: 12px 0; }
+.rev-diff { font-size: 13px; color: #555; margin-bottom: 10px; }
+.rev-ahead { color: #059669; font-weight: 600; margin: 4px 0 0; }
+.rev-any { color: #059669; font-weight: 600; }
+
+.rev-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.rev-tbl th, .rev-tbl td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--border-soft, #e4e4e4);
+  vertical-align: middle;
+}
+.rev-tbl thead th {
+  background: #f8fafc;
+  font-weight: 600;
+  font-size: 12px;
+  color: #555;
+  text-align: left;
+}
+.rev-method {
+  font-weight: 600;
+  white-space: nowrap;
+  color: #333;
+  width: 72px;
+  font-size: 12px;
+}
+.rev-amount { font-variant-numeric: tabular-nums; }
+.rev-base {
+  display: block;
+  font-size: 11px;
+  color: #999;
+  margin-top: 2px;
+}
+
+.rev-tag {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.rev-tag-any { background: #d1fae5; color: #065f46; }
+.rev-tag-mg  { background: #dbeafe; color: #1e40af; }
+.rev-tag-hm  { background: #fef9c3; color: #92400e; }
+.rev-tag-bm  { background: #fed7aa; color: #9a3412; }
+.rev-tag-sm  { background: #fecaca; color: #991b1b; }
+.rev-tag-ym  { background: #f5d0fe; color: #6b21a8; }
+.rev-tag-ng  { background: #fee2e2; color: #dc2626; }
+.rev-alt {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: #666;
+  border-top: 1px dashed var(--border-soft, #e4e4e4);
+  padding-top: 4px;
 }

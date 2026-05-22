@@ -28,6 +28,7 @@
       <button class="tabbtn active" data-tab="t1">ウマ/オカ 精算</button>
       <button class="tabbtn" data-tab="t2">総合ポイント精算</button>
       <button class="tabbtn" data-tab="t3">戦績記録</button>
+      <button class="tabbtn" data-tab="t4">逆転計算</button>
     </div>
 
     <!-- タブ0：テーブル -->
@@ -201,6 +202,41 @@
           </fieldset>
         </div>
       </div>
+    </div>
+
+    <!-- タブ4：逆転計算 -->
+    <div id="t4" class="tab">
+      <fieldset>
+        <legend>設定</legend>
+        <label>本場数
+          <input id="honba4" type="number" value="0" min="0">
+        </label>
+        <label class="checklabel">
+          <input id="tie4" type="checkbox">
+          同点可（同点は起家に近い方が上位）
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>自分</legend>
+        <label>点数（百点単位）
+          <input id="my-score4" type="number" value="250">
+        </label>
+        <label>役割
+          <select id="my-role4">
+            <option value="ko">子</option>
+            <option value="oya">親</option>
+          </select>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>対戦相手</legend>
+        <div id="opponents4"></div>
+        <button id="add-opp4" class="logout-btn" style="margin-top:6px">＋ 相手を追加</button>
+      </fieldset>
+
+      <div id="result4"></div>
     </div>
 
     </div><!-- /.page-card -->
