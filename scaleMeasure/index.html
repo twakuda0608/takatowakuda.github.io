@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>図面スケール計測</title>
+  <link rel="icon" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5XPYDMQ921"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-5XPYDMQ921');
+  </script>
+  <link rel="stylesheet" href="/common.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <h1>図面スケール計測</h1>
+
+    <div class="page-card">
+
+      <!-- Upload area -->
+      <div id="upload-area">
+        <div class="upload-inner">
+          <svg class="upload-icon" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <path d="M21 15l-5-5L5 21"/>
+          </svg>
+          <p>図面・間取り図をドラッグ＆ドロップ</p>
+          <p class="muted">または</p>
+          <label class="btn-upload">
+            ファイルを選択
+            <input type="file" id="file-input" accept="image/*" hidden>
+          </label>
+        </div>
+      </div>
+
+      <!-- Tool area (shown after image load) -->
+      <div id="tool-area" hidden>
+        <div class="toolbar">
+          <button id="btn-calibrate" class="btn-active">1. キャリブレーション</button>
+          <button id="btn-measure" disabled>2. 線計測</button>
+          <button id="btn-area" disabled>3. 面積計測</button>
+          <button id="btn-clear">計測クリア</button>
+          <button id="btn-change">画像変更</button>
+          <label class="unit-label">面積単位:
+            <select id="area-unit">
+              <option value="m2">m²</option>
+              <option value="jo">帖</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="status-bar" class="status-bar"></div>
+
+        <div class="canvas-wrap" id="canvas-wrap">
+          <img id="img-preview" alt="図面">
+          <canvas id="canvas"></canvas>
+        </div>
+
+        <div id="calib-input" class="calib-input" hidden>
+          <label>実際の長さ:</label>
+          <div class="len-group">
+            <input id="real-length" type="number" min="0.01" step="any" placeholder="例: 5">
+            <select id="unit-select">
+              <option value="m" selected>m</option>
+              <option value="cm">cm</option>
+              <option value="mm">mm</option>
+            </select>
+          </div>
+          <button id="btn-set-scale" class="btn-primary">スケールを設定</button>
+        </div>
+
+        <div id="scale-info" class="scale-info" hidden></div>
+
+        <div id="measurements-panel" hidden>
+          <h3>計測結果</h3>
+          <ul id="measurements-list"></ul>
+        </div>
+      </div>
+
+    </div><!-- /.page-card -->
+  </div>
+
+  <script src="app.js" defer></script>
+  <script src="/common.js"></script>
+</body>
+</html>
