@@ -804,13 +804,19 @@ function minHand4(required, mode, tsumoOppIsOya = false, tieOk = false) {
 
 
 
-function revCell4(required, mode, honba, tsumoOppIsOya = false, tieOk = false) {
+function revCell4(required, mode, honba, tsumoOppIsOya = false, tieOk = false, scores = null) {
   const h = minHand4(required, mode, tsumoOppIsOya, tieOk);
   if (h.label === '任意') return '<span class="rev-any">任意でOK</span>';
   if (h.pay === null) return '<span class="rev-tag rev-tag-ng">達成不可</span>';
 
+  function getDealer(hand) {
+    return (hand.han != null && hand.fu != null)
+      ? Math.ceil(hand.fu * (1 << (hand.han + 2)) * 2 / 100) * 100
+      : hand.pay * 2;
+  }
+
   function payStr(hand) {
-    const { label, pay, han, fu } = hand;
+    const { label, pay } = hand;
     const bold = `<strong>${label}</strong>`;
     if (mode === 'tsumoOya') {
       const act = pay + honba * 100;
@@ -819,9 +825,7 @@ function revCell4(required, mode, honba, tsumoOppIsOya = false, tieOk = false) {
         : `${bold} ${pay.toLocaleString()}点オール`;
     }
     if (mode === 'tsumoKo') {
-      const dealer = (han != null && fu != null)
-        ? Math.ceil(fu * (1 << (han + 2)) * 2 / 100) * 100
-        : pay * 2;
+      const dealer = getDealer(hand);
       const act_ko = pay + honba * 100, act_dealer = dealer + honba * 100;
       return honba > 0
         ? `${bold} 本場込 ${act_ko.toLocaleString()}-${act_dealer.toLocaleString()}点`
@@ -833,7 +837,31 @@ function revCell4(required, mode, honba, tsumoOppIsOya = false, tieOk = false) {
       : `${bold} ${pay.toLocaleString()}点`;
   }
 
-  let html = payStr(h);
+  function scoreStr(hand) {
+    if (!scores) return '';
+    let myGain, oppLoss;
+    if (mode === 'tsumoOya') {
+      const act = hand.pay + honba * 100;
+      myGain  = 3 * act;
+      oppLoss = act;
+    } else if (mode === 'tsumoKo') {
+      const dealer   = getDealer(hand);
+      const act_ko   = hand.pay + honba * 100;
+      const act_deal = dealer   + honba * 100;
+      myGain  = 2 * act_ko + act_deal;
+      oppLoss = tsumoOppIsOya ? act_deal : act_ko;
+    } else {
+      // ron (ronOya / ronKo)
+      const act = hand.pay + honba * 300;
+      myGain  = act;
+      oppLoss = scores.oppPays ? act : 0;
+    }
+    const myFinal  = scores.my  + myGain;
+    const oppFinal = scores.opp - oppLoss;
+    return `<span class="rev-final">→ 自分 ${myFinal.toLocaleString()}点 / 相手 ${oppFinal.toLocaleString()}点</span>`;
+  }
+
+  let html = payStr(h) + scoreStr(h);
   if (h.alt) {
     html += `<span class="rev-alt">または ${payStr(h.alt)}</span>`;
   }
@@ -886,15 +914,15 @@ function computeTab4() {
         <tbody>
           <tr>
             <td class="rev-method">ツモ</td>
-            <td class="rev-amount">${revCell4(tsumoBase, tsumoMode, honba, opp.isOya, tieOk)}</td>
+            <td class="rev-amount">${revCell4(tsumoBase, tsumoMode, honba, opp.isOya, tieOk, { my: myScore, opp: opp.score, oppPays: true })}</td>
           </tr>
           <tr>
             <td class="rev-method">他家ロン</td>
-            <td class="rev-amount">${revCell4(ronElseBase, ronMode, honba, false, tieOk)}</td>
+            <td class="rev-amount">${revCell4(ronElseBase, ronMode, honba, false, tieOk, { my: myScore, opp: opp.score, oppPays: false })}</td>
           </tr>
           <tr>
             <td class="rev-method">直撃</td>
-            <td class="rev-amount">${revCell4(ronDirBase, ronMode, honba, false, tieOk)}</td>
+            <td class="rev-amount">${revCell4(ronDirBase, ronMode, honba, false, tieOk, { my: myScore, opp: opp.score, oppPays: true })}</td>
           </tr>
         </tbody>
       </table>
