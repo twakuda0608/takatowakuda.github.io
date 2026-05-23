@@ -53,16 +53,18 @@ varValueInput.addEventListener("input", updateVarDemo);
 
 
 /* ============================================================
-   代入デモ
+   代入デモ（アニメーション強化版）
 ============================================================ */
-const assignInput   = document.getElementById("assignInput");
-const assignBtn     = document.getElementById("assignBtn");
-const assignBoxEl   = document.getElementById("assignBox");
+const assignInput    = document.getElementById("assignInput");
+const assignBtn      = document.getElementById("assignBtn");
+const assignBoxEl    = document.getElementById("assignBox");
 const assignBoxValEl = document.getElementById("assignBoxVal");
-const assignRhsBox  = document.getElementById("assignRhsBox");
+const assignRhsBox   = document.getElementById("assignRhsBox");
 const assignRhsValEl = document.getElementById("assignRhsVal");
-const assignCodeEl  = document.getElementById("assignCode");
-const assignArrowEl = document.getElementById("assignArrow");
+const assignCodeEl   = document.getElementById("assignCode");
+const assignDemoEl   = document.getElementById("assignDemo");
+const assignEqEl     = document.getElementById("assignEq");
+const assignStatusEl = document.getElementById("assignStatus");
 
 function updateAssignRhs() {
   const v = assignInput.value !== "" ? assignInput.value : "0";
@@ -72,26 +74,91 @@ function updateAssignRhs() {
 
 assignInput.addEventListener("input", updateAssignRhs);
 
-assignBtn.addEventListener("click", () => {
-  const val = assignInput.value !== "" ? assignInput.value : "0";
+function setStatus(msg) { assignStatusEl.textContent = msg; }
 
-  // 右辺ボックス光らせる
+assignBtn.addEventListener("click", async () => {
+  if (assignBtn.disabled) return;
+  assignBtn.disabled = true;
+
+  const val = assignInput.value !== "" ? assignInput.value : "0";
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+
+  // ── step 1: highlight RHS ──────────────────────
+  setStatus("① 右の値を読みます…");
+  assignRhsValEl.textContent = val;
   assignRhsBox.classList.remove("flash");
   void assignRhsBox.offsetWidth;
   assignRhsBox.classList.add("flash");
+  await wait(260);
 
-  // 矢印アニメーション
-  assignArrowEl.classList.remove("shooting");
-  void assignArrowEl.offsetWidth;
-  assignArrowEl.classList.add("shooting");
+  // ── step 2: compute positions ──────────────────
+  const containerRect = assignDemoEl.getBoundingClientRect();
+  const fromRect = assignRhsBox.getBoundingClientRect();
+  const toRect   = document.getElementById("assignValueArea").getBoundingClientRect();
 
-  // 少し遅らせて変数ボックスを更新
-  setTimeout(() => {
-    assignBoxValEl.textContent = val;
-    assignBoxEl.classList.remove("pop", "receive");
-    void assignBoxEl.offsetWidth;
-    assignBoxEl.classList.add("receive");
-  }, 180);
+  const fromX = fromRect.left - containerRect.left + fromRect.width  / 2;
+  const fromY = fromRect.top  - containerRect.top  + fromRect.height / 2;
+  const toX   = toRect.left   - containerRect.left + toRect.width    / 2;
+  const toY   = toRect.top    - containerRect.top  + toRect.height   / 2;
+
+  // ── step 3: create flying token ───────────────
+  setStatus("② 左の箱に入れます！");
+  const token = document.createElement("div");
+  token.className = "fly-token";
+  token.textContent = val;
+  token.style.left = fromX + "px";
+  token.style.top  = fromY + "px";
+  assignDemoEl.appendChild(token);
+
+  // open box lid
+  assignBoxEl.classList.add("box-open");
+
+  // ── step 4: fly token along arc ───────────────
+  const dx = toX - fromX;
+  const dy = toY - fromY;
+  // arc height: goes up/left before dropping into box
+  const peakDy = -Math.max(70, Math.abs(dx) * 0.55);
+
+  await new Promise(resolve => {
+    const anim = token.animate([
+      {
+        transform: "translate(-50%,-50%) scale(1.1)",
+        opacity: "1",
+        offset: 0,
+      },
+      {
+        transform: `translate(calc(-50% + ${dx * 0.45}px), calc(-50% + ${peakDy}px)) scale(1.3)`,
+        opacity: "1",
+        offset: 0.42,
+      },
+      {
+        transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.35)`,
+        opacity: "0",
+        offset: 1,
+      },
+    ], { duration: 560, easing: "ease-in", fill: "forwards" });
+    anim.onfinish = resolve;
+  });
+  token.remove();
+
+  // ── step 5: land — close lid, bounce, update ──
+  assignBoxEl.classList.remove("box-open");
+  assignBoxValEl.textContent = val;
+  assignCodeEl.textContent   = `score = ${val}`;
+
+  assignBoxEl.classList.remove("box-receive");
+  void assignBoxEl.offsetWidth;
+  assignBoxEl.classList.add("box-receive");
+
+  assignEqEl.classList.remove("eq-pulse");
+  void assignEqEl.offsetWidth;
+  assignEqEl.classList.add("eq-pulse");
+
+  setStatus("✓ 代入完了！");
+  await wait(700);
+  setStatus("");
+
+  assignBtn.disabled = false;
 });
 
 
