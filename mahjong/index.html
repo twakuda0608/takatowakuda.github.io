@@ -216,6 +216,9 @@
         <label>本場数
           <input id="honba4" type="number" value="0" min="0">
         </label>
+        <label>供託（1本=1,000点）
+          <input id="kyoutaku4" type="number" value="0" min="0">
+        </label>
         <label class="checklabel">
           <input id="tie4" type="checkbox">
           同点可（同点は起家に近い方が上位）
@@ -224,15 +227,15 @@
 
       <fieldset>
         <legend>自分</legend>
-        <label>点数（百点単位）
-          <input id="my-score4" type="number" value="250">
-        </label>
-        <label>役割
-          <select id="my-role4">
+        <div class="opp-row">
+          <span class="opp-name"></span>
+          <input id="my-score4" class="opp-score score-num" type="number" value="250" min="0">
+          <select id="my-role4" class="opp-role">
             <option value="ko">子</option>
             <option value="oya">親</option>
           </select>
-        </label>
+          <span class="opp-del-placeholder"></span>
+        </div>
       </fieldset>
 
       <fieldset>

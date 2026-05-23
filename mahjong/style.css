@@ -609,6 +609,15 @@ body.table-tab-active .back-fab {
   margin: 0;
   padding: 7px 4px;
 }
+.opp-del-placeholder {
+  width: 28px;
+  flex-shrink: 0;
+}
+.opp-row-auto .opp-score {
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: default;
+}
 
 .rev-card { margin: 12px 0; }
 .rev-diff { font-size: 13px; color: #555; margin-bottom: 10px; }
@@ -662,6 +671,12 @@ body.table-tab-active .back-fab {
 .rev-tag-sm  { background: #fecaca; color: #991b1b; }
 .rev-tag-ym  { background: #f5d0fe; color: #6b21a8; }
 .rev-tag-ng  { background: #fee2e2; color: #dc2626; }
+.rev-final {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #555;
+}
 .rev-alt {
   display: block;
   margin-top: 5px;
