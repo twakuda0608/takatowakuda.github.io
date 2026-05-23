@@ -725,6 +725,22 @@ const HAND4_ABOVE = {
 // Returns {label, pay, alt?} for the minimum valid hand achieving required base payment.
 // Priority: minimum payment → minimum fu → minimum han.
 // When best.fu > 50 (unrealistic), also sets alt: {label, pay} restricted to fu ≤ 50.
+// Checks mangan+ table only; returns {label, pay} or null.
+function findManganPlus4(required, mode, tsumoOppIsOya, tieOk) {
+  if (mode === 'tsumoKo') {
+    const above = [[2000, 4000, '満貫'], [3000, 6000, '跳満'], [4000, 8000, '倍満'], [6000, 12000, '三倍満'], [8000, 16000, '役満']];
+    for (const [ko, dealer, lbl] of above) {
+      const netChange = tsumoOppIsOya ? (2 * ko + 2 * dealer) : (3 * ko + dealer);
+      if (tieOk ? netChange >= required : netChange > required) return { label: lbl, pay: ko };
+    }
+  } else {
+    for (const [amt, lbl] of HAND4_ABOVE[mode]) {
+      if (tieOk ? amt >= required : amt > required) return { label: lbl, pay: amt };
+    }
+  }
+  return null;
+}
+
 // required: for tsumoKo = raw diff (points); for other modes = min payment needed
 // tsumoOppIsOya: opponent is dealer (affects tsumoKo net-change formula)
 function minHand4(required, mode, tsumoOppIsOya = false, tieOk = false) {
@@ -756,7 +772,7 @@ function minHand4(required, mode, tsumoOppIsOya = false, tieOk = false) {
           if (mode === 'ronOya')        raw = Math.ceil(basic * 6 / 100) * 100;
           else if (mode === 'ronKo')    raw = Math.ceil(basic * 4 / 100) * 100;
           else /* tsumoOya */           raw = Math.ceil(basic * 2 / 100) * 100;
-          if (raw >= manganPay || raw < required) continue;
+          if (raw >= manganPay || (tieOk ? raw < required : raw <= required)) continue;
           if (raw < minPay || (raw === minPay && (fu < best.fu || (fu === best.fu && han < best.han)))) {
             minPay = raw; best = { han, fu };
           }
@@ -768,58 +784,84 @@ function minHand4(required, mode, tsumoOppIsOya = false, tieOk = false) {
 
   const b = search(110);
   if (b) {
-    const result = { label: `${b.han}飜${b.fu}符`, pay: b.pay, han: b.han, fu: b.fu };
     if (b.fu > 50) {
-      const a = search(50);
-      if (a) result.alt = { label: `${a.han}飜${a.fu}符`, pay: a.pay, han: a.han, fu: a.fu };
+      // Prefer realistic (fu ≤ 50) result as primary; fall back to mangan+ if needed
+      const a = search(50) || findManganPlus4(required, mode, tsumoOppIsOya, tieOk);
+      if (a) {
+        return {
+          ...(a.han != null ? { label: `${a.han}飜${a.fu}符`, han: a.han, fu: a.fu } : { label: a.label }),
+          pay: a.pay,
+          alt: { label: `${b.han}飜${b.fu}符`, pay: b.pay, han: b.han, fu: b.fu }
+        };
+      }
     }
-    return result;
+    return { label: `${b.han}飜${b.fu}符`, pay: b.pay, han: b.han, fu: b.fu };
   }
 
-  if (mode === 'tsumoKo') {
-    // mangan+ ko/dealer amounts; dealer = ko*2 (all exact multiples of 100)
-    const above = [[2000, 4000, '満貫'], [3000, 6000, '跳満'], [4000, 8000, '倍満'], [6000, 12000, '三倍満'], [8000, 16000, '役満']];
-    for (const [ko, dealer, lbl] of above) {
-      const netChange = tsumoOppIsOya ? (2 * ko + 2 * dealer) : (3 * ko + dealer);
-      if (tieOk ? netChange >= required : netChange > required) return { label: lbl, pay: ko };
-    }
-  } else {
-    for (const [amt, lbl] of HAND4_ABOVE[mode]) {
-      if (amt >= required) return { label: lbl, pay: amt };
-    }
-  }
-  return { label: '役満でも届かない', pay: null };
+  const mg = findManganPlus4(required, mode, tsumoOppIsOya, tieOk);
+  return mg || { label: '役満でも届かない', pay: null };
 }
 
 
 
-function revCell4(required, mode, honba, tsumoOppIsOya = false, tieOk = false) {
+function revCell4(required, mode, honba, tsumoOppIsOya = false, tieOk = false, scores = null) {
   const h = minHand4(required, mode, tsumoOppIsOya, tieOk);
   if (h.label === '任意') return '<span class="rev-any">任意でOK</span>';
   if (h.pay === null) return '<span class="rev-tag rev-tag-ng">達成不可</span>';
 
+  function getDealer(hand) {
+    return (hand.han != null && hand.fu != null)
+      ? Math.ceil(hand.fu * (1 << (hand.han + 2)) * 2 / 100) * 100
+      : hand.pay * 2;
+  }
+
   function payStr(hand) {
-    const { label, pay, han, fu } = hand;
+    const { label, pay } = hand;
     const bold = `<strong>${label}</strong>`;
     if (mode === 'tsumoOya') {
       const act = pay + honba * 100;
-      return `${bold} ${pay.toLocaleString()}点オール`
-        + (honba > 0 ? `<span class="rev-base">本場込 ${act.toLocaleString()}点オール</span>` : '');
+      return honba > 0
+        ? `${bold} 本場込 ${act.toLocaleString()}点オール`
+        : `${bold} ${pay.toLocaleString()}点オール`;
     }
     if (mode === 'tsumoKo') {
-      const dealer = (han != null && fu != null)
-        ? Math.ceil(fu * (1 << (han + 2)) * 2 / 100) * 100
-        : pay * 2;
+      const dealer = getDealer(hand);
       const act_ko = pay + honba * 100, act_dealer = dealer + honba * 100;
-      return `${bold} ${pay.toLocaleString()}-${dealer.toLocaleString()}点`
-        + (honba > 0 ? `<span class="rev-base">本場込 ${act_ko.toLocaleString()}-${act_dealer.toLocaleString()}</span>` : '');
+      return honba > 0
+        ? `${bold} 本場込 ${act_ko.toLocaleString()}-${act_dealer.toLocaleString()}点`
+        : `${bold} ${pay.toLocaleString()}-${dealer.toLocaleString()}点`;
     }
     const act = pay + honba * 300;
-    return `${bold} ${pay.toLocaleString()}点`
-      + (honba > 0 ? `<span class="rev-base">本場込 ${act.toLocaleString()}点</span>` : '');
+    return honba > 0
+      ? `${bold} 本場込 ${act.toLocaleString()}点`
+      : `${bold} ${pay.toLocaleString()}点`;
   }
 
-  let html = payStr(h);
+  function scoreStr(hand) {
+    if (!scores) return '';
+    let myGain, oppLoss;
+    if (mode === 'tsumoOya') {
+      const act = hand.pay + honba * 100;
+      myGain  = 3 * act;
+      oppLoss = act;
+    } else if (mode === 'tsumoKo') {
+      const dealer   = getDealer(hand);
+      const act_ko   = hand.pay + honba * 100;
+      const act_deal = dealer   + honba * 100;
+      myGain  = 2 * act_ko + act_deal;
+      oppLoss = tsumoOppIsOya ? act_deal : act_ko;
+    } else {
+      // ron (ronOya / ronKo)
+      const act = hand.pay + honba * 300;
+      myGain  = act;
+      oppLoss = scores.oppPays ? act : 0;
+    }
+    const myFinal  = scores.my  + myGain + (scores.kyoutaku || 0);
+    const oppFinal = scores.opp - oppLoss;
+    return `<span class="rev-final">→ 自分 ${myFinal.toLocaleString()}点 / 相手 ${oppFinal.toLocaleString()}点</span>`;
+  }
+
+  let html = payStr(h) + scoreStr(h);
   if (h.alt) {
     html += `<span class="rev-alt">または ${payStr(h.alt)}</span>`;
   }
@@ -827,8 +869,18 @@ function revCell4(required, mode, honba, tsumoOppIsOya = false, tieOk = false) {
 }
 
 function computeTab4() {
-  const honba = Number(el('honba4').value || 0);
+  const honba    = Number(el('honba4').value    || 0);
+  const kyoutaku = Number(el('kyoutaku4').value || 0) * 1000;
+  const tieOk = el('tie4').checked;
   const myScore = Number(el('my-score4').value || 0) * 100;
+  // Keep auto opponent score in sync (100,000 − me − manual opponents)
+  const autoRow = document.querySelector('#opponents4 .opp-row[data-auto]');
+  if (autoRow) {
+    const manualTotal = Array.from(
+      document.querySelectorAll('#opponents4 .opp-row:not([data-auto]) .opp-score')
+    ).reduce((s, inp) => s + Number(inp.value || 0) * 100, 0);
+    autoRow.querySelector('.opp-score').value = (100000 - myScore - manualTotal) / 100;
+  }
   const isMyOya = el('my-role4').value === 'oya';
   const opponents = Array.from(document.querySelectorAll('#opponents4 .opp-row')).map((row, i) => ({
     name: row.querySelector('.opp-name').value.trim() || `相手${i + 1}`,
@@ -847,7 +899,7 @@ function computeTab4() {
     if (diff < 0) return `<fieldset class="rev-card"><legend>${escHtml(opp.name)}</legend>
       ${diffLine}<p class="rev-ahead">既にトップ</p></fieldset>`;
     if (diff === 0) return `<fieldset class="rev-card"><legend>${escHtml(opp.name)}</legend>
-      ${diffLine}<p class="rev-ahead">同点 — 任意の和了でトップ</p></fieldset>`;
+      ${diffLine}<p class="rev-ahead">${tieOk ? '同点可ルール — 起家に近い方が上位（任意の和了でOK）' : '同点 — 逆転には1点以上の差が必要'}</p></fieldset>`;
 
     const h400 = honba * 400;
     const h300 = honba * 300;
@@ -856,9 +908,9 @@ function computeTab4() {
     // 必要な基本支払い（本場なし）
     // 親ツモ: 4x > diff - h400   子ツモ vs親: 6x   子ツモ vs子: 5x
     // tsumoOya: 3 players each pay same amount; tsumoKo: pass raw diff for actual net-change check
-    const tsumoBase  = isMyOya ? ceilTo100((diff - h400) / 4) : (diff - h400);
-    const ronElseBase = ceilTo100(diff - h300);
-    const ronDirBase  = ceilTo100((diff - h600) / 2);
+    const tsumoBase  = isMyOya ? ceilTo100((diff - h400 - kyoutaku) / 4) : (diff - h400 - kyoutaku);
+    const ronElseBase = ceilTo100(diff - h300 - kyoutaku);
+    const ronDirBase  = ceilTo100((diff - h600 - kyoutaku) / 2);
 
     const tsumoMode = isMyOya ? 'tsumoOya' : 'tsumoKo';
     const ronMode   = isMyOya ? 'ronOya'   : 'ronKo';
@@ -871,15 +923,15 @@ function computeTab4() {
         <tbody>
           <tr>
             <td class="rev-method">ツモ</td>
-            <td class="rev-amount">${revCell4(tsumoBase, tsumoMode, honba, opp.isOya)}</td>
+            <td class="rev-amount">${revCell4(tsumoBase, tsumoMode, honba, opp.isOya, tieOk, { my: myScore, opp: opp.score, oppPays: true,  kyoutaku })}</td>
           </tr>
           <tr>
             <td class="rev-method">他家ロン</td>
-            <td class="rev-amount">${revCell4(ronElseBase, ronMode, honba)}</td>
+            <td class="rev-amount">${revCell4(ronElseBase, ronMode, honba, false, tieOk, { my: myScore, opp: opp.score, oppPays: false, kyoutaku })}</td>
           </tr>
           <tr>
             <td class="rev-method">直撃</td>
-            <td class="rev-amount">${revCell4(ronDirBase, ronMode, honba)}</td>
+            <td class="rev-amount">${revCell4(ronDirBase, ronMode, honba, false, tieOk, { my: myScore, opp: opp.score, oppPays: true,  kyoutaku })}</td>
           </tr>
         </tbody>
       </table>
@@ -899,23 +951,83 @@ function addOppRow4(idx) {
     </select>
     <button class="opp-del-btn rec-del-btn" title="削除">×</button>
   `;
-  div.querySelector('.opp-del-btn').addEventListener('click', () => { div.remove(); computeTab4(); });
+  div.querySelector('.opp-del-btn').addEventListener('click', () => {
+    div.remove();
+    document.querySelector('#opponents4 .opp-row[data-auto]')?.remove();
+    updateDeleteButtons4();
+    updateAddButton4();
+    computeTab4();
+  });
   ['input', 'change'].forEach(ev => {
     div.querySelector('.opp-name').addEventListener(ev, computeTab4);
     div.querySelector('.opp-score').addEventListener(ev, computeTab4);
-    div.querySelector('.opp-role').addEventListener(ev, computeTab4);
   });
+  const roleEl = div.querySelector('.opp-role');
+  roleEl.addEventListener('change', () => { enforceOya4(roleEl); computeTab4(); });
   el('opponents4').appendChild(div);
 }
 
-addOppRow4(++oppIdx4);
+function addAutoOpp4(idx) {
+  const div = document.createElement('div');
+  div.className = 'opp-row opp-row-auto';
+  div.dataset.auto = 'true';
+  div.innerHTML = `
+    <input class="opp-name player-name-input" placeholder="相手${idx}" autocomplete="off">
+    <input class="opp-score score-num" type="number" value="0" readonly tabindex="-1">
+    <select class="opp-role">
+      <option value="ko">子</option>
+      <option value="oya">親</option>
+    </select>
+    <span class="opp-del-placeholder"></span>
+  `;
+  ['input', 'change'].forEach(ev =>
+    div.querySelector('.opp-name').addEventListener(ev, computeTab4)
+  );
+  const roleEl = div.querySelector('.opp-role');
+  roleEl.addEventListener('change', () => { enforceOya4(roleEl); computeTab4(); });
+  el('opponents4').appendChild(div);
+}
 
-el('add-opp4').addEventListener('click', () => { addOppRow4(++oppIdx4); computeTab4(); });
+function updateDeleteButtons4() {
+  const manualRows = document.querySelectorAll('#opponents4 .opp-row:not([data-auto])');
+  const show = manualRows.length > 1;
+  manualRows.forEach(row => {
+    const btn = row.querySelector('.opp-del-btn');
+    if (btn) btn.style.display = show ? '' : 'none';
+  });
+}
+
+function updateAddButton4() {
+  const hasAuto = !!document.querySelector('#opponents4 .opp-row[data-auto]');
+  el('add-opp4').style.display = hasAuto ? 'none' : '';
+}
+
+function enforceOya4(changedEl) {
+  if (changedEl.value !== 'oya') return;
+  const myRole = el('my-role4');
+  if (myRole !== changedEl) myRole.value = 'ko';
+  document.querySelectorAll('#opponents4 .opp-role').forEach(sel => {
+    if (sel !== changedEl) sel.value = 'ko';
+  });
+}
+
+addOppRow4(++oppIdx4);
+updateDeleteButtons4();
+
+el('add-opp4').addEventListener('click', () => {
+  addOppRow4(++oppIdx4);
+  addAutoOpp4(++oppIdx4);
+  updateDeleteButtons4();
+  updateAddButton4();
+  computeTab4();
+});
 ['input', 'change'].forEach(ev => {
   el('honba4').addEventListener(ev, computeTab4);
+  el('kyoutaku4').addEventListener(ev, computeTab4);
   el('my-score4').addEventListener(ev, computeTab4);
-  el('my-role4').addEventListener(ev, computeTab4);
 });
+el('my-role4').addEventListener('change', () => { enforceOya4(el('my-role4')); computeTab4(); });
+el('tie4').addEventListener('change', computeTab4);
 computeTab4();
 
 // ====== Tab 3: All-time totals ======
