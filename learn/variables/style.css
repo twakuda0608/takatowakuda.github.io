@@ -67,47 +67,75 @@
 /* ===== 変数ビジュアル ===== */
 .var-visual { flex: 0 0 auto; }
 
+/* ── outer box ──────────────────────────────── */
 .var-box {
   position: relative;
-  width: 148px;
-  min-height: 108px;
+  width: 162px;
   border: 3px solid #f97316;
   border-radius: 14px;
-  background: #fff7ed;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 18px 12px 10px;
-  transition: border-color .2s, background .2s;
+  overflow: hidden;
+  /* flat 3D shadow → looks like a physical crate */
+  box-shadow: 5px 6px 0 rgba(234,88,12,0.25), 0 2px 12px rgba(0,0,0,0.09);
+  flex-shrink: 0;
 }
 
 .var-box.pop {
-  animation: varPop .3s ease;
+  animation: varPop .35s ease;
 }
 
 @keyframes varPop {
   0%   { transform: scale(1); }
-  40%  { transform: scale(1.07); border-color: #ea580c; background: #ffedd5; }
+  35%  { transform: scale(1.07) translateY(-4px);
+         box-shadow: 7px 9px 0 rgba(234,88,12,0.3), 0 4px 16px rgba(0,0,0,0.13); }
   100% { transform: scale(1); }
 }
 
-.var-label {
-  position: absolute;
-  top: -14px;
-  left: 12px;
+/* ── name zone (outside / front face) ──────── */
+.var-name-area {
   background: #f97316;
-  color: #fff;
-  font-size: 0.78rem;
+  padding: 7px 11px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+/* tiny "変数名" / "中身" label */
+.var-zone-tag {
+  font-size: 0.58rem;
   font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 6px;
+  color: rgba(255,255,255,0.75);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
   white-space: nowrap;
-  max-width: 130px;
+  flex-shrink: 0;
+}
+
+.var-zone-inner {
+  color: #bbb;
+}
+
+.var-label {
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 800;
+  font-family: 'Courier New', monospace;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-family: 'Courier New', monospace;
+  max-width: 110px;
+}
+
+/* ── value zone (inside / interior) ────────── */
+.var-value-area {
+  position: relative;
+  background: #fff;
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  /* subtle inner shadow → depth of interior */
+  box-shadow: inset 0 3px 8px rgba(0,0,0,0.06);
 }
 
 .var-val {
@@ -121,27 +149,30 @@
 }
 
 .var-type {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 600;
   color: #d97706;
   background: #fef3c7;
   border-radius: 999px;
-  padding: 1px 7px;
+  padding: 2px 8px;
 }
 
-/* ミニ変数（比較セクション用） */
+/* ── mini (compare section) ─────────────────── */
 .var-box.mini {
-  width: 96px;
-  min-height: 68px;
-  border-width: 2px;
-  padding: 14px 8px 6px;
-  gap: 2px;
+  width: 104px;
+  box-shadow: 3px 4px 0 rgba(234,88,12,0.2);
+}
+
+.var-box.mini .var-name-area {
+  padding: 5px 8px;
 }
 
 .var-box.mini .var-label {
-  font-size: 0.65rem;
-  padding: 1px 5px;
-  top: -11px;
+  font-size: 0.78rem;
+}
+
+.var-box.mini .var-value-area {
+  padding: 7px 8px 8px;
 }
 
 .var-box.mini .var-val {
@@ -439,6 +470,7 @@
 .incr-badge   { background: #fdf4ff; color: #7e22ce; }
 
 .assign-demo {
+  position: relative;           /* anchor for flying token */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -458,20 +490,70 @@
   font-size: .72rem;
   font-weight: 700;
   color: var(--muted-color);
-  text-transform: uppercase;
   letter-spacing: .5px;
 }
 
+/* ── assign box theme (green) ───────────────── */
 .assign-var-box {
   border-color: #10b981;
+  box-shadow: 5px 6px 0 rgba(5,150,105,0.22), 0 2px 12px rgba(0,0,0,0.08);
 }
 
-.assign-var-box .var-label { background: #10b981; }
+.assign-var-box .var-name-area {
+  background: #10b981;
+}
 
+.assign-var-box .var-val {
+  color: #064e3b;
+}
+
+/* ── box lid (inside value-area) ────────────── */
+.box-lid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 16px;
+  background: #10b981;
+  transform-origin: top center;
+  transition: transform 0.28s ease, opacity 0.28s;
+  z-index: 2;
+}
+
+.assign-var-box.box-open .box-lid {
+  transform: perspective(220px) rotateX(-72deg);
+  opacity: 0.35;
+}
+
+/* box bounce when value lands */
+@keyframes boxReceive {
+  0%   { transform: scale(1)    translateY(0);  }
+  20%  { transform: scale(1.07) translateY(-7px); }
+  45%  { transform: scale(0.96) translateY(3px); }
+  68%  { transform: scale(1.03) translateY(-2px); }
+  100% { transform: scale(1)    translateY(0);  }
+}
+
+.assign-var-box.box-receive {
+  animation: boxReceive 0.45s ease;
+}
+
+/* val drop-in */
+@keyframes valDrop {
+  0%   { transform: scale(0.4) translateY(-18px); opacity: 0; }
+  65%  { transform: scale(1.15) translateY(3px);  opacity: 1; }
+  100% { transform: scale(1)   translateY(0);     opacity: 1; }
+}
+
+.assign-var-box.box-receive .var-val {
+  animation: valDrop 0.35s ease forwards;
+}
+
+/* ── RHS value box ───────────────────────────── */
 .assign-rhs {
   width: 110px;
   height: 80px;
-  border: 2px dashed #6ee7b7;
+  border: 2.5px solid #6ee7b7;
   border-radius: 12px;
   background: #f0fdf4;
   display: flex;
@@ -481,23 +563,25 @@
   font-weight: 800;
   color: #065f46;
   font-family: 'Courier New', monospace;
+  transition: background .15s, border-color .15s, transform .15s;
 }
 
 .assign-rhs.flash {
-  animation: rhsFlash .25s ease;
+  animation: rhsFlash .22s ease;
 }
 
 @keyframes rhsFlash {
-  0%   { background: #bbf7d0; border-color: #10b981; }
-  100% { background: #f0fdf4; border-color: #6ee7b7; }
+  0%   { background: #bbf7d0; border-color: #10b981; transform: scale(1.06); }
+  100% { background: #f0fdf4; border-color: #6ee7b7; transform: scale(1); }
 }
 
+/* ── center = sign ───────────────────────────── */
 .assign-center {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding-top: 24px; /* offset for sublabel */
+  padding-top: 24px;
 }
 
 .assign-eq {
@@ -505,9 +589,20 @@
   font-weight: 800;
   color: #10b981;
   line-height: 1;
+  transition: transform .2s;
 }
 
-.assign-arrow {
+.assign-eq.eq-pulse {
+  animation: eqPulse .4s ease;
+}
+
+@keyframes eqPulse {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.5); color: #059669; }
+  100% { transform: scale(1); }
+}
+
+.assign-dir-label {
   font-size: .72rem;
   font-weight: 700;
   color: #10b981;
@@ -515,25 +610,33 @@
   letter-spacing: .3px;
 }
 
-.assign-arrow.shooting {
-  animation: arrowShoot .35s ease;
+/* ── flying value token ──────────────────────── */
+.fly-token {
+  position: absolute;
+  background: #10b981;
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-family: 'Courier New', monospace;
+  padding: 7px 16px;
+  border-radius: 12px;
+  pointer-events: none;
+  box-shadow: 0 4px 20px rgba(16,185,129,0.55);
+  z-index: 50;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  will-change: transform, opacity;
 }
 
-@keyframes arrowShoot {
-  0%   { transform: translateX(10px); opacity: 0.3; }
-  60%  { transform: translateX(-4px); opacity: 1; }
-  100% { transform: translateX(0);    opacity: 1; }
-}
-
-/* 代入時のボックスアニメーション */
-.var-box.receive .var-val {
-  animation: receiveVal .35s ease;
-}
-
-@keyframes receiveVal {
-  0%   { transform: scale(.7) translateX(20px); opacity: 0; }
-  70%  { transform: scale(1.1) translateX(-3px); opacity: 1; }
-  100% { transform: scale(1)   translateX(0);    opacity: 1; }
+/* ── status message ──────────────────────────── */
+.assign-status {
+  text-align: center;
+  font-size: .88rem;
+  font-weight: 700;
+  min-height: 1.4em;
+  margin: -4px 0 8px;
+  color: #10b981;
+  transition: opacity .3s;
 }
 
 .assign-controls {
@@ -580,9 +683,16 @@
 
 .step-var-box {
   border-color: #a855f7;
+  box-shadow: 5px 6px 0 rgba(168,85,247,0.22), 0 2px 12px rgba(0,0,0,0.08);
 }
 
-.step-var-box .var-label { background: #a855f7; }
+.step-var-box .var-name-area {
+  background: #a855f7;
+}
+
+.step-var-box .var-val {
+  color: #3b0764;
+}
 
 .step-cards {
   flex: 1 1 260px;

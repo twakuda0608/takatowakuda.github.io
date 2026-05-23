@@ -33,9 +33,15 @@
         <!-- 視覚 -->
         <div class="var-visual">
           <div class="var-box" id="varBox">
-            <div class="var-label" id="varLabel">score</div>
-            <div class="var-val" id="varVal">100</div>
-            <div class="var-type" id="varType">数値</div>
+            <div class="var-name-area">
+              <span class="var-zone-tag">変数名</span>
+              <span class="var-label" id="varLabel">score</span>
+            </div>
+            <div class="var-value-area">
+              <span class="var-zone-tag var-zone-inner">中身（値）</span>
+              <div class="var-val" id="varVal">100</div>
+              <div class="var-type" id="varType">整数（int）</div>
+            </div>
           </div>
         </div>
 
@@ -69,36 +75,45 @@
         <span class="badge assign-badge">代入</span>
         <h2>= は「入れる」という意味</h2>
       </div>
-      <p class="concept-desc">プログラムの <code>=</code> は <strong>「右側の値を左側の変数に入れる」</strong> 命令です。</p>
+      <p class="concept-desc">プログラムの <code>=</code> は <strong>「右側の値を左側の箱に入れる」</strong> 命令です。</p>
 
-      <div class="assign-demo">
+      <div class="assign-demo" id="assignDemo">
         <div class="assign-side">
-          <div class="assign-sublabel">変数（左辺）</div>
+          <div class="assign-sublabel">左の箱（変数）</div>
           <div class="var-box assign-var-box" id="assignBox">
-            <div class="var-label">score</div>
-            <div class="var-val" id="assignBoxVal">0</div>
+            <div class="var-name-area">
+              <span class="var-zone-tag">変数名</span>
+              <span class="var-label">score</span>
+            </div>
+            <div class="var-value-area" id="assignValueArea">
+              <div class="box-lid" id="boxLid"></div>
+              <span class="var-zone-tag var-zone-inner">中身（値）</span>
+              <div class="var-val" id="assignBoxVal">0</div>
+            </div>
           </div>
         </div>
 
         <div class="assign-center">
-          <div class="assign-eq">=</div>
-          <div class="assign-arrow" id="assignArrow">← 右から入れる</div>
+          <div class="assign-eq" id="assignEq">=</div>
+          <div class="assign-dir-label">右 → 左へ入れる</div>
         </div>
 
         <div class="assign-side">
-          <div class="assign-sublabel">値（右辺）</div>
+          <div class="assign-sublabel">右の値</div>
           <div class="assign-rhs" id="assignRhsBox">
             <span id="assignRhsVal">100</span>
           </div>
         </div>
       </div>
 
+      <div class="assign-status" id="assignStatus"></div>
+
       <div class="assign-controls">
         <div class="input-group">
           <label class="input-label">代入する値</label>
           <input class="demo-input mono" id="assignInput" type="number" value="100">
         </div>
-        <button class="action-btn assign-btn" id="assignBtn">代入する →</button>
+        <button class="action-btn assign-btn" id="assignBtn">▶ 代入する！</button>
       </div>
 
       <div class="code-block">
@@ -124,8 +139,14 @@
         <div class="step-var-area">
           <div class="assign-sublabel">score の現在値</div>
           <div class="var-box step-var-box" id="stepVarBox">
-            <div class="var-label">score</div>
-            <div class="var-val" id="stepVarVal">5</div>
+            <div class="var-name-area">
+              <span class="var-zone-tag">変数名</span>
+              <span class="var-label">score</span>
+            </div>
+            <div class="var-value-area">
+              <span class="var-zone-tag var-zone-inner">中身（値）</span>
+              <div class="var-val" id="stepVarVal">5</div>
+            </div>
           </div>
         </div>
 
@@ -274,8 +295,12 @@ print(score)  # → 6</code></pre>
           <div class="compare-title">変数</div>
           <div class="compare-visual">
             <div class="var-box mini">
-              <div class="var-label">score</div>
-              <div class="var-val">100</div>
+              <div class="var-name-area">
+                <span class="var-label">score</span>
+              </div>
+              <div class="var-value-area">
+                <div class="var-val">100</div>
+              </div>
             </div>
           </div>
           <ul class="compare-list">
