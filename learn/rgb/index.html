@@ -139,6 +139,158 @@
         </div>
       </div>
 
+      <!-- Light mixing section -->
+      <div class="mixing-section">
+        <h2 class="info-title">光の混色（加法混色）</h2>
+        <p class="info-text">
+          光は重ねるほど<strong>明るく</strong>なります。赤・緑・青を全部重ねると<strong>白</strong>になります。
+          スクリーンやプロジェクターはこの原理で色を表示しています。
+        </p>
+
+        <div class="fl-demo">
+          <div class="fl-stage">
+            <div class="fl-beam fl-beam-1" id="flBeam1"></div>
+            <div class="fl-beam fl-beam-2" id="flBeam2"></div>
+            <div class="fl-beam fl-beam-3" id="flBeam3"></div>
+            <div class="fl-icon fl-icon-1">&#128294;</div>
+            <div class="fl-icon fl-icon-2">&#128294;</div>
+            <div class="fl-icon fl-icon-3">&#128294;</div>
+          </div>
+          <div class="fl-controls">
+            <label class="fl-ctrl">
+              <span class="fl-dot" id="flDot1"></span>
+              1:
+              <select id="flSel1">
+                <option value="255,0,0" selected>赤</option>
+                <option value="0,255,0">緑</option>
+                <option value="0,0,255">青</option>
+              </select>
+            </label>
+            <label class="fl-ctrl">
+              <span class="fl-dot" id="flDot2"></span>
+              2:
+              <select id="flSel2">
+                <option value="255,0,0">赤</option>
+                <option value="0,255,0" selected>緑</option>
+                <option value="0,0,255">青</option>
+              </select>
+            </label>
+            <label class="fl-ctrl">
+              <span class="fl-dot" id="flDot3"></span>
+              3:
+              <select id="flSel3">
+                <option value="255,0,0">赤</option>
+                <option value="0,255,0">緑</option>
+                <option value="0,0,255" selected>青</option>
+              </select>
+            </label>
+          </div>
+          <div class="fl-result">
+            <span id="flC1Name" class="fl-cname">赤</span>
+            <span class="fl-plus">＋</span>
+            <span id="flC2Name" class="fl-cname">緑</span>
+            <span class="fl-plus">＋</span>
+            <span id="flC3Name" class="fl-cname">青</span>
+            <span class="fl-arrow">→</span>
+            <span class="fl-mix-swatch" id="flMixSwatch"></span>
+            <strong id="flMixName">白</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ink/pigment mixing section -->
+      <div class="mixing-section">
+        <h2 class="info-title">インク・絵の具の混色（減法混色）</h2>
+        <p class="info-text">
+          インクや絵の具は重ねるほど<strong>暗く</strong>なります。シアン・マゼンタ・イエロー（CMY）を全部重ねると<strong>黒</strong>になります。
+          プリンターのインクはこの原理を使っています（光の三原色 RGB とは異なります）。
+        </p>
+
+        <div class="cmy-demo">
+
+          <div class="ink-anim">
+            <div class="ink-stage">
+              <div class="ink-blob ink-blob-1" id="inkBlob1"></div>
+              <div class="ink-blob ink-blob-2" id="inkBlob2"></div>
+              <div class="ink-blob ink-blob-3" id="inkBlob3"></div>
+            </div>
+            <div class="fl-controls">
+              <label class="fl-ctrl">
+                <span class="fl-dot" id="inkDot1"></span>
+                1:
+                <select id="inkSel1">
+                  <option value="0,255,255" selected>シアン</option>
+                  <option value="255,0,255">マゼンタ</option>
+                  <option value="255,255,0">イエロー</option>
+                </select>
+              </label>
+              <label class="fl-ctrl">
+                <span class="fl-dot" id="inkDot2"></span>
+                2:
+                <select id="inkSel2">
+                  <option value="0,255,255">シアン</option>
+                  <option value="255,0,255" selected>マゼンタ</option>
+                  <option value="255,255,0">イエロー</option>
+                </select>
+              </label>
+              <label class="fl-ctrl">
+                <span class="fl-dot" id="inkDot3"></span>
+                3:
+                <select id="inkSel3">
+                  <option value="0,255,255">シアン</option>
+                  <option value="255,0,255">マゼンタ</option>
+                  <option value="255,255,0" selected>イエロー</option>
+                </select>
+              </label>
+            </div>
+            <div class="fl-result">
+              <span id="inkC1Name" class="fl-cname">シアン</span>
+              <span class="fl-plus">＋</span>
+              <span id="inkC2Name" class="fl-cname">マゼンタ</span>
+              <span class="fl-plus">＋</span>
+              <span id="inkC3Name" class="fl-cname">イエロー</span>
+              <span class="fl-arrow">→</span>
+              <span class="fl-mix-swatch" id="inkMixSwatch"></span>
+              <strong id="inkMixName">黒</strong>
+            </div>
+          </div>
+
+          <div class="cmy-stage">
+            <div class="cmy-circle cmy-c"></div>
+            <div class="cmy-circle cmy-m"></div>
+            <div class="cmy-circle cmy-y"></div>
+            <span class="cmy-label" style="top:14px;left:34px">シアン</span>
+            <span class="cmy-label" style="top:14px;right:34px">イエロー</span>
+            <span class="cmy-label" style="bottom:10px;left:50%;transform:translateX(-50%)">マゼンタ</span>
+            <span class="cmy-mix-label" style="top:42px;left:50%;transform:translateX(-50%)">緑</span>
+            <span class="cmy-mix-label" style="top:96px;left:30px">青</span>
+            <span class="cmy-mix-label" style="top:96px;right:30px">赤</span>
+            <span class="cmy-mix-label cmy-center-label" style="top:78px;left:50%;transform:translateX(-50%)">黒</span>
+          </div>
+          <div class="cmy-legend">
+            <div class="cmy-legend-row"><span class="cmy-leg-swatch" style="background:#00ffff"></span>シアン（C）</div>
+            <div class="cmy-legend-row"><span class="cmy-leg-swatch" style="background:#ff00ff"></span>マゼンタ（M）</div>
+            <div class="cmy-legend-row"><span class="cmy-leg-swatch" style="background:#ffff00;border:1px solid #ccc"></span>イエロー（Y）</div>
+          </div>
+          <div class="cmy-compare">
+            <div class="compare-col">
+              <div class="compare-title">光（RGB）</div>
+              <div class="compare-row"><span class="compare-dot" style="background:#ff0000"></span>赤＋<span class="compare-dot" style="background:#00ff00"></span>緑 → <span class="compare-dot" style="background:#ffff00"></span>黄</div>
+              <div class="compare-row"><span class="compare-dot" style="background:#ff0000"></span>赤＋<span class="compare-dot" style="background:#0000ff"></span>青 → <span class="compare-dot" style="background:#ff00ff"></span>マゼンタ</div>
+              <div class="compare-row"><span class="compare-dot" style="background:#00ff00"></span>緑＋<span class="compare-dot" style="background:#0000ff"></span>青 → <span class="compare-dot" style="background:#00ffff"></span>シアン</div>
+              <div class="compare-row"><span class="compare-dot" style="background:#ff0000"></span>＋<span class="compare-dot" style="background:#00ff00"></span>＋<span class="compare-dot" style="background:#0000ff"></span> → <span class="compare-dot" style="background:#ffffff;border:1px solid #ccc"></span>白</div>
+            </div>
+            <div class="compare-col">
+              <div class="compare-title">インク（CMY）</div>
+              <div class="compare-row"><span class="compare-dot" style="background:#00ffff"></span>C＋<span class="compare-dot" style="background:#ff00ff"></span>M → <span class="compare-dot" style="background:#0000ff"></span>青</div>
+              <div class="compare-row"><span class="compare-dot" style="background:#00ffff"></span>C＋<span class="compare-dot" style="background:#ffff00;border:1px solid #ccc"></span>Y → <span class="compare-dot" style="background:#00ff00"></span>緑</div>
+              <div class="compare-row"><span class="compare-dot" style="background:#ff00ff"></span>M＋<span class="compare-dot" style="background:#ffff00;border:1px solid #ccc"></span>Y → <span class="compare-dot" style="background:#ff0000"></span>赤</div>
+              <div class="compare-row"><span class="compare-dot" style="background:#00ffff"></span>＋<span class="compare-dot" style="background:#ff00ff"></span>＋<span class="compare-dot" style="background:#ffff00;border:1px solid #ccc"></span> → <span class="compare-dot" style="background:#000000"></span>黒</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
