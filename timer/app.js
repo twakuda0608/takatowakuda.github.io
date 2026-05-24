@@ -24,7 +24,7 @@ async function loadCalendarData() {
 
   const now  = new Date();
   const tMin = new Date(now.getFullYear(), now.getMonth() - 3, 1).toISOString();
-  const tMax = new Date(now.getFullYear(), now.getMonth() + 6, 1).toISOString();
+  const tMax = new Date(now.getFullYear(), now.getMonth() + 24, 1).toISOString();
   const url  = 'https://www.googleapis.com/calendar/v3/calendars/'
     + encodeURIComponent(CALENDAR_ID)
     + '/events?key=' + API_KEY
