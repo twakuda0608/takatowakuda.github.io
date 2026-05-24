@@ -8,30 +8,48 @@ const COLOR_NEUTRAL = '#000000';
 const RATE_A = 2000;
 const RATE_B = 1226;
 
-const SHIFT_DATA = {
-  '2026-04-10': { start: '16:30', end: '20:45' },
-  '2026-04-11': { start: '12:45', end: '20:45' },
-  '2026-04-17': { start: '16:30', end: '20:45' },
-  '2026-04-18': { start: '09:00', end: '20:45' },
-  '2026-04-24': { start: '16:45', end: '20:45' },
-  '2026-04-25': { start: '09:30', end: '20:45' },
-  '2026-05-08': { start: '16:45', end: '20:45' },
-  '2026-05-09': { start: '09:30', end: '20:45' },
-  '2026-05-15': { start: '16:45', end: '20:45' },
-  '2026-05-16': { start: '09:30', end: '20:45' },
-  '2026-05-22': { start: '16:45', end: '20:45' },
-  '2026-05-23': { start: '09:30', end: '20:45' },
-  '2026-05-29': { start: '16:45', end: '20:45' },
-  '2026-05-30': { start: '09:30', end: '20:45' },
-  '2026-06-05': { start: '16:45', end: '20:45' },
-  '2026-06-06': { start: '09:30', end: '20:45' },
-  '2026-06-12': { start: '16:45', end: '20:45' },
-  '2026-06-13': { start: '09:30', end: '20:45' },
-  '2026-06-19': { start: '16:45', end: '20:45' },
-  '2026-06-20': { start: '09:30', end: '20:45' },
-  '2026-06-26': { start: '16:45', end: '20:45' },
-  '2026-06-27': { start: '09:30', end: '20:45' },
-};
+// ── Google Calendar 設定 ────────────────────────────────────
+const API_KEY     = 'AIzaSyANL5C5iMZtnZhdUCb0xt59P-LD-WA0ecw';
+const CALENDAR_ID = 'd0eb120895b44bb5496dba4a21c45f6e6d393fbb14910748827723b4e5736015@group.calendar.google.com';
+
+let SHIFT_DATA = {};
+
+async function loadCalendarData() {
+  const CACHE_KEY = 'shift_cal_v1';
+  const CACHE_TTL = 3 * 60 * 60 * 1000; // 3時間キャッシュ
+  try {
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+    if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data;
+  } catch (_) {}
+
+  const now  = new Date();
+  const tMin = new Date(now.getFullYear(), now.getMonth() - 3, 1).toISOString();
+  const tMax = new Date(now.getFullYear(), now.getMonth() + 6, 1).toISOString();
+  const url  = 'https://www.googleapis.com/calendar/v3/calendars/'
+    + encodeURIComponent(CALENDAR_ID)
+    + '/events?key=' + API_KEY
+    + '&timeMin=' + encodeURIComponent(tMin)
+    + '&timeMax=' + encodeURIComponent(tMax)
+    + '&singleEvents=true&orderBy=startTime&maxResults=500';
+
+  const res  = await fetch(url);
+  if (!res.ok) throw new Error('Calendar API ' + res.status);
+  const json = await res.json();
+
+  const result = {};
+  for (const ev of json.items) {
+    if (!ev.start || !ev.start.dateTime) continue;
+    const key   = ev.start.dateTime.substring(0, 10);  // "2026-05-16"
+    const start = ev.start.dateTime.substring(11, 16); // "09:30"
+    const end   = ev.end.dateTime.substring(11, 16);   // "20:45"
+    result[key] = { start, end };
+  }
+
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: result })); } catch (_) {}
+  return result;
+}
+
+// ── Schedule constants ──────────────────────────────────────
 
 const SCHEDULE_SAT = [
   { start: '09:30:00', end: '10:00:00', rate: RATE_B },
@@ -169,16 +187,13 @@ function closeTotal() {
 }
 
 document.addEventListener('click', function(e) {
-  if (e.target.id === 'hour')     openTotal();
+  if (e.target.id === 'hour')      openTotal();
   if (e.target.id === 'close-btn') closeTotal();
   if (e.target.id === 'sec') {
     const el = document.getElementById('earned');
     el.style.visibility = el.style.visibility === 'hidden' ? 'visible' : 'hidden';
   }
 });
-
-tick();
-setInterval(tick, 1000);
 
 // ── Total tab ──────────────────────────────────────────────
 
@@ -225,7 +240,14 @@ function calcDayEarnings(date, mode, startTime, endTime) {
   if (mode === 'custom') {
     const from = startTime ? asTime(startTime, date) : shiftStart;
     const to   = endTime   ? asTime(endTime,   date) : shiftEnd;
-    return calcEarned(from, to, blocks);
+    const extBlocks = blocks.slice();
+    if (extBlocks.length > 0) {
+      if (from < extBlocks[0].start)
+        extBlocks.unshift({ start: from, end: extBlocks[0].start, rate: RATE_B });
+      if (to > extBlocks[extBlocks.length - 1].end)
+        extBlocks.push({ start: extBlocks[extBlocks.length - 1].end, end: to, rate: RATE_B });
+    }
+    return calcEarned(from, to, extBlocks);
   }
   return calcEarned(shiftStart, shiftEnd, blocks);
 }
@@ -384,3 +406,15 @@ document.getElementById('next-month').addEventListener('click', function() {
   if (totalMonth > 12) { totalMonth = 1; totalYear++; }
   renderTotal();
 });
+
+// ── 起動 ──────────────────────────────────────────────────
+
+(async () => {
+  try {
+    SHIFT_DATA = await loadCalendarData();
+  } catch (e) {
+    console.error('カレンダー取得失敗:', e);
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
