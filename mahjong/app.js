@@ -858,7 +858,9 @@ function revCell4(required, mode, honba, tsumoOppIsOya = false, tieOk = false, s
     }
     const myFinal  = scores.my  + myGain + (scores.kyoutaku || 0);
     const oppFinal = scores.opp - oppLoss;
-    return `<span class="rev-final">→ 自分 ${myFinal.toLocaleString()}点 / 相手 ${oppFinal.toLocaleString()}点</span>`;
+    const winning  = myFinal > oppFinal;
+    const myStyle  = `color:${winning ? '#059669' : '#dc2626'};font-weight:600`;
+    return `<span class="rev-final">→ <span style="${myStyle}">${myFinal.toLocaleString()}点</span> / 相手 ${oppFinal.toLocaleString()}点</span>`;
   }
 
   let html = payStr(h) + scoreStr(h);
@@ -894,12 +896,13 @@ function computeTab4() {
   result.innerHTML = opponents.map(opp => {
     const diff = opp.score - myScore;
 
-    const diffLine = `<div class="rev-diff">${opp.score.toLocaleString()} − ${myScore.toLocaleString()} = <strong>${Math.abs(diff).toLocaleString()}点差</strong></div>`;
+    const hdr = `<div class="rev-card-hdr">
+      <span class="rev-opp-name">${escHtml(opp.name)}</span>
+      <span class="rev-diff">${opp.score.toLocaleString()} − ${myScore.toLocaleString()} = <strong>${Math.abs(diff).toLocaleString()}点差</strong></span>
+    </div>`;
 
-    if (diff < 0) return `<fieldset class="rev-card"><legend>${escHtml(opp.name)}</legend>
-      ${diffLine}<p class="rev-ahead">既にトップ</p></fieldset>`;
-    if (diff === 0) return `<fieldset class="rev-card"><legend>${escHtml(opp.name)}</legend>
-      ${diffLine}<p class="rev-ahead">${tieOk ? '同点可ルール — 起家に近い方が上位（任意の和了でOK）' : '同点 — 逆転には1点以上の差が必要'}</p></fieldset>`;
+    if (diff < 0) return `<div class="rev-card">${hdr}<p class="rev-ahead">✓ 既にトップ</p></div>`;
+    if (diff === 0) return `<div class="rev-card">${hdr}<p class="rev-ahead">${tieOk ? '同点可ルール — 任意の和了でOK' : '△ 同点 — 逆転には1点以上の差が必要'}</p></div>`;
 
     const h400 = honba * 400;
     const h300 = honba * 300;
@@ -915,9 +918,8 @@ function computeTab4() {
     const tsumoMode = isMyOya ? 'tsumoOya' : 'tsumoKo';
     const ronMode   = isMyOya ? 'ronOya'   : 'ronKo';
 
-    return `<fieldset class="rev-card">
-      <legend>${escHtml(opp.name)}</legend>
-      ${diffLine}
+    return `<div class="rev-card">
+      ${hdr}
       <table class="rev-tbl">
         <thead><tr><th>和了</th><th>必要な手</th></tr></thead>
         <tbody>
@@ -935,7 +937,7 @@ function computeTab4() {
           </tr>
         </tbody>
       </table>
-    </fieldset>`;
+    </div>`;
   }).join('');
 }
 
@@ -978,7 +980,7 @@ function addAutoOpp4(idx) {
       <option value="ko">子</option>
       <option value="oya">親</option>
     </select>
-    <span class="opp-del-placeholder"></span>
+    <span class="opp-del-placeholder auto-badge-cell"><span class="auto-badge">自動</span></span>
   `;
   ['input', 'change'].forEach(ev =>
     div.querySelector('.opp-name').addEventListener(ev, computeTab4)
