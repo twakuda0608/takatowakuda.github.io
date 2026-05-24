@@ -588,6 +588,76 @@ body.table-tab-active .back-fab {
 /* =========================
    Tab4: 逆転計算
 ========================= */
+/* Tab 4 settings row */
+.settings-row4 {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.settings-row4 > label {
+  flex: 1;
+  min-width: 80px;
+  margin-bottom: 0;
+}
+
+/* Tab 4 player column headers */
+.player-col-hdr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 5px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border, #ddd);
+}
+.ph-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  margin: 0;
+}
+.ph-score {
+  width: 72px;
+  flex-shrink: 0;
+  text-align: center;
+}
+.ph-role {
+  width: 58px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+/* "自分" row label and separator */
+.my-name-label {
+  font-weight: 700;
+  font-size: 13px;
+  color: #1e293b;
+}
+.opp-row-me {
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px dashed var(--border-soft, #e4e4e4);
+}
+
+/* Auto opponent badge */
+.auto-badge-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.auto-badge {
+  font-size: 10px;
+  font-weight: 600;
+  background: #e0f2fe;
+  color: #0284c7;
+  padding: 2px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
 .opp-row {
   display: flex;
   align-items: center;
@@ -613,15 +683,36 @@ body.table-tab-active .back-fab {
   width: 28px;
   flex-shrink: 0;
 }
-.opp-row-auto .opp-score {
-  background: #f1f5f9;
-  color: #64748b;
-  cursor: default;
-}
 
-.rev-card { margin: 12px 0; }
-.rev-diff { font-size: 13px; color: #555; margin-bottom: 10px; }
-.rev-ahead { color: #059669; font-weight: 600; margin: 4px 0 0; }
+.rev-card {
+  margin: 12px 0;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.rev-card-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--border-soft, #e4e4e4);
+}
+.rev-opp-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1e293b;
+}
+.rev-diff { font-size: 13px; color: #64748b; }
+.rev-ahead {
+  padding: 10px 14px;
+  margin: 0;
+  font-weight: 600;
+  color: #059669;
+  font-size: 13px;
+}
 .rev-any { color: #059669; font-weight: 600; }
 
 .rev-tbl {
@@ -630,22 +721,26 @@ body.table-tab-active .back-fab {
   font-size: 13px;
 }
 .rev-tbl th, .rev-tbl td {
-  padding: 7px 8px;
+  padding: 8px 14px;
   border-bottom: 1px solid var(--border-soft, #e4e4e4);
   vertical-align: middle;
 }
+.rev-tbl tbody tr:last-child td { border-bottom: none; }
 .rev-tbl thead th {
   background: #f8fafc;
   font-weight: 600;
-  font-size: 12px;
-  color: #555;
+  font-size: 11px;
+  color: #64748b;
   text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border, #ddd);
 }
 .rev-method {
   font-weight: 600;
   white-space: nowrap;
-  color: #333;
-  width: 72px;
+  color: #334155;
+  width: 68px;
   font-size: 12px;
 }
 .rev-amount { font-variant-numeric: tabular-nums; }
