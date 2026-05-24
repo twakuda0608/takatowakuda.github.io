@@ -213,12 +213,14 @@
     <div id="t4" class="tab">
       <fieldset>
         <legend>設定</legend>
-        <label>本場数
-          <input id="honba4" type="number" value="0" min="0">
-        </label>
-        <label>供託（1本=1,000点）
-          <input id="kyoutaku4" type="number" value="0" min="0">
-        </label>
+        <div class="settings-row4">
+          <label>本場数
+            <input id="honba4" type="number" value="0" min="0">
+          </label>
+          <label>供託（本）
+            <input id="kyoutaku4" type="number" value="0" min="0">
+          </label>
+        </div>
         <label class="checklabel">
           <input id="tie4" type="checkbox">
           同点可（同点は起家に近い方が上位）
@@ -226,9 +228,15 @@
       </fieldset>
 
       <fieldset>
-        <legend>自分</legend>
-        <div class="opp-row">
-          <span class="opp-name"></span>
+        <legend>プレイヤー</legend>
+        <div class="player-col-hdr">
+          <span class="opp-name ph-label">名前</span>
+          <span class="ph-score ph-label">点数（百点）</span>
+          <span class="ph-role ph-label">役割</span>
+          <span class="opp-del-placeholder"></span>
+        </div>
+        <div class="opp-row opp-row-me">
+          <span class="opp-name my-name-label">自分</span>
           <input id="my-score4" class="opp-score score-num" type="number" value="250" min="0">
           <select id="my-role4" class="opp-role">
             <option value="ko">子</option>
@@ -236,12 +244,8 @@
           </select>
           <span class="opp-del-placeholder"></span>
         </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>対戦相手</legend>
         <div id="opponents4"></div>
-        <button id="add-opp4" class="logout-btn" style="margin-top:6px">＋ 相手を追加</button>
+        <button id="add-opp4" class="logout-btn" style="margin-top:8px">＋ 相手を追加</button>
       </fieldset>
 
       <div id="result4"></div>
