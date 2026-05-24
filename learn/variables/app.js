@@ -110,7 +110,7 @@ assignBtn.addEventListener("click", async () => {
   token.style.top  = fromY + "px";
   assignDemoEl.appendChild(token);
 
-  // open box lid
+  // open box flaps
   assignBoxEl.classList.add("box-open");
 
   // ── step 4: fly token along arc ───────────────
@@ -141,7 +141,7 @@ assignBtn.addEventListener("click", async () => {
   });
   token.remove();
 
-  // ── step 5: land — close lid, bounce, update ──
+  // ── step 5: land — close flaps, bounce, update ──
   assignBoxEl.classList.remove("box-open");
   assignBoxValEl.textContent = val;
   assignCodeEl.textContent   = `score = ${val}`;
