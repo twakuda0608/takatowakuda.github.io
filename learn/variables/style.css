@@ -65,18 +65,26 @@
 }
 
 /* ===== 変数ビジュアル ===== */
-.var-visual { flex: 0 0 auto; }
+.var-visual { flex: 0 0 auto; padding-top: 18px; padding-right: 26px; }
 
-/* ── outer box ──────────────────────────────── */
+/* ── cardboard box ──────────────────────────── */
 .var-box {
+  --box-dx: 22px;
+  --box-dy: 14px;
   position: relative;
   width: 162px;
-  border: 3px solid #f97316;
-  border-radius: 14px;
-  overflow: hidden;
-  /* flat 3D shadow → looks like a physical crate */
-  box-shadow: 5px 6px 0 rgba(234,88,12,0.25), 0 2px 12px rgba(0,0,0,0.09);
+  border-radius: 3px 3px 4px 4px;
+  overflow: visible;
   flex-shrink: 0;
+  background: #C8935A;
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      rgba(255,255,255,0.07) 0px,  rgba(255,255,255,0.07) 1px,
+      rgba(0,0,0,0.04)       1px,  rgba(0,0,0,0.04)       2px,
+      transparent            2px,  transparent            6px
+    );
+  box-shadow: 0 10px 28px rgba(0,0,0,0.28);
 }
 
 .var-box.pop {
@@ -84,26 +92,112 @@
 }
 
 @keyframes varPop {
-  0%   { transform: scale(1); }
-  35%  { transform: scale(1.07) translateY(-4px);
-         box-shadow: 7px 9px 0 rgba(234,88,12,0.3), 0 4px 16px rgba(0,0,0,0.13); }
-  100% { transform: scale(1); }
+  0%   { transform: scale(1) translateY(0); }
+  35%  { transform: scale(1.07) translateY(-5px); }
+  100% { transform: scale(1) translateY(0); }
 }
 
-/* ── name zone (outside / front face) ──────── */
-.var-name-area {
-  background: #f97316;
-  padding: 7px 11px;
+/* ── 3-D faces: two top flaps + right side ──── */
+.box-flap-l,
+.box-flap-r {
+  position: absolute;
+  top: calc(-1 * var(--box-dy));
+  left: 0;
+  width: calc(100% + var(--box-dx));
+  height: var(--box-dy);
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,0.07) 0px, rgba(255,255,255,0.07) 1px,
+      transparent            1px, transparent            6px
+    );
+  /* pivot at fold line (bottom = top edge of box front face) */
+  transform-origin: center bottom;
+  transition: transform 0.42s ease, opacity 0.36s;
+}
+
+/* left flap: left half of the top parallelogram */
+.box-flap-l {
+  background-color: #E8CA90;
+  clip-path: polygon(
+    0px var(--box-dy),
+    calc(50% - var(--box-dx) / 2) var(--box-dy),
+    calc(50% + var(--box-dx) / 2) 0px,
+    var(--box-dx) 0px
+  );
+}
+
+/* right flap: right half of the top parallelogram */
+.box-flap-r {
+  background-color: #D9B57A;
+  clip-path: polygon(
+    calc(50% - var(--box-dx) / 2) var(--box-dy),
+    calc(100% - var(--box-dx)) var(--box-dy),
+    100% 0px,
+    calc(50% + var(--box-dx) / 2) 0px
+  );
+}
+
+.box-face-right {
+  position: absolute;
+  top: calc(-1 * var(--box-dy));
+  left: 100%;
+  width: var(--box-dx);
+  bottom: 0;
+  background: #8B5224;
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      rgba(0,0,0,0.08) 0px, rgba(0,0,0,0.08) 1px,
+      transparent      1px, transparent      6px
+    );
+  clip-path: polygon(0 var(--box-dy), 100% 0, 100% 100%, 0 100%);
+}
+
+/* box opening: flaps fold backward (rotateX around fold line) */
+.var-box.box-open .box-flap-l {
+  transform: perspective(320px) rotateX(-115deg);
+  opacity: 0.5;
+}
+
+.var-box.box-open .box-flap-r {
+  transform: perspective(320px) rotateX(-115deg);
+  opacity: 0.5;
+}
+
+/* ── shipping label (variable name) ─────────── */
+.var-name-label {
+  margin: 10px 10px 0;
+  background: #FFFEF0;
+  border: 1px solid #DDD0B0;
+  border-radius: 3px;
+  padding: 6px 9px;
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 5px;
+  /* label shadow = sticker lifted slightly */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.5) inset;
+  position: relative;
 }
 
-/* tiny "変数名" / "中身" label */
+/* tape strip across top of label */
+.var-name-label::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 22%;
+  right: 22%;
+  height: 7px;
+  background: rgba(210,190,100,0.55);
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* tiny zone tags */
 .var-zone-tag {
   font-size: 0.58rem;
   font-weight: 700;
-  color: rgba(255,255,255,0.75);
+  color: #aaa;
   text-transform: uppercase;
   letter-spacing: 0.4px;
   white-space: nowrap;
@@ -111,11 +205,12 @@
 }
 
 .var-zone-inner {
-  color: #bbb;
+  color: rgba(255,255,255,0.45);
 }
 
+/* the variable name on the label */
 .var-label {
-  color: #fff;
+  color: #2D1A08;
   font-size: 0.95rem;
   font-weight: 800;
   font-family: 'Courier New', monospace;
@@ -125,46 +220,58 @@
   max-width: 110px;
 }
 
-/* ── value zone (inside / interior) ────────── */
+/* ── interior (value) ───────────────────────── */
 .var-value-area {
   position: relative;
-  background: #fff;
+  margin: 8px 10px 10px;
+  background: #A86A32;
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px,
+      transparent            1px, transparent            5px
+    );
+  border-radius: 3px;
   padding: 10px 12px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  /* subtle inner shadow → depth of interior */
-  box-shadow: inset 0 3px 8px rgba(0,0,0,0.06);
+  /* deep inner shadow = looking into box */
+  box-shadow: inset 0 5px 16px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(0,0,0,0.1);
 }
 
 .var-val {
   font-size: 1.8rem;
   font-weight: 800;
-  color: #9a3412;
+  color: #FFF8F0;
   word-break: break-all;
   max-width: 130px;
   text-align: center;
   font-family: 'Courier New', monospace;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
 
 .var-type {
   font-size: 0.65rem;
-  font-weight: 600;
-  color: #d97706;
-  background: #fef3c7;
+  font-weight: 700;
+  color: #FFDFA0;
+  background: rgba(0,0,0,0.2);
   border-radius: 999px;
-  padding: 2px 8px;
+  padding: 2px 9px;
 }
 
 /* ── mini (compare section) ─────────────────── */
 .var-box.mini {
+  --box-dx: 14px;
+  --box-dy: 9px;
   width: 104px;
-  box-shadow: 3px 4px 0 rgba(234,88,12,0.2);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.22);
 }
 
-.var-box.mini .var-name-area {
-  padding: 5px 8px;
+.var-box.mini .var-name-label {
+  margin: 7px 7px 0;
+  padding: 4px 7px;
 }
 
 .var-box.mini .var-label {
@@ -172,6 +279,7 @@
 }
 
 .var-box.mini .var-value-area {
+  margin: 6px 7px 7px;
   padding: 7px 8px 8px;
 }
 
@@ -411,6 +519,8 @@
   margin: 12px 0 16px;
   display: flex;
   justify-content: center;
+  padding-top: 12px;
+  padding-right: 18px;
 }
 
 .mini-list {
@@ -483,7 +593,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 20px;
+  padding-top: 18px;
+  padding-right: 26px;
 }
 
 .assign-sublabel {
@@ -493,44 +605,26 @@
   letter-spacing: .5px;
 }
 
-/* ── assign box theme (green) ───────────────── */
-.assign-var-box {
-  border-color: #10b981;
-  box-shadow: 5px 6px 0 rgba(5,150,105,0.22), 0 2px 12px rgba(0,0,0,0.08);
+/* ── assign box theme (green tint on label) ─── */
+.assign-var-box .var-name-label {
+  background: #F0FFF8;
+  border-color: #A8D8C0;
 }
 
-.assign-var-box .var-name-area {
-  background: #10b981;
+.assign-var-box .var-name-label::before {
+  background: rgba(100,200,160,0.5);
 }
 
-.assign-var-box .var-val {
-  color: #064e3b;
+.assign-var-box .var-label {
+  color: #064E3B;
 }
 
-/* ── box lid (inside value-area) ────────────── */
-.box-lid {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 16px;
-  background: #10b981;
-  transform-origin: top center;
-  transition: transform 0.28s ease, opacity 0.28s;
-  z-index: 2;
-}
-
-.assign-var-box.box-open .box-lid {
-  transform: perspective(220px) rotateX(-72deg);
-  opacity: 0.35;
-}
-
-/* box bounce when value lands */
+/* box thud when value lands */
 @keyframes boxReceive {
   0%   { transform: scale(1)    translateY(0);  }
-  20%  { transform: scale(1.07) translateY(-7px); }
-  45%  { transform: scale(0.96) translateY(3px); }
-  68%  { transform: scale(1.03) translateY(-2px); }
+  18%  { transform: scale(1.06) translateY(-6px); }
+  44%  { transform: scale(0.97) translateY(3px); }
+  66%  { transform: scale(1.02) translateY(-2px); }
   100% { transform: scale(1)    translateY(0);  }
 }
 
@@ -538,15 +632,15 @@
   animation: boxReceive 0.45s ease;
 }
 
-/* val drop-in */
+/* val drops into interior */
 @keyframes valDrop {
-  0%   { transform: scale(0.4) translateY(-18px); opacity: 0; }
-  65%  { transform: scale(1.15) translateY(3px);  opacity: 1; }
+  0%   { transform: scale(0.4) translateY(-20px); opacity: 0; }
+  60%  { transform: scale(1.15) translateY(4px);  opacity: 1; }
   100% { transform: scale(1)   translateY(0);     opacity: 1; }
 }
 
 .assign-var-box.box-receive .var-val {
-  animation: valDrop 0.35s ease forwards;
+  animation: valDrop 0.38s ease forwards;
 }
 
 /* ── RHS value box ───────────────────────────── */
@@ -678,20 +772,23 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 20px;
+  padding-top: 18px;
+  padding-right: 26px;
 }
 
-.step-var-box {
-  border-color: #a855f7;
-  box-shadow: 5px 6px 0 rgba(168,85,247,0.22), 0 2px 12px rgba(0,0,0,0.08);
+/* ── step box theme (purple tint on label) ──── */
+.step-var-box .var-name-label {
+  background: #FAF5FF;
+  border-color: #D8B4FE;
 }
 
-.step-var-box .var-name-area {
-  background: #a855f7;
+.step-var-box .var-name-label::before {
+  background: rgba(168,85,247,0.35);
 }
 
-.step-var-box .var-val {
-  color: #3b0764;
+.step-var-box .var-label {
+  color: #3B0764;
 }
 
 .step-cards {

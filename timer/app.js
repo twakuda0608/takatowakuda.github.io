@@ -304,7 +304,7 @@ function renderTotal() {
     sel.addEventListener('change', function(e) {
       var key  = e.target.dataset.key;
       var mode = e.target.value;
-      if (!settings[key]) settings[key] = { mode: 'full', endTime: '' };
+      if (!settings[key]) settings[key] = { mode: 'full', startTime: '', endTime: '' };
       settings[key].mode = mode;
       saveSettings(y, m, settings);
 
@@ -312,6 +312,23 @@ function renderTotal() {
       row.querySelector('.shift-time').style.display  = mode === 'custom' ? 'none' : 'inline';
       row.querySelector('.time-inputs').style.display = mode === 'custom' ? 'flex'  : 'none';
       row.classList.toggle('is-off', mode === 'off');
+
+      if (mode === 'custom') {
+        var shift = SHIFT_DATA[key];
+        if (shift) {
+          var startInp = row.querySelector('.start-time-input');
+          var endInp   = row.querySelector('.end-time-input');
+          if (!settings[key].startTime) {
+            settings[key].startTime = shift.start;
+            startInp.value = shift.start;
+          }
+          if (!settings[key].endTime) {
+            settings[key].endTime = shift.end;
+            endInp.value = shift.end;
+          }
+          saveSettings(y, m, settings);
+        }
+      }
 
       var parts = key.split('-').map(Number);
       var date  = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
