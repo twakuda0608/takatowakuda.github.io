@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SQLプレイグラウンド</title>
+  <link rel="icon" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5XPYDMQ921"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-5XPYDMQ921');
+</script>
+  <link rel="stylesheet" href="/common.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <h1>SQLプレイグラウンド</h1>
+
+    <div class="page-card schema-card">
+      <p class="schema-title">サンプルデータ（最初から入っているテーブル）</p>
+      <div class="schema-tables">
+        <div class="schema-table">
+          <span class="table-name">students</span>
+          <span class="col-list">id, name, age, score</span>
+        </div>
+        <div class="schema-table">
+          <span class="table-name">clubs</span>
+          <span class="col-list">id, student_id, club_name</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-card">
+      <div class="editor-header">
+        <label class="preset-label">プリセット：</label>
+        <select id="preset">
+          <option value="">（選んで試してみよう）</option>
+          <option value="select_all">全データを表示 (SELECT)</option>
+          <option value="where">絞り込み (WHERE)</option>
+          <option value="order">並べ替え (ORDER BY)</option>
+          <option value="aggregate">集計 (COUNT / AVG / MAX)</option>
+          <option value="groupby">グループ集計 (GROUP BY)</option>
+          <option value="insert">行を追加 (INSERT)</option>
+          <option value="update">データを更新 (UPDATE)</option>
+          <option value="delete">行を削除 (DELETE)</option>
+          <option value="join">テーブルを結合 (JOIN)</option>
+        </select>
+      </div>
+
+      <textarea id="sql-input" spellcheck="false" placeholder="SQLを入力して実行ボタンを押してください...&#10;（Ctrl+Enter でも実行できます）"></textarea>
+
+      <div class="btn-row">
+        <button id="run-btn" class="btn-primary">▶ 実行</button>
+        <button id="reset-btn">データをリセット</button>
+      </div>
+    </div>
+
+    <div class="page-card" id="result-card">
+      <p class="result-label" id="result-label">結果がここに表示されます</p>
+      <div id="result-area"></div>
+    </div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
+  <script src="app.js"></script>
+  <script src="/common.js"></script>
+</body>
+</html>
