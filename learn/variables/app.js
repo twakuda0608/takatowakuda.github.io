@@ -285,8 +285,12 @@ function renderList(newIndex = null) {
     if (i === selectedIdx) el.classList.add("selected");
 
     el.innerHTML = `
-      <div class="list-index">[${i}]</div>
-      <div class="list-box">${item}</div>
+      <div class="list-box">
+        <div class="door-win"></div>
+        <span class="door-label">${item}</span>
+        <div class="door-knob"></div>
+      </div>
+      <div class="list-index">${i}号室</div>
     `;
 
     el.addEventListener("click", () => {
@@ -308,10 +312,10 @@ function updateListCode() {
 
   if (selectedIdx !== null && listItems[selectedIdx] !== undefined) {
     const val = listItems[selectedIdx];
-    code += `\n\n# [${selectedIdx}] にアクセス\nprint(fruits[${selectedIdx}])  # → "${val}"`;
-    listHintEl.textContent = `fruits[${selectedIdx}] の値は "${val}" です`;
+    code += `\n\n# ${selectedIdx}号室にアクセス\nprint(fruits[${selectedIdx}])  # → "${val}"`;
+    listHintEl.textContent = `${selectedIdx}号室（fruits[${selectedIdx}]）の住人は "${val}" です`;
   } else {
-    listHintEl.textContent = "箱をクリックするとアクセス方法が見られます";
+    listHintEl.textContent = "部屋をクリックするとアクセス方法が見られます";
   }
 
   listCodeEl.textContent = code;
@@ -368,14 +372,14 @@ document.querySelectorAll(".matrix-cell").forEach(cell => {
     if (selectedMatrixCell === cell) {
       selectedMatrixCell = null;
       document.querySelectorAll(".matrix-cell").forEach(c => c.classList.remove("selected"));
-      matrixHintEl.textContent = "セルをクリックするとアクセス方法が見られます";
+      matrixHintEl.textContent = "部屋をクリックするとアクセス方法が見られます";
       matrixCodeEl.textContent = baseMatrixCode();
     } else {
       document.querySelectorAll(".matrix-cell").forEach(c => c.classList.remove("selected"));
       cell.classList.add("selected");
       selectedMatrixCell = cell;
       const val = matrixData[row][col];
-      matrixHintEl.textContent = `matrix[${row}][${col}] の値は ${val} です`;
+      matrixHintEl.textContent = `${row}階の${col}号室（matrix[${row}][${col}]）の値は ${val} です`;
       matrixCodeEl.textContent =
         baseMatrixCode() + `\n\n# [${row}][${col}] にアクセス\nprint(matrix[${row}][${col}])  # → ${val}`;
     }

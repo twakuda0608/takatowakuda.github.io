@@ -389,15 +389,77 @@
   color: #1d4ed8;
 }
 
-/* ===== リストビジュアル ===== */
+/* ===== マンションイラスト ===== */
 .list-wrapper { width: 100%; overflow-x: auto; padding-bottom: 4px; }
 
+/* 建物全体 */
+.mansion-building {
+  display: inline-block;
+  min-width: 100%;
+  overflow: hidden;
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+/* 三角屋根（clip-pathで幅に追従） */
+.mansion-roof-peak {
+  height: 52px;
+  background: #c0392b;
+  clip-path: polygon(0% 100%, 50% 0%, 100% 100%);
+  margin-bottom: -1px;
+}
+
+/* 屋根帯（建物名） */
+.mansion-roof-band {
+  background: #c0392b;
+  border-bottom: 4px solid #922b21;
+  padding: 6px 16px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: .9rem;
+  color: #fff;
+}
+
+.mansion-roof-band code {
+  font-family: 'Courier New', monospace;
+  font-weight: 800;
+  color: #fff;
+  font-size: .9rem;
+  background: none;
+  padding: 0;
+}
+
+.mansion-name-sub {
+  font-size: .65rem;
+  color: rgba(255,255,255,0.75);
+  font-weight: 600;
+}
+
+/* 外壁（クリーム） */
+.mansion-wall {
+  background: #f0ede4;
+  border-left: 5px solid #d4c5a9;
+  border-right: 5px solid #d4c5a9;
+  padding: 20px 16px 18px;
+}
+
+/* 基礎 */
+.mansion-ground {
+  height: 12px;
+  background: #6d5a2a;
+  border-left: 5px solid #4a3a18;
+  border-right: 5px solid #4a3a18;
+  border-radius: 0 0 3px 3px;
+}
+
+/* ===== 部屋（ドアイラスト） ===== */
 .list-visual {
   display: flex;
-  gap: 8px;
-  min-height: 90px;
+  gap: 14px;
   align-items: flex-end;
-  padding: 6px 2px;
+  padding: 0 4px 4px;
   flex-wrap: nowrap;
 }
 
@@ -410,52 +472,121 @@
   transition: transform .15s;
 }
 
-.list-item:hover { transform: translateY(-4px); }
+.list-item:hover { transform: translateY(-3px); }
 
-.list-item.selected .list-box {
-  border-color: var(--brand);
-  background: #dbeafe;
-  box-shadow: 0 0 0 3px rgba(0,120,215,.2);
-}
-
-.list-index {
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: #6b7280;
-  margin-bottom: 3px;
-  font-family: monospace;
-}
-
+/* ドア本体（木製） */
 .list-box {
-  width: 70px;
-  height: 70px;
-  border: 2px solid #3b82f6;
-  border-radius: 10px;
-  background: #eff6ff;
+  width: 58px;
+  height: 88px;
+  background: linear-gradient(170deg, #a87040 0%, #8b5228 60%, #7a4220 100%);
+  border: 3px solid #5a3010;
+  border-radius: 4px 4px 0 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: .82rem;
-  font-weight: 600;
-  color: #1e40af;
-  padding: 4px;
-  text-align: center;
-  word-break: break-all;
+  justify-content: flex-start;
+  padding: 8px 4px 4px;
+  gap: 6px;
+  position: relative;
+  box-shadow:
+    inset 1px 0 0 rgba(255,255,255,0.18),
+    inset -1px 0 0 rgba(0,0,0,0.15),
+    2px 3px 8px rgba(0,0,0,0.28);
   transition: all .2s;
-  line-height: 1.3;
+}
+
+/* ドアの小窓 */
+.door-win {
+  width: 32px;
+  height: 20px;
+  background: #cce5f5;
+  border: 2px solid #5a3010;
+  border-radius: 2px;
+  flex-shrink: 0;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* ドアに書いたラベル */
+.door-label {
+  font-size: .72rem;
+  font-weight: 700;
+  color: #fff0d8;
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-all;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  max-width: 52px;
+}
+
+/* ドアノブ（真鍮） */
+.door-knob {
+  position: absolute;
+  right: 7px;
+  bottom: 18px;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle at 35% 30%, #f8e090, #c89a28);
+  border-radius: 50%;
+  border: 1px solid #8b6010;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+/* ドアの段差（step） */
+.list-box::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: -5px;
+  right: -5px;
+  height: 6px;
+  background: #b8a890;
+  border-radius: 0 0 3px 3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+/* 部屋番号プレート */
+.list-index {
+  margin-top: 13px;
+  background: #5a4a3a;
+  color: #f5dfa0;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-family: monospace;
+  white-space: nowrap;
+}
+
+/* 選択時：ドアが明るくなる */
+.list-item.selected .list-box {
+  background: linear-gradient(170deg, #d49050 0%, #b87038 60%, #a06028 100%);
+  box-shadow:
+    inset 1px 0 0 rgba(255,255,255,0.25),
+    0 0 16px rgba(255,200,80,0.5),
+    2px 3px 8px rgba(0,0,0,0.28);
+}
+
+.list-item.selected .door-win {
+  background: #fff9c4;
+  box-shadow: inset 0 0 8px rgba(255,220,0,0.4), 0 0 6px rgba(255,220,0,0.3);
+}
+
+.list-item.selected .list-index {
+  background: #7a5a10;
+  color: #ffd54f;
 }
 
 @keyframes itemIn {
-  from { opacity: 0; transform: scale(.6) translateY(12px); }
+  from { opacity: 0; transform: scale(.6) translateY(14px); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-.list-item.new-item { animation: itemIn .25s ease; }
+.list-item.new-item { animation: itemIn .28s ease; }
 
 .list-hint {
   font-size: .8rem;
   color: var(--muted-color);
-  margin-top: 6px;
+  margin-top: 10px;
   min-height: 1.2em;
 }
 
@@ -523,40 +654,116 @@
   padding-right: 18px;
 }
 
+/* ===== ミニマンション（比較カード用） ===== */
+.mini-mansion {
+  display: inline-flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 0 0 3px 3px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+}
+
+.mini-roof-peak {
+  height: 28px;
+  background: #c0392b;
+  clip-path: polygon(0% 100%, 50% 0%, 100% 100%);
+  margin-bottom: -1px;
+}
+
+.mini-roof-band {
+  background: #c0392b;
+  border-bottom: 3px solid #922b21;
+  padding: 3px 10px 4px;
+  font-size: .62rem;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+}
+
+.mini-wall {
+  background: #f0ede4;
+  border-left: 3px solid #d4c5a9;
+  border-right: 3px solid #d4c5a9;
+  padding: 8px 6px 4px;
+}
+
+.mini-ground {
+  height: 7px;
+  background: #6d5a2a;
+  border-left: 3px solid #4a3a18;
+  border-right: 3px solid #4a3a18;
+  border-radius: 0 0 2px 2px;
+}
+
 .mini-list {
   display: flex;
-  gap: 4px;
+  gap: 5px;
 }
 
 .mini-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 46px;
-  border: 1.5px solid #3b82f6;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.mini-idx {
-  background: #1d4ed8;
-  color: #fff;
-  font-size: .6rem;
-  font-weight: 700;
-  padding: 1px 0;
-  width: 100%;
-  text-align: center;
-  font-family: monospace;
+  width: 42px;
 }
 
 .mini-val {
-  padding: 5px 2px;
-  font-size: .62rem;
-  font-weight: 600;
-  color: #1e40af;
+  width: 38px;
+  height: 48px;
+  border: 2px solid #5a3010;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(170deg, #a87040, #7a4220);
+  box-shadow: inset 1px 0 0 rgba(255,255,255,0.15), 1px 2px 5px rgba(0,0,0,0.25);
+  font-size: .6rem;
+  font-weight: 700;
+  color: #fff0d8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 5px;
+  gap: 3px;
   text-align: center;
-  line-height: 1.3;
+  line-height: 1.2;
   word-break: break-all;
+  position: relative;
+}
+
+/* ミニ小窓 */
+.mini-val::before {
+  content: '';
+  width: 20px;
+  height: 12px;
+  background: #cce5f5;
+  border: 1.5px solid #5a3010;
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+/* ミニノブ */
+.mini-val::after {
+  content: '';
+  position: absolute;
+  right: 4px;
+  bottom: 8px;
+  width: 5px;
+  height: 5px;
+  background: radial-gradient(circle at 35% 30%, #f8e090, #c89a28);
+  border-radius: 50%;
+  border: 1px solid #8b6010;
+}
+
+.mini-idx {
+  margin-top: 4px;
+  background: #5a4a3a;
+  color: #f5dfa0;
+  font-size: .5rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-family: monospace;
+  white-space: nowrap;
 }
 
 .compare-list {
@@ -898,59 +1105,76 @@ mark.hl-store { background: #ede9fe; color: #6d28d9; padding: 1px 3px; border-ra
 
 .matrix-area { margin: 16px 0; }
 
+.matrix-mansion { display: block; }
+
+.matrix-mansion .mansion-wall {
+  overflow-x: auto;
+  padding: 16px 14px 12px;
+}
+
 .matrix-container {
   display: inline-flex;
   flex-direction: column;
-  gap: 6px;
-  overflow-x: auto;
+  gap: 8px;
+  padding-bottom: 4px;
 }
 
 .matrix-col-labels {
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 
-.matrix-corner { width: 36px; flex-shrink: 0; }
+.matrix-corner { width: 46px; flex-shrink: 0; }
 
 .matrix-col-label {
-  width: 60px;
+  width: 64px;
   text-align: center;
   font-size: .68rem;
   font-weight: 700;
-  color: #6b7280;
+  color: #f5dfa0;
+  background: linear-gradient(135deg, #3a4a6b, #2a3a5a);
+  border-radius: 4px;
+  padding: 4px 0;
   font-family: monospace;
   flex-shrink: 0;
+  border: 1px solid #2d1f14;
 }
 
 .matrix-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .matrix-row-label {
-  width: 36px;
-  text-align: right;
+  width: 46px;
+  text-align: center;
   font-size: .68rem;
   font-weight: 700;
-  color: #6b7280;
+  color: #a8e6a3;
+  background: linear-gradient(135deg, #2d4a28, #1e3318);
+  border-radius: 4px;
+  padding: 4px 0;
   font-family: monospace;
   flex-shrink: 0;
-  padding-right: 4px;
+  border: 1px solid #1a1209;
 }
 
 .matrix-cell {
-  width: 60px;
-  height: 60px;
-  border: 2px solid #6ee7b7;
-  border-radius: 10px;
-  background: #f0fdf4;
+  width: 64px;
+  height: 64px;
+  border: 3px solid #4a6d8c;
+  border-radius: 4px 4px 2px 2px;
+  background: #cce5f5;
+  box-shadow:
+    inset 0 3px 8px rgba(0,0,0,0.08),
+    0 2px 5px rgba(0,0,0,0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #065f46;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #1a3a52;
   font-family: 'Courier New', monospace;
   cursor: pointer;
   flex-shrink: 0;
@@ -961,9 +1185,11 @@ mark.hl-store { background: #ede9fe; color: #6d28d9; padding: 1px 3px; border-ra
 .matrix-cell:hover { transform: translateY(-3px); }
 
 .matrix-cell.selected {
-  border-color: #059669;
-  background: #d1fae5;
-  box-shadow: 0 0 0 3px rgba(5,150,105,.2);
+  background: #fff9c4;
+  border-color: #8b7320;
+  box-shadow:
+    0 0 14px rgba(255,215,0,0.55),
+    0 2px 5px rgba(0,0,0,0.15);
 }
 
 /* ===== レスポンシブ ===== */

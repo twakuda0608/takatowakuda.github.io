@@ -1,0 +1,255 @@
+/* ===== Layout ===== */
+.wrap {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.lead {
+  text-align: center;
+  color: var(--muted-color);
+  font-size: 1rem;
+  margin: -8px 0 0;
+}
+
+/* ===== Section header ===== */
+.sec-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.sec-header h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+  color: #1a202c;
+  text-shadow: none;
+  text-align: left;
+}
+
+/* ===== Badges ===== */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.frame-badge   { background: #ede9fe; color: #5b21b6; }
+.fps-badge     { background: #fef3c7; color: #92400e; }
+.compare-badge { background: #fee2e2; color: #991b1b; }
+.try-badge     { background: #d1fae5; color: #065f46; }
+
+/* ===== Concept text ===== */
+.concept-desc {
+  color: #374151;
+  line-height: 1.75;
+  margin-bottom: 8px;
+}
+
+.concept-note {
+  background: #f0f9ff;
+  border-left: 4px solid var(--brand);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  font-size: .9rem;
+  color: #374151;
+  margin-top: 14px;
+  line-height: 1.6;
+}
+
+/* ===== Canvas ===== */
+.canvas-wrap {
+  margin: 12px 0 4px;
+  display: flex;
+  justify-content: center;
+}
+
+canvas {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+/* ===== Controls ===== */
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.ctrl-lbl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .9rem;
+  color: var(--muted-color);
+}
+
+.range-input {
+  width: 180px;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+
+.action-btn {
+  padding: 9px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform .1s, filter .15s;
+}
+
+.action-btn:active { transform: scale(.97); }
+
+.frame-btn   { background: #7c3aed; color: #fff; }
+.frame-btn:hover { filter: brightness(1.15); }
+.compare-btn { background: #ef4444; color: #fff; }
+.compare-btn:hover { filter: brightness(1.1); }
+.reset-btn   { background: #e2e8f0; color: #475569; }
+.reset-btn:hover { filter: brightness(.95); }
+
+/* ===== FPS chart ===== */
+.fps-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0 4px;
+}
+
+.fps-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fps-label {
+  width: 58px;
+  font-size: .78rem;
+  font-weight: 700;
+  color: #6b7280;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.fps-bar-wrap {
+  flex: 1;
+  background: #f1f5f9;
+  border-radius: 6px;
+  height: 32px;
+  overflow: hidden;
+}
+
+.fps-bar {
+  height: 100%;
+  background: #a5b4fc;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  font-size: .75rem;
+  font-weight: 600;
+  color: #3730a3;
+  transition: width .3s;
+  min-width: 44px;
+}
+
+.fps-row-highlight .fps-bar {
+  background: #6366f1;
+  color: #fff;
+}
+
+/* ===== Compare grid ===== */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 12px 0 4px;
+}
+
+.compare-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.compare-label {
+  font-size: .85rem;
+  font-weight: 700;
+  padding: 2px 12px;
+  border-radius: 999px;
+}
+
+.fps-low-label  { background: #fee2e2; color: #991b1b; }
+.fps-high-label { background: #d1fae5; color: #065f46; }
+
+.compare-cell canvas {
+  width: 100%;
+}
+
+/* ===== FPS display ===== */
+.fps-display {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--brand);
+  letter-spacing: .03em;
+  margin: 12px 0 4px;
+}
+
+.fps-tag {
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-size: .82rem;
+  font-weight: 700;
+  background: #d1fae5;
+  color: #065f46;
+}
+
+/* ===== FPS meter ===== */
+.fps-meter {
+  margin-top: 8px;
+  height: 10px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.fps-meter-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e);
+  border-radius: 999px;
+  transition: width .15s;
+}
+
+.fps-meter-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: .72rem;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 480px) {
+  .compare-grid { grid-template-columns: 1fr; }
+  .compare-cell canvas { max-width: 300px; }
+  .fps-row .fps-label { width: 46px; }
+}
