@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FPS（フレームレート）を学ぼう</title>
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5XPYDMQ921"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-5XPYDMQ921');
+</script>
+  <link rel="stylesheet" href="/common.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <button class="back-fab" onclick="history.back()" aria-label="もどる">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <header class="page-header">
+    <span class="page-header-title">FPS（フレームレート）を学ぼう</span>
+  </header>
+
+  <div class="wrap">
+    <p class="lead">動画やゲームがなめらかに動く秘密を知ろう！</p>
+
+    <!-- ===== 1: フレームとは ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge frame-badge">フレーム</span>
+        <h2>フレームってなに？</h2>
+      </div>
+      <p class="concept-desc">
+        アニメーションや動画は、たくさんの<strong>静止画（コマ）</strong>を素早く切り替えることで動いて見えます。<br>
+        1枚1枚の画像を <strong>フレーム</strong> といいます。
+      </p>
+
+      <div class="canvas-wrap">
+        <canvas id="frameCanvas" width="560" height="160"></canvas>
+      </div>
+
+      <div class="controls-row">
+        <button class="action-btn frame-btn" id="framePlayBtn">▶ コマを送る</button>
+        <button class="action-btn reset-btn" id="frameResetBtn">↩ もどす</button>
+      </div>
+    </section>
+
+    <!-- ===== 2: FPSとは ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge fps-badge">FPS</span>
+        <h2>FPS = 1秒間に何枚のフレームを表示するか</h2>
+      </div>
+      <p class="concept-desc">
+        <strong>FPS</strong> は <strong>Frames Per Second</strong>（フレーム毎秒）の略です。<br>
+        1秒間に表示するフレーム数が多いほど、動きがなめらかに見えます。
+      </p>
+
+      <div class="fps-chart">
+        <div class="fps-row">
+          <div class="fps-label">1 FPS</div>
+          <div class="fps-bar-wrap"><div class="fps-bar" style="width: calc(100% * 1/60)"><span>1コマ</span></div></div>
+        </div>
+        <div class="fps-row">
+          <div class="fps-label">5 FPS</div>
+          <div class="fps-bar-wrap"><div class="fps-bar" style="width: calc(100% * 5/60)"><span>5コマ</span></div></div>
+        </div>
+        <div class="fps-row">
+          <div class="fps-label">15 FPS</div>
+          <div class="fps-bar-wrap"><div class="fps-bar" style="width: calc(100% * 15/60)"><span>15コマ</span></div></div>
+        </div>
+        <div class="fps-row">
+          <div class="fps-label">30 FPS</div>
+          <div class="fps-bar-wrap"><div class="fps-bar" style="width: calc(100% * 30/60)"><span>30コマ</span></div></div>
+        </div>
+        <div class="fps-row fps-row-highlight">
+          <div class="fps-label">60 FPS</div>
+          <div class="fps-bar-wrap"><div class="fps-bar fps-bar-highlight"><span>60コマ ← なめらか！</span></div></div>
+        </div>
+      </div>
+
+      <div class="concept-note">
+        映画は一般的に <strong>24 FPS</strong>、テレビは <strong>30 FPS</strong>、
+        ゲームやスマートフォンは <strong>60 FPS</strong> 以上が多いです。
+      </div>
+    </section>
+
+    <!-- ===== 3: FPSを比べよう ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge compare-badge">比較</span>
+        <h2>FPSのちがいを見てみよう！</h2>
+      </div>
+      <p class="concept-desc">
+        同じボールが同じ速さで動いています。FPSが低いとカクカクして見えます。
+      </p>
+
+      <div class="compare-grid">
+        <div class="compare-cell">
+          <div class="compare-label fps-low-label">5 FPS</div>
+          <canvas id="lowCanvas" width="240" height="120"></canvas>
+        </div>
+        <div class="compare-cell">
+          <div class="compare-label fps-high-label">60 FPS</div>
+          <canvas id="highCanvas" width="240" height="120"></canvas>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <button class="action-btn compare-btn" id="compareStartBtn">▶ 動かす</button>
+        <button class="action-btn reset-btn" id="compareStopBtn">■ 止める</button>
+      </div>
+    </section>
+
+    <!-- ===== 4: FPS体験スライダー ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge try-badge">体験</span>
+        <h2>FPSを自分で変えてみよう！</h2>
+      </div>
+      <p class="concept-desc">
+        スライダーを動かして FPS を変えると、アニメーションのなめらかさが変わります。
+      </p>
+
+      <div class="canvas-wrap">
+        <canvas id="tryCanvas" width="560" height="160"></canvas>
+      </div>
+
+      <div class="fps-display" id="fpsDisplay">30 FPS</div>
+
+      <div class="controls-row">
+        <label class="ctrl-lbl">
+          FPS：
+          <input type="range" id="fpsSlider" min="1" max="60" value="30" class="range-input">
+        </label>
+        <div class="fps-tag" id="fpsTag">ふつう</div>
+      </div>
+
+      <div class="fps-meter">
+        <div class="fps-meter-fill" id="fpsMeterFill"></div>
+        <div class="fps-meter-labels">
+          <span>1</span><span>15</span><span>30</span><span>60</span>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="app.js" defer></script>
+  <script src="/common.js"></script>
+</body>
+</html>

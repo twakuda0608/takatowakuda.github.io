@@ -206,24 +206,31 @@ print(score)  # → 6</code></pre>
         <span class="badge list-badge">リスト</span>
         <h2>リスト（配列）とは？</h2>
       </div>
-      <p class="concept-desc">リストは <strong>複数のデータを並べた箱の列</strong>です。各箱に <strong>0 から始まるインデックス</strong> がつきます。</p>
+      <p class="concept-desc">リストは <strong>マンション</strong> に例えられます。マンション全体がリスト、各 <strong>部屋が要素</strong>、<strong>部屋番号がインデックス</strong> です。インデックスは <strong>0 から</strong> 始まります。</p>
 
       <div class="demo-area column">
-        <!-- 視覚 -->
+        <!-- 視覚：マンション -->
         <div class="list-wrapper">
-          <div class="list-name-bar">
-            <code class="list-var-code">fruits</code>
-            <span class="list-name-desc">リスト名（変数名）</span>
+          <div class="mansion-building">
+            <div class="mansion-roof-peak"></div>
+            <div class="mansion-roof-band">
+              <span>🏠</span>
+              <code>fruits</code>
+              <span class="mansion-name-sub">マンション名（リスト名）</span>
+            </div>
+            <div class="mansion-wall">
+              <div class="list-visual" id="listVisual"></div>
+            </div>
+            <div class="mansion-ground"></div>
           </div>
-          <div class="list-visual" id="listVisual"></div>
-          <p class="list-hint" id="listHint">箱をクリックするとアクセス方法が見られます</p>
+          <p class="list-hint" id="listHint">部屋をクリックするとアクセス方法が見られます</p>
         </div>
 
         <!-- 操作 -->
         <div class="list-action-bar">
-          <button class="list-btn add-btn" id="addItemBtn">＋ 追加</button>
-          <button class="list-btn remove-btn" id="removeItemBtn">－ 最後を削除</button>
-          <span class="list-count"><span id="listCount">4</span> 個</span>
+          <button class="list-btn add-btn" id="addItemBtn">＋ 入居</button>
+          <button class="list-btn remove-btn" id="removeItemBtn">－ 最後を退去</button>
+          <span class="list-count"><span id="listCount">4</span> 部屋</span>
         </div>
       </div>
 
@@ -233,7 +240,7 @@ print(score)  # → 6</code></pre>
       </div>
 
       <div class="concept-note">
-        インデックスは <strong>0</strong> から始まります。追加：<code>fruits.append("もも")</code>、削除：<code>fruits.pop()</code>
+        部屋番号（インデックス）は <strong>0</strong> から始まります。入居：<code>fruits.append("もも")</code>、退去：<code>fruits.pop()</code>
       </div>
     </section>
 
@@ -243,40 +250,47 @@ print(score)  # → 6</code></pre>
         <span class="badge matrix-badge">応用</span>
         <h2>二次元リスト（リストのリスト）</h2>
       </div>
-      <p class="concept-desc">リストの中にリストを入れると、<strong>表のようなデータ</strong>を扱えます。</p>
+      <p class="concept-desc">リストの中にリストを入れると、<strong>マンションの階と部屋</strong> のような2次元データを扱えます。行が <strong>階</strong>、列が <strong>号室</strong> です。</p>
 
       <div class="matrix-area">
-        <div class="list-name-bar">
-          <code class="list-var-code">matrix</code>
-          <span class="list-name-desc">リスト名</span>
+        <div class="mansion-building matrix-mansion">
+          <div class="mansion-roof-peak"></div>
+          <div class="mansion-roof-band">
+            <span>🏠</span>
+            <code>matrix</code>
+            <span class="mansion-name-sub">マンション名（リスト名）</span>
+          </div>
+          <div class="mansion-wall">
+            <div class="matrix-container">
+              <div class="matrix-col-labels">
+                <div class="matrix-corner"></div>
+                <div class="matrix-col-label">0号室</div>
+                <div class="matrix-col-label">1号室</div>
+                <div class="matrix-col-label">2号室</div>
+              </div>
+              <div class="matrix-row">
+                <div class="matrix-row-label">0階</div>
+                <div class="matrix-cell" data-row="0" data-col="0">1</div>
+                <div class="matrix-cell" data-row="0" data-col="1">2</div>
+                <div class="matrix-cell" data-row="0" data-col="2">3</div>
+              </div>
+              <div class="matrix-row">
+                <div class="matrix-row-label">1階</div>
+                <div class="matrix-cell" data-row="1" data-col="0">4</div>
+                <div class="matrix-cell" data-row="1" data-col="1">5</div>
+                <div class="matrix-cell" data-row="1" data-col="2">6</div>
+              </div>
+              <div class="matrix-row">
+                <div class="matrix-row-label">2階</div>
+                <div class="matrix-cell" data-row="2" data-col="0">7</div>
+                <div class="matrix-cell" data-row="2" data-col="1">8</div>
+                <div class="matrix-cell" data-row="2" data-col="2">9</div>
+              </div>
+            </div>
+          </div>
+          <div class="mansion-ground"></div>
         </div>
-        <div class="matrix-container">
-          <div class="matrix-col-labels">
-            <div class="matrix-corner"></div>
-            <div class="matrix-col-label">[0]</div>
-            <div class="matrix-col-label">[1]</div>
-            <div class="matrix-col-label">[2]</div>
-          </div>
-          <div class="matrix-row">
-            <div class="matrix-row-label">[0]</div>
-            <div class="matrix-cell" data-row="0" data-col="0">1</div>
-            <div class="matrix-cell" data-row="0" data-col="1">2</div>
-            <div class="matrix-cell" data-row="0" data-col="2">3</div>
-          </div>
-          <div class="matrix-row">
-            <div class="matrix-row-label">[1]</div>
-            <div class="matrix-cell" data-row="1" data-col="0">4</div>
-            <div class="matrix-cell" data-row="1" data-col="1">5</div>
-            <div class="matrix-cell" data-row="1" data-col="2">6</div>
-          </div>
-          <div class="matrix-row">
-            <div class="matrix-row-label">[2]</div>
-            <div class="matrix-cell" data-row="2" data-col="0">7</div>
-            <div class="matrix-cell" data-row="2" data-col="1">8</div>
-            <div class="matrix-cell" data-row="2" data-col="2">9</div>
-          </div>
-        </div>
-        <p class="list-hint" id="matrixHint">セルをクリックするとアクセス方法が見られます</p>
+        <p class="list-hint" id="matrixHint">部屋をクリックするとアクセス方法が見られます</p>
       </div>
 
       <div class="code-block">
@@ -289,7 +303,7 @@ print(score)  # → 6</code></pre>
       </div>
 
       <div class="concept-note">
-        <code>matrix[行][列]</code> でアクセスします。例：<code>matrix[0][2]</code> → <code>3</code>
+        <code>matrix[階][号室]</code> でアクセスします。例：<code>matrix[0][2]</code>（0階の2号室）→ <code>3</code>
       </div>
     </section>
 
@@ -321,18 +335,25 @@ print(score)  # → 6</code></pre>
           </ul>
         </div>
         <div class="compare-card list-theme">
-          <div class="compare-title">リスト</div>
+          <div class="compare-title">リスト（マンション）</div>
           <div class="compare-visual">
-            <div class="mini-list">
-              <div class="mini-item"><span class="mini-idx">0</span><span class="mini-val">りんご</span></div>
-              <div class="mini-item"><span class="mini-idx">1</span><span class="mini-val">バナナ</span></div>
-              <div class="mini-item"><span class="mini-idx">2</span><span class="mini-val">みかん</span></div>
+            <div class="mini-mansion">
+              <div class="mini-roof-peak"></div>
+              <div class="mini-roof-band">🏠 fruits</div>
+              <div class="mini-wall">
+                <div class="mini-list">
+                  <div class="mini-item"><span class="mini-val">りんご</span><span class="mini-idx">0号室</span></div>
+                  <div class="mini-item"><span class="mini-val">バナナ</span><span class="mini-idx">1号室</span></div>
+                  <div class="mini-item"><span class="mini-val">みかん</span><span class="mini-idx">2号室</span></div>
+                </div>
+              </div>
+              <div class="mini-ground"></div>
             </div>
           </div>
           <ul class="compare-list">
-            <li>複数の値を保存</li>
-            <li>番号でアクセス：<code>fruits[0]</code></li>
-            <li>追加・削除が可能</li>
+            <li>複数の値を部屋に保存</li>
+            <li>部屋番号でアクセス：<code>fruits[0]</code></li>
+            <li>入居（追加）・退去（削除）が可能</li>
           </ul>
         </div>
       </div>
