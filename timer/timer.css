@@ -35,9 +35,9 @@ body {
 }
 
 .clock {
-  font-weight: 800;
+  font-weight: 300;
   letter-spacing: 0.04em;
-  font-size: clamp(48px, 10vw, 140px);
+  font-size: clamp(64px, min(28vw, 42vh), 380px);
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -47,9 +47,9 @@ body {
 
 .earned {
   font-variant-numeric: tabular-nums;
-  font-size: clamp(36px, 8vw, 60px);
-  font-weight: 800;
-  margin-top: 20px;
+  font-size: clamp(40px, min(16vw, 24vh), 220px);
+  font-weight: 300;
+  margin-top: clamp(8px, 2vh, 28px);
 }
 
 /* ── Total view ── */
