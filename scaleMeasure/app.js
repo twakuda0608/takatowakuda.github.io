@@ -4,6 +4,7 @@ const toolArea     = document.getElementById('tool-area');
 const btnCalibrate = document.getElementById('btn-calibrate');
 const btnMeasure   = document.getElementById('btn-measure');
 const btnArea      = document.getElementById('btn-area');
+const btnUndo      = document.getElementById('btn-undo');
 const btnClear     = document.getElementById('btn-clear');
 const btnChange    = document.getElementById('btn-change');
 const statusBar    = document.getElementById('status-bar');
@@ -70,6 +71,8 @@ btnArea.addEventListener('click', () => {
   if (!calibScale) { alert('先にキャリブレーションを完了してください。'); return; }
   enterMode('area');
 });
+btnUndo.addEventListener('click', undo);
+
 btnClear.addEventListener('click', () => {
   measures = []; pending = null; hover = null; areaPts = [];
   renderMeasList(); redraw(); updateStatus();
@@ -100,6 +103,7 @@ function resetAll() {
   calibDiv.hidden = true; scaleInfo.hidden = true;
   measPanel.hidden = true; measList.innerHTML = '';
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  updateUndoBtn();
 }
 
 function updateStatus() {
@@ -116,6 +120,7 @@ function updateStatus() {
       ? '面積計測: 最初の頂点をクリック'
       : `面積計測: 頂点 ${areaPts.length} 個追加済み（最初の点をクリックか Enter で閉じる、Esc でキャンセル）`;
   }
+  updateUndoBtn();
 }
 
 // ── Canvas interaction ────────────────────────────────────────────────────────
@@ -173,6 +178,9 @@ canvas.addEventListener('mouseleave', () => {
 });
 
 document.addEventListener('keydown', e => {
+  if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault(); undo(); return;
+  }
   if (e.key === 'Escape') {
     if (pending) { pending = null; hover = null; redraw(); updateStatus(); }
     if (areaPts.length > 0) { areaPts = []; hover = null; redraw(); updateStatus(); }
@@ -193,6 +201,26 @@ function closePoly() {
   });
   areaPts = []; hover = null;
   renderMeasList(); redraw(); updateStatus();
+}
+
+function undo() {
+  if (areaPts.length > 0) {
+    areaPts.pop();
+    hover = null;
+  } else if (pending) {
+    pending = null;
+    hover = null;
+  } else if (measures.length > 0) {
+    measures.pop();
+    renderMeasList();
+  } else {
+    return;
+  }
+  redraw(); updateStatus();
+}
+
+function updateUndoBtn() {
+  btnUndo.disabled = !areaPts.length && !pending && !measures.length;
 }
 
 function coords(e) {
@@ -425,7 +453,7 @@ function renderMeasList() {
   measList.querySelectorAll('.btn-delete').forEach(btn => {
     btn.addEventListener('click', () => {
       measures.splice(+btn.dataset.i, 1);
-      renderMeasList(); redraw();
+      renderMeasList(); redraw(); updateUndoBtn();
     });
   });
 }
