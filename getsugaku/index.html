@@ -41,69 +41,122 @@
 
   <main id="main-content" class="main-content" style="display:none;">
 
+    <!-- ===== フィルター（両タブ共通） ===== -->
     <div id="payer-filter" class="payer-filter" style="display:none;"></div>
 
-    <div class="summary-row">
-      <div class="summary-card">
-        <div class="summary-label">月額換算合計</div>
-        <div class="summary-value" id="monthly-total">¥0</div>
-        <div class="summary-note" id="monthly-note">全項目の月割り</div>
-      </div>
-      <div class="summary-card next-month-card" id="next-month-card">
+    <!-- ===== ビュー切り替えタブ ===== -->
+    <div class="view-tabs">
+      <button type="button" class="view-tab view-tab-active" data-view="next">
+        <span class="view-tab-label">来月必要なお金</span>
+        <span class="view-tab-sub">実際に支払う額</span>
+      </button>
+      <button type="button" class="view-tab" data-view="avg">
+        <span class="view-tab-label">毎月の平均</span>
+        <span class="view-tab-sub">月割り換算</span>
+      </button>
+    </div>
+
+    <!-- ===== タブ1: 来月必要なお金 ===== -->
+    <div id="view-next" class="view-panel">
+      <div class="summary-card next-month-card hero-card">
         <div class="summary-label">来月の支払い</div>
         <div class="summary-value" id="next-month-total">¥0</div>
         <div class="summary-note" id="next-month-label"></div>
-        <div class="forecast-hint">月別グラフ <span class="forecast-chevron">▼</span></div>
       </div>
-    </div>
 
-    <div id="forecast-panel" class="forecast-panel" style="display:none;"></div>
+      <div id="next-breakdown-card" class="breakdown-card" style="display:none;">
+        <table class="breakdown-table">
+          <thead><tr><th>支払い者</th><th>来月の支払い</th></tr></thead>
+          <tbody id="next-breakdown-body"></tbody>
+        </table>
+      </div>
 
-    <div id="chart-card" class="chart-card" style="display:none;">
-      <div class="chart-header" id="chart-card-header">カテゴリ別 月額内訳</div>
-      <div class="chart-body">
-        <div class="chart-donut-wrap">
-          <svg id="pie-chart" viewBox="0 0 200 200"></svg>
+      <div id="forecast-panel" class="forecast-panel"></div>
+
+      <section class="section" id="next-month-section">
+        <div class="section-header">
+          <h2 class="section-title">来月支払う項目</h2>
+          <span id="next-month-badge" class="month-badge"></span>
         </div>
-        <div id="chart-legend" class="chart-legend"></div>
+        <div id="next-month-list" class="next-month-list">
+          <p class="empty-msg">来月の支払い予定はありません</p>
+        </div>
+      </section>
+
+      <section class="section" id="monthly-breakdown-section" style="display:none;">
+        <div class="section-header">
+          <h2 class="section-title">月別内訳</h2>
+          <span class="settings-note">未払いをクリックで記録</span>
+        </div>
+        <div id="monthly-breakdown-body"></div>
+      </section>
+    </div>
+
+    <!-- ===== タブ2: 毎月の平均 ===== -->
+    <div id="view-avg" class="view-panel" style="display:none;">
+      <div class="summary-card hero-card">
+        <div class="summary-label">毎月かかる平均額</div>
+        <div class="summary-value" id="monthly-total">¥0</div>
+        <div class="summary-note" id="monthly-note">年払い等を月割り換算</div>
       </div>
+
+      <div id="avg-breakdown-card" class="breakdown-card" style="display:none;">
+        <table class="breakdown-table">
+          <thead><tr><th>支払い者</th><th>毎月の平均</th></tr></thead>
+          <tbody id="avg-breakdown-body"></tbody>
+        </table>
+      </div>
+
+      <div id="chart-card" class="chart-card" style="display:none;">
+        <div class="chart-header" id="chart-card-header">カテゴリ別 月額内訳<span class="chart-subtitle">特定の月ではなく、毎月かかる平均額（年払い・分割は月割り換算）</span></div>
+        <div class="chart-body">
+          <div class="chart-donut-wrap">
+            <svg id="pie-chart" viewBox="0 0 200 200"></svg>
+          </div>
+          <div id="chart-legend" class="chart-legend"></div>
+        </div>
+      </div>
+
+      <div id="personal-chart-card" class="chart-card" style="display:none;"></div>
+
+      <section class="section" id="avg-items-section" style="display:none;">
+        <div class="section-header">
+          <h2 class="section-title">各項目の月額換算</h2>
+          <span class="settings-note">月で割ると実質いくらか</span>
+        </div>
+        <div id="avg-items-body"></div>
+      </section>
     </div>
 
-    <div id="personal-chart-card" class="chart-card" style="display:none;"></div>
+    <!-- ===== 支払い実績・精算（常時表示） ===== -->
+    <div class="zone-divider"><span>支払い実績・精算</span></div>
 
-    <div id="breakdown-card" class="breakdown-card" style="display:none;">
-      <table class="breakdown-table">
-        <thead>
-          <tr>
-            <th></th>
-            <th>月額換算</th>
-            <th>来月の支払い</th>
-          </tr>
-        </thead>
-        <tbody id="breakdown-body"></tbody>
-      </table>
-    </div>
-
-    <section class="section payers-section">
+    <section class="section" id="paid-summary-section" style="display:none;">
       <div class="section-header">
-        <h2 class="section-title">支払い者の設定</h2>
-        <span class="settings-note">名前を変更・追加できます</span>
+        <h2 class="section-title">支払い実績</h2>
       </div>
-      <div class="payers-body">
-        <div id="payers-list" class="payers-list"></div>
-        <button type="button" id="add-payer-btn" class="add-payer-btn">+ 追加</button>
-      </div>
-      <div id="movein-container"></div>
-      <div id="global-split-container"></div>
+      <div id="paid-summary-body"></div>
     </section>
 
-    <section class="section" id="next-month-section">
+    <section class="section" id="settlement-section" style="display:none;">
       <div class="section-header">
-        <h2 class="section-title">来月支払う項目</h2>
-        <span id="next-month-badge" class="month-badge"></span>
+        <h2 class="section-title">精算</h2>
+        <span class="settings-note">建て替え分の清算</span>
       </div>
-      <div id="next-month-list" class="next-month-list">
-        <p class="empty-msg">来月の支払い予定はありません</p>
+      <div id="settlement-body"></div>
+    </section>
+
+    <!-- ===== 項目と設定ゾーン ===== -->
+    <div class="zone-divider"><span>項目と設定</span></div>
+
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">全項目一覧</h2>
+        <span id="item-count" class="item-count"></span>
+      </div>
+      <div id="freq-summary" class="freq-summary"></div>
+      <div id="payments-list" class="payments-list">
+        <p class="empty-msg">まだ項目がありません</p>
       </div>
     </section>
 
@@ -131,12 +184,20 @@
               <option value="12">年1回</option>
               <option value="24">2年ごと</option>
               <option value="36">3年ごと</option>
+              <option value="0">一回のみ</option>
               <option value="custom">カスタム</option>
             </select>
           </div>
           <div class="form-group" id="add-custom-freq-group" style="display:none;">
             <label for="f-freq-custom">頻度（ヶ月）</label>
             <input type="number" id="f-freq-custom" min="1" max="120" placeholder="例: 18">
+          </div>
+          <div class="form-group" id="add-amortize-group" style="display:none;">
+            <label for="f-amortize-months">月割換算（分割期間）</label>
+            <div class="amortize-row">
+              <input type="number" id="f-amortize-months" min="1" max="600" placeholder="例: 12">
+              <span class="amortize-unit">ヶ月で分割<br>空欄＝月額に含めない</span>
+            </div>
           </div>
           <div class="form-group">
             <label for="f-next-date">次回支払日</label>
@@ -173,15 +234,17 @@
       </form>
     </section>
 
-    <section class="section">
+    <section class="section payers-section">
       <div class="section-header">
-        <h2 class="section-title">全項目一覧</h2>
-        <span id="item-count" class="item-count"></span>
+        <h2 class="section-title">支払い者の設定</h2>
+        <span class="settings-note">名前を変更・追加できます</span>
       </div>
-      <div id="freq-summary" class="freq-summary"></div>
-      <div id="payments-list" class="payments-list">
-        <p class="empty-msg">まだ項目がありません</p>
+      <div class="payers-body">
+        <div id="payers-list" class="payers-list"></div>
+        <button type="button" id="add-payer-btn" class="add-payer-btn">+ 追加</button>
       </div>
+      <div id="movein-container"></div>
+      <div id="global-split-container"></div>
     </section>
 
   </main>
@@ -212,12 +275,20 @@
               <option value="12">年1回</option>
               <option value="24">2年ごと</option>
               <option value="36">3年ごと</option>
+              <option value="0">一回のみ</option>
               <option value="custom">カスタム</option>
             </select>
           </div>
           <div class="form-group" id="edit-custom-freq-group" style="display:none;">
             <label for="e-freq-custom">頻度（ヶ月）</label>
             <input type="number" id="e-freq-custom" min="1" max="120">
+          </div>
+          <div class="form-group" id="edit-amortize-group" style="display:none;">
+            <label for="e-amortize-months">月割換算（分割期間）</label>
+            <div class="amortize-row">
+              <input type="number" id="e-amortize-months" min="1" max="600" placeholder="例: 12">
+              <span class="amortize-unit">ヶ月で分割<br>空欄＝月額に含めない</span>
+            </div>
           </div>
           <div class="form-group">
             <label for="e-next-date">次回支払日</label>
@@ -253,6 +324,36 @@
         <div class="modal-btns">
           <button type="button" id="modal-cancel" class="cancel-btn">キャンセル</button>
           <button type="submit" class="add-btn">保存する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="paid-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:420px;">
+      <div class="modal-header">
+        <h3 id="paid-modal-title">支払いを記録</h3>
+        <button id="paid-modal-close-btn" class="modal-close">✕</button>
+      </div>
+      <form id="paid-form" class="add-form">
+        <p id="paid-modal-desc" class="paid-modal-desc"></p>
+        <div class="form-grid">
+          <div class="form-group form-group-wide">
+            <label for="pm-date">支払い月</label>
+            <select id="pm-date"></select>
+          </div>
+          <div class="form-group form-group-wide">
+            <label for="pm-payer">誰が払った？（建て替え含む）</label>
+            <select id="pm-payer"></select>
+          </div>
+          <div class="form-group form-group-wide">
+            <label for="pm-amount">実際に払った金額（円）</label>
+            <input type="number" id="pm-amount" min="0" required>
+          </div>
+        </div>
+        <div class="modal-btns">
+          <button type="button" id="paid-modal-cancel-btn" class="cancel-btn">キャンセル</button>
+          <button type="submit" class="add-btn paid-confirm-btn">支払済にする</button>
         </div>
       </form>
     </div>
