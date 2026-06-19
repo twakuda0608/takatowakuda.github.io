@@ -375,6 +375,30 @@ body {
   vertical-align: middle;
 }
 
+.future-badge {
+  font-size: .68rem;
+  font-weight: 700;
+  background: #f59e0b;
+  color: white;
+  border-radius: 100px;
+  padding: 1px 7px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.field-optional {
+  font-size: .72rem;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 2px;
+}
+
+.field-hint {
+  font-size: .72rem;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
 /* ===== Empty / loading ===== */
 .empty-msg {
   color: var(--muted);
