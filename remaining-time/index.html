@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>残り時間計算</title>
+  <link rel="icon" type="image/png" href="/favicon-32.png">
+  <link rel="apple-touch-icon" href="/icon.png">
+  <link rel="stylesheet" href="/common.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <button class="back-fab" onclick="location.href='/'" aria-label="トップへ戻る">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+
+  <header class="page-header">
+    <span class="page-header-title">残り時間計算</span>
+  </header>
+
+  <main class="app-shell">
+    <section class="countdown-panel">
+      <div class="target-form" aria-label="目標日時">
+        <label class="field">
+          <span>日付</span>
+          <input type="date" id="target-date" required>
+        </label>
+        <label class="field">
+          <span>時刻</span>
+          <input type="time" id="target-time" step="1" required>
+        </label>
+      </div>
+
+      <div class="status-row">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">未来の日付と時刻を選んでください。</span>
+      </div>
+
+      <section class="result-grid" aria-live="polite">
+        <div class="time-block">
+          <span class="time-value" id="years" data-current="0" data-prev="0"><span class="value-text">0</span><span class="hinge"></span></span>
+          <span class="time-label">年</span>
+        </div>
+        <div class="time-block">
+          <span class="time-value" id="months" data-current="0" data-prev="0"><span class="value-text">0</span><span class="hinge"></span></span>
+          <span class="time-label">月</span>
+        </div>
+        <div class="time-block">
+          <span class="time-value" id="days" data-current="0" data-prev="0"><span class="value-text">0</span><span class="hinge"></span></span>
+          <span class="time-label">日</span>
+        </div>
+        <div class="time-block">
+          <span class="time-value" id="hours" data-current="0" data-prev="0"><span class="value-text">0</span><span class="hinge"></span></span>
+          <span class="time-label">時間</span>
+        </div>
+        <div class="time-block">
+          <span class="time-value" id="minutes" data-current="0" data-prev="0"><span class="value-text">0</span><span class="hinge"></span></span>
+          <span class="time-label">分</span>
+        </div>
+        <div class="time-block">
+          <span class="time-value" id="seconds" data-current="0" data-prev="0"><span class="value-text">0</span><span class="hinge"></span></span>
+          <span class="time-label">秒</span>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="app.js" defer></script>
+  <script src="/common.js"></script>
+</body>
+</html>
