@@ -394,12 +394,18 @@ async function deletePayment(id)       { await deleteDoc(doc(db, 'users', curren
 async function updatePayment(id, data) { await updateDoc(doc(db, 'users', currentUser.uid, 'payments', id), data); }
 
 // ===== Helpers =====
-function effectiveNextDate(nextDateStr, freqMonths) {
+function effectiveNextDate(nextDateStr, freqMonths, startDate) {
   let d = new Date(nextDateStr + 'T00:00:00');
   const now = new Date();
   now.setHours(0, 0, 0, 0);
-  while (d < now) d = new Date(d.getFullYear(), d.getMonth() + freqMonths, d.getDate());
+  const threshold = startDate ? new Date(Math.max(now, new Date(startDate + 'T00:00:00'))) : now;
+  while (d < threshold) d = new Date(d.getFullYear(), d.getMonth() + freqMonths, d.getDate());
   return d;
+}
+
+function fmtStartBadge(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${d.getFullYear()}年${d.getMonth() + 1}月〜`;
 }
 
 function isInNextMonth(date) {
@@ -456,6 +462,10 @@ function renderForecastChart(payerFilter) {
     payments.forEach(p => {
       const freq = p.frequencyMonths || 1;
       let d = new Date(p.nextPaymentDate + 'T00:00:00');
+      if (p.startDate) {
+        const sd = new Date(p.startDate + 'T00:00:00');
+        while (d < sd) d = new Date(d.getFullYear(), d.getMonth() + freq, d.getDate());
+      }
       while (d < mStart) d = new Date(d.getFullYear(), d.getMonth() + freq, d.getDate());
       if (d >= mStart && d <= mEnd) {
         const cat = CAT_ORDER.includes(p.category) ? p.category : 'その他';
@@ -757,7 +767,7 @@ function render() {
     const freq    = p.frequencyMonths || 1;
     totalMonthly += p.amount / freq;
 
-    const eff     = effectiveNextDate(p.nextPaymentDate, freq);
+    const eff     = effectiveNextDate(p.nextPaymentDate, freq, p.startDate);
     const dueNext = isInNextMonth(eff);
     if (dueNext) { totalNextMonth += p.amount; nextItems.push({ ...p, eff }); }
 
@@ -911,8 +921,10 @@ function render() {
     </div>`;
     html += items.map(p => {
       const freq    = p.frequencyMonths || 1;
-      const eff     = effectiveNextDate(p.nextPaymentDate, freq);
+      const eff     = effectiveNextDate(p.nextPaymentDate, freq, p.startDate);
       const dueNext = isInNextMonth(eff);
+      const today0  = new Date(); today0.setHours(0, 0, 0, 0);
+      const isFutureStart = p.startDate && new Date(p.startDate + 'T00:00:00') > today0;
       const splitText = payers.length > 1
         ? p.payerOverride
           ? `<span class="split-chip">
@@ -934,7 +946,7 @@ function render() {
              draggable="true" data-id="${p.id}" data-category="${esc(p.category)}">
           <div class="payment-item-top">
             <span class="drag-handle" title="ドラッグして並び替え">⠿</span>
-            <span class="payment-name">${esc(p.name)}${dueNext ? '<span class="due-badge">来月</span>' : ''}</span>
+            <span class="payment-name">${esc(p.name)}${dueNext ? '<span class="due-badge">来月</span>' : ''}${isFutureStart ? `<span class="future-badge">${fmtStartBadge(p.startDate)}</span>` : ''}</span>
             <div class="payment-actions">
               <button class="edit-btn" data-id="${p.id}">編集</button>
               <button class="del-btn"  data-id="${p.id}">削除</button>
@@ -1038,6 +1050,7 @@ addForm.addEventListener('submit', async e => {
       amount:          parseFloat(document.getElementById('f-amount').value),
       frequencyMonths: getFreqMonths(fFreq, fFreqCustom),
       nextPaymentDate: document.getElementById('f-next-date').value,
+      startDate:       document.getElementById('f-start-date').value || '',
       category:        document.getElementById('f-category').value,
       payerOverride:   document.getElementById('f-payer-override').value,
       note:            document.getElementById('f-note').value.trim(),
@@ -1058,6 +1071,7 @@ function openEditModal(id) {
   document.getElementById('e-name').value      = p.name;
   document.getElementById('e-amount').value    = p.amount;
   document.getElementById('e-next-date').value = p.nextPaymentDate;
+  document.getElementById('e-start-date').value     = p.startDate || '';
   document.getElementById('e-category').value       = p.category || 'その他';
   document.getElementById('e-payer-override').value = p.payerOverride || '';
   document.getElementById('e-note').value           = p.note || '';
@@ -1088,6 +1102,7 @@ editForm.addEventListener('submit', async e => {
       amount:          parseFloat(document.getElementById('e-amount').value),
       frequencyMonths: getFreqMonths(eFreq, eFreqCustom),
       nextPaymentDate: document.getElementById('e-next-date').value,
+      startDate:       document.getElementById('e-start-date').value || '',
       category:        document.getElementById('e-category').value,
       payerOverride:   document.getElementById('e-payer-override').value,
       note:            document.getElementById('e-note').value.trim(),
