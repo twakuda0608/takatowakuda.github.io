@@ -41,6 +41,10 @@ let itemOrder     = [];
 let editingId     = null;
 let unsub         = null;
 let selectedPayer = null;
+let paidModalData        = null;
+let breakdownMonthOffset = 0; // 0=今月, -1=先月, +1=来月
+let forecastOffset       = 0; // 0=来月スタート、負=過去方向にシフト
+let currentView          = 'next'; // 'next'=来月必要なお金, 'avg'=毎月の平均
 
 // ===== DOM refs =====
 const loginBtn        = document.getElementById('login-btn');
@@ -61,7 +65,11 @@ const fFreqCustom     = document.getElementById('f-freq-custom');
 const addCustomGroup  = document.getElementById('add-custom-freq-group');
 const eFreq           = document.getElementById('e-freq');
 const eFreqCustom     = document.getElementById('e-freq-custom');
-const editCustomGroup = document.getElementById('edit-custom-freq-group');
+const editCustomGroup  = document.getElementById('edit-custom-freq-group');
+const addAmortizeGroup  = document.getElementById('add-amortize-group');
+const fAmortizeMonths   = document.getElementById('f-amortize-months');
+const editAmortizeGroup = document.getElementById('edit-amortize-group');
+const eAmortizeMonths   = document.getElementById('e-amortize-months');
 const payersList      = document.getElementById('payers-list');
 const addPayerBtn     = document.getElementById('add-payer-btn');
 
@@ -393,8 +401,24 @@ async function addPayment(data)        { await addDoc(colRef(currentUser.uid), {
 async function deletePayment(id)       { await deleteDoc(doc(db, 'users', currentUser.uid, 'payments', id)); }
 async function updatePayment(id, data) { await updateDoc(doc(db, 'users', currentUser.uid, 'payments', id), data); }
 
+async function markPaid(id, date, payerName, amount) {
+  const p = payments.find(x => x.id === id);
+  if (!p) return;
+  const history = (p.paidHistory || []).filter(r => !(r.date === date && r.paidBy === payerName));
+  history.push({ date, paidBy: payerName, amount: Math.round(amount) });
+  await updatePayment(id, { paidHistory: history });
+}
+
+async function unmarkPaid(id, date, payerName) {
+  const p = payments.find(x => x.id === id);
+  if (!p) return;
+  const history = (p.paidHistory || []).filter(r => !(r.date === date && r.paidBy === payerName));
+  await updatePayment(id, { paidHistory: history });
+}
+
 // ===== Helpers =====
 function effectiveNextDate(nextDateStr, freqMonths, startDate) {
+  if (freqMonths === 0) return new Date(nextDateStr + 'T00:00:00');
   let d = new Date(nextDateStr + 'T00:00:00');
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -415,6 +439,22 @@ function isInNextMonth(date) {
   return date >= start && date <= end;
 }
 
+// 来月に支払いがある場合にその日付を返す（来月起点でループするため棒グラフと一致）
+function occurrenceInNextMonth(nextDateStr, freqMonths, startDate) {
+  const now   = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const end   = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+  const d0    = new Date(nextDateStr + 'T00:00:00');
+  if (freqMonths === 0) return (d0 >= start && d0 <= end) ? d0 : null;
+  let d = new Date(d0);
+  if (startDate) {
+    const sd = new Date(startDate + 'T00:00:00');
+    while (d < sd) d = new Date(d.getFullYear(), d.getMonth() + freqMonths, d.getDate());
+  }
+  while (d < start) d = new Date(d.getFullYear(), d.getMonth() + freqMonths, d.getDate());
+  return (d >= start && d <= end) ? d : null;
+}
+
 function fmtDate(d) {
   return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
 }
@@ -422,8 +462,15 @@ function fmtYen(n)  { return '¥' + Math.round(n).toLocaleString('ja-JP'); }
 function esc(str)   { return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function freqLabel(months) {
-  const map = { 1:'毎月', 2:'2ヶ月ごと', 3:'3ヶ月ごと', 6:'半年ごと', 12:'年1回', 24:'2年ごと', 36:'3年ごと' };
+  const map = { 0:'一回のみ', 1:'毎月', 2:'2ヶ月ごと', 3:'3ヶ月ごと', 6:'半年ごと', 12:'年1回', 24:'2年ごと', 36:'3年ごと' };
   return map[months] ?? `${months}ヶ月ごと`;
+}
+
+// 月額計算の除数：定期は freq、一回のみで月割ありは amortizeMonths、それ以外は 0（含めない）
+function monthlyDiv(p) {
+  const freq = p.frequencyMonths ?? 1;
+  if (freq > 0) return freq;
+  return (p.amortizeMonths > 0) ? p.amortizeMonths : 0;
 }
 
 const CAT_COLORS = {
@@ -448,11 +495,13 @@ function renderForecastChart(payerFilter) {
     return;
   }
 
-  const MONTHS = 24;
-  const now    = new Date();
-  const data   = [];
+  const MONTHS    = 24;
+  const MIN_OFF   = -60;
+  const now       = new Date();
+  const data      = [];
+  const startIdx  = forecastOffset + 1; // forecastOffset=0 → i=1(来月)〜24
 
-  for (let i = 1; i <= MONTHS; i++) {
+  for (let i = startIdx; i < startIdx + MONTHS; i++) {
     const d0     = new Date(now.getFullYear(), now.getMonth() + i, 1);
     const mStart = d0;
     const mEnd   = new Date(d0.getFullYear(), d0.getMonth() + 1, 0);
@@ -460,41 +509,48 @@ function renderForecastChart(payerFilter) {
     let total = 0;
 
     payments.forEach(p => {
-      const freq = p.frequencyMonths || 1;
+      const freq = p.frequencyMonths ?? 1;
       let d = new Date(p.nextPaymentDate + 'T00:00:00');
-      if (p.startDate) {
-        const sd = new Date(p.startDate + 'T00:00:00');
-        while (d < sd) d = new Date(d.getFullYear(), d.getMonth() + freq, d.getDate());
+      if (freq === 0) {
+        if (d < mStart || d > mEnd) return;
+      } else {
+        if (p.startDate) {
+          const sd = new Date(p.startDate + 'T00:00:00');
+          while (d < sd) d = new Date(d.getFullYear(), d.getMonth() + freq, d.getDate());
+        }
+        while (d > mEnd)   d = new Date(d.getFullYear(), d.getMonth() - freq, d.getDate());
+        while (d < mStart) d = new Date(d.getFullYear(), d.getMonth() + freq, d.getDate());
+        if (d < mStart || d > mEnd) return;
       }
-      while (d < mStart) d = new Date(d.getFullYear(), d.getMonth() + freq, d.getDate());
-      if (d >= mStart && d <= mEnd) {
-        const cat = CAT_ORDER.includes(p.category) ? p.category : 'その他';
-        let amt;
-        if (payerFilter) {
-          if (p.payerOverride) {
-            amt = p.payerOverride === payerFilter ? p.amount : 0;
-          } else {
-            const s = globalSplits.find(gs => gs.name === payerFilter);
-            amt = s ? computeShare(p.amount, s) : 0;
-          }
+      const cat = CAT_ORDER.includes(p.category) ? p.category : CAT_ORDER[CAT_ORDER.length - 1];
+      let amt;
+      if (payerFilter) {
+        if (p.payerOverride) {
+          amt = p.payerOverride === payerFilter ? p.amount : 0;
         } else {
-          amt = p.amount;
+          const s = globalSplits.find(gs => gs.name === payerFilter);
+          amt = s ? computeShare(p.amount, s) : 0;
         }
-        if (amt > 0) {
-          catAmts[cat] = (catAmts[cat] || 0) + amt;
-          total += amt;
-        }
+      } else {
+        amt = p.amount;
+      }
+      if (amt > 0) {
+        catAmts[cat] = (catAmts[cat] || 0) + amt;
+        total += amt;
       }
     });
 
     data.push({
       year: d0.getFullYear(), month: d0.getMonth() + 1,
-      showYear: d0.getMonth() === 0 || i === 1,
-      total, catAmts, isNext: i === 1,
+      showYear: d0.getMonth() === 0 || i === startIdx,
+      total, catAmts,
+      isNext:    i === 1,
+      isCurrent: i === 0,
+      isPast:    i <  0,
     });
   }
 
-  const max  = Math.max(...data.map(d => d.total), 1);
+  const max   = Math.max(...data.map(d => d.total), 1);
   const BAR_H = 120;
 
   const bars = data.map(d => {
@@ -506,8 +562,12 @@ function renderForecastChart(payerFilter) {
         return `<div class="forecast-seg" style="height:${h}px;background:${CAT_COLORS[cat]}"></div>`;
       }).join('');
 
+    const cls = d.isNext    ? ' forecast-col-next'
+              : d.isCurrent ? ' forecast-col-current'
+              : d.isPast    ? ' forecast-col-past'
+              : '';
     return `
-      <div class="forecast-col${d.isNext ? ' forecast-col-next' : ''}">
+      <div class="forecast-col${cls}">
         <div class="forecast-amount">${d.total > 0 ? fmtYenCompact(d.total) : ''}</div>
         <div class="forecast-bar-wrap">
           <div class="forecast-bar" style="height:${totalH}px">${segments}</div>
@@ -520,7 +580,11 @@ function renderForecastChart(payerFilter) {
 
   panel.innerHTML = `
     <div class="forecast-header">
-      <span class="forecast-title">月別支払い予測（24ヶ月）</span>
+      <div class="forecast-nav">
+        <button class="forecast-nav-btn" id="forecast-prev" ${forecastOffset <= MIN_OFF ? 'disabled' : ''}>◀ 前へ</button>
+        <span class="forecast-title">月別支払い（24ヶ月）</span>
+        <button class="forecast-nav-btn" id="forecast-next" ${forecastOffset >= 0 ? 'disabled' : ''}>次へ ▶</button>
+      </div>
       <div class="forecast-legend">
         ${CAT_ORDER.map(cat => `
           <span class="forecast-leg-item">
@@ -531,21 +595,112 @@ function renderForecastChart(payerFilter) {
     <div class="forecast-scroll">
       <div class="forecast-chart">${bars}</div>
     </div>`;
-}
 
-function setupForecastToggle() {
-  const card  = document.getElementById('next-month-card');
-  const panel = document.getElementById('forecast-panel');
-  if (!card || !panel) return;
-  card.addEventListener('click', () => {
-    const open = panel.style.display !== 'none';
-    panel.style.display = open ? 'none' : '';
-    card.classList.toggle('forecast-open', !open);
-    if (!open) renderForecastChart();
+  panel.querySelector('#forecast-prev').addEventListener('click', () => {
+    if (forecastOffset > MIN_OFF) { forecastOffset -= 6; renderForecastChart(selectedPayer); }
+  });
+  panel.querySelector('#forecast-next').addEventListener('click', () => {
+    if (forecastOffset < 0) { forecastOffset += 6; renderForecastChart(selectedPayer); }
   });
 }
 
-setupForecastToggle();
+// ===== View tabs =====
+function setView(view) {
+  currentView = view;
+  document.getElementById('view-next').style.display = view === 'next' ? '' : 'none';
+  document.getElementById('view-avg').style.display  = view === 'avg'  ? '' : 'none';
+  document.querySelectorAll('.view-tab').forEach(btn => {
+    btn.classList.toggle('view-tab-active', btn.dataset.view === view);
+  });
+}
+
+document.querySelectorAll('.view-tab').forEach(btn => {
+  btn.addEventListener('click', () => setView(btn.dataset.view));
+});
+
+// ===== Occurrence helpers =====
+function getOccurrencesAroundNow(nextDateStr, freqMonths, pastCount = 3, futureCount = 3) {
+  if (freqMonths === 0) return [new Date(nextDateStr + 'T00:00:00')];
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  let cursor = new Date(nextDateStr + 'T00:00:00');
+  while (cursor < now) cursor = new Date(cursor.getFullYear(), cursor.getMonth() + freqMonths, cursor.getDate());
+  // go back pastCount steps
+  let start = new Date(cursor);
+  for (let i = 0; i < pastCount; i++) start = new Date(start.getFullYear(), start.getMonth() - freqMonths, start.getDate());
+  const results = [];
+  let d = new Date(start);
+  for (let i = 0; i < pastCount + futureCount; i++) {
+    results.push(new Date(d));
+    d = new Date(d.getFullYear(), d.getMonth() + freqMonths, d.getDate());
+  }
+  return results;
+}
+
+// ===== Paid modal =====
+function openPaidModal(id, options = {}) {
+  const p = payments.find(x => x.id === id);
+  if (!p) return;
+  paidModalData = { id };
+
+  const freq        = p.frequencyMonths ?? 1;
+  const occurrences = getOccurrencesAroundNow(p.nextPaymentDate, freq);
+
+  const dateSel = document.getElementById('pm-date');
+  dateSel.innerHTML = occurrences.map(d => {
+    const dateStr = toDateInputVal(d);
+    const label   = freq === 1
+      ? `${d.getFullYear()}年${d.getMonth()+1}月分（${fmtDate(d)}）`
+      : fmtDate(d);
+    return `<option value="${dateStr}">${label}</option>`;
+  }).join('');
+
+  const targetDate = options.date && occurrences.some(d => toDateInputVal(d) === options.date)
+    ? options.date
+    : toDateInputVal(occurrences.find(d => {
+        const now = new Date(); now.setHours(0,0,0,0);
+        return d >= now;
+      }) || occurrences[occurrences.length - 1]);
+  dateSel.value = targetDate;
+
+  document.getElementById('paid-modal-title').textContent = `支払いを記録：${p.name}`;
+  document.getElementById('paid-modal-desc').textContent  = `${freqLabel(freq)}  合計 ${fmtYen(p.amount)}`;
+
+  const payerSel = document.getElementById('pm-payer');
+  payerSel.innerHTML = payers.map(pay => `<option value="${esc(pay.name)}">${esc(pay.name)}</option>`).join('');
+  if (options.payerName && payers.find(pay => pay.name === options.payerName)) payerSel.value = options.payerName;
+
+  document.getElementById('pm-amount').value = Math.round(
+    options.amount !== undefined ? options.amount : p.amount
+  );
+  document.getElementById('paid-modal').style.display = 'flex';
+}
+
+function closePaidModal() {
+  document.getElementById('paid-modal').style.display = 'none';
+  paidModalData = null;
+}
+
+document.getElementById('paid-modal-close-btn').addEventListener('click', closePaidModal);
+document.getElementById('paid-modal-cancel-btn').addEventListener('click', closePaidModal);
+document.getElementById('paid-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('paid-modal')) closePaidModal();
+});
+
+document.getElementById('paid-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!paidModalData) return;
+  const btn = e.target.querySelector('[type=submit]');
+  btn.disabled = true;
+  try {
+    const date      = document.getElementById('pm-date').value;
+    const payerName = document.getElementById('pm-payer').value;
+    const amount    = parseFloat(document.getElementById('pm-amount').value);
+    await markPaid(paidModalData.id, date, payerName, amount);
+    closePaidModal();
+  } catch { alert('保存に失敗しました'); }
+  btn.disabled = false;
+});
 
 // ===== Sorting & reordering =====
 function catIndex(cat) {
@@ -645,18 +800,19 @@ function renderDateShortcuts(inputId) {
 function renderPieChart(payerFilter) {
   const catTotals = {};
   payments.forEach(p => {
-    const cat  = p.category || 'その他';
-    const freq = p.frequencyMonths || 1;
+    const div = monthlyDiv(p);
+    if (div === 0) return; // 月額に含めない
+    const cat = p.category || 'その他';
     let amt;
     if (payerFilter) {
       if (p.payerOverride) {
-        amt = p.payerOverride === payerFilter ? p.amount / freq : 0;
+        amt = p.payerOverride === payerFilter ? p.amount / div : 0;
       } else {
         const s = globalSplits.find(gs => gs.name === payerFilter);
-        amt = s ? computeShare(p.amount, s) / freq : 0;
+        amt = s ? computeShare(p.amount, s) / div : 0;
       }
     } else {
-      amt = p.amount / freq;
+      amt = p.amount / div;
     }
     if (amt > 0) catTotals[cat] = (catTotals[cat] || 0) + amt;
   });
@@ -667,7 +823,10 @@ function renderPieChart(payerFilter) {
   chartCard.style.display = '';
 
   const hdr = document.getElementById('chart-card-header');
-  if (hdr) hdr.textContent = payerFilter ? `カテゴリ別 月額内訳（${payerFilter}）` : 'カテゴリ別 月額内訳';
+  if (hdr) {
+    const label = payerFilter ? `カテゴリ別 月額内訳（${payerFilter}）` : 'カテゴリ別 月額内訳';
+    hdr.innerHTML = `${esc(label)}<span class="chart-subtitle">特定の月ではなく、毎月かかる平均額（年払い・分割は月割り換算）</span>`;
+  }
 
   const cx = 100, cy = 100, R = 82, r = 52;
   let angle = -Math.PI / 2;
@@ -713,16 +872,17 @@ function renderPersonalBarChart(payerName) {
   if (!payerName) { card.style.display = 'none'; return; }
 
   const items = payments.map(p => {
-    const freq = p.frequencyMonths || 1;
+    const div = monthlyDiv(p);
+    if (div === 0) return null; // 月額に含めない
     let monthlyAmt;
     if (p.payerOverride) {
-      monthlyAmt = p.payerOverride === payerName ? p.amount / freq : 0;
+      monthlyAmt = p.payerOverride === payerName ? p.amount / div : 0;
     } else {
       const s = globalSplits.find(gs => gs.name === payerName);
-      monthlyAmt = s ? computeShare(p.amount, s) / freq : 0;
+      monthlyAmt = s ? computeShare(p.amount, s) / div : 0;
     }
     return { ...p, monthlyAmt };
-  }).filter(p => p.monthlyAmt > 0).sort((a, b) => b.monthlyAmt - a.monthlyAmt);
+  }).filter(Boolean).filter(p => p.monthlyAmt > 0).sort((a, b) => b.monthlyAmt - a.monthlyAmt);
 
   if (items.length === 0) { card.style.display = 'none'; return; }
   card.style.display = '';
@@ -731,7 +891,7 @@ function renderPersonalBarChart(payerName) {
   const max   = items[0].monthlyAmt;
 
   card.innerHTML = `
-    <div class="chart-header">${esc(payerName)}の支払い内訳（月額換算）</div>
+    <div class="chart-header">${esc(payerName)}の支払い内訳<span class="chart-subtitle">特定の月ではなく、毎月かかる平均額（年払い・分割は月割り換算）</span></div>
     <div class="personal-bar-list">
       ${items.map(p => {
         const pct = Math.max(3, Math.round(p.monthlyAmt / max * 100));
@@ -752,6 +912,64 @@ function renderPersonalBarChart(payerName) {
   `;
 }
 
+// ===== 各項目の月額換算リスト（平均タブ） =====
+function renderAvgItems(payerFilter) {
+  const section = document.getElementById('avg-items-section');
+  const body    = document.getElementById('avg-items-body');
+  if (!section || !body) return;
+
+  // 月額に寄与する項目（div>0）のみ、選択者の負担額で算出
+  const items = payments.map(p => {
+    const div = monthlyDiv(p);
+    if (div === 0) return null;
+    let monthlyAmt, fullAmt;
+    if (payerFilter) {
+      if (p.payerOverride) {
+        if (p.payerOverride !== payerFilter) return null;
+        fullAmt = p.amount;
+      } else {
+        const s = globalSplits.find(gs => gs.name === payerFilter);
+        if (!s || splitPct(s) === 0) return null;
+        fullAmt = computeShare(p.amount, s);
+      }
+    } else {
+      fullAmt = p.amount;
+    }
+    monthlyAmt = fullAmt / div;
+    return { ...p, fullAmt, monthlyAmt, div };
+  }).filter(Boolean).filter(p => p.monthlyAmt > 0)
+    .sort((a, b) => b.monthlyAmt - a.monthlyAmt);
+
+  if (items.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  const total = items.reduce((s, p) => s + p.monthlyAmt, 0);
+
+  const rows = items.map(p => {
+    const freq    = p.frequencyMonths ?? 1;
+    // 月払い以外は「元の金額 ÷ 期間」の換算式を表示
+    const conv = p.div > 1
+      ? `<span class="ai-conv">${fmtYen(p.fullAmt)} ÷ ${p.div}ヶ月</span>`
+      : '';
+    return `
+      <div class="ai-row">
+        <span class="cat-badge ai-cat" style="background:${CAT_COLORS[p.category]||'#64748b'}">${esc(p.category)}</span>
+        <div class="ai-main">
+          <span class="ai-name">${esc(p.name)}</span>
+          <span class="ai-freq">${freqLabel(freq)}${conv}</span>
+        </div>
+        <span class="ai-amt">${fmtYen(p.monthlyAmt)}<span class="ai-unit">/月</span></span>
+      </div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="ai-list">${rows}</div>
+    <div class="ai-footer">
+      <span class="ai-footer-label">${payerFilter ? `${esc(payerFilter)}の月額換算 合計` : '月額換算 合計'}</span>
+      <span class="ai-footer-total">${fmtYen(total)}<span class="ai-unit">/月</span></span>
+    </div>`;
+}
+
 // ===== Render =====
 function render() {
   const now        = new Date();
@@ -764,20 +982,21 @@ function render() {
   payers.forEach(p => { perPayer[p.name] = { monthly: 0, nextMonth: 0, color: p.color }; });
 
   payments.forEach(p => {
-    const freq    = p.frequencyMonths || 1;
-    totalMonthly += p.amount / freq;
+    const freq = p.frequencyMonths ?? 1;
+    const div  = monthlyDiv(p);
+    if (div > 0) totalMonthly += p.amount / div;
 
-    const eff     = effectiveNextDate(p.nextPaymentDate, freq, p.startDate);
-    const dueNext = isInNextMonth(eff);
-    if (dueNext) { totalNextMonth += p.amount; nextItems.push({ ...p, eff }); }
+    const nextMonthEff = occurrenceInNextMonth(p.nextPaymentDate, freq, p.startDate);
+    const dueNext      = nextMonthEff !== null;
+    if (dueNext) { totalNextMonth += p.amount; nextItems.push({ ...p, eff: nextMonthEff }); }
 
     if (p.payerOverride && perPayer[p.payerOverride]) {
-      perPayer[p.payerOverride].monthly += p.amount / freq;
+      if (div > 0) perPayer[p.payerOverride].monthly += p.amount / div;
       if (dueNext) perPayer[p.payerOverride].nextMonth += p.amount;
     } else {
       globalSplits.forEach(s => {
         if (!perPayer[s.name]) return;
-        perPayer[s.name].monthly += computeShare(p.amount, s) / freq;
+        if (div > 0) perPayer[s.name].monthly += computeShare(p.amount, s) / div;
         if (dueNext) perPayer[s.name].nextMonth += computeShare(p.amount, s);
       });
     }
@@ -793,21 +1012,30 @@ function render() {
   document.getElementById('next-month-label').textContent = selectedPayer ? `${nextMLabel} / ${selectedPayer}` : nextMLabel;
   document.getElementById('next-month-badge').textContent = nextMLabel;
   const monthlyNote = document.getElementById('monthly-note');
-  if (monthlyNote) monthlyNote.textContent = selectedPayer ? `${selectedPayer}の月割り` : '全項目の月割り';
+  if (monthlyNote) monthlyNote.textContent = selectedPayer ? `${selectedPayer}の負担分・年払い等を月割り換算` : '年払い等を月割り換算';
 
-  // 内訳テーブル（個人ビュー時は非表示）
-  const bdCard = document.getElementById('breakdown-card');
-  if (payers.length > 1 && !selectedPayer) {
-    bdCard.style.display = '';
-    document.getElementById('breakdown-body').innerHTML = payers.map(p => `
+  // 支払い者別内訳テーブル（個人ビュー時は非表示）
+  const showBreakdown = payers.length > 1 && !selectedPayer;
+  const nextBdCard = document.getElementById('next-breakdown-card');
+  const avgBdCard  = document.getElementById('avg-breakdown-card');
+  if (showBreakdown) {
+    nextBdCard.style.display = '';
+    avgBdCard.style.display  = '';
+    document.getElementById('next-breakdown-body').innerHTML = payers.map(p => `
       <tr>
         <td class="bd-name"><span class="payer-dot" style="background:${p.color}"></span>${esc(p.name)}</td>
-        <td class="bd-val">${fmtYen(perPayer[p.name]?.monthly   ?? 0)}</td>
         <td class="bd-val">${fmtYen(perPayer[p.name]?.nextMonth ?? 0)}</td>
       </tr>
     `).join('');
+    document.getElementById('avg-breakdown-body').innerHTML = payers.map(p => `
+      <tr>
+        <td class="bd-name"><span class="payer-dot" style="background:${p.color}"></span>${esc(p.name)}</td>
+        <td class="bd-val">${fmtYen(perPayer[p.name]?.monthly ?? 0)}</td>
+      </tr>
+    `).join('');
   } else {
-    bdCard.style.display = 'none';
+    nextBdCard.style.display = 'none';
+    avgBdCard.style.display  = 'none';
   }
 
   // 来月リスト
@@ -846,6 +1074,7 @@ function render() {
                </span>`
             ).join('');
       }
+
       return `
         <div class="next-item" style="border-left: 4px solid ${CAT_COLORS[p.category]||'#64748b'}">
           <span class="cat-badge" style="background:${CAT_COLORS[p.category]||'#64748b'}">${esc(p.category)}</span>
@@ -866,10 +1095,16 @@ function render() {
   // 個人バーチャート
   renderPersonalBarChart(selectedPayer);
 
-  // 月別予測グラフ（開いているときのみ再描画）
-  if (document.getElementById('forecast-panel')?.style.display !== 'none') {
-    renderForecastChart(selectedPayer);
-  }
+  // 各項目の月額換算リスト
+  renderAvgItems(selectedPayer);
+
+  // 月別予測グラフ（来月タブで常時表示）
+  renderForecastChart(selectedPayer);
+
+  // 月別内訳・支払い実績・精算
+  renderMonthlyBreakdown();
+  renderPaidSummary();
+  renderSettlement();
 
   // 件数
   document.getElementById('item-count').textContent = payments.length ? `${payments.length}件` : '';
@@ -879,20 +1114,29 @@ function render() {
   if (freqSummaryEl) {
     const groups = {};
     payments.forEach(p => {
-      const freq = p.frequencyMonths || 1;
-      if (!groups[freq]) groups[freq] = { count: 0, monthly: 0 };
+      const freq = p.frequencyMonths ?? 1;
+      if (!groups[freq]) groups[freq] = { count: 0, monthly: 0, total: 0 };
       groups[freq].count++;
-      groups[freq].monthly += p.amount / freq;
+      groups[freq].total += p.amount;
+      const div = monthlyDiv(p);
+      if (div > 0) groups[freq].monthly += p.amount / div;
     });
     freqSummaryEl.innerHTML = Object.entries(groups)
       .sort(([a], [b]) => Number(a) - Number(b))
-      .map(([freq, g]) => `
-        <div class="freq-chip">
-          <span class="freq-chip-label">${freqLabel(Number(freq))}</span>
-          <span class="freq-chip-count">${g.count}件</span>
-          <span class="freq-chip-amount">${fmtYen(g.monthly)}/月</span>
-        </div>
-      `).join('');
+      .map(([freq, g]) => {
+        const fNum = Number(freq);
+        const amtHtml = fNum > 0
+          ? `<span class="freq-chip-amount">${fmtYen(g.monthly)}/月</span>`
+          : g.monthly > 0
+            ? `<span class="freq-chip-amount">${fmtYen(g.monthly)}/月</span>`
+            : `<span class="freq-chip-amount" style="color:var(--muted)">${fmtYen(g.total)} 合計</span>`;
+        return `
+          <div class="freq-chip">
+            <span class="freq-chip-label">${freqLabel(fNum)}</span>
+            <span class="freq-chip-count">${g.count}件</span>
+            ${amtHtml}
+          </div>`;
+      }).join('');
   }
 
   // 全項目リスト
@@ -920,23 +1164,24 @@ function render() {
       <span class="cat-group-count">${items.length}件</span>
     </div>`;
     html += items.map(p => {
-      const freq    = p.frequencyMonths || 1;
+      const freq    = p.frequencyMonths ?? 1;
+      const div     = monthlyDiv(p);
       const eff     = effectiveNextDate(p.nextPaymentDate, freq, p.startDate);
-      const dueNext = isInNextMonth(eff);
+      const dueNext = occurrenceInNextMonth(p.nextPaymentDate, freq, p.startDate) !== null;
       const today0  = new Date(); today0.setHours(0, 0, 0, 0);
       const isFutureStart = p.startDate && new Date(p.startDate + 'T00:00:00') > today0;
       const splitText = payers.length > 1
         ? p.payerOverride
           ? `<span class="split-chip">
                <span class="chip-dot" style="background:${payerColor(p.payerOverride)}"></span>
-               ${esc(p.payerOverride)}のみ (${fmtYen(p.amount / freq)}/月)
+               ${esc(p.payerOverride)}のみ${div > 0 ? ` (${fmtYen(p.amount / div)}/月)` : ''}
              </span>`
           : globalSplits.filter(s => splitPct(s) > 0).map(s => {
               const pct        = splitPct(s);
-              const monthlyAmt = Math.round(computeShare(p.amount, s) / freq);
+              const monthlyAmt = div > 0 ? Math.round(computeShare(p.amount, s) / div) : null;
               return `<span class="split-chip">
                 <span class="chip-dot" style="background:${payerColor(s.name)}"></span>
-                ${esc(s.name)} ${pct}% (${fmtYen(monthlyAmt)}/月)
+                ${esc(s.name)} ${pct}%${monthlyAmt !== null ? ` (${fmtYen(monthlyAmt)}/月)` : ''}
               </span>`;
             }).join('')
         : '';
@@ -948,6 +1193,7 @@ function render() {
             <span class="drag-handle" title="ドラッグして並び替え">⠿</span>
             <span class="payment-name">${esc(p.name)}${dueNext ? '<span class="due-badge">来月</span>' : ''}${isFutureStart ? `<span class="future-badge">${fmtStartBadge(p.startDate)}</span>` : ''}</span>
             <div class="payment-actions">
+              <button class="pay-btn"  data-id="${p.id}">支払い</button>
               <button class="edit-btn" data-id="${p.id}">編集</button>
               <button class="del-btn"  data-id="${p.id}">削除</button>
             </div>
@@ -955,10 +1201,13 @@ function render() {
           <div class="payment-item-detail">
             <span><span class="detail-label">金額</span>${fmtYen(p.amount)}</span>
             <span><span class="detail-label">頻度</span>${freqLabel(freq)}</span>
-            <span><span class="detail-label">月額換算</span>${fmtYen(p.amount / freq)}</span>
-            <span><span class="detail-label">次回</span>${fmtDate(eff)}</span>
+            ${div > 0 ? `<span><span class="detail-label">月額換算</span>${fmtYen(p.amount / div)}${freq === 0 ? `（${p.amortizeMonths}ヶ月）` : ''}</span>` : ''}
+            <span><span class="detail-label">支払日</span>${fmtDate(eff)}</span>
             ${splitText ? `<span class="split-detail-text"><span class="detail-label">分担</span>${splitText}</span>` : ''}
             ${p.note ? `<span><span class="detail-label">メモ</span>${esc(p.note)}</span>` : ''}
+            ${(p.paidHistory || []).length > 0
+              ? `<span><span class="detail-label">支払済</span><span class="paid-count-badge">${(p.paidHistory).length}件</span></span>`
+              : ''}
           </div>
         </div>
       `;
@@ -967,6 +1216,7 @@ function render() {
 
   list.innerHTML = html;
 
+  list.querySelectorAll('.pay-btn').forEach(btn => btn.addEventListener('click', () => openPaidModal(btn.dataset.id)));
   list.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', () => openEditModal(btn.dataset.id)));
   list.querySelectorAll('.del-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1029,11 +1279,15 @@ function setupDragDrop() {
 setupDragDrop();
 
 // ===== Frequency select =====
-function setupFreqToggle(sel, grp) {
-  sel.addEventListener('change', () => { grp.style.display = sel.value === 'custom' ? 'block' : 'none'; });
+function setupFreqToggle(sel, customGrp, amortizeGrp, amortizeInp) {
+  sel.addEventListener('change', () => {
+    customGrp.style.display   = sel.value === 'custom' ? 'block' : 'none';
+    amortizeGrp.style.display = sel.value === '0' ? '' : 'none';
+    if (sel.value !== '0' && amortizeInp) amortizeInp.value = '';
+  });
 }
-setupFreqToggle(fFreq, addCustomGroup);
-setupFreqToggle(eFreq, editCustomGroup);
+setupFreqToggle(fFreq, addCustomGroup, addAmortizeGroup, fAmortizeMonths);
+setupFreqToggle(eFreq, editCustomGroup, editAmortizeGroup, eAmortizeMonths);
 
 function getFreqMonths(sel, inp) {
   return sel.value === 'custom' ? (parseInt(inp.value) || 1) : parseInt(sel.value);
@@ -1049,6 +1303,7 @@ addForm.addEventListener('submit', async e => {
       name:            document.getElementById('f-name').value.trim(),
       amount:          parseFloat(document.getElementById('f-amount').value),
       frequencyMonths: getFreqMonths(fFreq, fFreqCustom),
+      amortizeMonths:  fFreq.value === '0' ? (parseInt(fAmortizeMonths.value) || 0) : 0,
       nextPaymentDate: document.getElementById('f-next-date').value,
       startDate:       document.getElementById('f-start-date').value || '',
       category:        document.getElementById('f-category').value,
@@ -1058,6 +1313,7 @@ addForm.addEventListener('submit', async e => {
     addForm.reset();
     fFreq.value = '1';
     addCustomGroup.style.display = 'none';
+    addAmortizeGroup.style.display = 'none';
   } catch { alert('追加に失敗しました'); }
   btn.disabled = false;
 });
@@ -1076,12 +1332,14 @@ function openEditModal(id) {
   document.getElementById('e-payer-override').value = p.payerOverride || '';
   document.getElementById('e-note').value           = p.note || '';
 
-  const freq = p.frequencyMonths || 1;
-  if ([1,2,3,6,12,24,36].includes(freq)) {
+  const freq = p.frequencyMonths ?? 1;
+  if ([0,1,2,3,6,12,24,36].includes(freq)) {
     eFreq.value = String(freq); editCustomGroup.style.display = 'none';
   } else {
     eFreq.value = 'custom'; eFreqCustom.value = freq; editCustomGroup.style.display = 'block';
   }
+  editAmortizeGroup.style.display = (freq === 0) ? '' : 'none';
+  eAmortizeMonths.value = (freq === 0 && p.amortizeMonths > 0) ? p.amortizeMonths : '';
 
   editModal.style.display = 'flex';
 }
@@ -1090,6 +1348,263 @@ function closeModal() { editModal.style.display = 'none'; editingId = null; }
 modalClose.addEventListener('click', closeModal);
 modalCancel.addEventListener('click', closeModal);
 editModal.addEventListener('click', e => { if (e.target === editModal) closeModal(); });
+
+// ===== Settlement =====
+function calculateSettlement() {
+  const balance = {};
+  payers.forEach(p => { balance[p.name] = 0; });
+
+  payments.forEach(p => {
+    (p.paidHistory || []).forEach(r => {
+      if (balance[r.paidBy] === undefined) return;
+      balance[r.paidBy] += r.amount;
+
+      if (p.payerOverride) {
+        if (balance[p.payerOverride] !== undefined) balance[p.payerOverride] -= r.amount;
+      } else {
+        let remaining = r.amount;
+        globalSplits.forEach((s, i) => {
+          if (balance[s.name] === undefined) return;
+          const share = (i === globalSplits.length - 1)
+            ? remaining
+            : Math.round(r.amount * s.numer / s.denom);
+          balance[s.name] -= share;
+          remaining -= share;
+        });
+      }
+    });
+  });
+  return balance;
+}
+
+function minimizeTransactions(balance) {
+  const creditors = Object.entries(balance).filter(([,v]) => v > 0.5)
+    .map(([person, amount]) => ({ person, amount })).sort((a,b) => b.amount - a.amount);
+  const debtors   = Object.entries(balance).filter(([,v]) => v < -0.5)
+    .map(([person, amount]) => ({ person, amount: -amount })).sort((a,b) => b.amount - a.amount);
+
+  const txs = [];
+  let i = 0, j = 0;
+  while (i < creditors.length && j < debtors.length) {
+    const transfer = Math.min(creditors[i].amount, debtors[j].amount);
+    if (transfer > 0.5) txs.push({ from: debtors[j].person, to: creditors[i].person, amount: Math.round(transfer) });
+    creditors[i].amount -= transfer;
+    debtors[j].amount   -= transfer;
+    if (creditors[i].amount < 0.5) i++;
+    if (debtors[j].amount   < 0.5) j++;
+  }
+  return txs;
+}
+
+function renderSettlement() {
+  const section = document.getElementById('settlement-section');
+  const body    = document.getElementById('settlement-body');
+  if (!section || !body) return;
+  if (payers.length <= 1 || !payments.some(p => (p.paidHistory || []).length > 0)) {
+    section.style.display = 'none'; return;
+  }
+  section.style.display = '';
+
+  const balance = calculateSettlement();
+  const txs     = minimizeTransactions(balance);
+
+  const balanceRows = payers.map(p => {
+    const net = Math.round(balance[p.name] || 0);
+    const cls = net > 0 ? 'settle-pos' : net < 0 ? 'settle-neg' : 'settle-zero';
+    const lbl = net > 0 ? '受取' : net < 0 ? '支払' : '±0';
+    return `
+      <div class="settle-balance-row">
+        <span class="settle-name"><span class="payer-dot" style="background:${p.color}"></span>${esc(p.name)}</span>
+        <span class="settle-label ${cls}">${lbl}</span>
+        <span class="settle-amount ${cls}">${net >= 0 ? '+' : ''}${fmtYen(net)}</span>
+      </div>`;
+  }).join('');
+
+  const txRows = txs.length
+    ? txs.map(t => `
+      <div class="settle-tx-row">
+        <span class="settle-tx-from"><span class="payer-dot" style="background:${payerColor(t.from)}"></span>${esc(t.from)}</span>
+        <span class="settle-tx-arrow">→</span>
+        <span class="settle-tx-to"><span class="payer-dot" style="background:${payerColor(t.to)}"></span>${esc(t.to)}</span>
+        <span class="settle-tx-amount">${fmtYen(t.amount)}</span>
+      </div>`).join('')
+    : '<p class="empty-msg" style="padding:12px 16px 16px;">精算なし（バランスが取れています）</p>';
+
+  body.innerHTML = `
+    <div class="settle-balance">
+      <div class="settle-block-title">残高</div>
+      ${balanceRows}
+    </div>
+    <div class="settle-transactions">
+      <div class="settle-block-title">振り込み</div>
+      ${txRows}
+    </div>`;
+}
+
+// ===== Monthly breakdown =====
+function renderMonthlyBreakdown() {
+  const section = document.getElementById('monthly-breakdown-section');
+  const el      = document.getElementById('monthly-breakdown-body');
+  if (!section || !el) return;
+  if (payments.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  const MIN_OFF = -12, MAX_OFF = 3;
+  const now    = new Date();
+  const mStart = new Date(now.getFullYear(), now.getMonth() + breakdownMonthOffset, 1);
+  const mEnd   = new Date(mStart.getFullYear(), mStart.getMonth() + 1, 0);
+  const isThis = breakdownMonthOffset === 0;
+  const isNext = breakdownMonthOffset === 1;
+  const y = mStart.getFullYear(), m = mStart.getMonth() + 1;
+  const badge = isNext ? '来月' : isThis ? '今月' : '';
+
+  // 該当月の支払い項目を集める
+  const dueItems = [];
+  payments.forEach(p => {
+    const freq = p.frequencyMonths ?? 1;
+    const d0   = new Date(p.nextPaymentDate + 'T00:00:00');
+    if (freq === 0) {
+      if (d0 >= mStart && d0 <= mEnd) dueItems.push({ p, date: new Date(d0) });
+      return;
+    }
+    let d = new Date(d0);
+    while (d < mStart) d = new Date(d.getFullYear(), d.getMonth() + freq, d.getDate());
+    if (d >= mStart && d <= mEnd) dueItems.push({ p, date: new Date(d) });
+  });
+  dueItems.sort((a, b) => CAT_ORDER.indexOf(a.p.category) - CAT_ORDER.indexOf(b.p.category));
+
+  const total     = dueItems.reduce((s, x) => s + x.p.amount, 0);
+  const paidCount = dueItems.filter(x => {
+    const ds = toDateInputVal(x.date);
+    return (x.p.paidHistory || []).some(r => r.date === ds);
+  }).length;
+  const allPaid = dueItems.length > 0 && paidCount === dueItems.length;
+
+  // ナビゲーション
+  const navHtml = `
+    <div class="mb-nav${allPaid ? ' mb-nav-paid' : ''}">
+      <button class="mb-nav-btn" id="mb-prev" ${breakdownMonthOffset <= MIN_OFF ? 'disabled' : ''}>◀</button>
+      <span class="mb-nav-title">
+        ${y}年${m}月${badge ? `<span class="mb-badge">${badge}</span>` : ''}
+      </span>
+      <button class="mb-nav-btn" id="mb-next" ${breakdownMonthOffset >= MAX_OFF ? 'disabled' : ''}>▶</button>
+    </div>`;
+
+  // 内訳
+  let bodyHtml;
+  if (dueItems.length === 0) {
+    bodyHtml = '<p class="empty-msg">この月の支払い予定はありません</p>';
+  } else {
+    const rows = dueItems.map(({ p, date }) => {
+      const ds     = toDateInputVal(date);
+      const recs   = (p.paidHistory || []).filter(r => r.date === ds);
+      const isPaid = recs.length > 0;
+      const isPast = date < now;
+
+      const statusHtml = isPaid
+        ? recs.map(r => `
+            <span class="mb-chip mb-chip-paid">
+              <span class="payer-dot" style="background:${payerColor(r.paidBy)}"></span>
+              ${esc(r.paidBy)} ${fmtYen(r.amount)}
+            </span>`).join('')
+        : `<button class="mb-chip mb-chip-unpaid${isPast ? ' mb-chip-overdue' : ''}"
+               data-id="${p.id}" data-date="${ds}">未払い</button>`;
+
+      return `
+        <div class="mb-item">
+          <span class="cat-badge mb-cat" style="background:${CAT_COLORS[p.category]||'#64748b'}">${esc(p.category)}</span>
+          <span class="mb-name">${esc(p.name)}</span>
+          <span class="mb-date">${fmtDate(date)}</span>
+          <span class="mb-amount">${fmtYen(p.amount)}</span>
+          <span class="mb-status">${statusHtml}</span>
+        </div>`;
+    }).join('');
+
+    bodyHtml = `
+      <div class="mb-items">${rows}</div>
+      <div class="mb-footer${allPaid ? ' mb-footer-paid' : ''}">
+        <span class="mb-footer-progress">${paidCount}/${dueItems.length}件 支払済</span>
+        <span class="mb-footer-total">${fmtYen(total)}</span>
+      </div>`;
+  }
+
+  el.innerHTML = navHtml + bodyHtml;
+
+  document.getElementById('mb-prev')?.addEventListener('click', () => {
+    if (breakdownMonthOffset > MIN_OFF) { breakdownMonthOffset--; renderMonthlyBreakdown(); }
+  });
+  document.getElementById('mb-next')?.addEventListener('click', () => {
+    if (breakdownMonthOffset < MAX_OFF) { breakdownMonthOffset++; renderMonthlyBreakdown(); }
+  });
+  el.querySelectorAll('.mb-chip-unpaid').forEach(btn => {
+    btn.addEventListener('click', () => openPaidModal(btn.dataset.id, { date: btn.dataset.date }));
+  });
+}
+
+// ===== Paid summary =====
+function renderPaidSummary() {
+  const section = document.getElementById('paid-summary-section');
+  const body    = document.getElementById('paid-summary-body');
+  if (!section || !body) return;
+
+  const totals     = {};
+  const allRecords = [];
+
+  payments.forEach(p => {
+    (p.paidHistory || []).forEach(r => {
+      if (!totals[r.paidBy]) totals[r.paidBy] = { total: 0, count: 0 };
+      totals[r.paidBy].total += r.amount;
+      totals[r.paidBy].count++;
+      allRecords.push({ ...r, itemName: p.name });
+    });
+  });
+
+  const grandTotal = Object.values(totals).reduce((s, t) => s + t.total, 0);
+  if (grandTotal === 0) { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  const summaryRows = payers.map(p => {
+    const t = totals[p.name];
+    if (!t || t.total === 0) return '';
+    return `
+      <div class="ps-row">
+        <span class="ps-name"><span class="payer-dot" style="background:${p.color}"></span>${esc(p.name)}</span>
+        <span class="ps-count">${t.count}件</span>
+        <span class="ps-amount">${fmtYen(t.total)}</span>
+      </div>`;
+  }).join('');
+
+  allRecords.sort((a, b) => b.date.localeCompare(a.date));
+
+  const historyRows = allRecords.slice(0, 30).map(r => {
+    const d = new Date(r.date + 'T00:00:00');
+    return `
+      <div class="ps-hist-row">
+        <span class="ps-hist-date">${fmtDate(d)}</span>
+        <span class="ps-hist-name">${esc(r.itemName)}</span>
+        <span class="ps-hist-payer">
+          <span class="payer-dot" style="background:${payerColor(r.paidBy)}"></span>${esc(r.paidBy)}
+        </span>
+        <span class="ps-hist-amount">${fmtYen(r.amount)}</span>
+      </div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="ps-totals">
+      ${summaryRows}
+      <div class="ps-row ps-grand-total">
+        <span class="ps-name">合計</span>
+        <span class="ps-count">${allRecords.length}件</span>
+        <span class="ps-amount">${fmtYen(grandTotal)}</span>
+      </div>
+    </div>
+    ${historyRows ? `
+      <div class="ps-history">
+        <div class="ps-history-header">支払い履歴</div>
+        ${historyRows}
+      </div>` : ''}
+  `;
+}
 
 editForm.addEventListener('submit', async e => {
   e.preventDefault();
@@ -1101,6 +1616,7 @@ editForm.addEventListener('submit', async e => {
       name:            document.getElementById('e-name').value.trim(),
       amount:          parseFloat(document.getElementById('e-amount').value),
       frequencyMonths: getFreqMonths(eFreq, eFreqCustom),
+      amortizeMonths:  eFreq.value === '0' ? (parseInt(eAmortizeMonths.value) || 0) : 0,
       nextPaymentDate: document.getElementById('e-next-date').value,
       startDate:       document.getElementById('e-start-date').value || '',
       category:        document.getElementById('e-category').value,
