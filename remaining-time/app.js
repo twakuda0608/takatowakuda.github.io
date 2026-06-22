@@ -1,5 +1,7 @@
 const dateInput = document.getElementById("target-date");
 const timeInput = document.getElementById("target-time");
+const setCurrentDateButton = document.getElementById("set-current-date");
+const setCurrentTimeButton = document.getElementById("set-current-time");
 const statusDot = document.getElementById("status-dot");
 const statusText = document.getElementById("status-text");
 
@@ -152,5 +154,13 @@ document.addEventListener("DOMContentLoaded", () => {
   updateCountdown();
   dateInput.addEventListener("input", updateCountdown);
   timeInput.addEventListener("input", updateCountdown);
+  setCurrentDateButton.addEventListener("click", () => {
+    dateInput.value = toInputDate(new Date());
+    updateCountdown();
+  });
+  setCurrentTimeButton.addEventListener("click", () => {
+    timeInput.value = toInputTime(new Date());
+    updateCountdown();
+  });
   setInterval(updateCountdown, 1000);
 });
