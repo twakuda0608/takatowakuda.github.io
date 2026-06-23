@@ -1801,6 +1801,33 @@
       return pt > 0 ? `+${abs}` : pt < 0 ? `▲${abs}` : abs;
     }
 
+    function detailSeatNames(match, tableGame, rankPlayers, roundLog) {
+      const baseNames = Array.isArray(tableGame.playerNames) && tableGame.playerNames.length
+        ? tableGame.playerNames.slice()
+        : rankPlayers.map(p => p.name);
+      const n = baseNames.length || 4;
+      const names = Array.from({ length: n }, (_, i) => baseNames[i] || `P${i + 1}`);
+      if (!roundLog.length || !rankPlayers.length) return names;
+
+      const firstScores = Array.isArray(roundLog[0]?.scoresBefore)
+        ? roundLog[0].scoresBefore.slice(0, n)
+        : Array(n).fill(25000);
+      const finalScores = firstScores.slice();
+      for (const ev of roundLog) {
+        const deltas = ev.deltas || [];
+        for (let i = 0; i < n; i++) finalScores[i] += deltas[i] || 0;
+      }
+
+      const seatOrder = Array.from({ length: n }, (_, i) => i)
+        .sort((a, b) => finalScores[b] - finalScores[a]);
+      const editedByRank = rankPlayers.slice().sort((a, b) => (a.rank || 9) - (b.rank || 9));
+      seatOrder.forEach((seatIdx, rankIdx) => {
+        const editedName = editedByRank[rankIdx]?.name;
+        if (editedName) names[seatIdx] = editedName;
+      });
+      return names;
+    }
+
     function updateRecordsUI(user) {
       const wall = document.getElementById('rec-login-wall');
       const content = document.getElementById('rec-content');
@@ -1948,7 +1975,7 @@
 
       const roundLog = tg.roundLog || [];
       const riichiCounts = tg.riichiCounts || [0,0,0,0];
-      const seatNames = tg.playerNames || rankPlayers.map(p=>p.name);
+      const seatNames = detailSeatNames(match, tg, rankPlayers, roundLog);
       const n = seatNames.length;
       const initial = roundLog.length > 0 ? roundLog[0].scoresBefore.slice() : Array(n).fill(25000);
 
