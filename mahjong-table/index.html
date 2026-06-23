@@ -1150,16 +1150,26 @@
     .detail-legend { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; padding:0 4px; }
     .detail-legend-item { display:flex; align-items:center; gap:4px; font-size:11px; color:rgba(255,255,255,0.65); }
     .detail-legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-    .detail-stats-table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px; }
+    .detail-stats-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; margin-bottom:14px; }
+    .detail-stats-table { width:100%; min-width:460px; border-collapse:collapse; font-size:12px; }
     .detail-stats-table th { color:rgba(255,255,255,0.4); font-weight:600; padding:4px 3px 6px; text-align:center; font-size:10px; border-bottom:1px solid rgba(255,255,255,0.12); }
     .detail-stats-table th:first-child { text-align:left; }
     .detail-stats-table td { padding:7px 3px; text-align:center; color:rgba(255,255,255,0.75); border-bottom:1px solid rgba(255,255,255,0.06); }
     .detail-stats-table td:first-child { text-align:left; font-weight:700; }
+    .detail-stats-table tbody tr { background:linear-gradient(90deg, color-mix(in srgb, var(--p-color) 16%, transparent), transparent 64%); }
+    .detail-stats-name { display:flex; align-items:center; gap:6px; color:rgba(255,255,255,0.88); }
+    .detail-stats-dot { width:9px; height:9px; border-radius:50%; background:var(--p-color); box-shadow:0 0 10px color-mix(in srgb, var(--p-color) 70%, transparent); flex-shrink:0; }
     .detail-roundlog { display:flex; flex-direction:column; gap:4px; }
     .detail-round-item { background:rgba(0,0,0,0.2); border-radius:6px; padding:8px 10px; border:1px solid rgba(255,255,255,0.07); }
     .detail-round-label { font-size:10px; color:rgba(255,255,255,0.35); letter-spacing:0.5px; margin-bottom:3px; }
     .detail-round-text { font-size:12px; color:rgba(255,255,255,0.78); font-weight:600; }
-    .detail-round-scores { font-size:10px; color:rgba(255,255,255,0.4); margin-top:3px; line-height:1.6; }
+    .detail-round-scores { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+    .detail-move-chip { display:inline-flex; align-items:center; gap:4px; border:1px solid color-mix(in srgb, var(--p-color) 45%, rgba(255,255,255,0.12)); background:color-mix(in srgb, var(--p-color) 10%, rgba(0,0,0,0.18)); border-radius:999px; padding:3px 7px; font-size:10px; color:rgba(255,255,255,0.72); line-height:1.2; white-space:nowrap; }
+    .detail-move-delta { font-weight:900; font-variant-numeric:tabular-nums; }
+    .detail-move-delta.pos { color:#4ade80; }
+    .detail-move-delta.neg { color:#f87171; }
+    .detail-move-empty { font-size:10px; color:rgba(255,255,255,0.3); margin-top:4px; }
+    .detail-player-chip { color:var(--p-color); font-weight:900; text-shadow:0 0 12px color-mix(in srgb, var(--p-color) 45%, transparent); }
     .detail-result-row { display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
   </style>
 </head>
@@ -1978,6 +1988,27 @@
       const seatNames = detailSeatNames(match, tg, rankPlayers, roundLog);
       const n = seatNames.length;
       const initial = roundLog.length > 0 ? roundLog[0].scoresBefore.slice() : Array(n).fill(25000);
+      const playerChip = idx => `<span class="detail-player-chip" style="--p-color:${COLORS[idx] || '#fff'}">${escH(seatNames[idx] || '?')}</span>`;
+      const fmtScore = score => Number(score || 0).toLocaleString();
+      const roundMoves = ev => {
+        const before = Array.isArray(ev.scoresBefore) ? ev.scoresBefore : [];
+        const deltas = Array.isArray(ev.deltas) ? ev.deltas : [];
+        const rows = [];
+        for (let j = 0; j < n; j++) {
+          const delta = Number(deltas[j] || 0);
+          if (delta === 0) continue;
+          const start = Number(before[j] || 0);
+          const after = start + delta;
+          const deltaClass = delta > 0 ? 'pos' : 'neg';
+          const sign = delta > 0 ? '+' : '';
+          rows.push(`<span class="detail-move-chip" style="--p-color:${COLORS[j] || '#fff'}">${playerChip(j)} <span>${fmtScore(start)}→${fmtScore(after)}</span> <span class="detail-move-delta ${deltaClass}">(${sign}${fmtScore(delta)})</span></span>`);
+        }
+        if (rows.length) return rows.join('');
+        if (before.length) {
+          return before.map((score, j) => `<span class="detail-move-chip" style="--p-color:${COLORS[j] || '#fff'}">${playerChip(j)} <span>${fmtScore(score)}</span></span>`).join('');
+        }
+        return '<span class="detail-move-empty">点数移動なし</span>';
+      };
 
       // Build score timeline
       const timeline = [initial.slice()];
@@ -2012,6 +2043,7 @@
       const totalRounds = roundLog.filter(e => e.type === 'agari' || e.type === 'ryukyoku').length || 1;
 
       html += `<div class="detail-sec-lbl" style="margin-top:16px">プレイヤー統計</div>
+        <div class="detail-stats-scroll">
         <table class="detail-stats-table">
           <thead><tr>
             <th>名前</th><th>和了(R)</th><th>和了(T)</th><th>放銃</th><th>リーチ</th><th>和了率</th><th>放銃率</th>
@@ -2019,15 +2051,16 @@
           <tbody>${seatNames.map((name,i) => {
             const s = stats[i];
             const agari = s.ron + s.tsumo;
-            return `<tr>
-              <td>${escH(name)}</td>
+            return `<tr style="--p-color:${COLORS[i] || '#fff'}">
+              <td><span class="detail-stats-name"><span class="detail-stats-dot"></span><span>${escH(name)}</span></span></td>
               <td>${s.ron}</td><td>${s.tsumo}</td><td>${s.houju}</td>
               <td>${riichiCounts[i] ?? '—'}</td>
               <td>${Math.round(agari/totalRounds*100)}%</td>
               <td>${Math.round(s.houju/totalRounds*100)}%</td>
             </tr>`;
           }).join('')}</tbody>
-        </table>`;
+        </table>
+        </div>`;
 
       // Round history
       if (roundLog.length > 0) {
@@ -2036,19 +2069,19 @@
             let text = '';
             if (ev.type === 'agari') {
               const winners = ev.winnerIdxs || (ev.winnerIdx >= 0 ? [ev.winnerIdx] : []);
-              const wNames = winners.map(wi => escH(seatNames[wi]||'?')).join('・');
+              const wNames = winners.map(wi => playerChip(wi)).join('・');
               const wt = ev.winType === 'ron' ? 'ロン' : 'ツモ';
-              const loser = ev.loserIdx >= 0 ? ` ← ${escH(seatNames[ev.loserIdx]||'?')}` : '';
+              const loser = ev.loserIdx >= 0 ? ` ← ${playerChip(ev.loserIdx)}` : '';
               text = `和了: ${wNames} (${wt})${loser}`;
             } else if (ev.type === 'ryukyoku') {
-              const t = (ev.tenpai||[]).map((b,j)=>b?escH(seatNames[j]||j):null).filter(Boolean);
+              const t = (ev.tenpai||[]).map((b,j)=>b?playerChip(j):null).filter(Boolean);
               text = t.length===0 ? '流局 (全ノーテン)' : t.length===4 ? '流局 (全聴牌)' : `流局: ${t.join('・')}聴牌`;
             } else if (ev.type === 'chonbo') {
-              text = `チョンボ: ${escH(seatNames[ev.playerIdx]||'?')}`;
+              text = `チョンボ: ${playerChip(ev.playerIdx)}`;
             } else {
               text = ev.type || '—';
             }
-            const scoreStr = (ev.scoresBefore||[]).map((s,j)=>`${escH(seatNames[j]||j)}: ${s.toLocaleString()}`).join('　');
+            const scoreStr = roundMoves(ev);
             return `<div class="detail-round-item">
               <div class="detail-round-label">${escH(ev.roundLabel||'')}　#${i+1}</div>
               <div class="detail-round-text">${text}</div>
