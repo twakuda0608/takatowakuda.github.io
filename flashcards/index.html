@@ -75,6 +75,8 @@
         <div class="deck-stats" aria-label="学習状況">
           <span><strong id="card-count">0</strong>枚</span>
           <span><strong id="known-count">0</strong>暗記</span>
+          <span><strong id="known-rate">0</strong>%</span>
+          <span class="deck-progress" aria-hidden="true"><span id="known-rate-bar" class="deck-progress-bar"></span></span>
         </div>
       </div>
 
@@ -84,6 +86,16 @@
       </div>
 
       <section class="mode-panel active" id="cards-panel">
+        <div class="study-options">
+          <label>
+            <span>学習方向</span>
+            <select id="direction-select">
+              <option value="front">表から裏</option>
+              <option value="back">裏から表</option>
+            </select>
+          </label>
+        </div>
+
         <div class="progress-row">
           <button type="button" class="icon-btn" id="prev-card" aria-label="前のカード">
             <span aria-hidden="true">&#8249;</span>
@@ -110,7 +122,13 @@
       <section class="mode-panel" id="list-panel">
         <div class="list-tools">
           <button type="button" class="primary-btn" id="edit-add-btn">編集・追加</button>
-          <button type="button" class="secondary-btn" id="export-btn">書き出し</button>
+          <div class="export-tools">
+            <select id="export-scope" class="export-scope" aria-label="書き出し対象">
+              <option value="deck">このカード集</option>
+              <option value="all">全カード集</option>
+            </select>
+            <button type="button" class="secondary-btn" id="export-btn">書き出し</button>
+          </div>
         </div>
 
         <div class="edit-add-panel" id="edit-add-panel" hidden>
@@ -195,6 +213,10 @@
               </div>
               <div id="bulk-preview" class="bulk-preview-empty">プレビューなし</div>
             </div>
+            <label class="duplicate-skip-option">
+              <input type="checkbox" id="duplicate-skip-checkbox" checked>
+              重複をスキップ
+            </label>
             <button type="button" class="secondary-btn bulk-add-btn" id="bulk-add-btn">一括追加</button>
           </section>
         </div>

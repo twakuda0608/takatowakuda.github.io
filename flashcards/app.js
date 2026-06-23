@@ -34,6 +34,8 @@ let unsubscribeCards = null;
 let currentIndex = 0;
 let showingBack = false;
 let mode = "cards";
+let studyDirection = "front";
+let lastViewedCardId = null;
 let pointerStartX = 0;
 let pointerStartY = 0;
 let pointerTracking = false;
@@ -60,6 +62,9 @@ const els = {
   deleteDeckBtn: document.getElementById("delete-deck-btn"),
   cardCount: document.getElementById("card-count"),
   knownCount: document.getElementById("known-count"),
+  knownRate: document.getElementById("known-rate"),
+  knownRateBar: document.getElementById("known-rate-bar"),
+  directionSelect: document.getElementById("direction-select"),
   progressText: document.getElementById("progress-text"),
   prevCard: document.getElementById("prev-card"),
   nextCard: document.getElementById("next-card"),
@@ -79,11 +84,13 @@ const els = {
   bulkPreviewCount: document.getElementById("bulk-preview-count"),
   termCustomInput: document.getElementById("term-custom-input"),
   cardCustomInput: document.getElementById("card-custom-input"),
+  duplicateSkipCheckbox: document.getElementById("duplicate-skip-checkbox"),
   cardList: document.getElementById("card-list"),
   editAddBtn: document.getElementById("edit-add-btn"),
   editAddPanel: document.getElementById("edit-add-panel"),
   duplicateWarning: document.getElementById("duplicate-warning"),
   exportBtn: document.getElementById("export-btn"),
+  exportScope: document.getElementById("export-scope"),
   importFile: document.getElementById("import-file"),
 };
 
@@ -117,6 +124,11 @@ els.flashcard.addEventListener("pointercancel", cancelFlick);
 
 els.prevCard.addEventListener("click", () => moveCard(-1, "right"));
 els.nextCard.addEventListener("click", () => moveCard(1, "left"));
+els.directionSelect.addEventListener("change", () => {
+  studyDirection = els.directionSelect.value;
+  showingBack = false;
+  renderCard();
+});
 els.shuffleBtn.addEventListener("click", shuffleCards);
 els.resetKnownBtn.addEventListener("click", resetKnown);
 els.knownBtn.addEventListener("click", toggleKnown);
@@ -125,6 +137,7 @@ els.bulkAddBtn.addEventListener("click", addBulkCards);
 els.bulkInput.addEventListener("input", renderImportPreview);
 els.termCustomInput.addEventListener("input", renderImportPreview);
 els.cardCustomInput.addEventListener("input", renderImportPreview);
+els.duplicateSkipCheckbox.addEventListener("change", renderImportPreview);
 els.termCustomInput.addEventListener("focus", () => selectCustomSeparator("term-separator"));
 els.cardCustomInput.addEventListener("focus", () => selectCustomSeparator("card-separator"));
 document.querySelectorAll("input[name='term-separator'], input[name='card-separator']").forEach((input) => {
@@ -133,6 +146,7 @@ document.querySelectorAll("input[name='term-separator'], input[name='card-separa
 els.editAddBtn.addEventListener("click", toggleEditAddPanel);
 els.exportBtn.addEventListener("click", exportCards);
 els.importFile.addEventListener("change", importCards);
+document.addEventListener("keydown", handleKeyboard);
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
@@ -192,6 +206,11 @@ function startListening(uid) {
         known: Boolean(data.known),
         deckId: data.deckId || DEFAULT_DECK_ID,
         order: getCardOrder(data),
+        viewCount: Number(data.viewCount || 0),
+        flipCount: Number(data.flipCount || 0),
+        knownCount: Number(data.knownCount || 0),
+        lastStudiedAt: readMillis(data.lastStudiedAt),
+        lastKnownAt: readMillis(data.lastKnownAt),
       };
     })
       .filter((card) => card.front && card.back)
@@ -352,6 +371,13 @@ function getCardOrder(data) {
   return Date.now();
 }
 
+function readMillis(value) {
+  if (!value) return null;
+  if (value.toMillis) return value.toMillis();
+  if (Number.isFinite(value)) return value;
+  return null;
+}
+
 function setMode(nextMode) {
   mode = nextMode;
   document.querySelectorAll(".mode-tab").forEach((tab) => {
@@ -370,6 +396,9 @@ function render() {
   renderDeckList();
   els.cardCount.textContent = cards.length;
   els.knownCount.textContent = cards.filter((card) => card.known).length;
+  const knownRate = cards.length ? Math.round(cards.filter((card) => card.known).length / cards.length * 100) : 0;
+  els.knownRate.textContent = knownRate;
+  els.knownRateBar.style.width = `${knownRate}%`;
   renderCard();
   renderDuplicateWarning();
   renderList();
@@ -408,11 +437,12 @@ function renderDeckList() {
   els.deckList.innerHTML = decks.map((deck) => {
     const deckCards = allCards.filter((card) => card.deckId === deck.id);
     const known = deckCards.filter((card) => card.known).length;
+    const rate = deckCards.length ? Math.round(known / deckCards.length * 100) : 0;
     const duplicateCount = countDeckDuplicates(deck.id);
     return `
       <button type="button" class="deck-list-item" data-deck-id="${escapeHtml(deck.id)}">
         <span class="deck-list-name">${escapeHtml(deck.name)}</span>
-        <span class="deck-list-meta">${deckCards.length}枚 / ${known}暗記</span>
+        <span class="deck-list-meta">${deckCards.length}枚 / ${known}暗記 / ${rate}%</span>
         ${duplicateCount ? `<span class="deck-list-warning">重複 ${duplicateCount}</span>` : ""}
       </button>
     `;
@@ -451,13 +481,26 @@ function renderCard() {
     return;
   }
 
-  els.cardSide.textContent = showingBack ? "裏" : "表";
-  els.cardMain.textContent = showingBack ? card.back : card.front;
-  els.cardSub.textContent = showingBack ? "クリックで表面" : "クリックで裏面";
+  const promptSide = studyDirection === "front" ? "表" : "裏";
+  const answerSide = studyDirection === "front" ? "裏" : "表";
+  const promptText = studyDirection === "front" ? card.front : card.back;
+  const answerText = studyDirection === "front" ? card.back : card.front;
+  els.cardSide.textContent = showingBack ? answerSide : promptSide;
+  els.cardMain.textContent = showingBack ? answerText : promptText;
+  els.cardSub.textContent = showingBack ? `${promptSide}へ` : `${answerSide}へ`;
   els.knownBtn.textContent = card.known ? "未暗記" : "暗記";
+  recordCardView(card);
 }
 
 function flipCard() {
+  const card = cards[currentIndex];
+  if (card) {
+    updateDoc(cardDoc(card.id), {
+      flipCount: (card.flipCount || 0) + 1,
+      lastStudiedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }).catch(() => {});
+  }
   window.clearTimeout(flipTimer);
   els.flashcard.classList.remove("is-flipping");
   void els.flashcard.offsetWidth;
@@ -469,6 +512,16 @@ function flipCard() {
   window.setTimeout(() => {
     els.flashcard.classList.remove("is-flipping");
   }, 320);
+}
+
+function recordCardView(card) {
+  if (!card || lastViewedCardId === card.id || currentView !== "study" || mode !== "cards") return;
+  lastViewedCardId = card.id;
+  updateDoc(cardDoc(card.id), {
+    viewCount: (card.viewCount || 0) + 1,
+    lastStudiedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  }).catch(() => {});
 }
 
 function renderList() {
@@ -490,8 +543,21 @@ function renderList() {
       </div>
       <div class="list-word list-back">${escapeHtml(card.back)}</div>
       <div class="mini-actions">
+        ${editing ? `<button type="button" class="mini-btn" data-action="edit" data-index="${index}">編集</button>` : ""}
         <button type="button" class="mini-btn" data-action="known" data-index="${index}">${card.known ? "未暗記" : "暗記"}</button>
         <button type="button" class="mini-btn delete" data-action="delete" data-index="${index}">削除</button>
+      </div>
+      ${editing ? `
+        <form class="inline-edit-form" data-id="${card.id}">
+          <input type="text" name="front" value="${escapeAttr(card.front)}" placeholder="表">
+          <input type="text" name="back" value="${escapeAttr(card.back)}" placeholder="裏">
+          <button type="submit" class="primary-btn">更新</button>
+        </form>
+      ` : ""}
+      <div class="history-line">
+        <span>学習 ${card.viewCount || 0}回</span>
+        <span>反転 ${card.flipCount || 0}回</span>
+        ${card.lastStudiedAt ? `<span>最終 ${formatShortDate(card.lastStudiedAt)}</span>` : ""}
       </div>
     </div>
   `).join("");
@@ -500,11 +566,31 @@ function renderList() {
     button.addEventListener("click", async () => {
       const card = listCards[Number(button.dataset.index)];
       if (!card) return;
+      if (button.dataset.action === "edit") {
+        const row = button.closest(".list-item");
+        row?.classList.toggle("editing-inline");
+        return;
+      }
       button.disabled = true;
       if (button.dataset.action === "delete") {
         await deleteDoc(cardDoc(card.id));
       } else {
         await updateDoc(cardDoc(card.id), { known: !card.known, updatedAt: serverTimestamp() });
+      }
+    });
+  });
+  els.cardList.querySelectorAll(".inline-edit-form").forEach((form) => {
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const front = form.elements.front.value.trim();
+      const back = form.elements.back.value.trim();
+      if (!front || !back) return;
+      const btn = form.querySelector("button");
+      btn.disabled = true;
+      try {
+        await updateDoc(cardDoc(form.dataset.id), { front, back, updatedAt: serverTimestamp() });
+      } finally {
+        btn.disabled = false;
       }
     });
   });
@@ -658,6 +744,26 @@ function cancelFlick() {
   els.flashcard.style.transform = "";
 }
 
+function handleKeyboard(event) {
+  const active = document.activeElement;
+  const typing = active && ["INPUT", "TEXTAREA", "SELECT"].includes(active.tagName);
+  if (typing || currentView !== "study" || mode !== "cards") return;
+
+  if (event.key === "ArrowLeft") {
+    event.preventDefault();
+    moveCard(-1, "right");
+  } else if (event.key === "ArrowRight") {
+    event.preventDefault();
+    moveCard(1, "left");
+  } else if (event.key === " ") {
+    event.preventDefault();
+    if (cards.length) flipCard();
+  } else if (event.key === "Enter") {
+    event.preventDefault();
+    toggleKnown();
+  }
+}
+
 function animateCard(direction) {
   els.flashcard.classList.remove("flick-left", "flick-right");
   void els.flashcard.offsetWidth;
@@ -693,7 +799,15 @@ async function toggleKnown() {
   const card = cards[currentIndex];
   if (!card) return;
   els.knownBtn.disabled = true;
-  await updateDoc(cardDoc(card.id), { known: !card.known, updatedAt: serverTimestamp() });
+  const nextKnown = !card.known;
+  const data = {
+    known: nextKnown,
+    knownCount: nextKnown ? (card.knownCount || 0) + 1 : (card.knownCount || 0),
+    lastStudiedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+  if (nextKnown) data.lastKnownAt = serverTimestamp();
+  await updateDoc(cardDoc(card.id), data);
 }
 
 async function resetKnown() {
@@ -768,7 +882,7 @@ function getImportPreviewCards() {
   const termSeparator = getSeparator("term-separator", els.termCustomInput);
   const cardSeparator = getSeparator("card-separator", els.cardCustomInput);
   if (!termSeparator || !cardSeparator) return [];
-  return parseCardsWithSeparators(els.bulkInput.value, termSeparator, cardSeparator);
+  return applyDuplicatePolicy(parseCardsWithSeparators(els.bulkInput.value, termSeparator, cardSeparator));
 }
 
 function renderImportPreview() {
@@ -901,12 +1015,18 @@ function rowToCard(row) {
 }
 
 function exportCards() {
-  const exportData = cards.map(({ front, back, known }) => ({ front, back, known }));
+  const scope = els.exportScope.value;
+  const exportData = scope === "all"
+    ? {
+        decks,
+        cards: allCards.map(({ front, back, known, deckId, order }) => ({ front, back, known, deckId, order })),
+      }
+    : getOrderedDeckCards().map(({ front, back, known }) => ({ front, back, known }));
   const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "flashcards.json";
+  link.download = scope === "all" ? "flashcards-all.json" : "flashcards.json";
   link.click();
   URL.revokeObjectURL(url);
 }
@@ -944,19 +1064,30 @@ function parseImportedCards(text) {
   try {
     const imported = JSON.parse(text);
     if (Array.isArray(imported)) {
-      return imported
+      return applyDuplicatePolicy(imported
         .filter((card) => card?.front && card?.back)
         .map((card) => ({
           front: String(card.front).trim(),
           back: String(card.back).trim(),
           known: Boolean(card.known),
         }))
-        .filter((card) => card.front && card.back);
+        .filter((card) => card.front && card.back));
     }
   } catch {
     // JSON以外はCSV/TSVとして扱う
   }
-  return parseCardText(text);
+  return applyDuplicatePolicy(parseCardText(text));
+}
+
+function applyDuplicatePolicy(nextCards) {
+  if (!els.duplicateSkipCheckbox.checked) return nextCards;
+  const seen = new Set(getOrderedDeckCards().map((card) => normalizeFront(card.front)));
+  return nextCards.filter((card) => {
+    const key = normalizeFront(card.front);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function clampIndex(index) {
@@ -972,4 +1103,14 @@ function escapeHtml(value) {
     '"': "&quot;",
     "'": "&#039;",
   })[char]);
+}
+
+function escapeAttr(value) {
+  return escapeHtml(String(value || ""));
+}
+
+function formatShortDate(ms) {
+  const date = new Date(ms);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${date.getMonth() + 1}/${date.getDate()}`;
 }
