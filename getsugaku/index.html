@@ -183,6 +183,15 @@
             <label for="f-amount">金額（円）</label>
             <input type="number" id="f-amount" required min="0" placeholder="例: 80000">
           </div>
+          <div class="form-group form-group-wide">
+            <label for="f-change-year">金額変更（任意）</label>
+            <div class="amount-change-row">
+              <input type="number" id="f-change-year" min="2" max="30" placeholder="2">
+              <span class="amount-change-unit">年目から</span>
+              <input type="number" id="f-change-amount" min="0" placeholder="変更後金額">
+            </div>
+            <span class="field-hint">初年度だけ安い項目や、2年目から発生する項目に使用</span>
+          </div>
           <div class="form-group">
             <label for="f-freq">支払い頻度</label>
             <select id="f-freq">
@@ -239,7 +248,7 @@
             <input type="text" id="f-note" placeholder="任意メモ">
           </div>
         </div>
-        <button type="submit" class="add-btn">追加する</button>
+        <button type="submit" class="add-btn">追加</button>
       </form>
     </section>
 
@@ -273,6 +282,15 @@
           <div class="form-group">
             <label for="e-amount">金額（円）</label>
             <input type="number" id="e-amount" required min="0">
+          </div>
+          <div class="form-group form-group-wide">
+            <label for="e-change-year">金額変更（任意）</label>
+            <div class="amount-change-row">
+              <input type="number" id="e-change-year" min="2" max="30" placeholder="2">
+              <span class="amount-change-unit">年目から</span>
+              <input type="number" id="e-change-amount" min="0" placeholder="変更後金額">
+            </div>
+            <span class="field-hint">初年度だけ安い項目や、2年目から発生する項目に使用</span>
           </div>
           <div class="form-group">
             <label for="e-freq">支払い頻度</label>
@@ -332,7 +350,7 @@
         </div>
         <div class="modal-btns">
           <button type="button" id="modal-cancel" class="cancel-btn">キャンセル</button>
-          <button type="submit" class="add-btn">保存する</button>
+          <button type="submit" class="add-btn">保存</button>
         </div>
       </form>
     </div>
@@ -362,7 +380,7 @@
         </div>
         <div class="modal-btns">
           <button type="button" id="paid-modal-cancel-btn" class="cancel-btn">キャンセル</button>
-          <button type="submit" class="add-btn paid-confirm-btn">支払済にする</button>
+          <button type="submit" class="add-btn paid-confirm-btn">支払済</button>
         </div>
       </form>
     </div>
