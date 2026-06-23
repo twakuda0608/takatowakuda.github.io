@@ -130,6 +130,7 @@ h1 {
   gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
+  max-width: 260px;
 }
 
 .deck-stats span {
@@ -141,6 +142,21 @@ h1 {
   font-weight: 700;
   padding: 6px 11px;
   white-space: nowrap;
+}
+
+.deck-progress {
+  flex-basis: 100%;
+  height: 7px;
+  border-radius: 999px;
+  background: #e5eaf3;
+  overflow: hidden;
+}
+
+.deck-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: var(--fc-brand);
+  transition: width .2s ease;
 }
 
 .deck-stats strong {
@@ -359,6 +375,34 @@ h1 {
   margin-bottom: 14px;
 }
 
+.study-options {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.study-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--fc-soft);
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.study-options select,
+.export-scope {
+  min-height: 38px;
+  border: 1.5px solid var(--fc-line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--fc-ink);
+  font: inherit;
+  font-size: .88rem;
+  font-weight: 800;
+  padding: 7px 10px;
+}
+
 .icon-btn {
   width: 48px;
   height: 44px;
@@ -497,6 +541,12 @@ textarea:focus {
   margin-top: 0;
 }
 
+.export-tools {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .edit-add-panel {
   background: #f8fafc;
   border: 1px solid var(--fc-line);
@@ -546,6 +596,22 @@ textarea:focus {
 .bulk-add-btn {
   margin-top: 10px;
   width: 100%;
+}
+
+.duplicate-skip-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--fc-ink);
+  font-size: .88rem;
+  font-weight: 800;
+  margin-top: 12px;
+}
+
+.duplicate-skip-option input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--fc-brand);
 }
 
 .import-textarea {
@@ -805,6 +871,10 @@ textarea {
   padding: 12px;
 }
 
+.list-item.editing-inline .inline-edit-form {
+  display: grid;
+}
+
 .list-item.reorder-enabled {
   grid-template-columns: auto 1fr 1fr auto;
   cursor: grab;
@@ -830,6 +900,36 @@ textarea {
   line-height: 1;
   padding: 0 2px;
   user-select: none;
+}
+
+.inline-edit-form {
+  display: none;
+  grid-column: 1 / -1;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--fc-line);
+}
+
+.inline-edit-form input {
+  min-width: 0;
+  border: 1.5px solid var(--fc-line);
+  border-radius: 8px;
+  color: var(--fc-ink);
+  font: inherit;
+  font-size: .88rem;
+  font-weight: 700;
+  padding: 9px 10px;
+}
+
+.history-line {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: var(--fc-soft);
+  font-size: .75rem;
+  font-weight: 800;
 }
 
 .list-item.duplicate-item {
@@ -992,6 +1092,36 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  #cards-panel {
+    padding-bottom: 96px;
+  }
+
+  #cards-panel.active .card-actions {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 80;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid var(--fc-line);
+    border-radius: 12px;
+    background: rgba(255,255,255,.96);
+    box-shadow: 0 10px 28px rgba(21, 32, 51, .18);
+  }
+
+  #cards-panel.active .card-actions button {
+    min-width: 0;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .export-tools,
+  .export-scope {
+    width: 100%;
+  }
+
   .file-import-row {
     align-items: stretch;
     flex-direction: column;
@@ -1013,6 +1143,10 @@ textarea {
   .list-item.reorder-enabled .list-back,
   .list-item.reorder-enabled .mini-actions {
     grid-column: 2;
+  }
+
+  .inline-edit-form {
+    grid-template-columns: 1fr;
   }
 
   .mini-actions {
