@@ -3347,6 +3347,15 @@
       return roundUp100(base * (isParent ? 6 : 4)) + state.honba * 300;
     }
 
+    function pickAtamahaneWinner(winners, loserIdx) {
+      const loserWindIdx = WINDS.indexOf(state.players[loserIdx].wind);
+      return [...winners].sort((a, b) => {
+        const da = (WINDS.indexOf(state.players[a].wind) - loserWindIdx + 4) % 4;
+        const db = (WINDS.indexOf(state.players[b].wind) - loserWindIdx + 4) % 4;
+        return da - db;
+      })[0];
+    }
+
     function buildMwHanTree() {
       const container = document.getElementById('mwHanTree');
       container.innerHTML = '';
@@ -3610,7 +3619,8 @@
     document.getElementById('mwStep1Next').addEventListener('click', () => {
       if (mwWinners.size === 0) { alert('和了者を選択してください'); return; }
       if (mwLoser < 0) { alert('放銃者を選択してください'); return; }
-      mwSortedWinners = [...mwWinners].sort((a,b)=>a-b);
+      const atamahaneWinner = pickAtamahaneWinner(mwWinners, mwLoser);
+      mwSortedWinners = atamahaneWinner === undefined ? [] : [atamahaneWinner];
       mwWinnerStep = 0;
       mwWinnerData = mwSortedWinners.map(() => ({ hanIdx: -1, fu: -1, score: 0 }));
       buildMwHanTree();
