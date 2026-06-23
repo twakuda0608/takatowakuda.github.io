@@ -209,11 +209,82 @@ input[type="checkbox"]{ width:auto; }
 /* =========================
    Record area (Tab 1)
 ========================= */
+.import-banner {
+  background: rgba(14,165,233,0.12);
+  border: 1px solid rgba(14,165,233,0.4);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.import-banner span {
+  font-size: 13px;
+  color: rgba(14,165,233,0.95);
+}
+.import-banner button {
+  background: none;
+  border: none;
+  color: rgba(14,165,233,0.7);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
 #record-area {
   margin-top: 4px;
 }
 .login-hint { padding: 4px 0; }
 
+.record-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border: 1px solid var(--border-soft, #e4e4e4);
+  border-radius: 10px;
+  background: #f8fafc;
+}
+.record-source-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.record-source-badge.record-source-table {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+.record-preview {
+  flex: 1;
+  min-width: 150px;
+  color: #475569;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.record-clear-btn {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  color: #64748b;
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.record-clear-btn:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+}
 .record-actions {
   display: flex;
   align-items: center;
@@ -361,6 +432,21 @@ input[type="checkbox"]{ width:auto; }
   cursor: default;
   white-space: nowrap;
 }
+.match-kind {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 700;
+}
+.match-kind.match-kind-table {
+  background: #e0f2fe;
+  color: #0284c7;
+}
 .match-label[data-time]:hover::after {
   content: attr(data-time);
   position: absolute;
@@ -400,6 +486,16 @@ input[type="checkbox"]{ width:auto; }
   border-radius: 6px;
   text-align: center;
   margin: 0;
+}
+.edit-player-cell {
+  min-width: 78px;
+}
+.name-edit-input {
+  width: 76px;
+  margin: 0 0 4px;
+  padding: 4px 6px;
+  font-size: 12px;
+  text-align: center;
 }
 .edit-sum {
   display: block;
@@ -469,6 +565,11 @@ input[type="checkbox"]{ width:auto; }
   font-weight: 600;
   color: #333;
   flex: 1;
+}
+.session-source-text {
+  font-size: 11px;
+  color: #94a3b8;
+  white-space: nowrap;
 }
 .player-edit-grid {
   display: flex;

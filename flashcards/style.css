@@ -82,6 +82,78 @@ textarea {
   display: block;
 }
 
+.sync-status {
+  width: fit-content;
+  margin: 0 0 10px auto;
+  border: 1px solid var(--fc-line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--fc-soft);
+  font-size: .78rem;
+  font-weight: 900;
+  padding: 6px 11px;
+}
+
+.sync-saving {
+  color: var(--fc-brand);
+  background: var(--fc-brand-soft);
+  border-color: #bfdbfe;
+}
+
+.sync-pending {
+  color: #92400e;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.sync-reconnect {
+  color: #9a3412;
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+
+.sync-saved {
+  color: var(--fc-good);
+  background: #e8f7ef;
+  border-color: #bbf7d0;
+}
+
+.undo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100% - 32px);
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  background: #111827;
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(17, 24, 39, .25);
+  font-size: .9rem;
+  font-weight: 800;
+  padding: 10px 12px;
+}
+
+.undo-toast[hidden] {
+  display: none;
+}
+
+.undo-toast button {
+  min-height: 34px;
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  padding: 6px 11px;
+}
+
 .study-panel,
 .deck-list-panel,
 .editor-panel {
@@ -147,9 +219,11 @@ h1 {
 .deck-progress {
   flex-basis: 100%;
   height: 7px;
+  border: 0;
   border-radius: 999px;
   background: #e5eaf3;
   overflow: hidden;
+  padding: 0;
 }
 
 .deck-progress-bar {
@@ -1109,6 +1183,10 @@ textarea {
     border-radius: 12px;
     background: rgba(255,255,255,.96);
     box-shadow: 0 10px 28px rgba(21, 32, 51, .18);
+  }
+
+  .undo-toast {
+    bottom: 86px;
   }
 
   #cards-panel.active .card-actions button {

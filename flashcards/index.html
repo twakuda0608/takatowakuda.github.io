@@ -45,6 +45,7 @@
   </div>
 
   <main class="app-shell" id="main-content" style="display:none;">
+    <div id="sync-status" class="sync-status" hidden></div>
     <section class="deck-list-panel" id="deck-list-panel">
       <div class="deck-bar">
         <div class="deck-title-block">
@@ -92,6 +93,13 @@
             <select id="direction-select">
               <option value="front">表から裏</option>
               <option value="back">裏から表</option>
+            </select>
+          </label>
+          <label>
+            <span>出題順</span>
+            <select id="study-order-select">
+              <option value="normal">記録順</option>
+              <option value="weak">苦手優先</option>
             </select>
           </label>
         </div>
@@ -227,6 +235,11 @@
       </section>
     </section>
   </main>
+
+  <div id="undo-toast" class="undo-toast" hidden>
+    <span id="undo-message"></span>
+    <button type="button" id="undo-btn">取り消し</button>
+  </div>
 
   <script type="module" src="app.js"></script>
   <script src="/common.js"></script>

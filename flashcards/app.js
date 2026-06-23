@@ -35,12 +35,15 @@ let currentIndex = 0;
 let showingBack = false;
 let mode = "cards";
 let studyDirection = "front";
+let studyOrderMode = "normal";
 let lastViewedCardId = null;
 let pointerStartX = 0;
 let pointerStartY = 0;
 let pointerTracking = false;
 let flipTimer = null;
 let dragCardId = null;
+let currentUndo = null;
+let undoTimer = null;
 
 const els = {
   loginScreen: document.getElementById("login-screen"),
@@ -65,6 +68,7 @@ const els = {
   knownRate: document.getElementById("known-rate"),
   knownRateBar: document.getElementById("known-rate-bar"),
   directionSelect: document.getElementById("direction-select"),
+  studyOrderSelect: document.getElementById("study-order-select"),
   progressText: document.getElementById("progress-text"),
   prevCard: document.getElementById("prev-card"),
   nextCard: document.getElementById("next-card"),
@@ -92,6 +96,10 @@ const els = {
   exportBtn: document.getElementById("export-btn"),
   exportScope: document.getElementById("export-scope"),
   importFile: document.getElementById("import-file"),
+  syncStatus: document.getElementById("sync-status"),
+  undoToast: document.getElementById("undo-toast"),
+  undoMessage: document.getElementById("undo-message"),
+  undoBtn: document.getElementById("undo-btn"),
 };
 
 els.loginBtn.addEventListener("click", () => {
@@ -129,6 +137,13 @@ els.directionSelect.addEventListener("change", () => {
   showingBack = false;
   renderCard();
 });
+els.studyOrderSelect.addEventListener("change", () => {
+  studyOrderMode = els.studyOrderSelect.value;
+  studyOrder = [];
+  currentIndex = 0;
+  showingBack = false;
+  render();
+});
 els.shuffleBtn.addEventListener("click", shuffleCards);
 els.resetKnownBtn.addEventListener("click", resetKnown);
 els.knownBtn.addEventListener("click", toggleKnown);
@@ -147,6 +162,9 @@ els.editAddBtn.addEventListener("click", toggleEditAddPanel);
 els.exportBtn.addEventListener("click", exportCards);
 els.importFile.addEventListener("change", importCards);
 document.addEventListener("keydown", handleKeyboard);
+els.undoBtn.addEventListener("click", runUndo);
+window.addEventListener("offline", () => setSyncStatus("reconnect"));
+window.addEventListener("online", () => setSyncStatus("saved"));
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
@@ -217,6 +235,7 @@ function startListening(uid) {
       .sort((a, b) => a.order - b.order);
     render();
   }, (err) => {
+    setSyncStatus("reconnect");
     if (err.code === "permission-denied") {
       alert("Firestoreルールの確認");
     }
@@ -249,10 +268,10 @@ function normalizeDecks(value) {
 }
 
 async function saveDeckSettings(uid = currentUser.uid) {
-  await setDoc(userDoc(uid), {
+  await saveWithStatus(() => setDoc(userDoc(uid), {
     flashcardDecks: decks,
     currentFlashcardDeckId: currentDeckId,
-  }, { merge: true });
+  }, { merge: true }));
 }
 
 async function switchDeck(deckId) {
@@ -305,19 +324,30 @@ async function deleteCurrentDeck() {
   }
   if (!confirm(`「${deck.name}」を削除しますか？`)) return;
 
+  const deletedDeck = { ...deck };
+  const deletedCards = allCards.filter((card) => card.deckId === currentDeckId);
   els.deleteDeckBtn.disabled = true;
   try {
     const batch = writeBatch(db);
-    allCards
-      .filter((card) => card.deckId === currentDeckId)
-      .forEach((card) => batch.delete(cardDoc(card.id)));
+    deletedCards.forEach((card) => batch.delete(cardDoc(card.id)));
     decks = decks.filter((item) => item.id !== currentDeckId);
     currentDeckId = decks[0].id;
     currentView = "decks";
     currentIndex = 0;
     studyOrder = [];
     await saveDeckSettings();
-    await batch.commit();
+    await saveWithStatus(() => batch.commit());
+    showUndo("カード集を削除", async () => {
+      decks.push(deletedDeck);
+      currentDeckId = deletedDeck.id;
+      currentView = "study";
+      currentIndex = 0;
+      studyOrder = [];
+      await saveDeckSettings();
+      const restoreBatch = writeBatch(db);
+      deletedCards.forEach((card) => restoreBatch.set(cardDoc(card.id), cardToDoc(card)));
+      return restoreBatch.commit();
+    });
     render();
   } catch {
     alert("削除に失敗しました");
@@ -344,7 +374,7 @@ async function migrateLocalCards(uid) {
       updatedAt: serverTimestamp(),
     });
   });
-  await batch.commit();
+  await saveWithStatus(() => batch.commit());
   localStorage.removeItem(STORAGE_KEY);
 }
 
@@ -378,6 +408,73 @@ function readMillis(value) {
   return null;
 }
 
+function setSyncStatus(state) {
+  const labels = {
+    pending: "保存待ち",
+    saving: "保存中",
+    saved: "保存済",
+    reconnect: "再接続待ち",
+  };
+  els.syncStatus.textContent = labels[state] || "";
+  els.syncStatus.className = `sync-status sync-${state}`;
+  els.syncStatus.hidden = !state;
+  if (state === "saved") {
+    window.setTimeout(() => {
+      if (els.syncStatus.classList.contains("sync-saved")) els.syncStatus.hidden = true;
+    }, 1400);
+  }
+}
+
+async function saveWithStatus(task) {
+  if (!navigator.onLine) setSyncStatus("pending");
+  else setSyncStatus("saving");
+  try {
+    const result = await task();
+    setSyncStatus("saved");
+    return result;
+  } catch (error) {
+    setSyncStatus("reconnect");
+    throw error;
+  }
+}
+
+function showUndo(message, undo) {
+  currentUndo = undo;
+  window.clearTimeout(undoTimer);
+  els.undoMessage.textContent = message;
+  els.undoToast.hidden = false;
+  undoTimer = window.setTimeout(clearUndo, 9000);
+}
+
+function clearUndo() {
+  currentUndo = null;
+  els.undoToast.hidden = true;
+}
+
+async function runUndo() {
+  if (!currentUndo) return;
+  const undo = currentUndo;
+  clearUndo();
+  await saveWithStatus(undo);
+}
+
+function cardToDoc(card) {
+  return {
+    front: card.front,
+    back: card.back,
+    known: Boolean(card.known),
+    deckId: card.deckId || currentDeckId,
+    order: card.order || Date.now(),
+    createdAt: serverTimestamp(),
+    viewCount: card.viewCount || 0,
+    flipCount: card.flipCount || 0,
+    knownCount: card.knownCount || 0,
+    lastStudiedAt: card.lastStudiedAt || null,
+    lastKnownAt: card.lastKnownAt || null,
+    updatedAt: serverTimestamp(),
+  };
+}
+
 function setMode(nextMode) {
   mode = nextMode;
   document.querySelectorAll(".mode-tab").forEach((tab) => {
@@ -406,6 +503,12 @@ function render() {
 
 function getStudyCards() {
   const deckCards = allCards.filter((card) => card.deckId === currentDeckId);
+  if (studyOrderMode === "weak" && studyOrder.length === 0) {
+    return [...deckCards].sort((a, b) => {
+      if (a.known !== b.known) return a.known ? 1 : -1;
+      return (b.viewCount || 0) - (a.viewCount || 0);
+    });
+  }
   const ids = new Set(deckCards.map((card) => card.id));
   studyOrder = studyOrder.filter((id) => ids.has(id));
   if (studyOrder.length !== deckCards.length) {
@@ -573,9 +676,10 @@ function renderList() {
       }
       button.disabled = true;
       if (button.dataset.action === "delete") {
-        await deleteDoc(cardDoc(card.id));
+        await saveWithStatus(() => deleteDoc(cardDoc(card.id)));
+        showUndo("カードを削除", () => setDoc(cardDoc(card.id), cardToDoc(card)));
       } else {
-        await updateDoc(cardDoc(card.id), { known: !card.known, updatedAt: serverTimestamp() });
+        await saveWithStatus(() => updateDoc(cardDoc(card.id), { known: !card.known, updatedAt: serverTimestamp() }));
       }
     });
   });
@@ -588,7 +692,7 @@ function renderList() {
       const btn = form.querySelector("button");
       btn.disabled = true;
       try {
-        await updateDoc(cardDoc(form.dataset.id), { front, back, updatedAt: serverTimestamp() });
+        await saveWithStatus(() => updateDoc(cardDoc(form.dataset.id), { front, back, updatedAt: serverTimestamp() }));
       } finally {
         btn.disabled = false;
       }
@@ -646,6 +750,7 @@ function clearDragTargets() {
 
 async function reorderCards(sourceId, targetId, position) {
   const nextCards = getOrderedDeckCards();
+  const previous = nextCards.map((card) => ({ id: card.id, order: card.order }));
   const from = nextCards.findIndex((card) => card.id === sourceId);
   const to = nextCards.findIndex((card) => card.id === targetId);
   if (from < 0 || to < 0) return;
@@ -662,7 +767,12 @@ async function reorderCards(sourceId, targetId, position) {
   studyOrder = [];
   allCards = allCards.map((card) => cards.find((item) => item.id === card.id) || card);
   render();
-  await batch.commit();
+  await saveWithStatus(() => batch.commit());
+  showUndo("並び替え", () => {
+    const undoBatch = writeBatch(db);
+    previous.forEach((item) => undoBatch.update(cardDoc(item.id), { order: item.order, updatedAt: serverTimestamp() }));
+    return undoBatch.commit();
+  });
 }
 
 function renderDuplicateWarning() {
@@ -807,7 +917,7 @@ async function toggleKnown() {
     updatedAt: serverTimestamp(),
   };
   if (nextKnown) data.lastKnownAt = serverTimestamp();
-  await updateDoc(cardDoc(card.id), data);
+  await saveWithStatus(() => updateDoc(cardDoc(card.id), data));
 }
 
 async function resetKnown() {
@@ -815,7 +925,7 @@ async function resetKnown() {
   cards.filter((card) => card.known).forEach((card) => {
     batch.update(cardDoc(card.id), { known: false, updatedAt: serverTimestamp() });
   });
-  await batch.commit();
+  await saveWithStatus(() => batch.commit());
 }
 
 async function addCard(event) {
@@ -827,7 +937,7 @@ async function addCard(event) {
   const btn = els.addForm.querySelector("button[type='submit']");
   btn.disabled = true;
   try {
-    await addDoc(cardCollection(), {
+    await saveWithStatus(() => addDoc(cardCollection(), {
       front,
       back,
       known: false,
@@ -835,7 +945,7 @@ async function addCard(event) {
       order: Date.now(),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    });
+    }));
     els.addForm.reset();
     els.frontInput.focus();
   } catch {
@@ -853,8 +963,11 @@ async function addBulkCards() {
   try {
     const batch = writeBatch(db);
     const baseOrder = Date.now();
+    const createdIds = [];
     nextCards.forEach((card, index) => {
-      batch.set(doc(cardCollection()), {
+      const ref = doc(cardCollection());
+      createdIds.push(ref.id);
+      batch.set(ref, {
         ...card,
         deckId: currentDeckId,
         order: baseOrder + index,
@@ -862,7 +975,8 @@ async function addBulkCards() {
         updatedAt: serverTimestamp(),
       });
     });
-    await batch.commit();
+    await saveWithStatus(() => batch.commit());
+    showUndo("一括追加", () => deleteCardsByIds(createdIds));
     els.bulkInput.value = "";
     renderImportPreview();
   } catch {
@@ -1043,8 +1157,11 @@ function importCards(event) {
 
       const batch = writeBatch(db);
       const baseOrder = Date.now();
+      const createdIds = [];
       nextCards.forEach((card, index) => {
-        batch.set(doc(cardCollection()), {
+        const ref = doc(cardCollection());
+        createdIds.push(ref.id);
+        batch.set(ref, {
           ...card,
           deckId: currentDeckId,
           order: baseOrder + index,
@@ -1052,7 +1169,8 @@ function importCards(event) {
           updatedAt: serverTimestamp(),
         });
       });
-      await batch.commit();
+      await saveWithStatus(() => batch.commit());
+      showUndo("読み込み", () => deleteCardsByIds(createdIds));
     } finally {
       event.target.value = "";
     }
@@ -1060,11 +1178,27 @@ function importCards(event) {
   reader.readAsText(file);
 }
 
+function deleteCardsByIds(ids) {
+  const batch = writeBatch(db);
+  ids.forEach((id) => batch.delete(cardDoc(id)));
+  return batch.commit();
+}
+
 function parseImportedCards(text) {
   try {
     const imported = JSON.parse(text);
     if (Array.isArray(imported)) {
       return applyDuplicatePolicy(imported
+        .filter((card) => card?.front && card?.back)
+        .map((card) => ({
+          front: String(card.front).trim(),
+          back: String(card.back).trim(),
+          known: Boolean(card.known),
+        }))
+        .filter((card) => card.front && card.back));
+    }
+    if (imported && Array.isArray(imported.cards)) {
+      return applyDuplicatePolicy(imported.cards
         .filter((card) => card?.front && card?.back)
         .map((card) => ({
           front: String(card.front).trim(),
