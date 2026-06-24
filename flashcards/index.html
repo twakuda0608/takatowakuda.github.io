@@ -45,15 +45,39 @@
   </div>
 
   <main class="app-shell" id="main-content" style="display:none;">
-    <section class="study-panel">
+    <div id="sync-status" class="sync-status" hidden></div>
+    <section class="deck-list-panel" id="deck-list-panel">
       <div class="deck-bar">
-        <div>
+        <div class="deck-title-block">
+          <p class="eyebrow">Decks</p>
+          <h1>カード集</h1>
+        </div>
+        <form id="deck-form" class="deck-form">
+          <input type="text" id="deck-name-input" maxlength="24" placeholder="カード集名">
+          <button type="submit" class="secondary-btn deck-add-btn">カード集追加</button>
+        </form>
+      </div>
+      <div class="deck-list" id="deck-list"></div>
+    </section>
+
+    <section class="study-panel" id="study-panel" style="display:none;">
+      <div class="detail-nav">
+        <button type="button" class="back-to-decks-btn" id="back-to-decks-btn">
+          <span aria-hidden="true">&#8249;</span>
+          カード集一覧
+        </button>
+      </div>
+
+      <div class="deck-bar">
+        <div class="deck-title-block">
           <p class="eyebrow">Deck</p>
-          <h1>単語カード</h1>
+          <h1 id="deck-title">単語カード</h1>
         </div>
         <div class="deck-stats" aria-label="学習状況">
           <span><strong id="card-count">0</strong>枚</span>
           <span><strong id="known-count">0</strong>暗記</span>
+          <span><strong id="known-rate">0</strong>%</span>
+          <span class="deck-progress" aria-hidden="true"><span id="known-rate-bar" class="deck-progress-bar"></span></span>
         </div>
       </div>
 
@@ -63,6 +87,23 @@
       </div>
 
       <section class="mode-panel active" id="cards-panel">
+        <div class="study-options">
+          <label>
+            <span>学習方向</span>
+            <select id="direction-select">
+              <option value="front">表から裏</option>
+              <option value="back">裏から表</option>
+            </select>
+          </label>
+          <label>
+            <span>出題順</span>
+            <select id="study-order-select">
+              <option value="normal">記録順</option>
+              <option value="weak">苦手優先</option>
+            </select>
+          </label>
+        </div>
+
         <div class="progress-row">
           <button type="button" class="icon-btn" id="prev-card" aria-label="前のカード">
             <span aria-hidden="true">&#8249;</span>
@@ -89,10 +130,30 @@
       <section class="mode-panel" id="list-panel">
         <div class="list-tools">
           <button type="button" class="primary-btn" id="edit-add-btn">編集・追加</button>
-          <button type="button" class="secondary-btn" id="export-btn">書き出し</button>
+          <div class="export-tools">
+            <select id="export-scope" class="export-scope" aria-label="書き出し対象">
+              <option value="deck">このカード集</option>
+              <option value="all">全カード集</option>
+            </select>
+            <button type="button" class="secondary-btn" id="export-btn">書き出し</button>
+          </div>
         </div>
 
         <div class="edit-add-panel" id="edit-add-panel" hidden>
+          <section class="add-box">
+            <div class="section-header compact">
+              <h2 class="section-title">カード集名</h2>
+              <span class="settings-note">名前変更</span>
+            </div>
+            <form class="deck-rename-form" id="deck-rename-form">
+              <input type="text" id="deck-rename-input" maxlength="24" placeholder="カード集名">
+              <button type="submit" class="secondary-btn">名前変更</button>
+            </form>
+            <div class="danger-zone">
+              <button type="button" class="danger-btn" id="delete-deck-btn">カード集削除</button>
+            </div>
+          </section>
+
           <div class="edit-add-grid">
             <section class="add-box">
               <div class="section-header compact">
@@ -129,19 +190,56 @@
 
           <section class="add-box">
             <div class="section-header compact">
-              <h2 class="section-title">まとめて追加</h2>
-              <span class="settings-note">CSV貼り付け</span>
+              <h2 class="section-title">データ貼り付け</h2>
+              <span class="settings-note">Excel / Docs</span>
             </div>
-            <textarea id="bulk-input" rows="5" placeholder="apple, りんご&#10;book, 本"></textarea>
+            <textarea id="bulk-input" class="import-textarea" rows="7" placeholder="Word 1&#9;Definition 1&#10;Word 2&#9;Definition 2&#10;Word 3&#9;Definition 3"></textarea>
+            <div class="import-options">
+              <fieldset class="import-option-group">
+                <legend>単語と意味の間</legend>
+                <label><input type="radio" name="term-separator" value="tab" checked> タブ</label>
+                <label><input type="radio" name="term-separator" value="comma"> カンマ</label>
+                <label class="custom-separator-row">
+                  <input type="radio" name="term-separator" value="custom">
+                  <input type="text" id="term-custom-input" class="separator-input" placeholder="カスタム">
+                </label>
+              </fieldset>
+              <fieldset class="import-option-group">
+                <legend>カードの間</legend>
+                <label><input type="radio" name="card-separator" value="newline" checked> 改行</label>
+                <label><input type="radio" name="card-separator" value="semicolon"> セミコロン</label>
+                <label class="custom-separator-row">
+                  <input type="radio" name="card-separator" value="custom">
+                  <input type="text" id="card-custom-input" class="separator-input" placeholder="カスタム">
+                </label>
+              </fieldset>
+            </div>
+            <div class="import-preview">
+              <div class="import-preview-head">
+                <h3>プレビュー</h3>
+                <span><strong id="bulk-preview-count">0</strong>枚</span>
+              </div>
+              <div id="bulk-preview" class="bulk-preview-empty">プレビューなし</div>
+            </div>
+            <label class="duplicate-skip-option">
+              <input type="checkbox" id="duplicate-skip-checkbox" checked>
+              重複をスキップ
+            </label>
             <button type="button" class="secondary-btn bulk-add-btn" id="bulk-add-btn">一括追加</button>
           </section>
         </div>
 
         <div class="list-divider"></div>
+        <div id="duplicate-warning" class="duplicate-warning" hidden></div>
         <div class="card-list" id="card-list"></div>
       </section>
     </section>
   </main>
+
+  <div id="undo-toast" class="undo-toast" hidden>
+    <span id="undo-message"></span>
+    <button type="button" id="undo-btn">取り消し</button>
+  </div>
 
   <script type="module" src="app.js"></script>
   <script src="/common.js"></script>

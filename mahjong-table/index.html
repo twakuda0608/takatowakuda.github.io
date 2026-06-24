@@ -171,7 +171,7 @@
       font-size: 30px;
       font-weight: 700;
       color: #fff;
-      width: 140px;
+      width: 118px;
       text-align: center;
       cursor: pointer;
       letter-spacing: -0.5px;
@@ -224,6 +224,22 @@
       border-color: rgba(255,255,255,0.55);
       color: #fff;
     }
+
+    .goal-btn {
+      background: rgba(251,191,36,0.12);
+      border: 1.5px solid rgba(251,191,36,0.34);
+      border-radius: 8px;
+      color: rgba(251,191,36,0.88);
+      font-size: 11px;
+      font-weight: 900;
+      width: 42px;
+      height: 34px;
+      cursor: pointer;
+      flex-shrink: 0;
+      padding: 0;
+      letter-spacing: 0.5px;
+    }
+    .goal-btn:active { background: rgba(251,191,36,0.28); color:#fff; }
 
     /* Riichi toggle button */
     .rbtn {
@@ -1150,17 +1166,45 @@
     .detail-legend { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; padding:0 4px; }
     .detail-legend-item { display:flex; align-items:center; gap:4px; font-size:11px; color:rgba(255,255,255,0.65); }
     .detail-legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-    .detail-stats-table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:14px; }
+    .detail-stats-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; margin-bottom:14px; }
+    .detail-stats-table { width:100%; min-width:460px; border-collapse:collapse; font-size:12px; }
     .detail-stats-table th { color:rgba(255,255,255,0.4); font-weight:600; padding:4px 3px 6px; text-align:center; font-size:10px; border-bottom:1px solid rgba(255,255,255,0.12); }
     .detail-stats-table th:first-child { text-align:left; }
     .detail-stats-table td { padding:7px 3px; text-align:center; color:rgba(255,255,255,0.75); border-bottom:1px solid rgba(255,255,255,0.06); }
     .detail-stats-table td:first-child { text-align:left; font-weight:700; }
+    .detail-stats-table tbody tr { background:linear-gradient(90deg, color-mix(in srgb, var(--p-color) 16%, transparent), transparent 64%); }
+    .detail-stats-name { display:flex; align-items:center; gap:6px; color:rgba(255,255,255,0.88); }
+    .detail-stats-dot { width:9px; height:9px; border-radius:50%; background:var(--p-color); box-shadow:0 0 10px color-mix(in srgb, var(--p-color) 70%, transparent); flex-shrink:0; }
     .detail-roundlog { display:flex; flex-direction:column; gap:4px; }
     .detail-round-item { background:rgba(0,0,0,0.2); border-radius:6px; padding:8px 10px; border:1px solid rgba(255,255,255,0.07); }
     .detail-round-label { font-size:10px; color:rgba(255,255,255,0.35); letter-spacing:0.5px; margin-bottom:3px; }
     .detail-round-text { font-size:12px; color:rgba(255,255,255,0.78); font-weight:600; }
-    .detail-round-scores { font-size:10px; color:rgba(255,255,255,0.4); margin-top:3px; line-height:1.6; }
+    .detail-round-scores { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+    .detail-move-chip { display:inline-flex; align-items:center; gap:4px; border:1px solid color-mix(in srgb, var(--p-color) 45%, rgba(255,255,255,0.12)); background:color-mix(in srgb, var(--p-color) 10%, rgba(0,0,0,0.18)); border-radius:999px; padding:3px 7px; font-size:10px; color:rgba(255,255,255,0.72); line-height:1.2; white-space:nowrap; }
+    .detail-move-delta { font-weight:900; font-variant-numeric:tabular-nums; }
+    .detail-move-delta.pos { color:#4ade80; }
+    .detail-move-delta.neg { color:#f87171; }
+    .detail-move-empty { font-size:10px; color:rgba(255,255,255,0.3); margin-top:4px; }
+    .detail-player-chip { color:var(--p-color); font-weight:900; text-shadow:0 0 12px color-mix(in srgb, var(--p-color) 45%, transparent); }
     .detail-result-row { display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+
+    .goal-summary { display:flex; align-items:center; gap:8px; margin-bottom:12px; padding:10px 12px; background:rgba(0,0,0,0.22); border:1px solid rgba(255,255,255,0.08); border-radius:10px; }
+    .goal-summary-wind { width:30px; height:30px; border-radius:50%; background:#f97316; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; flex-shrink:0; }
+    .goal-summary-name { flex:1; min-width:0; color:rgba(255,255,255,0.88); font-size:14px; font-weight:900; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .goal-summary-score { color:#fbbf24; font-size:13px; font-weight:900; font-variant-numeric:tabular-nums; }
+    .goal-rank-card { background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.08); border-radius:10px; margin-bottom:10px; overflow:hidden; }
+    .goal-rank-head { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 12px; background:rgba(255,255,255,0.05); border-bottom:1px solid rgba(255,255,255,0.07); }
+    .goal-rank-title { color:#fbbf24; font-size:13px; font-weight:900; }
+    .goal-rank-note { color:rgba(255,255,255,0.45); font-size:11px; text-align:right; }
+    .goal-method-row { display:grid; grid-template-columns:58px 1fr; gap:8px; padding:8px 12px; border-bottom:1px solid rgba(255,255,255,0.05); align-items:start; }
+    .goal-method-row:last-child { border-bottom:none; }
+    .goal-method { color:rgba(255,255,255,0.5); font-size:11px; font-weight:900; padding-top:2px; }
+    .goal-hand { color:rgba(255,255,255,0.82); font-size:12px; line-height:1.5; }
+    .goal-hand strong { color:#fff; }
+    .goal-final { display:block; color:rgba(255,255,255,0.42); font-size:10px; margin-top:2px; }
+    .goal-ok { color:#4ade80; font-weight:900; }
+    .goal-ng { color:#f87171; font-weight:900; }
+    .goal-alt { display:block; color:rgba(255,255,255,0.42); font-size:10px; margin-top:2px; }
   </style>
 </head>
 <body>
@@ -1324,6 +1368,7 @@
         <div class="srow">
           <button class="diff-btn" id="db2"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>
           <span class="sval" id="sv2">25000</span>
+          <button class="goal-btn" id="gb2">目標</button>
           <input class="sinp" id="si2" type="number" inputmode="numeric">
         </div>
         <button class="rbtn" id="r2">リーチ</button>
@@ -1342,6 +1387,7 @@
         <div class="srow">
           <button class="diff-btn" id="db3"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>
           <span class="sval" id="sv3">25000</span>
+          <button class="goal-btn" id="gb3">目標</button>
           <input class="sinp" id="si3" type="number" inputmode="numeric">
         </div>
         <button class="rbtn" id="r3">リーチ</button>
@@ -1385,6 +1431,7 @@
         <div class="srow">
           <button class="diff-btn" id="db1"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>
           <span class="sval" id="sv1">25000</span>
+          <button class="goal-btn" id="gb1">目標</button>
           <input class="sinp" id="si1" type="number" inputmode="numeric">
         </div>
         <button class="rbtn" id="r1">リーチ</button>
@@ -1403,6 +1450,7 @@
         <div class="srow">
           <button class="diff-btn" id="db0"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>
           <span class="sval" id="sv0">25000</span>
+          <button class="goal-btn" id="gb0">目標</button>
           <input class="sinp" id="si0" type="number" inputmode="numeric">
         </div>
         <button class="rbtn" id="r0">リーチ</button>
@@ -1594,6 +1642,17 @@
           <button class="ag-apply" id="agariApply">適　用</button>
           <button class="ag-cancel" id="backBtn">やり直し</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 目標順位モーダル -->
+  <div class="ag-overlay" id="goalModal" style="display:none">
+    <div class="ag-card">
+      <div class="ag-head" id="goalHead">目　標</div>
+      <div id="goalBody"></div>
+      <div class="ag-actions" style="margin-top:12px">
+        <button class="ag-cancel" id="goalClose">閉</button>
       </div>
     </div>
   </div>
@@ -1801,6 +1860,33 @@
       return pt > 0 ? `+${abs}` : pt < 0 ? `▲${abs}` : abs;
     }
 
+    function detailSeatNames(match, tableGame, rankPlayers, roundLog) {
+      const baseNames = Array.isArray(tableGame.playerNames) && tableGame.playerNames.length
+        ? tableGame.playerNames.slice()
+        : rankPlayers.map(p => p.name);
+      const n = baseNames.length || 4;
+      const names = Array.from({ length: n }, (_, i) => baseNames[i] || `P${i + 1}`);
+      if (!roundLog.length || !rankPlayers.length) return names;
+
+      const firstScores = Array.isArray(roundLog[0]?.scoresBefore)
+        ? roundLog[0].scoresBefore.slice(0, n)
+        : Array(n).fill(25000);
+      const finalScores = firstScores.slice();
+      for (const ev of roundLog) {
+        const deltas = ev.deltas || [];
+        for (let i = 0; i < n; i++) finalScores[i] += deltas[i] || 0;
+      }
+
+      const seatOrder = Array.from({ length: n }, (_, i) => i)
+        .sort((a, b) => finalScores[b] - finalScores[a]);
+      const editedByRank = rankPlayers.slice().sort((a, b) => (a.rank || 9) - (b.rank || 9));
+      seatOrder.forEach((seatIdx, rankIdx) => {
+        const editedName = editedByRank[rankIdx]?.name;
+        if (editedName) names[seatIdx] = editedName;
+      });
+      return names;
+    }
+
     function updateRecordsUI(user) {
       const wall = document.getElementById('rec-login-wall');
       const content = document.getElementById('rec-content');
@@ -1948,9 +2034,30 @@
 
       const roundLog = tg.roundLog || [];
       const riichiCounts = tg.riichiCounts || [0,0,0,0];
-      const seatNames = tg.playerNames || rankPlayers.map(p=>p.name);
+      const seatNames = detailSeatNames(match, tg, rankPlayers, roundLog);
       const n = seatNames.length;
       const initial = roundLog.length > 0 ? roundLog[0].scoresBefore.slice() : Array(n).fill(25000);
+      const playerChip = idx => `<span class="detail-player-chip" style="--p-color:${COLORS[idx] || '#fff'}">${escH(seatNames[idx] || '?')}</span>`;
+      const fmtScore = score => Number(score || 0).toLocaleString();
+      const roundMoves = ev => {
+        const before = Array.isArray(ev.scoresBefore) ? ev.scoresBefore : [];
+        const deltas = Array.isArray(ev.deltas) ? ev.deltas : [];
+        const rows = [];
+        for (let j = 0; j < n; j++) {
+          const delta = Number(deltas[j] || 0);
+          if (delta === 0) continue;
+          const start = Number(before[j] || 0);
+          const after = start + delta;
+          const deltaClass = delta > 0 ? 'pos' : 'neg';
+          const sign = delta > 0 ? '+' : '';
+          rows.push(`<span class="detail-move-chip" style="--p-color:${COLORS[j] || '#fff'}">${playerChip(j)} <span>${fmtScore(start)}→${fmtScore(after)}</span> <span class="detail-move-delta ${deltaClass}">(${sign}${fmtScore(delta)})</span></span>`);
+        }
+        if (rows.length) return rows.join('');
+        if (before.length) {
+          return before.map((score, j) => `<span class="detail-move-chip" style="--p-color:${COLORS[j] || '#fff'}">${playerChip(j)} <span>${fmtScore(score)}</span></span>`).join('');
+        }
+        return '<span class="detail-move-empty">点数移動なし</span>';
+      };
 
       // Build score timeline
       const timeline = [initial.slice()];
@@ -1985,6 +2092,7 @@
       const totalRounds = roundLog.filter(e => e.type === 'agari' || e.type === 'ryukyoku').length || 1;
 
       html += `<div class="detail-sec-lbl" style="margin-top:16px">プレイヤー統計</div>
+        <div class="detail-stats-scroll">
         <table class="detail-stats-table">
           <thead><tr>
             <th>名前</th><th>和了(R)</th><th>和了(T)</th><th>放銃</th><th>リーチ</th><th>和了率</th><th>放銃率</th>
@@ -1992,15 +2100,16 @@
           <tbody>${seatNames.map((name,i) => {
             const s = stats[i];
             const agari = s.ron + s.tsumo;
-            return `<tr>
-              <td>${escH(name)}</td>
+            return `<tr style="--p-color:${COLORS[i] || '#fff'}">
+              <td><span class="detail-stats-name"><span class="detail-stats-dot"></span><span>${escH(name)}</span></span></td>
               <td>${s.ron}</td><td>${s.tsumo}</td><td>${s.houju}</td>
               <td>${riichiCounts[i] ?? '—'}</td>
               <td>${Math.round(agari/totalRounds*100)}%</td>
               <td>${Math.round(s.houju/totalRounds*100)}%</td>
             </tr>`;
           }).join('')}</tbody>
-        </table>`;
+        </table>
+        </div>`;
 
       // Round history
       if (roundLog.length > 0) {
@@ -2009,19 +2118,19 @@
             let text = '';
             if (ev.type === 'agari') {
               const winners = ev.winnerIdxs || (ev.winnerIdx >= 0 ? [ev.winnerIdx] : []);
-              const wNames = winners.map(wi => escH(seatNames[wi]||'?')).join('・');
+              const wNames = winners.map(wi => playerChip(wi)).join('・');
               const wt = ev.winType === 'ron' ? 'ロン' : 'ツモ';
-              const loser = ev.loserIdx >= 0 ? ` ← ${escH(seatNames[ev.loserIdx]||'?')}` : '';
+              const loser = ev.loserIdx >= 0 ? ` ← ${playerChip(ev.loserIdx)}` : '';
               text = `和了: ${wNames} (${wt})${loser}`;
             } else if (ev.type === 'ryukyoku') {
-              const t = (ev.tenpai||[]).map((b,j)=>b?escH(seatNames[j]||j):null).filter(Boolean);
+              const t = (ev.tenpai||[]).map((b,j)=>b?playerChip(j):null).filter(Boolean);
               text = t.length===0 ? '流局 (全ノーテン)' : t.length===4 ? '流局 (全聴牌)' : `流局: ${t.join('・')}聴牌`;
             } else if (ev.type === 'chonbo') {
-              text = `チョンボ: ${escH(seatNames[ev.playerIdx]||'?')}`;
+              text = `チョンボ: ${playerChip(ev.playerIdx)}`;
             } else {
               text = ev.type || '—';
             }
-            const scoreStr = (ev.scoresBefore||[]).map((s,j)=>`${escH(seatNames[j]||j)}: ${s.toLocaleString()}`).join('　');
+            const scoreStr = roundMoves(ev);
             return `<div class="detail-round-item">
               <div class="detail-round-label">${escH(ev.roundLabel||'')}　#${i+1}</div>
               <div class="detail-round-text">${text}</div>
@@ -2225,7 +2334,16 @@
     // Score: tap to open agari modal for that player
     for (let i = 0; i < 4; i++) {
       document.getElementById(`sv${i}`).addEventListener('click', () => openAgariModal(i));
+      document.getElementById(`gb${i}`).addEventListener('click', (e) => {
+        e.stopPropagation();
+        openGoalModal(i);
+      });
     }
+
+    document.getElementById('goalClose').addEventListener('click', () => {
+      document.getElementById('goalModal').style.display = 'none';
+      setBackFabVisible(true);
+    });
 
 
     render();
@@ -2653,6 +2771,219 @@
       { base: 40000, name: '五倍役満' },
       { base: 48000, name: '六倍役満' },
     ];
+
+    const GOAL_FU_BY_HAN = {
+      1: [30, 40, 50, 60, 70, 80, 90, 100, 110],
+      2: [20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110],
+      3: [20, 25, 30, 40, 50, 60],
+      4: [20, 25, 30],
+    };
+    const GOAL_MANGAN = { ronOya: 12000, ronKo: 8000, tsumoOya: 4000, tsumoKo: 2000 };
+    const GOAL_ABOVE = {
+      ronOya:   [[12000,'満貫'],[18000,'跳満'],[24000,'倍満'],[36000,'三倍満'],[48000,'役満']],
+      ronKo:    [[8000,'満貫'],[12000,'跳満'],[16000,'倍満'],[24000,'三倍満'],[32000,'役満']],
+      tsumoOya: [[4000,'満貫'],[6000,'跳満'],[8000,'倍満'],[12000,'三倍満'],[16000,'役満']],
+      tsumoKo:  [[2000,'満貫'],[3000,'跳満'],[4000,'倍満'],[6000,'三倍満'],[8000,'役満']],
+    };
+
+    function goalCeilTo100(x) {
+      return x <= 0 ? 0 : Math.ceil(x / 100) * 100;
+    }
+
+    function goalEsc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function goalFindManganPlus(required, mode, tsumoOppIsOya) {
+      if (mode === 'tsumoKo') {
+        const above = [[2000, 4000, '満貫'], [3000, 6000, '跳満'], [4000, 8000, '倍満'], [6000, 12000, '三倍満'], [8000, 16000, '役満']];
+        for (const [ko, dealer, label] of above) {
+          const netChange = tsumoOppIsOya ? (2 * ko + 2 * dealer) : (3 * ko + dealer);
+          if (netChange > required) return { label, pay: ko };
+        }
+      } else {
+        for (const [pay, label] of GOAL_ABOVE[mode]) {
+          if (pay > required) return { label, pay };
+        }
+      }
+      return null;
+    }
+
+    function goalMinHand(required, mode, tsumoOppIsOya = false) {
+      if (required <= 0) return { label: '任意', pay: 0 };
+
+      const manganPay = GOAL_MANGAN[mode];
+      const isRon = mode.startsWith('ron');
+
+      function search(fuLimit) {
+        let minPay = Infinity, best = null;
+        for (let han = 1; han <= 4; han++) {
+          for (const fu of GOAL_FU_BY_HAN[han]) {
+            if (fu > fuLimit) continue;
+            if (isRon && fu === 20) continue;
+            if (fu === 25 && han < 2) continue;
+            const basic = fu * (1 << (han + 2));
+            let raw, netChange;
+            if (mode === 'tsumoKo') {
+              raw = Math.ceil(basic / 100) * 100;
+              if (raw >= manganPay) continue;
+              const dealer = Math.ceil(basic * 2 / 100) * 100;
+              netChange = tsumoOppIsOya ? (2 * raw + 2 * dealer) : (3 * raw + dealer);
+            } else {
+              if (mode === 'ronOya') raw = Math.ceil(basic * 6 / 100) * 100;
+              else if (mode === 'ronKo') raw = Math.ceil(basic * 4 / 100) * 100;
+              else raw = Math.ceil(basic * 2 / 100) * 100;
+              if (raw >= manganPay) continue;
+              netChange = raw;
+            }
+            if (netChange <= required) continue;
+            if (raw < minPay || (raw === minPay && (fu < best.fu || (fu === best.fu && han < best.han)))) {
+              minPay = raw;
+              best = { han, fu };
+            }
+          }
+        }
+        return best ? { han: best.han, fu: best.fu, pay: minPay } : null;
+      }
+
+      const hand = search(110);
+      if (hand) {
+        if (hand.fu > 50) {
+          const alt = search(50) || goalFindManganPlus(required, mode, tsumoOppIsOya);
+          if (alt) {
+            return {
+              ...(alt.han != null ? { label: `${alt.han}翻${alt.fu}符`, han: alt.han, fu: alt.fu } : { label: alt.label }),
+              pay: alt.pay,
+              alt: { label: `${hand.han}翻${hand.fu}符`, pay: hand.pay, han: hand.han, fu: hand.fu }
+            };
+          }
+        }
+        return { label: `${hand.han}翻${hand.fu}符`, pay: hand.pay, han: hand.han, fu: hand.fu };
+      }
+      return goalFindManganPlus(required, mode, tsumoOppIsOya) || { label: '役満でも届かない', pay: null };
+    }
+
+    function goalDealerPay(hand) {
+      return (hand.han != null && hand.fu != null)
+        ? Math.ceil(hand.fu * (1 << (hand.han + 2)) * 2 / 100) * 100
+        : hand.pay * 2;
+    }
+
+    function goalDescribeHand(hand, mode, honba, scores) {
+      if (hand.label === '任意') return '<span class="goal-ok">任意の和了</span>';
+      if (hand.pay === null) return '<span class="goal-ng">達成不可</span>';
+
+      let payText = '';
+      let myGain = 0, oppLoss = 0;
+      if (mode === 'tsumoOya') {
+        const act = hand.pay + honba * 100;
+        payText = `${act.toLocaleString()}点オール`;
+        myGain = 3 * act;
+        oppLoss = act;
+      } else if (mode === 'tsumoKo') {
+        const dealer = goalDealerPay(hand);
+        const koPay = hand.pay + honba * 100;
+        const dealerPay = dealer + honba * 100;
+        payText = `${koPay.toLocaleString()}-${dealerPay.toLocaleString()}点`;
+        myGain = 2 * koPay + dealerPay;
+        oppLoss = scores.oppIsOya ? dealerPay : koPay;
+      } else {
+        const act = hand.pay + honba * 300;
+        payText = `${act.toLocaleString()}点`;
+        myGain = act;
+        oppLoss = scores.oppPays ? act : 0;
+      }
+
+      const myFinal = scores.my + myGain + scores.kyotaku;
+      const oppFinal = scores.opp - oppLoss;
+      const finalClass = myFinal > oppFinal ? 'goal-ok' : 'goal-ng';
+      const alt = hand.alt ? `<span class="goal-alt">または ${hand.alt.label}</span>` : '';
+      return `<strong>${hand.label}</strong> ${payText}<span class="goal-final">→ <span class="${finalClass}">${myFinal.toLocaleString()}点</span> / 境目 ${oppFinal.toLocaleString()}点</span>${alt}`;
+    }
+
+    function goalCurrentRank(playerIdx) {
+      const order = [0, 1, 2, 3].sort((a, b) => state.players[b].score - state.players[a].score);
+      return order.indexOf(playerIdx) + 1;
+    }
+
+    function goalCutoffOpponent(playerIdx, targetRank) {
+      const rank = goalCurrentRank(playerIdx);
+      if (rank <= targetRank) return null;
+      const order = [0, 1, 2, 3].sort((a, b) => state.players[b].score - state.players[a].score);
+      return order[targetRank - 1];
+    }
+
+    function goalMethodCell(playerIdx, oppIdx, method) {
+      const me = state.players[playerIdx];
+      const opp = state.players[oppIdx];
+      const diff = opp.score - me.score;
+      const honba = state.honba;
+      const kyotaku = state.kyotaku * 1000;
+      const isOya = me.wind === '東';
+      const tsumoMode = isOya ? 'tsumoOya' : 'tsumoKo';
+      const ronMode = isOya ? 'ronOya' : 'ronKo';
+      let required, mode, oppPays = false;
+
+      if (method === 'tsumo') {
+        mode = tsumoMode;
+        required = isOya ? goalCeilTo100((diff - honba * 400 - kyotaku) / 4) : (diff - honba * 400 - kyotaku);
+        oppPays = true;
+      } else if (method === 'direct') {
+        mode = ronMode;
+        required = goalCeilTo100((diff - honba * 600 - kyotaku) / 2);
+        oppPays = true;
+      } else {
+        mode = ronMode;
+        required = goalCeilTo100(diff - honba * 300 - kyotaku);
+      }
+
+      const hand = goalMinHand(required, mode, opp.wind === '東');
+      return goalDescribeHand(hand, mode, honba, {
+        my: me.score,
+        opp: opp.score,
+        oppPays,
+        oppIsOya: opp.wind === '東',
+        kyotaku
+      });
+    }
+
+    function renderGoalRank(playerIdx, targetRank) {
+      const oppIdx = goalCutoffOpponent(playerIdx, targetRank);
+      if (oppIdx == null) {
+        return `<div class="goal-rank-card">
+          <div class="goal-rank-head">
+            <div class="goal-rank-title">${targetRank}位以内</div>
+            <div class="goal-rank-note">現在達成</div>
+          </div>
+          <div class="goal-method-row"><div class="goal-method">条件</div><div class="goal-hand"><span class="goal-ok">このままでOK</span></div></div>
+        </div>`;
+      }
+      const opp = state.players[oppIdx];
+      return `<div class="goal-rank-card">
+        <div class="goal-rank-head">
+          <div class="goal-rank-title">${targetRank}位以内</div>
+          <div class="goal-rank-note">${goalEsc(opp.name)}（${opp.score.toLocaleString()}点）超え</div>
+        </div>
+        <div class="goal-method-row"><div class="goal-method">ツモ</div><div class="goal-hand">${goalMethodCell(playerIdx, oppIdx, 'tsumo')}</div></div>
+        <div class="goal-method-row"><div class="goal-method">他家ロン</div><div class="goal-hand">${goalMethodCell(playerIdx, oppIdx, 'otherRon')}</div></div>
+        <div class="goal-method-row"><div class="goal-method">直撃</div><div class="goal-hand">${goalMethodCell(playerIdx, oppIdx, 'direct')}</div></div>
+      </div>`;
+    }
+
+    function openGoalModal(playerIdx) {
+      const p = state.players[playerIdx];
+      document.getElementById('goalHead').textContent = '目　標';
+      document.getElementById('goalBody').innerHTML = `
+        <div class="goal-summary">
+          <div class="goal-summary-wind">${p.wind}</div>
+          <div class="goal-summary-name">${goalEsc(p.name)}</div>
+          <div class="goal-summary-score">${p.score.toLocaleString()}点</div>
+        </div>
+        ${[1, 2, 3].map(rank => renderGoalRank(playerIdx, rank)).join('')}
+      `;
+      document.getElementById('goalModal').style.display = 'flex';
+      setBackFabVisible(false);
+    }
 
     function rotateWinds() {
       for (let i = 0; i < 4; i++) {
@@ -3347,6 +3678,15 @@
       return roundUp100(base * (isParent ? 6 : 4)) + state.honba * 300;
     }
 
+    function pickAtamahaneWinner(winners, loserIdx) {
+      const loserWindIdx = WINDS.indexOf(state.players[loserIdx].wind);
+      return [...winners].sort((a, b) => {
+        const da = (WINDS.indexOf(state.players[a].wind) - loserWindIdx + 4) % 4;
+        const db = (WINDS.indexOf(state.players[b].wind) - loserWindIdx + 4) % 4;
+        return da - db;
+      })[0];
+    }
+
     function buildMwHanTree() {
       const container = document.getElementById('mwHanTree');
       container.innerHTML = '';
@@ -3610,7 +3950,8 @@
     document.getElementById('mwStep1Next').addEventListener('click', () => {
       if (mwWinners.size === 0) { alert('和了者を選択してください'); return; }
       if (mwLoser < 0) { alert('放銃者を選択してください'); return; }
-      mwSortedWinners = [...mwWinners].sort((a,b)=>a-b);
+      const atamahaneWinner = pickAtamahaneWinner(mwWinners, mwLoser);
+      mwSortedWinners = atamahaneWinner === undefined ? [] : [atamahaneWinner];
       mwWinnerStep = 0;
       mwWinnerData = mwSortedWinners.map(() => ({ hanIdx: -1, fu: -1, score: 0 }));
       buildMwHanTree();

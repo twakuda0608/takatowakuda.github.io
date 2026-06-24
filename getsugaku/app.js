@@ -72,6 +72,10 @@ const editAmortizeGroup = document.getElementById('edit-amortize-group');
 const eAmortizeMonths   = document.getElementById('e-amortize-months');
 const payersList      = document.getElementById('payers-list');
 const addPayerBtn     = document.getElementById('add-payer-btn');
+const fChangeYear     = document.getElementById('f-change-year');
+const fChangeAmount   = document.getElementById('f-change-amount');
+const eChangeYear     = document.getElementById('e-change-year');
+const eChangeAmount   = document.getElementById('e-change-amount');
 
 // ===== Auth =====
 function login() {
@@ -473,6 +477,75 @@ function monthlyDiv(p) {
   return (p.amortizeMonths > 0) ? p.amortizeMonths : 0;
 }
 
+function normalizedAmountChanges(p) {
+  return (p.amountChanges || [])
+    .map(c => ({
+      startYear: parseInt(c.startYear, 10),
+      amount: Number(c.amount),
+    }))
+    .filter(c => Number.isFinite(c.startYear) && c.startYear >= 2 && Number.isFinite(c.amount) && c.amount >= 0)
+    .sort((a, b) => a.startYear - b.startYear);
+}
+
+function baseDateForAmount(p) {
+  return new Date((p.startDate || p.nextPaymentDate) + 'T00:00:00');
+}
+
+function yearIndexForDate(p, date) {
+  const base = baseDateForAmount(p);
+  const d = new Date(date);
+  let years = d.getFullYear() - base.getFullYear();
+  const anniv = new Date(d.getFullYear(), base.getMonth(), base.getDate());
+  if (d < anniv) years--;
+  return Math.max(1, years + 1);
+}
+
+function amountForDate(p, date) {
+  const yearIndex = yearIndexForDate(p, date);
+  return normalizedAmountChanges(p).reduce(
+    (amount, c) => yearIndex >= c.startYear ? c.amount : amount,
+    Number(p.amount) || 0
+  );
+}
+
+function effectiveNextPayableDate(p) {
+  const freq = p.frequencyMonths ?? 1;
+  let d = effectiveNextDate(p.nextPaymentDate, freq, p.startDate);
+  if (freq === 0) return amountForDate(p, d) > 0 ? d : null;
+  for (let i = 0; i < 600 && amountForDate(p, d) <= 0; i++) {
+    d = new Date(d.getFullYear(), d.getMonth() + freq, d.getDate());
+  }
+  return amountForDate(p, d) > 0 ? d : null;
+}
+
+function amountForAverage(p) {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  if (p.startDate) {
+    const sd = new Date(p.startDate + 'T00:00:00');
+    if (sd > now) return 0;
+  }
+  return amountForDate(p, now);
+}
+
+function amountChangeLabel(p) {
+  return normalizedAmountChanges(p)
+    .map(c => `${c.startYear}年目から${fmtYen(c.amount)}`)
+    .join(' / ');
+}
+
+function readAmountChanges(yearInput, amountInput) {
+  const rawYear = yearInput?.value.trim() || '';
+  const rawAmount = amountInput?.value.trim() || '';
+  if (!rawYear && !rawAmount) return [];
+  const startYear = parseInt(rawYear, 10);
+  const amount = Number(rawAmount);
+  if (!Number.isFinite(startYear) || startYear < 2 || !Number.isFinite(amount) || amount < 0) {
+    throw new Error('amount-change');
+  }
+  return [{ startYear, amount }];
+}
+
 const CAT_COLORS = {
   '賃貸':'#2563eb', 'インフラ':'#0891b2', 'サブスク':'#7c3aed', '保険':'#ea580c', 'その他':'#64748b'
 };
@@ -522,17 +595,18 @@ function renderForecastChart(payerFilter) {
         while (d < mStart) d = new Date(d.getFullYear(), d.getMonth() + freq, d.getDate());
         if (d < mStart || d > mEnd) return;
       }
+      const baseAmt = amountForDate(p, d);
       const cat = CAT_ORDER.includes(p.category) ? p.category : CAT_ORDER[CAT_ORDER.length - 1];
       let amt;
       if (payerFilter) {
         if (p.payerOverride) {
-          amt = p.payerOverride === payerFilter ? p.amount : 0;
+          amt = p.payerOverride === payerFilter ? baseAmt : 0;
         } else {
           const s = globalSplits.find(gs => gs.name === payerFilter);
-          amt = s ? computeShare(p.amount, s) : 0;
+          amt = s ? computeShare(baseAmt, s) : 0;
         }
       } else {
-        amt = p.amount;
+        amt = baseAmt;
       }
       if (amt > 0) {
         catAmts[cat] = (catAmts[cat] || 0) + amt;
@@ -644,7 +718,12 @@ function openPaidModal(id, options = {}) {
   paidModalData = { id };
 
   const freq        = p.frequencyMonths ?? 1;
-  const occurrences = getOccurrencesAroundNow(p.nextPaymentDate, freq);
+  const occurrencesRaw = getOccurrencesAroundNow(p.nextPaymentDate, freq);
+  const occurrences = occurrencesRaw.filter(d => amountForDate(p, d) > 0);
+  if (occurrences.length === 0) {
+    alert('記録できる支払い予定がありません');
+    return;
+  }
 
   const dateSel = document.getElementById('pm-date');
   dateSel.innerHTML = occurrences.map(d => {
@@ -662,17 +741,23 @@ function openPaidModal(id, options = {}) {
         return d >= now;
       }) || occurrences[occurrences.length - 1]);
   dateSel.value = targetDate;
+  const targetAmount = amountForDate(p, new Date(targetDate + 'T00:00:00'));
 
   document.getElementById('paid-modal-title').textContent = `支払いを記録：${p.name}`;
-  document.getElementById('paid-modal-desc').textContent  = `${freqLabel(freq)}  合計 ${fmtYen(p.amount)}`;
+  document.getElementById('paid-modal-desc').textContent  = `${freqLabel(freq)}  合計 ${fmtYen(targetAmount)}`;
 
   const payerSel = document.getElementById('pm-payer');
   payerSel.innerHTML = payers.map(pay => `<option value="${esc(pay.name)}">${esc(pay.name)}</option>`).join('');
   if (options.payerName && payers.find(pay => pay.name === options.payerName)) payerSel.value = options.payerName;
 
   document.getElementById('pm-amount').value = Math.round(
-    options.amount !== undefined ? options.amount : p.amount
+    options.amount !== undefined ? options.amount : targetAmount
   );
+  dateSel.onchange = () => {
+    const amt = amountForDate(p, new Date(dateSel.value + 'T00:00:00'));
+    document.getElementById('paid-modal-desc').textContent = `${freqLabel(freq)}  合計 ${fmtYen(amt)}`;
+    document.getElementById('pm-amount').value = Math.round(amt);
+  };
   document.getElementById('paid-modal').style.display = 'flex';
 }
 
@@ -802,17 +887,19 @@ function renderPieChart(payerFilter) {
   payments.forEach(p => {
     const div = monthlyDiv(p);
     if (div === 0) return; // 月額に含めない
+    const avgAmount = amountForAverage(p);
+    if (avgAmount === 0) return;
     const cat = p.category || 'その他';
     let amt;
     if (payerFilter) {
       if (p.payerOverride) {
-        amt = p.payerOverride === payerFilter ? p.amount / div : 0;
+        amt = p.payerOverride === payerFilter ? avgAmount / div : 0;
       } else {
         const s = globalSplits.find(gs => gs.name === payerFilter);
-        amt = s ? computeShare(p.amount, s) / div : 0;
+        amt = s ? computeShare(avgAmount, s) / div : 0;
       }
     } else {
-      amt = p.amount / div;
+      amt = avgAmount / div;
     }
     if (amt > 0) catTotals[cat] = (catTotals[cat] || 0) + amt;
   });
@@ -874,12 +961,14 @@ function renderPersonalBarChart(payerName) {
   const items = payments.map(p => {
     const div = monthlyDiv(p);
     if (div === 0) return null; // 月額に含めない
+    const avgAmount = amountForAverage(p);
+    if (avgAmount === 0) return null;
     let monthlyAmt;
     if (p.payerOverride) {
-      monthlyAmt = p.payerOverride === payerName ? p.amount / div : 0;
+      monthlyAmt = p.payerOverride === payerName ? avgAmount / div : 0;
     } else {
       const s = globalSplits.find(gs => gs.name === payerName);
-      monthlyAmt = s ? computeShare(p.amount, s) / div : 0;
+      monthlyAmt = s ? computeShare(avgAmount, s) / div : 0;
     }
     return { ...p, monthlyAmt };
   }).filter(Boolean).filter(p => p.monthlyAmt > 0).sort((a, b) => b.monthlyAmt - a.monthlyAmt);
@@ -922,18 +1011,20 @@ function renderAvgItems(payerFilter) {
   const items = payments.map(p => {
     const div = monthlyDiv(p);
     if (div === 0) return null;
+    const avgAmount = amountForAverage(p);
+    if (avgAmount === 0) return null;
     let monthlyAmt, fullAmt;
     if (payerFilter) {
       if (p.payerOverride) {
         if (p.payerOverride !== payerFilter) return null;
-        fullAmt = p.amount;
+        fullAmt = avgAmount;
       } else {
         const s = globalSplits.find(gs => gs.name === payerFilter);
         if (!s || splitPct(s) === 0) return null;
-        fullAmt = computeShare(p.amount, s);
+        fullAmt = computeShare(avgAmount, s);
       }
     } else {
-      fullAmt = p.amount;
+      fullAmt = avgAmount;
     }
     monthlyAmt = fullAmt / div;
     return { ...p, fullAmt, monthlyAmt, div };
@@ -951,12 +1042,13 @@ function renderAvgItems(payerFilter) {
     const conv = p.div > 1
       ? `<span class="ai-conv">${fmtYen(p.fullAmt)} ÷ ${p.div}ヶ月</span>`
       : '';
+    const change = amountChangeLabel(p);
     return `
       <div class="ai-row">
         <span class="cat-badge ai-cat" style="background:${CAT_COLORS[p.category]||'#64748b'}">${esc(p.category)}</span>
         <div class="ai-main">
           <span class="ai-name">${esc(p.name)}</span>
-          <span class="ai-freq">${freqLabel(freq)}${conv}</span>
+          <span class="ai-freq">${freqLabel(freq)}${conv}${change ? `<span class="ai-conv">${esc(change)}</span>` : ''}</span>
         </div>
         <span class="ai-amt">${fmtYen(p.monthlyAmt)}<span class="ai-unit">/月</span></span>
       </div>`;
@@ -984,20 +1076,22 @@ function render() {
   payments.forEach(p => {
     const freq = p.frequencyMonths ?? 1;
     const div  = monthlyDiv(p);
-    if (div > 0) totalMonthly += p.amount / div;
+    const avgAmount = amountForAverage(p);
+    if (div > 0) totalMonthly += avgAmount / div;
 
     const nextMonthEff = occurrenceInNextMonth(p.nextPaymentDate, freq, p.startDate);
-    const dueNext      = nextMonthEff !== null;
-    if (dueNext) { totalNextMonth += p.amount; nextItems.push({ ...p, eff: nextMonthEff }); }
+    const nextAmount   = nextMonthEff ? amountForDate(p, nextMonthEff) : 0;
+    const dueNext      = nextMonthEff !== null && nextAmount > 0;
+    if (dueNext) { totalNextMonth += nextAmount; nextItems.push({ ...p, eff: nextMonthEff, dueAmount: nextAmount }); }
 
     if (p.payerOverride && perPayer[p.payerOverride]) {
-      if (div > 0) perPayer[p.payerOverride].monthly += p.amount / div;
-      if (dueNext) perPayer[p.payerOverride].nextMonth += p.amount;
+      if (div > 0) perPayer[p.payerOverride].monthly += avgAmount / div;
+      if (dueNext) perPayer[p.payerOverride].nextMonth += nextAmount;
     } else {
       globalSplits.forEach(s => {
         if (!perPayer[s.name]) return;
-        if (div > 0) perPayer[s.name].monthly += computeShare(p.amount, s) / div;
-        if (dueNext) perPayer[s.name].nextMonth += computeShare(p.amount, s);
+        if (div > 0) perPayer[s.name].monthly += computeShare(avgAmount, s) / div;
+        if (dueNext) perPayer[s.name].nextMonth += computeShare(nextAmount, s);
       });
     }
   });
@@ -1052,14 +1146,15 @@ function render() {
     nml.innerHTML = '<p class="empty-msg">来月の支払い予定はありません</p>';
   } else {
     nml.innerHTML = displayNextItems.map(p => {
-      let displayAmt = p.amount;
+      const dueAmount = p.dueAmount ?? amountForDate(p, p.eff);
+      let displayAmt = dueAmount;
       let splitHint  = '';
       if (selectedPayer) {
         if (p.payerOverride) {
-          displayAmt = p.amount;
+          displayAmt = dueAmount;
         } else {
           const s = globalSplits.find(gs => gs.name === selectedPayer);
-          displayAmt = s ? computeShare(p.amount, s) : p.amount;
+          displayAmt = s ? computeShare(dueAmount, s) : dueAmount;
         }
       } else if (payers.length > 1) {
         splitHint = p.payerOverride
@@ -1070,7 +1165,7 @@ function render() {
           : globalSplits.filter(s => splitPct(s) > 0).map(s =>
               `<span class="split-chip">
                  <span class="chip-dot" style="background:${payerColor(s.name)}"></span>
-                 ${esc(s.name)} ${fmtYen(computeShare(p.amount, s))}
+                 ${esc(s.name)} ${fmtYen(computeShare(dueAmount, s))}
                </span>`
             ).join('');
       }
@@ -1117,9 +1212,10 @@ function render() {
       const freq = p.frequencyMonths ?? 1;
       if (!groups[freq]) groups[freq] = { count: 0, monthly: 0, total: 0 };
       groups[freq].count++;
-      groups[freq].total += p.amount;
+      const avgAmount = amountForAverage(p);
+      groups[freq].total += avgAmount;
       const div = monthlyDiv(p);
-      if (div > 0) groups[freq].monthly += p.amount / div;
+      if (div > 0) groups[freq].monthly += avgAmount / div;
     });
     freqSummaryEl.innerHTML = Object.entries(groups)
       .sort(([a], [b]) => Number(a) - Number(b))
@@ -1166,19 +1262,23 @@ function render() {
     html += items.map(p => {
       const freq    = p.frequencyMonths ?? 1;
       const div     = monthlyDiv(p);
-      const eff     = effectiveNextDate(p.nextPaymentDate, freq, p.startDate);
-      const dueNext = occurrenceInNextMonth(p.nextPaymentDate, freq, p.startDate) !== null;
+      const eff     = effectiveNextPayableDate(p) || effectiveNextDate(p.nextPaymentDate, freq, p.startDate);
+      const nextMonthEff = occurrenceInNextMonth(p.nextPaymentDate, freq, p.startDate);
+      const dueNext = nextMonthEff !== null && amountForDate(p, nextMonthEff) > 0;
+      const avgAmount = amountForAverage(p);
+      const effAmount = amountForDate(p, eff);
+      const changeLabel = amountChangeLabel(p);
       const today0  = new Date(); today0.setHours(0, 0, 0, 0);
       const isFutureStart = p.startDate && new Date(p.startDate + 'T00:00:00') > today0;
       const splitText = payers.length > 1
         ? p.payerOverride
           ? `<span class="split-chip">
                <span class="chip-dot" style="background:${payerColor(p.payerOverride)}"></span>
-               ${esc(p.payerOverride)}のみ${div > 0 ? ` (${fmtYen(p.amount / div)}/月)` : ''}
+               ${esc(p.payerOverride)}のみ${div > 0 ? ` (${fmtYen(avgAmount / div)}/月)` : ''}
              </span>`
           : globalSplits.filter(s => splitPct(s) > 0).map(s => {
               const pct        = splitPct(s);
-              const monthlyAmt = div > 0 ? Math.round(computeShare(p.amount, s) / div) : null;
+              const monthlyAmt = div > 0 ? Math.round(computeShare(avgAmount, s) / div) : null;
               return `<span class="split-chip">
                 <span class="chip-dot" style="background:${payerColor(s.name)}"></span>
                 ${esc(s.name)} ${pct}%${monthlyAmt !== null ? ` (${fmtYen(monthlyAmt)}/月)` : ''}
@@ -1200,9 +1300,10 @@ function render() {
           </div>
           <div class="payment-item-detail">
             <span><span class="detail-label">金額</span>${fmtYen(p.amount)}</span>
+            ${changeLabel ? `<span><span class="detail-label">変更</span>${esc(changeLabel)}</span>` : ''}
             <span><span class="detail-label">頻度</span>${freqLabel(freq)}</span>
-            ${div > 0 ? `<span><span class="detail-label">月額換算</span>${fmtYen(p.amount / div)}${freq === 0 ? `（${p.amortizeMonths}ヶ月）` : ''}</span>` : ''}
-            <span><span class="detail-label">支払日</span>${fmtDate(eff)}</span>
+            ${div > 0 && avgAmount > 0 ? `<span><span class="detail-label">月額換算</span>${fmtYen(avgAmount / div)}${freq === 0 ? `（${p.amortizeMonths}ヶ月）` : ''}</span>` : ''}
+            <span><span class="detail-label">支払日</span>${fmtDate(eff)}（${fmtYen(effAmount)}）</span>
             ${splitText ? `<span class="split-detail-text"><span class="detail-label">分担</span>${splitText}</span>` : ''}
             ${p.note ? `<span><span class="detail-label">メモ</span>${esc(p.note)}</span>` : ''}
             ${(p.paidHistory || []).length > 0
@@ -1302,6 +1403,7 @@ addForm.addEventListener('submit', async e => {
     await addPayment({
       name:            document.getElementById('f-name').value.trim(),
       amount:          parseFloat(document.getElementById('f-amount').value),
+      amountChanges:   readAmountChanges(fChangeYear, fChangeAmount),
       frequencyMonths: getFreqMonths(fFreq, fFreqCustom),
       amortizeMonths:  fFreq.value === '0' ? (parseInt(fAmortizeMonths.value) || 0) : 0,
       nextPaymentDate: document.getElementById('f-next-date').value,
@@ -1314,7 +1416,9 @@ addForm.addEventListener('submit', async e => {
     fFreq.value = '1';
     addCustomGroup.style.display = 'none';
     addAmortizeGroup.style.display = 'none';
-  } catch { alert('追加に失敗しました'); }
+  } catch (err) {
+    alert(err.message === 'amount-change' ? '金額変更の年目と金額を入力してください' : '追加に失敗しました');
+  }
   btn.disabled = false;
 });
 
@@ -1331,6 +1435,9 @@ function openEditModal(id) {
   document.getElementById('e-category').value       = p.category || 'その他';
   document.getElementById('e-payer-override').value = p.payerOverride || '';
   document.getElementById('e-note').value           = p.note || '';
+  const amountChange = normalizedAmountChanges(p)[0];
+  eChangeYear.value   = amountChange ? amountChange.startYear : '';
+  eChangeAmount.value = amountChange ? amountChange.amount : '';
 
   const freq = p.frequencyMonths ?? 1;
   if ([0,1,2,3,6,12,24,36].includes(freq)) {
@@ -1464,16 +1571,20 @@ function renderMonthlyBreakdown() {
     const freq = p.frequencyMonths ?? 1;
     const d0   = new Date(p.nextPaymentDate + 'T00:00:00');
     if (freq === 0) {
-      if (d0 >= mStart && d0 <= mEnd) dueItems.push({ p, date: new Date(d0) });
+      if (d0 >= mStart && d0 <= mEnd && amountForDate(p, d0) > 0) dueItems.push({ p, date: new Date(d0) });
       return;
     }
     let d = new Date(d0);
+    if (p.startDate) {
+      const sd = new Date(p.startDate + 'T00:00:00');
+      while (d < sd) d = new Date(d.getFullYear(), d.getMonth() + freq, d.getDate());
+    }
     while (d < mStart) d = new Date(d.getFullYear(), d.getMonth() + freq, d.getDate());
-    if (d >= mStart && d <= mEnd) dueItems.push({ p, date: new Date(d) });
+    if (d >= mStart && d <= mEnd && amountForDate(p, d) > 0) dueItems.push({ p, date: new Date(d) });
   });
   dueItems.sort((a, b) => CAT_ORDER.indexOf(a.p.category) - CAT_ORDER.indexOf(b.p.category));
 
-  const total     = dueItems.reduce((s, x) => s + x.p.amount, 0);
+  const total     = dueItems.reduce((s, x) => s + amountForDate(x.p, x.date), 0);
   const paidCount = dueItems.filter(x => {
     const ds = toDateInputVal(x.date);
     return (x.p.paidHistory || []).some(r => r.date === ds);
@@ -1497,6 +1608,7 @@ function renderMonthlyBreakdown() {
   } else {
     const rows = dueItems.map(({ p, date }) => {
       const ds     = toDateInputVal(date);
+      const dueAmount = amountForDate(p, date);
       const recs   = (p.paidHistory || []).filter(r => r.date === ds);
       const isPaid = recs.length > 0;
       const isPast = date < now;
@@ -1515,7 +1627,7 @@ function renderMonthlyBreakdown() {
           <span class="cat-badge mb-cat" style="background:${CAT_COLORS[p.category]||'#64748b'}">${esc(p.category)}</span>
           <span class="mb-name">${esc(p.name)}</span>
           <span class="mb-date">${fmtDate(date)}</span>
-          <span class="mb-amount">${fmtYen(p.amount)}</span>
+          <span class="mb-amount">${fmtYen(dueAmount)}</span>
           <span class="mb-status">${statusHtml}</span>
         </div>`;
     }).join('');
@@ -1615,6 +1727,7 @@ editForm.addEventListener('submit', async e => {
     await updatePayment(editingId, {
       name:            document.getElementById('e-name').value.trim(),
       amount:          parseFloat(document.getElementById('e-amount').value),
+      amountChanges:   readAmountChanges(eChangeYear, eChangeAmount),
       frequencyMonths: getFreqMonths(eFreq, eFreqCustom),
       amortizeMonths:  eFreq.value === '0' ? (parseInt(eAmortizeMonths.value) || 0) : 0,
       nextPaymentDate: document.getElementById('e-next-date').value,
@@ -1624,6 +1737,8 @@ editForm.addEventListener('submit', async e => {
       note:            document.getElementById('e-note').value.trim(),
     });
     closeModal();
-  } catch { alert('保存に失敗しました'); }
+  } catch (err) {
+    alert(err.message === 'amount-change' ? '金額変更の年目と金額を入力してください' : '保存に失敗しました');
+  }
   btn.disabled = false;
 });
