@@ -1271,11 +1271,412 @@
     .goal-alt { display:block; color:rgba(255,255,255,0.42); font-size:10px; margin-top:2px; }
     .ag-type-card { min-height: 250px; display:flex; flex-direction:column; justify-content:center; }
     .ag-type-actions { display:flex; flex-direction:column; gap:10px; }
+    .device-share-btn {
+      position: fixed;
+      right: 12px;
+      bottom: 76px;
+      z-index: 90;
+      width: 88px;
+      height: 38px;
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 999px;
+      background: rgba(14,165,233,0.28);
+      color: rgba(255,255,255,0.9);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.28);
+    }
+    .device-share-btn:active { background: rgba(14,165,233,0.42); }
+    .share-card { max-width: 330px; text-align: center; }
+    .share-qr {
+      width: 188px;
+      height: 188px;
+      border-radius: 14px;
+      background: #fff;
+      padding: 8px;
+      margin: 8px auto 12px;
+      display: block;
+    }
+    .share-url {
+      color: rgba(255,255,255,0.64);
+      font-size: 11px;
+      line-height: 1.5;
+      word-break: break-all;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 8px;
+      user-select: text;
+    }
+    .share-status {
+      min-height: 18px;
+      margin-top: 8px;
+      color: rgba(255,255,255,0.42);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .personal-view {
+      position: fixed;
+      inset: 0;
+      z-index: 20000;
+      display: none;
+      background: radial-gradient(circle at 10% 0%, rgba(251,191,36,0.16), transparent 34%), #0f3f23;
+      color: #fff;
+      overflow: hidden;
+      padding: 14px max(14px, env(safe-area-inset-right)) 14px max(14px, env(safe-area-inset-left));
+      font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
+    }
+    body.personal-view-active .personal-view { display: grid; }
+    body.personal-view-active > :not(.personal-view):not(script) { display: none !important; }
+    .personal-shell {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1.18fr 1fr;
+      grid-template-rows: 1fr auto 1fr;
+      gap: 10px;
+      min-width: 0;
+      min-height: 0;
+    }
+    .personal-center {
+      grid-column: 2;
+      grid-row: 2;
+      align-self: center;
+      justify-self: center;
+      text-align: center;
+      min-width: 0;
+    }
+    .personal-board-info {
+      color: rgba(255,255,255,0.64);
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      margin-bottom: 8px;
+    }
+    .personal-seat {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      min-height: 0;
+    }
+    .personal-seat.top {
+      grid-column: 2;
+      grid-row: 1;
+      align-self: end;
+    }
+    .personal-seat.left {
+      grid-column: 1;
+      grid-row: 2;
+      justify-self: end;
+    }
+    .personal-seat.right {
+      grid-column: 3;
+      grid-row: 2;
+      justify-self: start;
+    }
+    .personal-seat.bottom {
+      grid-column: 2;
+      grid-row: 3;
+      align-self: start;
+    }
+    .personal-score-card, .personal-seat-card {
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.24);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.22);
+    }
+    .personal-score-card {
+      width: min(46vw, 270px);
+      padding: 10px 12px;
+      display: grid;
+      gap: 4px;
+      text-align: center;
+      min-width: 0;
+    }
+    .personal-score-card.is-me {
+      width: min(54vw, 330px);
+      padding: 10px 16px;
+      border-color: rgba(251,191,36,0.48);
+      background: rgba(0,0,0,0.34);
+    }
+    .personal-score-card.top { transform: rotate(180deg); }
+    .personal-score-card.left { transform: rotate(90deg); }
+    .personal-score-card.right { transform: rotate(-90deg); }
+    .personal-name-line {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-width: 0;
+    }
+    .personal-wind {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #f97316;
+      color: #fff;
+      font-size: 19px;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+    .personal-score-card.is-me .personal-wind {
+      width: 44px;
+      height: 44px;
+      font-size: 25px;
+    }
+    .personal-name {
+      color: rgba(255,255,255,0.74);
+      font-size: 14px;
+      font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .personal-score-card.is-me .personal-name { font-size: 18px; }
+    .personal-score {
+      font-size: clamp(22px, 6vw, 38px);
+      font-weight: 900;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .personal-score.diff-pos { color: #60a5fa; }
+    .personal-score.diff-neg { color: #f87171; }
+    .personal-score-card.is-me .personal-score {
+      font-size: clamp(34px, 13vh, 54px);
+    }
+    .personal-score-line {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .personal-diff-btn {
+      width: 34px;
+      height: 34px;
+      border: 1.5px solid rgba(255,255,255,0.24);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.09);
+      color: rgba(255,255,255,0.62);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1;
+      padding: 0;
+      cursor: pointer;
+      touch-action: none;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .personal-diff-btn .plus,
+    .personal-diff-btn .minus {
+      position: absolute;
+      font-size: 10px;
+      line-height: 1;
+    }
+    .personal-diff-btn .plus { top: 5px; left: 5px; }
+    .personal-diff-btn .minus { bottom: 5px; right: 5px; }
+    .personal-diff-btn .slash {
+      font-size: 15px;
+      line-height: 1;
+    }
+    .personal-diff-btn.active {
+      background: rgba(96,165,250,0.22);
+      border-color: rgba(96,165,250,0.55);
+      color: #fff;
+    }
+    .personal-meta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: rgba(255,255,255,0.58);
+      font-size: 11px;
+      font-weight: 800;
+      min-width: 0;
+    }
+    .personal-riichi-stick {
+      width: 74px;
+      height: 12px;
+      border-radius: 999px;
+      background: #f8fafc;
+      border: 1px solid rgba(0,0,0,0.2);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      margin: 0 auto;
+      opacity: 0;
+      position: relative;
+    }
+    .personal-riichi-stick.on { opacity: 1; }
+    .personal-riichi-stick::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ef4444;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 0 1px rgba(127,29,29,0.18);
+    }
+    .personal-score-card.is-me .personal-riichi-stick {
+      width: 96px;
+      height: 14px;
+    }
+    .personal-score-card.is-me .personal-riichi-stick::after {
+      width: 12px;
+      height: 12px;
+    }
+    .personal-seat-grid {
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      align-items: stretch;
+    }
+    .personal-seat-card {
+      color: #fff;
+      font-family: inherit;
+      padding: 12px;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      gap: 4px;
+      min-width: 0;
+    }
+    .personal-seat-wind { color: #fbbf24; font-size: 30px; font-weight: 900; }
+    .personal-seat-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.72);
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .personal-action {
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.7);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 8px 12px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .personal-empty {
+      height: 100%;
+      display: grid;
+      place-items: center;
+      color: rgba(255,255,255,0.55);
+      font-size: 13px;
+      font-weight: 800;
+      text-align: center;
+      line-height: 1.7;
+    }
+    .portrait-hint {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      place-items: center;
+      background: #0f3f23;
+      color: rgba(255,255,255,0.82);
+      font-size: 15px;
+      font-weight: 900;
+      text-align: center;
+      line-height: 1.8;
+      padding: 24px;
+    }
+    @media (orientation: portrait) {
+      body.personal-view-active .portrait-hint { display: grid; }
+      body.personal-view-active .personal-shell,
+      body.personal-view-active .personal-seat-grid {
+        display: none;
+      }
+    }
+    @media (orientation: landscape) and (max-height: 430px) {
+      .personal-view { padding-top: 10px; padding-bottom: 10px; }
+      .personal-shell {
+        grid-template-rows: minmax(82px, 1fr) auto minmax(94px, 1fr);
+        gap: 6px;
+      }
+      .personal-board-info {
+        font-size: 12px;
+        margin-bottom: 6px;
+      }
+      .personal-action {
+        font-size: 11px;
+        padding: 6px 11px;
+        margin-top: 4px;
+      }
+      .personal-score-card {
+        width: min(42vw, 230px);
+        padding: 8px 10px;
+        gap: 3px;
+      }
+      .personal-score-card.is-me {
+        width: min(46vw, 300px);
+        padding: 8px 14px;
+      }
+      .personal-wind {
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+      }
+      .personal-score-card.is-me .personal-wind {
+        width: 36px;
+        height: 36px;
+        font-size: 21px;
+      }
+      .personal-name { font-size: 12px; }
+      .personal-score-card.is-me .personal-name { font-size: 15px; }
+      .personal-score { font-size: clamp(20px, 8vh, 32px); }
+      .personal-score-card.is-me .personal-score { font-size: clamp(34px, 12vh, 48px); }
+      .personal-score-line { gap: 7px; }
+      .personal-diff-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 13px;
+      }
+      .personal-riichi-stick {
+        width: 60px;
+        height: 10px;
+      }
+      .personal-riichi-stick::after {
+        width: 8px;
+        height: 8px;
+      }
+      .personal-score-card.is-me .personal-riichi-stick {
+        width: 82px;
+        height: 12px;
+      }
+      .personal-score-card.is-me .personal-riichi-stick::after {
+        width: 10px;
+        height: 10px;
+      }
+      .personal-meta {
+        gap: 7px;
+        font-size: 10px;
+      }
+    }
   </style>
 </head>
 <body>
 <script>
-  if (!new URLSearchParams(location.search).get('embedded')) {
+  const bootParams = new URLSearchParams(location.search);
+  if (!bootParams.get('embedded') && bootParams.get('view') !== 'personal') {
     window.location.replace('/mahjong/');
   }
 </script>
@@ -1542,6 +1943,25 @@
   <button class="end-btn" id="endBtn">終　了</button>
   <button class="ryuu-btn" id="ryuuBtn">終局</button>
   <button class="score-edit-btn" id="scoreEditBtn">点数修正</button>
+  <button class="device-share-btn" id="deviceShareBtn">端末表示</button>
+
+  <div class="ag-overlay" id="deviceShareModal" style="display:none">
+    <div class="ag-card share-card">
+      <div class="ag-head">端 末 表 示</div>
+      <img class="share-qr" id="deviceShareQr" alt="端末表示QR">
+      <div class="share-url" id="deviceShareUrl"></div>
+      <div class="share-status" id="deviceShareStatus"></div>
+      <div class="ag-actions" style="margin-top:12px">
+        <button class="ag-apply" id="deviceShareCopy">コピー</button>
+        <button class="ag-cancel" id="deviceShareRefresh">QR更新</button>
+        <button class="ag-cancel" id="deviceShareClose">閉</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="personal-view" id="personalView">
+    <div class="personal-empty">卓に接続中</div>
+  </div>
 
   <!-- 履歴モーダル -->
   <div class="ag-overlay" id="historyModal" style="display:none">
@@ -2276,14 +2696,66 @@
 
   <script src="/common.js"></script>
   <script>
-    const isEmbedded = new URLSearchParams(location.search).get('embedded') === '1';
+    const pageParams = new URLSearchParams(location.search);
+    const isEmbedded = pageParams.get('embedded') === '1';
+    const isPersonalView = pageParams.get('view') === 'personal' && !!pageParams.get('room');
     if (isEmbedded) {
+      const banner = document.getElementById('dev-banner');
+      if (banner) banner.style.display = 'none';
+    }
+    if (isPersonalView) {
+      document.body.classList.add('personal-view-active');
       const banner = document.getElementById('dev-banner');
       if (banner) banner.style.display = 'none';
     }
 
     const WINDS = ['東', '南', '西', '北'];
     const ROUND_WINDS = ['東', '南', '西', '北'];
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyBC0X3taGcEclIO8g7Lg7odIdTwaA6gnGY",
+      authDomain: "wakuda-tools.firebaseapp.com",
+      projectId: "wakuda-tools",
+      storageBucket: "wakuda-tools.firebasestorage.app",
+      messagingSenderId: "812175144918",
+      appId: "1:812175144918:web:e93ea5bec2fcad8810d677"
+    };
+    const ROOM_COLLECTION = 'mahjong_table_rooms';
+    const ROOM_ID_KEY = 'mahjong_table_room_id_v1';
+    let tableRoomId = cleanRoomId(pageParams.get('room')) || sessionStorage.getItem(ROOM_ID_KEY) || '';
+    let tableFbPromise = null;
+    let tableRoomPublishTimer = null;
+    let personalSeatIndex = Number(localStorage.getItem(`mahjong_personal_seat_${tableRoomId}`) ?? -1);
+    let personalRoomLoaded = false;
+    let personalDiffOn = false;
+
+    function cleanRoomId(roomId) {
+      return String(roomId || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+    }
+
+    function makeRoomId() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let roomId = '';
+      for (let i = 0; i < 6; i++) roomId += chars[Math.floor(Math.random() * chars.length)];
+      return roomId;
+    }
+
+    function getTableFirebase() {
+      if (tableFbPromise) return tableFbPromise;
+      tableFbPromise = Promise.all([
+        import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js')
+      ]).then(([appMod, firestoreMod]) => {
+        const app = appMod.getApps().length ? appMod.getApp() : appMod.initializeApp(FIREBASE_CONFIG);
+        return {
+          db: firestoreMod.getFirestore(app),
+          doc: firestoreMod.doc,
+          setDoc: firestoreMod.setDoc,
+          onSnapshot: firestoreMod.onSnapshot,
+          serverTimestamp: firestoreMod.serverTimestamp
+        };
+      });
+      return tableFbPromise;
+    }
 
     function freshState() {
       return {
@@ -2423,6 +2895,241 @@
       try { localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(buildSaveData())); } catch {}
     }
 
+    function buildRoomPayload() {
+      return {
+        version: 1,
+        updatedAt: Date.now(),
+        state: captureSnapshot(),
+        tableRoundLog: tableRoundLog.map(ev => ({ ...ev })),
+        riichiCounts: riichiCounts.slice(),
+        kiichaSlot,
+        playerWinds: playerWinds.slice(),
+        settings: {
+          gameType: settingGameType,
+          enchosen: settingEnchosen,
+          kijunten: settingKijunten,
+          hakoshita: settingHakoshita,
+          hakoshitaRiichi: settingHakoshitaRiichi,
+        },
+      };
+    }
+
+    async function writeRoomPayload() {
+      if (isPersonalView || !tableRoomId) return;
+      const fb = await getTableFirebase();
+      await fb.setDoc(fb.doc(fb.db, ROOM_COLLECTION, tableRoomId), {
+        roomId: tableRoomId,
+        active: true,
+        updatedAt: fb.serverTimestamp(),
+        payload: buildRoomPayload()
+      }, { merge: true });
+    }
+
+    function publishRoomState() {
+      if (isPersonalView || !tableRoomId || !isGameInProgress()) return;
+      clearTimeout(tableRoomPublishTimer);
+      tableRoomPublishTimer = setTimeout(() => {
+        writeRoomPayload().catch(() => updateShareStatus('同期できませんでした'));
+      }, 180);
+    }
+
+    async function ensureRoom() {
+      if (!tableRoomId) {
+        tableRoomId = makeRoomId();
+        sessionStorage.setItem(ROOM_ID_KEY, tableRoomId);
+      }
+      await writeRoomPayload();
+      return tableRoomId;
+    }
+
+    function getPersonalUrl() {
+      const url = new URL('/mahjong-table/', location.origin);
+      url.searchParams.set('room', tableRoomId);
+      url.searchParams.set('view', 'personal');
+      return url.toString();
+    }
+
+    function updateShareStatus(text) {
+      const status = document.getElementById('deviceShareStatus');
+      if (status) status.textContent = text || '';
+    }
+
+    async function refreshShareModal() {
+      updateShareStatus('同期準備中');
+      try {
+        await ensureRoom();
+        const url = getPersonalUrl();
+        document.getElementById('deviceShareUrl').textContent = url;
+        document.getElementById('deviceShareQr').src =
+          `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(url)}`;
+        updateShareStatus('QRを読み取ると個人表示に入れます');
+      } catch {
+        updateShareStatus('QRを作成できませんでした');
+      }
+    }
+
+    function openShareModal() {
+      document.getElementById('deviceShareModal').style.display = 'flex';
+      setBackFabVisible(false);
+      refreshShareModal();
+    }
+
+    function applyRoomPayload(payload) {
+      if (!payload?.state || !Array.isArray(payload.state.players)) return;
+      const s = payload.state;
+      state = freshState();
+      state.players = s.players.slice(0, 4).map((p, i) => ({
+        score: Number(p.score ?? 25000),
+        wind: WINDS.includes(p.wind) ? p.wind : WINDS[i],
+        riichi: !!p.riichi,
+        name: p.name || `P${i + 1}`,
+      }));
+      state.honba = Number(s.honba || 0);
+      state.kyotaku = Number(s.kyotaku || 0);
+      state.roundWind = Number(s.roundWind || 0);
+      state.roundNum = Number(s.roundNum || 1);
+      state.inEnchosen = !!s.inEnchosen;
+      tableRoundLog = Array.isArray(payload.tableRoundLog) ? payload.tableRoundLog : [];
+      riichiCounts = Array.isArray(payload.riichiCounts) ? payload.riichiCounts.slice(0, 4) : [0, 0, 0, 0];
+      while (riichiCounts.length < 4) riichiCounts.push(0);
+      kiichaSlot = Number.isInteger(payload.kiichaSlot) ? payload.kiichaSlot : state.players.findIndex(p => p.wind === '東');
+      if (kiichaSlot < 0) kiichaSlot = 0;
+      playerWinds = Array.isArray(payload.playerWinds) ? payload.playerWinds.slice(0, 4) : state.players.map(p => p.wind);
+      while (playerWinds.length < 4) playerWinds.push(WINDS[playerWinds.length]);
+      const settings = payload.settings || {};
+      settingGameType = Number(settings.gameType ?? settingGameType);
+      settingEnchosen = !!settings.enchosen;
+      settingKijunten = Number(settings.kijunten || settingKijunten);
+      settingHakoshita = !!settings.hakoshita;
+      settingHakoshitaRiichi = !!settings.hakoshitaRiichi;
+      personalRoomLoaded = true;
+      syncSettingsUI();
+      renderStartWindBtns();
+      document.getElementById('startScreen').style.display = 'none';
+      document.querySelectorAll('.ag-overlay').forEach(el => { el.style.display = 'none'; });
+      setBackFabVisible(false);
+      render();
+    }
+
+    function fmtPersonalScore(score) {
+      return Number(score || 0).toLocaleString();
+    }
+
+    function escPersonal(s) {
+      return String(s ?? '').replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      }[ch]));
+    }
+
+    function renderPersonalView() {
+      if (!isPersonalView) return;
+      const root = document.getElementById('personalView');
+      if (!root) return;
+      if (!personalRoomLoaded) {
+        root.innerHTML = '<div class="personal-empty">卓に接続中</div>';
+        return;
+      }
+      if (personalSeatIndex < 0 || personalSeatIndex > 3) {
+        root.innerHTML = `
+          <div>
+            <div class="personal-seat-grid">
+              ${state.players.map((p, i) => `
+                <button class="personal-seat-card" data-seat="${i}">
+                  <span class="personal-seat-wind">${escPersonal(p.wind)}</span>
+                  <span class="personal-seat-name">${escPersonal(p.name)}</span>
+                </button>
+              `).join('')}
+            </div>
+            <div class="portrait-hint">横向きにしてください<br>この画面は横向き専用です</div>
+          </div>`;
+        root.querySelectorAll('[data-seat]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            personalSeatIndex = Number(btn.dataset.seat);
+            localStorage.setItem(`mahjong_personal_seat_${tableRoomId}`, String(personalSeatIndex));
+            renderPersonalView();
+          });
+        });
+        return;
+      }
+
+      const me = state.players[personalSeatIndex] || state.players[0];
+      const seatPositions = [
+        { pos: 'bottom', idx: personalSeatIndex },
+        { pos: 'right', idx: (personalSeatIndex + 1) % 4 },
+        { pos: 'top', idx: (personalSeatIndex + 2) % 4 },
+        { pos: 'left', idx: (personalSeatIndex + 3) % 4 },
+      ];
+      const cardHtml = ({ pos, idx }) => {
+        const p = state.players[idx] || {};
+        const isMe = idx === personalSeatIndex;
+        const diff = Number(me.score || 0) - Number(p.score || 0);
+        const scoreText = personalDiffOn && !isMe
+          ? `${diff >= 0 ? '+' : ''}${fmtPersonalScore(diff)}`
+          : fmtPersonalScore(p.score);
+        const diffClass = personalDiffOn && !isMe
+          ? diff >= 0 ? ' diff-pos' : ' diff-neg'
+          : '';
+        return `
+          <div class="personal-seat ${pos}">
+            <div class="personal-score-card ${pos}${isMe ? ' is-me' : ''}">
+              <div class="personal-name-line">
+                <span class="personal-wind">${escPersonal(p.wind)}</span>
+                <span class="personal-name">${escPersonal(p.name)}</span>
+              </div>
+              <div class="personal-score-line">
+                ${isMe ? `<button class="personal-diff-btn${personalDiffOn ? ' active' : ''}" id="personalDiffBtn" aria-label="点差"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>` : ''}
+                <div class="personal-score${diffClass}">${scoreText}</div>
+              </div>
+              <div class="personal-riichi-stick${p.riichi ? ' on' : ''}" aria-label="${p.riichi ? 'リーチ' : ''}"></div>
+            </div>
+          </div>`;
+      };
+      root.innerHTML = `
+        <div class="personal-shell">
+          <div class="personal-center">
+            <div class="personal-board-info">${GT_NAMES[settingGameType]}　${ROUND_WINDS[state.roundWind]}${state.roundNum}局　${state.honba}本場　供託${state.kyotaku}本</div>
+            <button class="personal-action" id="personalSeatChange">席変更</button>
+          </div>
+          ${seatPositions.map(cardHtml).join('')}
+          <div class="portrait-hint">横向きにしてください<br>この画面は横向き専用です</div>
+        </div>`;
+      document.getElementById('personalSeatChange').addEventListener('click', () => {
+        personalSeatIndex = -1;
+        personalDiffOn = false;
+        localStorage.removeItem(`mahjong_personal_seat_${tableRoomId}`);
+        renderPersonalView();
+      });
+      const diffBtn = document.getElementById('personalDiffBtn');
+      if (diffBtn) {
+        diffBtn.addEventListener('pointerdown', e => {
+          e.preventDefault();
+          personalDiffOn = true;
+          renderPersonalView();
+        });
+      }
+    }
+
+    async function startPersonalSubscription() {
+      if (!isPersonalView || !tableRoomId) return;
+      try {
+        const fb = await getTableFirebase();
+        fb.onSnapshot(fb.doc(fb.db, ROOM_COLLECTION, tableRoomId), snap => {
+          if (!snap.exists()) {
+            const root = document.getElementById('personalView');
+            if (root) root.innerHTML = '<div class="personal-empty">卓が見つかりません<br>QRを読み直してください</div>';
+            return;
+          }
+          applyRoomPayload(snap.data().payload);
+        }, () => {
+          const root = document.getElementById('personalView');
+          if (root) root.innerHTML = '<div class="personal-empty">接続できませんでした</div>';
+        });
+      } catch {
+        const root = document.getElementById('personalView');
+        if (root) root.innerHTML = '<div class="personal-empty">Firebaseに接続できませんでした</div>';
+      }
+    }
+
     function syncSettingsUI() {
       document.querySelectorAll('[data-gt]').forEach(b => b.classList.toggle('sel', +b.dataset.gt === settingGameType));
       const kjSel = document.getElementById('kijuntenSelect');
@@ -2531,6 +3238,8 @@
         `${GT_NAMES[settingGameType]}　${ROUND_WINDS[state.roundWind]}${state.roundNum}局　${state.honba}本場　供託${state.kyotaku}本`;
       renderHonba();
       saveGameProgress();
+      publishRoomState();
+      renderPersonalView();
     }
 
     function renderHonba() {
@@ -2558,6 +3267,11 @@
       document.getElementById(`db${diffPlayer}`).classList.remove('active');
       diffPlayer = -1;
       render();
+    });
+    document.addEventListener('pointerup', () => {
+      if (!personalDiffOn) return;
+      personalDiffOn = false;
+      renderPersonalView();
     });
 
     // Riichi toggle: deduct/return 1000, track kyotaku pot
@@ -4624,6 +5338,25 @@
       setBackFabVisible(true);
       render();
     });
+
+    document.getElementById('deviceShareBtn').addEventListener('click', openShareModal);
+    document.getElementById('deviceShareClose').addEventListener('click', () => {
+      document.getElementById('deviceShareModal').style.display = 'none';
+      setBackFabVisible(true);
+    });
+    document.getElementById('deviceShareRefresh').addEventListener('click', refreshShareModal);
+    document.getElementById('deviceShareCopy').addEventListener('click', async () => {
+      const url = document.getElementById('deviceShareUrl').textContent;
+      if (!url) return;
+      try {
+        await navigator.clipboard.writeText(url);
+        updateShareStatus('URLをコピーしました');
+      } catch {
+        updateShareStatus('URLを選択してコピーしてください');
+      }
+    });
+
+    startPersonalSubscription();
 
     // ── Embedded mode: postMessage bridge ─────────────────────
     if (isEmbedded) {
