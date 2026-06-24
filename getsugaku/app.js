@@ -1035,6 +1035,13 @@ function renderAvgItems(payerFilter) {
   section.style.display = '';
 
   const total = items.reduce((s, p) => s + p.monthlyAmt, 0);
+  const categoryTotals = CAT_ORDER
+    .map(cat => {
+      const categoryItems = items.filter(p => (CAT_ORDER.includes(p.category) ? p.category : 'その他') === cat);
+      const monthly = categoryItems.reduce((s, p) => s + p.monthlyAmt, 0);
+      return { cat, count: categoryItems.length, monthly };
+    })
+    .filter(g => g.count > 0);
 
   const rows = items.map(p => {
     const freq    = p.frequencyMonths ?? 1;
@@ -1054,7 +1061,22 @@ function renderAvgItems(payerFilter) {
       </div>`;
   }).join('');
 
+  const categorySummary = categoryTotals.map(g => `
+    <div class="ai-cat-total">
+      <span class="ai-cat-total-name">
+        <span class="cat-group-dot" style="background:${CAT_COLORS[g.cat]||'#64748b'}"></span>
+        ${esc(g.cat)}
+      </span>
+      <span class="ai-cat-total-count">${g.count}件</span>
+      <span class="ai-cat-total-amount">${fmtYen(g.monthly)}<span class="ai-unit">/月</span></span>
+    </div>
+  `).join('');
+
   body.innerHTML = `
+    <div class="ai-cat-summary">
+      <div class="ai-cat-summary-title">カテゴリ別合計</div>
+      <div class="ai-cat-total-list">${categorySummary}</div>
+    </div>
     <div class="ai-list">${rows}</div>
     <div class="ai-footer">
       <span class="ai-footer-label">${payerFilter ? `${esc(payerFilter)}の月額換算 合計` : '月額換算 合計'}</span>
@@ -1303,7 +1325,7 @@ function render() {
             ${changeLabel ? `<span><span class="detail-label">変更</span>${esc(changeLabel)}</span>` : ''}
             <span><span class="detail-label">頻度</span>${freqLabel(freq)}</span>
             ${div > 0 && avgAmount > 0 ? `<span><span class="detail-label">月額換算</span>${fmtYen(avgAmount / div)}${freq === 0 ? `（${p.amortizeMonths}ヶ月）` : ''}</span>` : ''}
-            <span><span class="detail-label">支払日</span>${fmtDate(eff)}（${fmtYen(effAmount)}）</span>
+            <span><span class="detail-label">次回支払</span>${fmtDate(eff)}（${fmtYen(effAmount)}）</span>
             ${splitText ? `<span class="split-detail-text"><span class="detail-label">分担</span>${splitText}</span>` : ''}
             ${p.note ? `<span><span class="detail-label">メモ</span>${esc(p.note)}</span>` : ''}
             ${(p.paidHistory || []).length > 0
