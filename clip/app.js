@@ -429,7 +429,7 @@ function buildClipEl(clip, showSource) {
   actions.append(copyBtn, delBtn);
   footer.append(timer, extBtn, actions);
   const previews = buildLinkPreviews(clip.text);
-  item.append(textEl, ...previews, footer);
+  item.append(footer, textEl, ...previews);
   return item;
 }
 
