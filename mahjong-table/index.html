@@ -3175,6 +3175,34 @@
       };
     }
 
+    function personalDeltaLabelPoint(card) {
+      const rect = card.getBoundingClientRect();
+      const pos = card.dataset.seatPos;
+      if (pos === 'bottom') {
+        return { x: rect.left + rect.width / 2, y: Math.max(18, rect.top - 18) };
+      }
+      if (pos === 'top') {
+        return { x: rect.left + rect.width / 2, y: Math.min(innerHeight - 18, rect.bottom + 18) };
+      }
+      if (pos === 'left') {
+        return { x: Math.min(innerWidth - 18, rect.right + 18), y: rect.top + rect.height / 2 };
+      }
+      if (pos === 'right') {
+        return { x: Math.max(18, rect.left - 18), y: rect.top + rect.height / 2 };
+      }
+      return rectCenter(card);
+    }
+
+    function personalOuterElbow(start, end) {
+      const a = { x: end.x, y: start.y };
+      const b = { x: start.x, y: end.y };
+      const cx = innerWidth / 2;
+      const cy = innerHeight / 2;
+      const da = Math.hypot(a.x - cx, a.y - cy);
+      const db = Math.hypot(b.x - cx, b.y - cy);
+      return db > da ? b : a;
+    }
+
     function setPersonalScoreText(idx, score) {
       const el = document.querySelector(`.personal-score[data-score-idx="${idx}"]`);
       if (el) el.textContent = fmtPersonalScore(score);
@@ -3256,7 +3284,7 @@
         };
         const isCornerMove = Math.abs(dx) > 80 && Math.abs(dy) > 80;
         if (isCornerMove) {
-          const corner = { x: end.x, y: start.y };
+          const corner = personalOuterElbow(start, end);
           drawSegment(start, corner, false);
           drawSegment(corner, end, true);
         } else {
@@ -3268,7 +3296,7 @@
         if (!amount) return;
         const card = root.querySelector(`.personal-score-card[data-player-idx="${idx}"]`);
         if (!card) return;
-        const center = rectCenter(card);
+        const center = personalDeltaLabelPoint(card);
         const label = document.createElement('div');
         label.className = `personal-move-label ${amount > 0 ? 'plus' : 'minus'}`;
         label.textContent = `${amount > 0 ? '+' : ''}${fmtPersonalScore(amount)}`;
