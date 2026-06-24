@@ -622,6 +622,9 @@
       z-index: 300; padding: 16px 12px 24px;
       overflow-y: auto;
     }
+    .ag-overlay.centered {
+      align-items: center;
+    }
     .ag-card {
       background: #1c3a25;
       border: 1px solid rgba(255,255,255,0.15);
@@ -649,6 +652,19 @@
     .psel:disabled { opacity:0.28; cursor:default; }
     .psel-col { display:flex; flex-direction:column; gap:4px; }
     .psel-col .psel { flex:none; width:100%; }
+    .ag-sec.needs-input .psel:not(.sel) {
+      border-color:rgba(251,191,36,0.55);
+      background:rgba(251,191,36,0.10);
+    }
+    .dealer-hint {
+      display:none;
+      margin-top:6px;
+      color:#fbbf24;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:0.5px;
+    }
+    .ag-sec.needs-input .dealer-hint { display:block; }
     .wtype {
       flex:1; padding:9px 4px;
       background:rgba(255,255,255,0.08);
@@ -876,7 +892,55 @@
     .wind-sel-btn.wind-settle {
       animation: windSettle 0.4s ease 3;
     }
-    .start-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; margin-bottom: 12px; }
+    .start-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; margin-bottom: 12px; flex-wrap:wrap; }
+    .wind-shift-actions { display:flex; gap:8px; margin-right:auto; }
+    .wind-shift-btn {
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      border-radius: 50%;
+      font-size: 20px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .resume-card {
+      display:none;
+      margin:0 0 12px;
+      padding:12px;
+      border-radius:14px;
+      background:rgba(251,191,36,0.10);
+      border:1px solid rgba(251,191,36,0.32);
+    }
+    .resume-card.vis { display:block; }
+    .resume-title {
+      color:#fbbf24;
+      font-size:13px;
+      font-weight:900;
+      letter-spacing:1.5px;
+      margin-bottom:4px;
+    }
+    .resume-meta {
+      color:rgba(255,255,255,0.66);
+      font-size:12px;
+      line-height:1.55;
+      margin-bottom:10px;
+    }
+    .resume-actions { display:flex; gap:8px; }
+    .resume-btn {
+      flex:1;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.18);
+      color:#fff;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+      font-family:inherit;
+    }
+    .resume-btn.primary { background:#15803d; border-color:#15803d; }
+    .resume-btn.ghost { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.62); }
     /* 席ぎめ */
     #sekigimeOverlay { position:fixed; inset:0; background:rgba(8,24,14,0.97); z-index:900; flex-direction:column; align-items:center; justify-content:center; padding:28px 20px; gap:0; }
     .sgm-title { font-size:22px; font-weight:900; color:#fff; letter-spacing:4px; margin-bottom:6px; }
@@ -1205,6 +1269,8 @@
     .goal-ok { color:#4ade80; font-weight:900; }
     .goal-ng { color:#f87171; font-weight:900; }
     .goal-alt { display:block; color:rgba(255,255,255,0.42); font-size:10px; margin-top:2px; }
+    .ag-type-card { min-height: 250px; display:flex; flex-direction:column; justify-content:center; }
+    .ag-type-actions { display:flex; flex-direction:column; gap:10px; }
   </style>
 </head>
 <body>
@@ -1225,6 +1291,15 @@
       <div id="tabKyoku">
         <div class="start-title">麻 雀 テ ー ブ ル</div>
         <div class="start-subtitle">対 局 設 定</div>
+
+        <div class="resume-card" id="resumeCard">
+          <div class="resume-title">途中の対局</div>
+          <div class="resume-meta" id="resumeMeta"></div>
+          <div class="resume-actions">
+            <button class="resume-btn primary" id="resumeGameBtn">復元</button>
+            <button class="resume-btn ghost" id="discardResumeBtn">新規開始</button>
+          </div>
+        </div>
 
         <div class="setup-card">
           <div class="setup-card-lbl">PLAYERS</div>
@@ -1271,6 +1346,10 @@
         </div>
 
         <div class="start-actions">
+          <div class="wind-shift-actions">
+            <button class="random-btn wind-shift-btn" id="windShiftLeft" aria-label="左回転" title="左回転">↺</button>
+            <button class="random-btn wind-shift-btn" id="windShiftRight" aria-label="右回転" title="右回転">↻</button>
+          </div>
           <button class="random-btn" id="sekigimeBtn">🀅 席ぎめ</button>
           <button class="random-btn" id="randomWindBtn">🎲 ランダム</button>
         </div>
@@ -1543,8 +1622,19 @@
     <div class="ag-card">
       <div class="ag-head" id="agHead">の和了</div>
 
+      <div id="typeScreen" class="ag-type-card">
+        <div class="ag-sec">
+          <div class="ag-lbl">和了方法</div>
+          <div class="ag-type-actions">
+            <button class="kc-btn kc-agari" id="agTypeRon">ロン</button>
+            <button class="kc-btn kc-agari" id="agTypeTsumo">ツモ</button>
+            <button class="ag-cancel" id="agTypeCancel" style="margin-top:4px;padding:12px;width:100%">キャンセル</button>
+          </div>
+        </div>
+      </div>
+
       <div id="selScreen">
-      <div class="ag-sec">
+      <div class="ag-sec" style="display:none">
         <div class="ag-lbl">和了方法</div>
         <div class="ag-row">
           <button class="wtype sel" id="wtRon">ロン</button>
@@ -1560,6 +1650,7 @@
           <button class="psel" id="ad-2"></button>
           <button class="psel" id="ad-3"></button>
         </div>
+        <div class="dealer-hint" id="dealerHint">放銃者の選択</div>
       </div>
 
       <div class="ag-sec">
@@ -1633,14 +1724,14 @@
         </div>
       </div>
 
-        <button class="ag-cancel" id="agariCancel">キャンセル</button>
+        <button class="ag-cancel" id="agariCancel">戻　る</button>
       </div>
 
       <div id="confScreen" style="display:none">
         <div class="ag-result" id="agariResult"></div>
         <div class="ag-actions">
           <button class="ag-apply" id="agariApply">適　用</button>
-          <button class="ag-cancel" id="backBtn">やり直し</button>
+          <button class="ag-cancel" id="backBtn">戻　る</button>
         </div>
       </div>
     </div>
@@ -2226,6 +2317,7 @@
     let kiichaSlot = 0;
     let randomSpinInterval = null;
     let randomTimeouts = [];
+    const AUTO_SAVE_KEY = 'mahjong_table_autosave_v1';
 
     function captureSnapshot() {
       return {
@@ -2255,6 +2347,156 @@
       } else {
         badge.style.display = 'none';
       }
+    }
+
+    function escResumeText(v) {
+      return String(v ?? '').replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      }[ch]));
+    }
+
+    function savedGameLabel(data) {
+      const s = data?.state;
+      if (!s || !Array.isArray(s.players)) return '';
+      const players = s.players.map(p => `${escResumeText(p.wind || '')}${escResumeText(p.name || '')}`).join(' / ');
+      const round = `${GT_NAMES[data.settings?.gameType ?? settingGameType] || '対局'} ${ROUND_WINDS[s.roundWind] || '東'}${s.roundNum || 1}局 ${s.honba || 0}本場`;
+      const savedAt = data.savedAt ? new Date(data.savedAt) : null;
+      const time = savedAt && !Number.isNaN(savedAt.getTime())
+        ? `${savedAt.getMonth() + 1}/${savedAt.getDate()} ${String(savedAt.getHours()).padStart(2, '0')}:${String(savedAt.getMinutes()).padStart(2, '0')}`
+        : '';
+      return `${escResumeText(round)}<br>${players}${time ? `<br>保存 ${escResumeText(time)}` : ''}`;
+    }
+
+    function readSavedGame() {
+      try {
+        const raw = localStorage.getItem(AUTO_SAVE_KEY);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        if (!data || data.version !== 1 || !data.state || !Array.isArray(data.state.players)) return null;
+        return data;
+      } catch {
+        return null;
+      }
+    }
+
+    function clearSavedGame() {
+      try { localStorage.removeItem(AUTO_SAVE_KEY); } catch {}
+      const card = document.getElementById('resumeCard');
+      if (card) card.classList.remove('vis');
+    }
+
+    function isGameInProgress() {
+      const startScreen = document.getElementById('startScreen');
+      return startScreen && getComputedStyle(startScreen).display === 'none';
+    }
+
+    function buildSaveData() {
+      return {
+        version: 1,
+        savedAt: new Date().toISOString(),
+        state: captureSnapshot(),
+        gameHistory: gameHistory.map(h => ({
+          ...h,
+          snapshot: {
+            ...h.snapshot,
+            players: Array.isArray(h.snapshot?.players) ? h.snapshot.players.map(p => ({ ...p })) : [],
+          },
+        })),
+        tableRoundLog: tableRoundLog.map(ev => ({ ...ev })),
+        riichiCounts: riichiCounts.slice(),
+        gameRecorded,
+        kiichaSlot,
+        playerWinds: playerWinds.slice(),
+        setupNames: [0, 1, 2, 3].map(i => document.getElementById(`sn${i}`)?.value || ''),
+        settings: {
+          gameType: settingGameType,
+          enchosen: settingEnchosen,
+          kijunten: settingKijunten,
+          hakoshita: settingHakoshita,
+          hakoshitaRiichi: settingHakoshitaRiichi,
+        },
+      };
+    }
+
+    function saveGameProgress() {
+      if (!isGameInProgress()) return;
+      try { localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(buildSaveData())); } catch {}
+    }
+
+    function syncSettingsUI() {
+      document.querySelectorAll('[data-gt]').forEach(b => b.classList.toggle('sel', +b.dataset.gt === settingGameType));
+      const kjSel = document.getElementById('kijuntenSelect');
+      if (kjSel) kjSel.value = String(settingKijunten);
+      const enchosenBtn = document.getElementById('enchosenToggle');
+      if (enchosenBtn) {
+        enchosenBtn.textContent = settingEnchosen ? 'ON' : 'OFF';
+        enchosenBtn.classList.toggle('sel', settingEnchosen);
+      }
+      const kijuntenWrap = document.getElementById('kijuntenWrap');
+      if (kijuntenWrap) kijuntenWrap.style.display = settingEnchosen ? 'block' : 'none';
+      const hakoshitaBtn = document.getElementById('hakoshitaToggle');
+      if (hakoshitaBtn) {
+        hakoshitaBtn.textContent = settingHakoshita ? 'ON' : 'OFF';
+        hakoshitaBtn.classList.toggle('sel', settingHakoshita);
+      }
+      const hakoshitaWrap = document.getElementById('hakoshitaRiichiWrap');
+      if (hakoshitaWrap) hakoshitaWrap.style.display = settingHakoshita ? 'block' : 'none';
+      const hakoshitaRiichiBtn = document.getElementById('hakoshitaRiichiToggle');
+      if (hakoshitaRiichiBtn) {
+        hakoshitaRiichiBtn.textContent = settingHakoshitaRiichi ? 'ON' : 'OFF';
+        hakoshitaRiichiBtn.classList.toggle('sel', settingHakoshitaRiichi);
+      }
+    }
+
+    function applySavedGame(data) {
+      if (!data?.state) return;
+      const s = data.state;
+      state = freshState();
+      state.players = (Array.isArray(s.players) ? s.players : state.players).slice(0, 4).map((p, i) => ({
+        score: Number(p.score ?? 25000),
+        wind: WINDS.includes(p.wind) ? p.wind : WINDS[i],
+        riichi: !!p.riichi,
+        name: p.name || `P${i + 1}`,
+      }));
+      state.honba = Number(s.honba || 0);
+      state.kyotaku = Number(s.kyotaku || 0);
+      state.roundWind = Number(s.roundWind || 0);
+      state.roundNum = Number(s.roundNum || 1);
+      state.inEnchosen = !!s.inEnchosen;
+      gameHistory = Array.isArray(data.gameHistory) ? data.gameHistory : [];
+      tableRoundLog = Array.isArray(data.tableRoundLog) ? data.tableRoundLog : [];
+      riichiCounts = Array.isArray(data.riichiCounts) ? data.riichiCounts.slice(0, 4) : [0, 0, 0, 0];
+      while (riichiCounts.length < 4) riichiCounts.push(0);
+      gameRecorded = !!data.gameRecorded;
+      kiichaSlot = Number.isInteger(data.kiichaSlot) ? data.kiichaSlot : state.players.findIndex(p => p.wind === '東');
+      if (kiichaSlot < 0) kiichaSlot = 0;
+      playerWinds = Array.isArray(data.playerWinds) ? data.playerWinds.slice(0, 4) : ['東', '南', '西', '北'];
+      while (playerWinds.length < 4) playerWinds.push(WINDS[playerWinds.length]);
+      (data.setupNames || []).forEach((name, i) => {
+        const input = document.getElementById(`sn${i}`);
+        if (input) input.value = name;
+      });
+      const settings = data.settings || {};
+      settingGameType = Number(settings.gameType ?? settingGameType);
+      settingEnchosen = !!settings.enchosen;
+      settingKijunten = Number(settings.kijunten || settingKijunten);
+      settingHakoshita = !!settings.hakoshita;
+      settingHakoshitaRiichi = !!settings.hakoshitaRiichi;
+      syncSettingsUI();
+      renderStartWindBtns();
+      updateHistBadge();
+      document.getElementById('startScreen').style.display = 'none';
+      document.querySelectorAll('.ag-overlay').forEach(el => { el.style.display = 'none'; });
+      setBackFabVisible(true);
+      render();
+    }
+
+    function showResumeCard() {
+      const data = readSavedGame();
+      const card = document.getElementById('resumeCard');
+      if (!data || !card) return;
+      document.getElementById('resumeMeta').innerHTML = savedGameLabel(data);
+      card.classList.add('vis');
     }
 
     function render() {
@@ -2288,6 +2530,7 @@
       document.getElementById('topInfo').textContent =
         `${GT_NAMES[settingGameType]}　${ROUND_WINDS[state.roundWind]}${state.roundNum}局　${state.honba}本場　供託${state.kyotaku}本`;
       renderHonba();
+      saveGameProgress();
     }
 
     function renderHonba() {
@@ -2371,6 +2614,17 @@
         renderStartWindBtns();
       });
     });
+
+    function rotateAllWinds(dir) {
+      cancelRandomAnimation();
+      playerWinds = dir > 0
+        ? [playerWinds[3], playerWinds[0], playerWinds[1], playerWinds[2]]
+        : [playerWinds[1], playerWinds[2], playerWinds[3], playerWinds[0]];
+      renderStartWindBtns();
+    }
+
+    document.getElementById('windShiftLeft').addEventListener('click', () => rotateAllWinds(-1));
+    document.getElementById('windShiftRight').addEventListener('click', () => rotateAllWinds(1));
 
     function cancelRandomAnimation() {
       if (randomSpinInterval !== null) { clearInterval(randomSpinInterval); randomSpinInterval = null; }
@@ -2681,6 +2935,7 @@
 
     document.getElementById('startGameBtn').addEventListener('click', () => {
       cancelRandomAnimation();
+      clearSavedGame();
       // Collect setup entries; P1 (index 0) always sits at bottom
       const setup = [];
       for (let i = 0; i < 4; i++) {
@@ -2710,6 +2965,7 @@
       btn.addEventListener('click', () => {
         settingGameType = +btn.dataset.gt;
         document.querySelectorAll('[data-gt]').forEach(b => b.classList.toggle('sel', b === btn));
+        saveGameProgress();
       });
     });
 
@@ -2723,7 +2979,7 @@
         if (v === 30000) opt.selected = true;
         kjSel.appendChild(opt);
       }
-      kjSel.addEventListener('change', () => { settingKijunten = +kjSel.value; });
+      kjSel.addEventListener('change', () => { settingKijunten = +kjSel.value; saveGameProgress(); });
 
       document.getElementById('enchosenToggle').addEventListener('click', () => {
         settingEnchosen = !settingEnchosen;
@@ -2731,6 +2987,7 @@
         btn.textContent = settingEnchosen ? 'ON' : 'OFF';
         btn.classList.toggle('sel', settingEnchosen);
         document.getElementById('kijuntenWrap').style.display = settingEnchosen ? 'block' : 'none';
+        saveGameProgress();
       });
     }
 
@@ -2751,6 +3008,18 @@
       btn.classList.toggle('sel', settingHakoshitaRiichi);
       render();
     });
+
+    document.getElementById('resumeGameBtn').addEventListener('click', () => {
+      const data = readSavedGame();
+      if (data) applySavedGame(data);
+    });
+
+    document.getElementById('discardResumeBtn').addEventListener('click', () => {
+      clearSavedGame();
+    });
+
+    showResumeCard();
+    window.addEventListener('beforeunload', saveGameProgress);
 
     // ── 和了スコア計算 ──────────────────────────
     function roundUp100(n) { return Math.ceil(n / 100) * 100; }
@@ -3002,6 +3271,19 @@
         b.classList.remove('sel');
         b.style.display = i === agWinner ? 'none' : '';
       }
+      clearDealerPrompt();
+    }
+
+    function clearDealerPrompt() {
+      const dealerSec = document.getElementById('dealerSec');
+      if (dealerSec) dealerSec.classList.remove('needs-input');
+    }
+
+    function promptDealerSelection() {
+      const dealerSec = document.getElementById('dealerSec');
+      if (!dealerSec) return;
+      dealerSec.classList.add('needs-input');
+      dealerSec.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }
 
     for (let i = 0; i < 4; i++) {
@@ -3010,6 +3292,7 @@
         for (let j = 0; j < 4; j++) {
           document.getElementById(`ad-${j}`).classList.toggle('sel', j === i);
         }
+        clearDealerPrompt();
         tryCalcAgari();
       });
     }
@@ -3027,7 +3310,7 @@
       document.getElementById('agHead').textContent = state.players[playerIdx].wind + 'の和了';
       document.getElementById('wtRon').classList.add('sel');
       document.getElementById('wtTsumo').classList.remove('sel');
-      document.getElementById('dealerSec').style.display = 'block';
+      document.getElementById('dealerSec').style.display = 'none';
       repopulateDealerRow();
       applyFuRestrictions();
 
@@ -3035,15 +3318,49 @@
       document.querySelectorAll('#hanTree .fu-children').forEach(fc => fc.classList.remove('open'));
       document.querySelectorAll('#hanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
 
-      document.getElementById('selScreen').style.display = 'block';
+      document.getElementById('typeScreen').style.display = 'block';
+      document.getElementById('selScreen').style.display = 'none';
       document.getElementById('confScreen').style.display = 'none';
+      document.getElementById('agariModal').classList.add('centered');
       document.getElementById('agariModal').style.display = 'flex';
       setBackFabVisible(false);
     }
 
-    document.getElementById('agariCancel').addEventListener('click', () => {
+    function closeAgariModal() {
       document.getElementById('agariModal').style.display = 'none';
+      document.getElementById('agariModal').classList.remove('centered');
       setBackFabVisible(true);
+    }
+
+    function showAgariScoreScreen(winType) {
+      agWinType = winType;
+      agDealer = -1;
+      agHanIdx = -1;
+      agFu = -1;
+      agDeltas = null;
+      document.getElementById('wtRon').classList.toggle('sel', winType === 'ron');
+      document.getElementById('wtTsumo').classList.toggle('sel', winType === 'tsumo');
+      document.getElementById('dealerSec').style.display = winType === 'ron' ? 'block' : 'none';
+      clearDealerPrompt();
+      document.querySelectorAll('#hanTree .han-row').forEach(r => r.classList.remove('sel', 'open'));
+      document.querySelectorAll('#hanTree .fu-children').forEach(fc => fc.classList.remove('open'));
+      document.querySelectorAll('#hanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
+      document.getElementById('typeScreen').style.display = 'none';
+      document.getElementById('selScreen').style.display = 'block';
+      document.getElementById('confScreen').style.display = 'none';
+      document.getElementById('agariModal').classList.remove('centered');
+      repopulateDealerRow();
+      applyFuRestrictions();
+      tryCalcAgari();
+    }
+
+    document.getElementById('agTypeRon').addEventListener('click', () => showAgariScoreScreen('ron'));
+    document.getElementById('agTypeTsumo').addEventListener('click', () => showAgariScoreScreen('tsumo'));
+    document.getElementById('agTypeCancel').addEventListener('click', closeAgariModal);
+    document.getElementById('agariCancel').addEventListener('click', () => {
+      document.getElementById('selScreen').style.display = 'none';
+      document.getElementById('typeScreen').style.display = 'block';
+      document.getElementById('agariModal').classList.add('centered');
     });
 
     function applyFuRestrictions() {
@@ -3073,22 +3390,11 @@
     }
 
     document.getElementById('wtRon').addEventListener('click', () => {
-      agWinType = 'ron'; agDealer = -1;
-      document.getElementById('wtRon').classList.add('sel');
-      document.getElementById('wtTsumo').classList.remove('sel');
-      document.getElementById('dealerSec').style.display = 'block';
-      repopulateDealerRow();
-      applyFuRestrictions();
-      tryCalcAgari();
+      showAgariScoreScreen('ron');
     });
 
     document.getElementById('wtTsumo').addEventListener('click', () => {
-      agWinType = 'tsumo'; agDealer = -1;
-      document.getElementById('wtTsumo').classList.add('sel');
-      document.getElementById('wtRon').classList.remove('sel');
-      document.getElementById('dealerSec').style.display = 'none';
-      applyFuRestrictions();
-      tryCalcAgari();
+      showAgariScoreScreen('tsumo');
     });
 
     function closeFuChildren(fc) {
@@ -3198,8 +3504,11 @@
     function tryCalcAgari() {
       const def = HAN_DEFS[agHanIdx];
       if (!def) return;
-      if (agWinType === 'ron' && agDealer < 0) return;
       if (def.needsFu && agFu < 0) return;
+      if (agWinType === 'ron' && agDealer < 0) {
+        promptDealerSelection();
+        return;
+      }
 
       let base, limitName;
       if (def.needsFu) {
@@ -3482,6 +3791,7 @@
             state.roundNum  = h.snapshot.roundNum;
             state.inEnchosen = h.snapshot.inEnchosen ?? false;
             gameHistory = gameHistory.slice(0, idx);
+            tableRoundLog = tableRoundLog.slice(0, idx);
             updateHistBadge();
             document.getElementById('historyModal').style.display = 'none';
             setBackFabVisible(true);
@@ -3591,6 +3901,7 @@
     document.getElementById('gameEndNewGame').addEventListener('click', () => {
       if (!gameRecorded && !confirm('スコアを記録せずにテーブルに戻りますか？')) return;
       document.getElementById('gameEndModal').style.display = 'none';
+      clearSavedGame();
       state = freshState();
       gameHistory = [];
       tableRoundLog = [];
@@ -3617,6 +3928,7 @@
         }, '*');
         gameRecorded = true;
         document.getElementById('gameEndModal').style.display = 'none';
+        clearSavedGame();
         state = freshState();
         gameHistory = [];
         tableRoundLog = [];
@@ -3632,6 +3944,7 @@
           tableGame: tableGameData,
         };
         localStorage.setItem('mahjong_table_import', JSON.stringify(importData));
+        clearSavedGame();
         window.location.href = '/mahjong/';
       }
     });
