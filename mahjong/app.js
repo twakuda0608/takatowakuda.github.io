@@ -32,18 +32,41 @@ let matches = [];
 let myName = '';
 let playerHistory = [];
 let pendingTableGame = null;
+let tableSeatNames = ['P1', 'P2', 'P3', 'P4'];
+
+function cleanName(name, fallback = '') {
+  const trimmed = String(name || '').trim();
+  return trimmed || fallback;
+}
+
+function normalizeNameList(names, fallbackPrefix = 'P') {
+  return [0, 1, 2, 3].map(i => cleanName(names?.[i], `${fallbackPrefix}${i + 1}`));
+}
+
+function getRankNames() {
+  return [1, 2, 3, 4].map(rank => cleanName(el(`sn${rank}_1`)?.value, `P${rank}`));
+}
+
+function getRankPlayerRecords() {
+  if (!lastResult) return [];
+  return getRankNames().map((name, i) => ({
+    name,
+    pt: Number(lastResult.pts[i]) || 0,
+    rank: i + 1
+  }));
+}
+
+function setTableSeatNames(names, shouldNotify = true) {
+  tableSeatNames = normalizeNameList(names);
+  if (shouldNotify) sendToTable({ type: 'update_players', names: tableSeatNames });
+}
 
 
 // ====== Tab switching + テーブルタブ ======
 let tableIframe = null;
 
 function getSharedPlayerNames() {
-  return [
-    el('sn1_1').value || '',
-    el('sn2_1').value || '',
-    el('sn3_1').value || '',
-    el('sn4_1').value || '',
-  ];
+  return tableSeatNames;
 }
 
 function sendToTable(msg) {
@@ -99,12 +122,13 @@ window.addEventListener('message', (e) => {
     const players = msg.players;
     if (!Array.isArray(players) || players.length !== 4) return;
     pendingTableGame = msg.tableGame || null;
+    if (pendingTableGame?.playerNames) setTableSeatNames(pendingTableGame.playerNames, false);
     el('s2_1').value = Math.round(players[1].score / 100);
     el('s3_1').value = Math.round(players[2].score / 100);
     el('s4_1').value = Math.round(players[3].score / 100);
     [1, 2, 3, 4].forEach((rank, i) => {
       const inp = el(`sn${rank}_1`);
-      if (inp) inp.value = players[i].name;
+      if (inp) inp.value = cleanName(players[i].name, `P${rank}`);
     });
     computeTab1();
     const banner = el('import-banner');
@@ -224,6 +248,7 @@ function updateRankNames() {
     const name = field.value.trim();
     nameEl.textContent = name ? ` · ${name}` : '';
   });
+  updateRecordSourceUI();
 }
 
 // ====== Name field autocomplete init (Tab 1) ======
@@ -240,7 +265,10 @@ function getScoreInputNames(rank) {
 [1, 2, 3, 4].forEach(rank => {
   const inp = el(`sn${rank}_1`);
   if (!inp) return;
-  inp.addEventListener('input', updateRankNames);
+  inp.addEventListener('input', () => {
+    updateRankNames();
+    if (!pendingTableGame) setTableSeatNames(getRankNames());
+  });
   makeAutocomplete(inp, () => getScoreInputNames(rank));
 });
 
@@ -250,29 +278,63 @@ function updateRecordSection() {
   const loggedIn   = el('record-logged-in');
   needsLogin.style.display = currentUser ? 'none' : 'block';
   loggedIn.style.display   = currentUser ? 'block' : 'none';
+  updateRecordSourceUI();
 }
+
+function updateRecordSourceUI() {
+  const sourceLabel = el('record-source-label');
+  const preview = el('record-preview');
+  const clearBtn = el('record-clear-table');
+  if (!sourceLabel || !preview || !clearBtn) return;
+
+  const hasTable = !!pendingTableGame;
+  sourceLabel.textContent = hasTable ? 'テーブル記録' : '点数のみ';
+  sourceLabel.classList.toggle('record-source-table', hasTable);
+  clearBtn.style.display = hasTable ? '' : 'none';
+
+  const players = getRankPlayerRecords();
+  preview.textContent = players.length
+    ? players.map(p => `${p.name} ${fmtPt(p.pt)}`).join(' / ')
+    : '';
+}
+
+el('record-clear-table').addEventListener('click', () => {
+  pendingTableGame = null;
+  setTableSeatNames(getRankNames());
+  const banner = el('import-banner');
+  if (banner) banner.style.display = 'none';
+  updateRecordSourceUI();
+});
+
+el('import-banner-close').addEventListener('click', () => {
+  el('import-banner').style.display = 'none';
+});
 
 el('record-btn').addEventListener('click', async () => {
   if (!currentUser || !lastResult) return;
 
-  const names = [1, 2, 3, 4].map(rank => el(`sn${rank}_1`)?.value.trim() || `P${rank}`);
-  const playerRecords = names.map((name, i) => ({ name, pt: lastResult.pts[i], rank: i + 1 }));
+  const playerRecords = getRankPlayerRecords();
 
-  const matchRecord = { recordedAt: new Date().toISOString(), players: playerRecords };
+  const matchRecord = {
+    recordedAt: new Date().toISOString(),
+    source: pendingTableGame ? 'table' : 'score',
+    players: playerRecords
+  };
   if (pendingTableGame) matchRecord.tableGame = pendingTableGame;
 
   const btn = el('record-btn');
   const msg = el('record-success');
   btn.disabled = true;
-  btn.textContent = '記録中...';
+  btn.textContent = '記録中';
 
   try {
     await addDoc(collection(db, 'mahjong_records', currentUser.uid, 'matches'), matchRecord);
-    updateHistoryWithNames(names);
+    updateHistoryWithNames(playerRecords.map(p => p.name));
     await savePlayerHistory();
     pendingTableGame = null;
     msg.textContent = '記録しました！';
     msg.className = 'record-msg success';
+    updateRecordSourceUI();
     setTimeout(() => { msg.textContent = ''; msg.className = 'record-msg'; }, 3000);
   } catch (err) {
     console.error('記録エラー:', err);
@@ -280,7 +342,7 @@ el('record-btn').addEventListener('click', async () => {
     msg.className = 'record-msg error';
   } finally {
     btn.disabled = false;
-    btn.textContent = 'この試合を記録する';
+    btn.textContent = '試合記録';
   }
 });
 
@@ -335,6 +397,7 @@ function computeTab2() {
 ['input', 'change'].forEach(ev => {
   [rate2, n1_2, n2_2, n3_2, n4_2, p1_2, p2_2, p3_2, p4_2].forEach(e => e.addEventListener(ev, computeTab2));
 });
+[n1_2, n2_2, n3_2, n4_2].forEach(inp => makeAutocomplete(inp, () => playerHistory));
 computeTab2();
 
 // ====== Tab 3: Auth ======
@@ -374,11 +437,24 @@ async function loadProfile() {
   const snap = await getDoc(ref);
   if (snap.exists()) {
     myName = snap.data().myName || '';
-    playerHistory = snap.data().playerNames || [];
-    el('my-name-input').value = myName;
+    playerHistory = Array.isArray(snap.data().playerNames) ? snap.data().playerNames : [];
+  } else {
+    try { playerHistory = JSON.parse(localStorage.getItem('mahjong_playerHistory') || '[]'); } catch { playerHistory = []; }
   }
+  playerHistory = playerHistory.map(n => cleanName(n)).filter(Boolean);
+  el('my-name-input').value = myName;
+  applyMyNameToUi();
   try { localStorage.setItem('mahjong_playerHistory', JSON.stringify(playerHistory)); } catch {}
   renderPlayerHistory();
+}
+
+function applyMyNameToUi(oldName = '') {
+  const label = document.querySelector('.my-name-label');
+  if (label) label.textContent = myName || '自分';
+
+  if (myName && (!tableSeatNames[0] || tableSeatNames[0] === 'P1' || tableSeatNames[0] === oldName)) {
+    setTableSeatNames([myName, ...tableSeatNames.slice(1)]);
+  }
 }
 
 function updateHistoryWithNames(names) {
@@ -429,13 +505,20 @@ function renderPlayerHistory() {
 
 el('my-name-save').addEventListener('click', async () => {
   const name = el('my-name-input').value.trim();
+  const oldName = myName;
   myName = name;
   const msg = el('my-name-msg');
   try {
     await setDoc(
       doc(db, 'mahjong_records', currentUser.uid, 'settings', 'profile'),
-      { myName: name }
+      { myName: name },
+      { merge: true }
     );
+    applyMyNameToUi(oldName);
+    if (name) {
+      updateHistoryWithNames([name]);
+      await savePlayerHistory();
+    }
     msg.textContent = '保存しました';
     msg.className = 'record-msg success';
     setTimeout(() => { msg.textContent = ''; msg.className = 'record-msg'; }, 2000);
@@ -487,6 +570,35 @@ function fmtPt(pt) {
 
 const ptClass = pt => pt > 0 ? 'pt-pos' : pt < 0 ? 'pt-neg' : '';
 
+function syncTableGameNames(tableGame, players) {
+  if (!tableGame || !Array.isArray(tableGame.roundLog)) return tableGame;
+  const n = Array.isArray(tableGame.playerNames) && tableGame.playerNames.length
+    ? tableGame.playerNames.length
+    : 4;
+  const roundLog = tableGame.roundLog;
+  if (!roundLog.length) {
+    return { ...tableGame, playerNames: normalizeNameList(players.map(p => p.name)) };
+  }
+
+  const initial = Array.isArray(roundLog[0]?.scoresBefore)
+    ? roundLog[0].scoresBefore.slice(0, n)
+    : Array(n).fill(25000);
+  const finalScores = initial.slice();
+  roundLog.forEach(ev => {
+    const deltas = ev.deltas || [];
+    for (let i = 0; i < n; i++) finalScores[i] += deltas[i] || 0;
+  });
+
+  const names = Array.from({ length: n }, (_, i) => tableGame.playerNames?.[i] || `P${i + 1}`);
+  const seatOrder = Array.from({ length: n }, (_, i) => i).sort((a, b) => finalScores[b] - finalScores[a]);
+  const rankOrder = players.slice().sort((a, b) => (a.rank || 9) - (b.rank || 9));
+  seatOrder.forEach((seatIdx, rankIdx) => {
+    const name = cleanName(rankOrder[rankIdx]?.name);
+    if (name) names[seatIdx] = name;
+  });
+  return { ...tableGame, playerNames: names };
+}
+
 // ====== Tab 3: Group matches by date + player set ======
 function groupMatches(allMatches) {
   const groups = [];
@@ -526,6 +638,12 @@ function renderMatches(allMatches) {
 
   container.innerHTML = groups.map(group => {
     const { date, colPlayers, matches: gMatches } = group;
+    const tableCount = gMatches.filter(m => m.tableGame || m.source === 'table').length;
+    const scoreCount = gMatches.length - tableCount;
+    const sourceSummary = [
+      tableCount ? `テーブル${tableCount}` : '',
+      scoreCount ? `点数${scoreCount}` : ''
+    ].filter(Boolean).join(' / ');
 
     const totals = colPlayers.map(() => 0);
     gMatches.forEach(m => {
@@ -537,7 +655,10 @@ function renderMatches(allMatches) {
 
     const matchRows = gMatches.map((m, mi) => `
       <tr>
-        <td class="date-cell match-label" data-time="${escHtml(formatMatchTime(m.recordedAt))}">${mi + 1}試合目</td>
+        <td class="date-cell match-label" data-time="${escHtml(formatMatchTime(m.recordedAt))}">
+          <span>${mi + 1}試合目</span>
+          <span class="match-kind ${m.tableGame || m.source === 'table' ? 'match-kind-table' : ''}">${m.tableGame || m.source === 'table' ? 'テーブル' : '点数'}</span>
+        </td>
         ${colPlayers.map(pname => {
           const found = (m.players || []).find(p => p.name === pname);
           const pt = found && typeof found.pt === 'number' ? found.pt : 0;
@@ -554,6 +675,7 @@ function renderMatches(allMatches) {
       <legend class="session-legend">${escHtml(date)}</legend>
       <div class="session-players-row">
         <span class="session-players-text">${colPlayers.map(escHtml).join(' · ')}</span>
+        <span class="session-source-text">${escHtml(sourceSummary)}</span>
       </div>
       <div class="records-scroll">
         <table class="records-tbl">
@@ -609,13 +731,23 @@ function buildEditRow(match, displayRow) {
 
   const inputs = colPlayers.map(p => {
     const td = document.createElement('td');
-    const inp = document.createElement('input');
-    inp.type = 'number';
-    inp.value = typeof p.pt === 'number' ? p.pt : 0;
-    inp.className = 'pt-edit-input';
-    td.appendChild(inp);
+    td.className = 'edit-player-cell';
+
+    const nameInp = document.createElement('input');
+    nameInp.type = 'text';
+    nameInp.value = cleanName(p.name);
+    nameInp.className = 'name-edit-input player-name-input';
+    nameInp.placeholder = '名前';
+    makeAutocomplete(nameInp, () => playerHistory);
+
+    const ptInp = document.createElement('input');
+    ptInp.type = 'number';
+    ptInp.value = typeof p.pt === 'number' ? p.pt : 0;
+    ptInp.className = 'pt-edit-input';
+
+    td.append(nameInp, ptInp);
     tr.appendChild(td);
-    return inp;
+    return { nameInp, ptInp, original: p };
   });
 
   const actionTd = document.createElement('td');
@@ -632,7 +764,7 @@ function buildEditRow(match, displayRow) {
   tr.appendChild(actionTd);
 
   function checkSum() {
-    const sum = inputs.reduce((s, inp) => s + (Number(inp.value) || 0), 0);
+    const sum = inputs.reduce((s, item) => s + (Number(item.ptInp.value) || 0), 0);
     const rounded = Math.round(sum * 10) / 10;
     const ok = Math.abs(rounded) < 1e-9;
     sumSpan.textContent = ok ? '合計: 0 ✓' : `合計: ${rounded > 0 ? '+' : ''}${rounded.toFixed(1)}`;
@@ -640,21 +772,28 @@ function buildEditRow(match, displayRow) {
     saveBtn.disabled = !ok;
   }
 
-  inputs.forEach(inp => inp.addEventListener('input', checkSum));
+  inputs.forEach(item => item.ptInp.addEventListener('input', checkSum));
   checkSum();
 
   cancelBtn.addEventListener('click', () => tr.replaceWith(displayRow));
 
   saveBtn.addEventListener('click', async () => {
-    if (inputs.reduce((s, inp) => s + (Number(inp.value) || 0), 0) !== 0) return;
-    const ptByName = {};
-    colPlayers.forEach((p, i) => { ptByName[p.name] = Number(inputs[i].value) || 0; });
-    const updatedPlayers = (match.players || []).map(p => ({ ...p, pt: ptByName[p.name] ?? p.pt }));
+    const sum = inputs.reduce((s, item) => s + (Number(item.ptInp.value) || 0), 0);
+    if (Math.abs(Math.round(sum * 10) / 10) > 1e-9) return;
+    const updatedPlayers = inputs.map((item, i) => ({
+      ...item.original,
+      name: cleanName(item.nameInp.value, `P${i + 1}`),
+      pt: Number(item.ptInp.value) || 0
+    }));
 
     saveBtn.disabled = true;
-    saveBtn.textContent = '保存中...';
+    saveBtn.textContent = '保存中';
     try {
-      await updateDoc(doc(db, 'mahjong_records', currentUser.uid, 'matches', match.id), { players: updatedPlayers });
+      const patch = { players: updatedPlayers };
+      if (match.tableGame) patch.tableGame = syncTableGameNames(match.tableGame, updatedPlayers);
+      await updateDoc(doc(db, 'mahjong_records', currentUser.uid, 'matches', match.id), patch);
+      updateHistoryWithNames(updatedPlayers.map(p => p.name));
+      await savePlayerHistory();
     } catch (err) {
       console.error('保存エラー:', err);
       alert('保存に失敗しました。');
@@ -678,6 +817,11 @@ function applyTableImport() {
 
     // Sort by score descending to get rank order
     const sorted = data.players.slice().sort((a, b) => b.score - a.score);
+    if (data.tableGame?.playerNames) {
+      setTableSeatNames(data.tableGame.playerNames, false);
+    } else {
+      setTableSeatNames(data.players.map(p => p.name), false);
+    }
 
     // Fill score inputs (mahjong uses 百点単位: divide by 100)
     // s1_1 is auto-calculated; fill s2_1, s3_1, s4_1
@@ -688,7 +832,7 @@ function applyTableImport() {
     pendingTableGame = data.tableGame || null;
     [1, 2, 3, 4].forEach((rank, i) => {
       const inp = el(`sn${rank}_1`);
-      if (inp) inp.value = sorted[i].name;
+      if (inp) inp.value = cleanName(sorted[i].name, `P${rank}`);
     });
     computeTab1();
 
@@ -964,6 +1108,7 @@ function addOppRow4(idx) {
     div.querySelector('.opp-name').addEventListener(ev, computeTab4);
     div.querySelector('.opp-score').addEventListener(ev, computeTab4);
   });
+  makeAutocomplete(div.querySelector('.opp-name'), () => playerHistory);
   const roleEl = div.querySelector('.opp-role');
   roleEl.addEventListener('change', () => { enforceOya4(roleEl); computeTab4(); });
   el('opponents4').appendChild(div);
@@ -985,6 +1130,7 @@ function addAutoOpp4(idx) {
   ['input', 'change'].forEach(ev =>
     div.querySelector('.opp-name').addEventListener(ev, computeTab4)
   );
+  makeAutocomplete(div.querySelector('.opp-name'), () => playerHistory);
   const roleEl = div.querySelector('.opp-role');
   roleEl.addEventListener('change', () => { enforceOya4(roleEl); computeTab4(); });
   el('opponents4').appendChild(div);

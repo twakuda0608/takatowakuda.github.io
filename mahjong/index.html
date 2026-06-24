@@ -41,9 +41,9 @@
 
     <!-- タブ1：ウマ/オカ 精算 -->
     <div id="t1" class="tab active">
-      <div id="import-banner" style="display:none;background:rgba(14,165,233,0.12);border:1px solid rgba(14,165,233,0.4);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:none;align-items:center;justify-content:space-between;gap:8px">
-        <span style="font-size:13px;color:rgba(14,165,233,0.95)">📋 麻雀テーブルからスコアを取り込みました</span>
-        <button onclick="this.parentElement.style.display='none'" style="background:none;border:none;color:rgba(14,165,233,0.7);font-size:16px;cursor:pointer;padding:0;line-height:1">×</button>
+      <div id="import-banner" class="import-banner" style="display:none">
+        <span>麻雀テーブルからスコアを取り込みました</span>
+        <button id="import-banner-close" type="button" aria-label="通知を閉じる">×</button>
       </div>
       <fieldset>
         <legend>設定</legend>
@@ -117,8 +117,13 @@
           <p class="muted">記録するには「戦績記録」タブでログインしてください。</p>
         </div>
         <div id="record-logged-in" style="display:none">
+          <div class="record-summary">
+            <span id="record-source-label" class="record-source-badge">点数のみ</span>
+            <span id="record-preview" class="record-preview"></span>
+            <button id="record-clear-table" class="record-clear-btn" type="button" style="display:none">取り込み解除</button>
+          </div>
           <div class="record-actions">
-            <button id="record-btn" class="record-btn">この試合を記録する</button>
+            <button id="record-btn" class="record-btn">試合記録</button>
             <span id="record-success" class="record-msg"></span>
           </div>
         </div>
@@ -169,7 +174,7 @@
           </svg>
         </div>
         <p>戦績を記録・閲覧するには<br>ログインが必要です。</p>
-        <button id="t3-login-btn" class="login-btn">Googleでログイン</button>
+        <button id="t3-login-btn" class="login-btn">Googleログイン</button>
       </div>
 
       <!-- ログイン済み -->
@@ -245,7 +250,7 @@
           <span class="opp-del-placeholder"></span>
         </div>
         <div id="opponents4"></div>
-        <button id="add-opp4" class="logout-btn" style="margin-top:8px">＋ 相手を追加</button>
+        <button id="add-opp4" class="logout-btn" style="margin-top:8px">＋ 相手追加</button>
       </fieldset>
 
       <div id="result4"></div>
