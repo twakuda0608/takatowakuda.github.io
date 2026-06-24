@@ -3239,7 +3239,7 @@
       const layer = root.querySelector('.personal-fx-layer');
       if (!layer) return;
       layer.innerHTML = '';
-      const drawSegment = (start, end, hasHead = true) => {
+      const drawSegment = (start, end, hasHead = true, delay = 0, duration = 720) => {
         const dx = end.x - start.x;
         const dy = end.y - start.y;
         const length = Math.hypot(dx, dy);
@@ -3256,7 +3256,8 @@
           { transform: `rotate(${angle}deg) scaleX(0)`, opacity: 1 },
           { transform: `rotate(${angle}deg) scaleX(1)`, opacity: 1 }
         ], {
-          duration: 720,
+          duration,
+          delay,
           easing: 'cubic-bezier(.2,.7,.2,1)',
           fill: 'forwards'
         });
@@ -3285,10 +3286,10 @@
         const isCornerMove = Math.abs(dx) > 80 && Math.abs(dy) > 80;
         if (isCornerMove) {
           const corner = personalOuterElbow(start, end);
-          drawSegment(start, corner, false);
-          drawSegment(corner, end, true);
+          drawSegment(start, corner, false, 0, 430);
+          drawSegment(corner, end, true, 430, 430);
         } else {
-          drawSegment(start, end, true);
+          drawSegment(start, end, true, 0, 720);
         }
       });
       deltas.forEach((raw, idx) => {
@@ -3308,12 +3309,12 @@
           { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' }
         ], {
           duration: 260,
-          delay: 780,
+          delay: 980,
           easing: 'ease-out',
           fill: 'forwards'
         });
       });
-      setTimeout(() => animatePersonalScores(scoresBefore, deltas), 1500);
+      setTimeout(() => animatePersonalScores(scoresBefore, deltas), 1700);
       setTimeout(() => {
         if (layer) layer.innerHTML = '';
       }, 5000);
