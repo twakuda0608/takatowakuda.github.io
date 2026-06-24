@@ -1326,7 +1326,7 @@
       background: radial-gradient(circle at 10% 0%, rgba(251,191,36,0.16), transparent 34%), #0f3f23;
       color: #fff;
       overflow: hidden;
-      padding: 14px max(14px, env(safe-area-inset-right)) 14px max(14px, env(safe-area-inset-left));
+      padding: clamp(8px, 2.2vh, 18px) max(clamp(8px, 2.2vh, 18px), env(safe-area-inset-right)) clamp(8px, 2.2vh, 18px) max(clamp(8px, 2.2vh, 18px), env(safe-area-inset-left));
       font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
     }
     body.personal-view-active .personal-view { display: grid; }
@@ -1336,8 +1336,8 @@
       height: 100%;
       display: grid;
       grid-template-columns: 1fr 1.18fr 1fr;
-      grid-template-rows: 1fr auto 1fr;
-      gap: 10px;
+      grid-template-rows: minmax(0, 1fr) auto minmax(0, 1.08fr);
+      gap: clamp(6px, 1.8vh, 14px);
       min-width: 0;
       min-height: 0;
     }
@@ -1355,7 +1355,7 @@
       font-weight: 900;
       letter-spacing: 1px;
       white-space: nowrap;
-      margin-bottom: 8px;
+      margin-bottom: clamp(6px, 1.4vh, 12px);
     }
     .personal-seat {
       display: flex;
@@ -1382,7 +1382,7 @@
     .personal-seat.bottom {
       grid-column: 2;
       grid-row: 3;
-      align-self: start;
+      align-self: end;
     }
     .personal-score-card, .personal-seat-card {
       border: 1px solid rgba(255,255,255,0.12);
@@ -1391,16 +1391,16 @@
       box-shadow: 0 18px 40px rgba(0,0,0,0.22);
     }
     .personal-score-card {
-      width: min(46vw, 270px);
-      padding: 10px 12px;
+      width: min(48vw, 44vh, 330px);
+      padding: clamp(9px, 1.9vh, 16px) clamp(12px, 2.6vh, 20px);
       display: grid;
-      gap: 4px;
+      gap: clamp(4px, 1vh, 8px);
       text-align: center;
       min-width: 0;
     }
     .personal-score-card.is-me {
-      width: min(54vw, 330px);
-      padding: 10px 16px;
+      width: min(62vw, 58vh, 430px);
+      padding: clamp(10px, 2vh, 18px) clamp(16px, 3vh, 26px);
       border-color: rgba(251,191,36,0.48);
       background: rgba(0,0,0,0.34);
     }
@@ -1411,37 +1411,37 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
+      gap: clamp(7px, 1.5vh, 12px);
       min-width: 0;
     }
     .personal-wind {
-      width: 34px;
-      height: 34px;
+      width: clamp(34px, 8.5vh, 52px);
+      height: clamp(34px, 8.5vh, 52px);
       border-radius: 50%;
       display: grid;
       place-items: center;
       background: #f97316;
       color: #fff;
-      font-size: 19px;
+      font-size: clamp(19px, 4.8vh, 30px);
       font-weight: 900;
       flex-shrink: 0;
     }
     .personal-score-card.is-me .personal-wind {
-      width: 44px;
-      height: 44px;
-      font-size: 25px;
+      width: clamp(44px, 11vh, 66px);
+      height: clamp(44px, 11vh, 66px);
+      font-size: clamp(25px, 6.2vh, 38px);
     }
     .personal-name {
       color: rgba(255,255,255,0.74);
-      font-size: 14px;
+      font-size: clamp(14px, 3.3vh, 22px);
       font-weight: 800;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .personal-score-card.is-me .personal-name { font-size: 18px; }
+    .personal-score-card.is-me .personal-name { font-size: clamp(18px, 4vh, 26px); }
     .personal-score {
-      font-size: clamp(22px, 6vw, 38px);
+      font-size: clamp(30px, 12vh, 62px);
       font-weight: 900;
       line-height: 1;
       font-variant-numeric: tabular-nums;
@@ -1450,24 +1450,24 @@
     .personal-score.diff-pos { color: #60a5fa; }
     .personal-score.diff-neg { color: #f87171; }
     .personal-score-card.is-me .personal-score {
-      font-size: clamp(34px, 13vh, 54px);
+      font-size: clamp(52px, 18vh, 96px);
     }
     .personal-score-line {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: clamp(9px, 2vh, 16px);
       min-width: 0;
     }
     .personal-diff-btn {
-      width: 34px;
-      height: 34px;
+      width: clamp(38px, 9.5vh, 58px);
+      height: clamp(38px, 9.5vh, 58px);
       border: 1.5px solid rgba(255,255,255,0.24);
       border-radius: 8px;
       background: rgba(255,255,255,0.09);
       color: rgba(255,255,255,0.62);
       font-family: inherit;
-      font-size: 15px;
+      font-size: clamp(16px, 3.8vh, 23px);
       font-weight: 900;
       line-height: 1;
       padding: 0;
@@ -1479,13 +1479,13 @@
     .personal-diff-btn .plus,
     .personal-diff-btn .minus {
       position: absolute;
-      font-size: 10px;
+      font-size: clamp(10px, 2.4vh, 14px);
       line-height: 1;
     }
-    .personal-diff-btn .plus { top: 5px; left: 5px; }
-    .personal-diff-btn .minus { bottom: 5px; right: 5px; }
+    .personal-diff-btn .plus { top: 16%; left: 16%; }
+    .personal-diff-btn .minus { bottom: 16%; right: 16%; }
     .personal-diff-btn .slash {
-      font-size: 15px;
+      font-size: clamp(15px, 3.8vh, 23px);
       line-height: 1;
     }
     .personal-diff-btn.active {
@@ -1505,8 +1505,8 @@
       min-width: 0;
     }
     .personal-riichi-stick {
-      width: 74px;
-      height: 12px;
+      width: clamp(78px, 20vh, 120px);
+      height: clamp(12px, 2.8vh, 18px);
       border-radius: 999px;
       background: #f8fafc;
       border: 1px solid rgba(0,0,0,0.2);
@@ -1521,21 +1521,79 @@
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 10px;
-      height: 10px;
+      width: clamp(10px, 2.2vh, 14px);
+      height: clamp(10px, 2.2vh, 14px);
       border-radius: 50%;
       background: #ef4444;
       transform: translate(-50%, -50%);
       box-shadow: 0 0 0 1px rgba(127,29,29,0.18);
     }
     .personal-score-card.is-me .personal-riichi-stick {
-      width: 96px;
-      height: 14px;
+      width: clamp(108px, 25vh, 150px);
+      height: clamp(14px, 3.2vh, 20px);
     }
     .personal-score-card.is-me .personal-riichi-stick::after {
-      width: 12px;
-      height: 12px;
+      width: clamp(12px, 2.6vh, 16px);
+      height: clamp(12px, 2.6vh, 16px);
     }
+    .personal-fx-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .personal-move-label {
+      position: fixed;
+      left: 0;
+      top: 0;
+      transform: translate(-50%, -50%);
+      min-width: 74px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(251,191,36,0.95);
+      color: #1f2937;
+      font-size: clamp(12px, 3vh, 18px);
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.34);
+      white-space: nowrap;
+      opacity: 0;
+    }
+    .personal-move-label.plus {
+      background: rgba(74,222,128,0.96);
+      color: #052e16;
+    }
+    .personal-move-label.minus {
+      background: rgba(248,113,113,0.96);
+      color: #450a0a;
+    }
+    .personal-move-arrow {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 0;
+      height: 0;
+      transform-origin: 0 50%;
+      border-top: 3px solid rgba(251,191,36,0.94);
+      filter: drop-shadow(0 3px 8px rgba(0,0,0,0.4));
+    }
+    .personal-move-arrow.corner {
+      border-top-style: solid;
+    }
+    .personal-move-arrow::after {
+      content: "";
+      position: absolute;
+      right: -1px;
+      top: -8px;
+      width: 0;
+      height: 0;
+      border-left: 13px solid rgba(251,191,36,0.94);
+      border-top: 6px solid transparent;
+      border-bottom: 6px solid transparent;
+    }
+    .personal-move-arrow.no-head::after { display: none; }
     .personal-seat-grid {
       height: 100%;
       display: grid;
@@ -1571,7 +1629,7 @@
       font-family: inherit;
       font-size: 12px;
       font-weight: 800;
-      padding: 8px 12px;
+      padding: clamp(8px, 1.8vh, 12px) clamp(14px, 3vh, 22px);
       cursor: pointer;
       margin-top: 8px;
     }
@@ -1607,68 +1665,111 @@
       }
     }
     @media (orientation: landscape) and (max-height: 430px) {
-      .personal-view { padding-top: 10px; padding-bottom: 10px; }
+      .personal-view { padding-top: 8px; padding-bottom: 8px; }
       .personal-shell {
-        grid-template-rows: minmax(82px, 1fr) auto minmax(94px, 1fr);
-        gap: 6px;
+        grid-template-rows: minmax(92px, 1fr) auto minmax(112px, 1.08fr);
+        gap: 8px;
       }
       .personal-board-info {
-        font-size: 12px;
+        font-size: 14px;
         margin-bottom: 6px;
       }
       .personal-action {
-        font-size: 11px;
-        padding: 6px 11px;
+        font-size: 13px;
+        padding: 8px 14px;
         margin-top: 4px;
       }
       .personal-score-card {
-        width: min(42vw, 230px);
-        padding: 8px 10px;
-        gap: 3px;
+        width: min(44vw, 260px);
+        padding: 9px 12px;
+        gap: 4px;
       }
       .personal-score-card.is-me {
-        width: min(46vw, 300px);
-        padding: 8px 14px;
+        width: min(52vw, 340px);
+        padding: 10px 16px;
       }
       .personal-wind {
-        width: 28px;
-        height: 28px;
-        font-size: 16px;
+        width: 34px;
+        height: 34px;
+        font-size: 19px;
       }
       .personal-score-card.is-me .personal-wind {
-        width: 36px;
-        height: 36px;
-        font-size: 21px;
+        width: 44px;
+        height: 44px;
+        font-size: 25px;
       }
-      .personal-name { font-size: 12px; }
-      .personal-score-card.is-me .personal-name { font-size: 15px; }
-      .personal-score { font-size: clamp(20px, 8vh, 32px); }
-      .personal-score-card.is-me .personal-score { font-size: clamp(34px, 12vh, 48px); }
-      .personal-score-line { gap: 7px; }
+      .personal-name { font-size: 15px; }
+      .personal-score-card.is-me .personal-name { font-size: 20px; }
+      .personal-score { font-size: clamp(32px, 12vh, 48px); }
+      .personal-score-card.is-me .personal-score { font-size: clamp(54px, 17vh, 72px); }
+      .personal-score-line { gap: 10px; }
       .personal-diff-btn {
-        width: 30px;
-        height: 30px;
-        font-size: 13px;
+        width: 42px;
+        height: 42px;
+        font-size: 18px;
       }
       .personal-riichi-stick {
-        width: 60px;
-        height: 10px;
-      }
-      .personal-riichi-stick::after {
-        width: 8px;
-        height: 8px;
-      }
-      .personal-score-card.is-me .personal-riichi-stick {
-        width: 82px;
+        width: 80px;
         height: 12px;
       }
-      .personal-score-card.is-me .personal-riichi-stick::after {
+      .personal-riichi-stick::after {
         width: 10px;
         height: 10px;
+      }
+      .personal-score-card.is-me .personal-riichi-stick {
+        width: 112px;
+        height: 14px;
+      }
+      .personal-score-card.is-me .personal-riichi-stick::after {
+        width: 12px;
+        height: 12px;
       }
       .personal-meta {
         gap: 7px;
         font-size: 10px;
+      }
+    }
+    @media (orientation: landscape) and (max-height: 380px) {
+      .personal-view { padding-top: 6px; padding-bottom: 6px; }
+      .personal-shell {
+        grid-template-rows: minmax(82px, 1fr) auto minmax(98px, 1fr);
+        gap: 6px;
+      }
+      .personal-board-info { font-size: 12px; margin-bottom: 4px; }
+      .personal-action { font-size: 11px; padding: 6px 12px; }
+      .personal-score-card {
+        width: min(42vw, 235px);
+        padding: 8px 10px;
+      }
+      .personal-score-card.is-me {
+        width: min(48vw, 310px);
+        padding: 8px 14px;
+      }
+      .personal-wind {
+        width: 30px;
+        height: 30px;
+        font-size: 17px;
+      }
+      .personal-score-card.is-me .personal-wind {
+        width: 38px;
+        height: 38px;
+        font-size: 22px;
+      }
+      .personal-name { font-size: 13px; }
+      .personal-score-card.is-me .personal-name { font-size: 17px; }
+      .personal-score { font-size: clamp(28px, 11vh, 40px); }
+      .personal-score-card.is-me .personal-score { font-size: clamp(46px, 15vh, 58px); }
+      .personal-diff-btn {
+        width: 36px;
+        height: 36px;
+      }
+      .personal-riichi-stick {
+        width: 72px;
+        height: 11px;
+      }
+      .personal-score-card.is-me .personal-riichi-stick {
+        width: 96px;
+        height: 13px;
       }
     }
   </style>
@@ -2727,6 +2828,8 @@
     let personalSeatIndex = Number(localStorage.getItem(`mahjong_personal_seat_${tableRoomId}`) ?? -1);
     let personalRoomLoaded = false;
     let personalDiffOn = false;
+    let personalPendingMove = null;
+    let personalScoreOverrides = null;
 
     function cleanRoomId(roomId) {
       return String(roomId || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
@@ -2989,7 +3092,26 @@
       state.roundWind = Number(s.roundWind || 0);
       state.roundNum = Number(s.roundNum || 1);
       state.inEnchosen = !!s.inEnchosen;
-      tableRoundLog = Array.isArray(payload.tableRoundLog) ? payload.tableRoundLog : [];
+      const prevRoundLogLength = tableRoundLog.length;
+      const nextRoundLog = Array.isArray(payload.tableRoundLog) ? payload.tableRoundLog : [];
+      const shouldAnimateMove = isPersonalView
+        && personalRoomLoaded
+        && nextRoundLog.length > prevRoundLogLength
+        && nextRoundLog[nextRoundLog.length - 1]?.type === 'agari'
+        && Array.isArray(nextRoundLog[nextRoundLog.length - 1]?.deltas);
+      tableRoundLog = nextRoundLog;
+      if (shouldAnimateMove) {
+        const lastMove = tableRoundLog[tableRoundLog.length - 1];
+        const beforeScores = Array.isArray(lastMove.scoresBefore)
+          ? lastMove.scoresBefore.slice(0, 4).map(score => Number(score || 0))
+          : null;
+        if (beforeScores && beforeScores.length === 4) personalScoreOverrides = beforeScores;
+        personalPendingMove = {
+          deltas: lastMove.deltas.slice(0, 4),
+          scoresBefore: beforeScores,
+          token: Date.now()
+        };
+      }
       riichiCounts = Array.isArray(payload.riichiCounts) ? payload.riichiCounts.slice(0, 4) : [0, 0, 0, 0];
       while (riichiCounts.length < 4) riichiCounts.push(0);
       kiichaSlot = Number.isInteger(payload.kiichaSlot) ? payload.kiichaSlot : state.players.findIndex(p => p.wind === '東');
@@ -3019,6 +3141,154 @@
       return String(s ?? '').replace(/[&<>"']/g, ch => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
       }[ch]));
+    }
+
+    function buildPointFlows(deltas) {
+      const positives = [];
+      const negatives = [];
+      deltas.forEach((raw, idx) => {
+        const amount = Number(raw || 0);
+        if (amount > 0) positives.push({ idx, amount });
+        if (amount < 0) negatives.push({ idx, amount: -amount });
+      });
+      const flows = [];
+      let pi = 0;
+      let ni = 0;
+      while (pi < positives.length && ni < negatives.length) {
+        const amount = Math.min(positives[pi].amount, negatives[ni].amount);
+        if (amount > 0) {
+          flows.push({ from: negatives[ni].idx, to: positives[pi].idx, amount });
+        }
+        positives[pi].amount -= amount;
+        negatives[ni].amount -= amount;
+        if (positives[pi].amount <= 0) pi++;
+        if (negatives[ni].amount <= 0) ni++;
+      }
+      return flows;
+    }
+
+    function rectCenter(el) {
+      const rect = el.getBoundingClientRect();
+      return {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+      };
+    }
+
+    function setPersonalScoreText(idx, score) {
+      const el = document.querySelector(`.personal-score[data-score-idx="${idx}"]`);
+      if (el) el.textContent = fmtPersonalScore(score);
+    }
+
+    function animatePersonalScores(scoresBefore, deltas) {
+      if (!Array.isArray(scoresBefore) || !Array.isArray(deltas)) return;
+      const duration = 1100;
+      const startAt = performance.now();
+      const finalScores = scoresBefore.map((score, i) => Number(score || 0) + Number(deltas[i] || 0));
+      const tick = now => {
+        const t = Math.min(1, (now - startAt) / duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+        scoresBefore.forEach((score, i) => {
+          const next = Math.round((Number(score || 0) + (finalScores[i] - Number(score || 0)) * eased) / 100) * 100;
+          setPersonalScoreText(i, next);
+        });
+        if (t < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          personalScoreOverrides = null;
+          finalScores.forEach((score, i) => setPersonalScoreText(i, score));
+        }
+      };
+      requestAnimationFrame(tick);
+    }
+
+    function showPersonalPointMove(deltas, scoresBefore = null) {
+      if (!isPersonalView || !Array.isArray(deltas)) return;
+      const root = document.getElementById('personalView');
+      if (!root) return;
+      const flows = buildPointFlows(deltas).slice(0, 8);
+      if (!flows.length) return;
+      const layer = root.querySelector('.personal-fx-layer');
+      if (!layer) return;
+      layer.innerHTML = '';
+      const drawSegment = (start, end, hasHead = true) => {
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const length = Math.hypot(dx, dy);
+        if (length < 16) return;
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        const arrow = document.createElement('div');
+        arrow.className = `personal-move-arrow${hasHead ? '' : ' no-head'}`;
+        arrow.style.left = `${start.x}px`;
+        arrow.style.top = `${start.y}px`;
+        arrow.style.width = `${Math.max(0, length - (hasHead ? 10 : 0))}px`;
+        arrow.style.transform = `rotate(${angle}deg) scaleX(0)`;
+        layer.appendChild(arrow);
+        arrow.animate([
+          { transform: `rotate(${angle}deg) scaleX(0)`, opacity: 1 },
+          { transform: `rotate(${angle}deg) scaleX(1)`, opacity: 1 }
+        ], {
+          duration: 720,
+          easing: 'cubic-bezier(.2,.7,.2,1)',
+          fill: 'forwards'
+        });
+      };
+      flows.forEach((flow, i) => {
+        const fromCard = root.querySelector(`.personal-score-card[data-player-idx="${flow.from}"]`);
+        const toCard = root.querySelector(`.personal-score-card[data-player-idx="${flow.to}"]`);
+        if (!fromCard || !toCard) return;
+        const fromPos = fromCard.dataset.seatPos;
+        const toPos = toCard.dataset.seatPos;
+        const from = rectCenter(fromCard);
+        const to = rectCenter(toCard);
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+        const angleRad = Math.atan2(dy, dx);
+        const startPad = 44;
+        const endPad = 44;
+        const start = {
+          x: from.x + Math.cos(angleRad) * startPad,
+          y: from.y + Math.sin(angleRad) * startPad
+        };
+        const end = {
+          x: to.x - Math.cos(angleRad) * endPad,
+          y: to.y - Math.sin(angleRad) * endPad
+        };
+        const isCornerMove = Math.abs(dx) > 80 && Math.abs(dy) > 80;
+        if (isCornerMove) {
+          const corner = { x: end.x, y: start.y };
+          drawSegment(start, corner, false);
+          drawSegment(corner, end, true);
+        } else {
+          drawSegment(start, end, true);
+        }
+      });
+      deltas.forEach((raw, idx) => {
+        const amount = Number(raw || 0);
+        if (!amount) return;
+        const card = root.querySelector(`.personal-score-card[data-player-idx="${idx}"]`);
+        if (!card) return;
+        const center = rectCenter(card);
+        const label = document.createElement('div');
+        label.className = `personal-move-label ${amount > 0 ? 'plus' : 'minus'}`;
+        label.textContent = `${amount > 0 ? '+' : ''}${fmtPersonalScore(amount)}`;
+        label.style.left = `${center.x}px`;
+        label.style.top = `${center.y}px`;
+        layer.appendChild(label);
+        label.animate([
+          { opacity: 0, transform: 'translate(-50%, -50%) scale(0.88)' },
+          { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' }
+        ], {
+          duration: 260,
+          delay: 780,
+          easing: 'ease-out',
+          fill: 'forwards'
+        });
+      });
+      setTimeout(() => animatePersonalScores(scoresBefore, deltas), 1500);
+      setTimeout(() => {
+        if (layer) layer.innerHTML = '';
+      }, 5000);
     }
 
     function renderPersonalView() {
@@ -3062,23 +3332,26 @@
       const cardHtml = ({ pos, idx }) => {
         const p = state.players[idx] || {};
         const isMe = idx === personalSeatIndex;
+        const displayScore = Array.isArray(personalScoreOverrides)
+          ? Number(personalScoreOverrides[idx] || 0)
+          : Number(p.score || 0);
         const diff = Number(me.score || 0) - Number(p.score || 0);
         const scoreText = personalDiffOn && !isMe
           ? `${diff >= 0 ? '+' : ''}${fmtPersonalScore(diff)}`
-          : fmtPersonalScore(p.score);
+          : fmtPersonalScore(displayScore);
         const diffClass = personalDiffOn && !isMe
           ? diff >= 0 ? ' diff-pos' : ' diff-neg'
           : '';
         return `
           <div class="personal-seat ${pos}">
-            <div class="personal-score-card ${pos}${isMe ? ' is-me' : ''}">
+            <div class="personal-score-card ${pos}${isMe ? ' is-me' : ''}" data-player-idx="${idx}" data-seat-pos="${pos}">
               <div class="personal-name-line">
                 <span class="personal-wind">${escPersonal(p.wind)}</span>
                 <span class="personal-name">${escPersonal(p.name)}</span>
               </div>
               <div class="personal-score-line">
                 ${isMe ? `<button class="personal-diff-btn${personalDiffOn ? ' active' : ''}" id="personalDiffBtn" aria-label="点差"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>` : ''}
-                <div class="personal-score${diffClass}">${scoreText}</div>
+                <div class="personal-score${diffClass}" data-score-idx="${idx}">${scoreText}</div>
               </div>
               <div class="personal-riichi-stick${p.riichi ? ' on' : ''}" aria-label="${p.riichi ? 'リーチ' : ''}"></div>
             </div>
@@ -3091,6 +3364,7 @@
             <button class="personal-action" id="personalSeatChange">席変更</button>
           </div>
           ${seatPositions.map(cardHtml).join('')}
+          <div class="personal-fx-layer"></div>
           <div class="portrait-hint">横向きにしてください<br>この画面は横向き専用です</div>
         </div>`;
       document.getElementById('personalSeatChange').addEventListener('click', () => {
@@ -3106,6 +3380,11 @@
           personalDiffOn = true;
           renderPersonalView();
         });
+      }
+      if (personalPendingMove) {
+        const move = personalPendingMove;
+        personalPendingMove = null;
+        requestAnimationFrame(() => showPersonalPointMove(move.deltas, move.scoresBefore));
       }
     }
 
