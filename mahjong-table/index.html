@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>麻雀テーブル</title>
   <link rel="icon" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
@@ -1326,7 +1326,11 @@
       background: radial-gradient(circle at 10% 0%, rgba(251,191,36,0.16), transparent 34%), #0f3f23;
       color: #fff;
       overflow: hidden;
-      padding: clamp(8px, 2.2vh, 18px) max(clamp(8px, 2.2vh, 18px), env(safe-area-inset-right)) clamp(8px, 2.2vh, 18px) max(clamp(8px, 2.2vh, 18px), env(safe-area-inset-left));
+      padding:
+        calc(max(clamp(12px, 3.2vh, 28px), env(safe-area-inset-top)) + 8px)
+        max(clamp(8px, 2.2vh, 18px), env(safe-area-inset-right))
+        max(clamp(10px, 2.6vh, 22px), env(safe-area-inset-bottom))
+        max(clamp(8px, 2.2vh, 18px), env(safe-area-inset-left));
       font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
     }
     body.personal-view-active .personal-view { display: grid; }
@@ -1351,11 +1355,18 @@
     }
     .personal-board-info {
       color: rgba(255,255,255,0.64);
-      font-size: 14px;
+      font-size: clamp(18px, 4.6vh, 30px);
       font-weight: 900;
-      letter-spacing: 1px;
+      line-height: 1.25;
+      letter-spacing: 0;
       white-space: nowrap;
       margin-bottom: clamp(6px, 1.4vh, 12px);
+    }
+    .personal-board-info-sub {
+      display: block;
+      color: rgba(255,255,255,0.46);
+      font-size: 0.72em;
+      margin-top: 2px;
     }
     .personal-seat {
       display: flex;
@@ -1441,16 +1452,22 @@
     }
     .personal-score-card.is-me .personal-name { font-size: clamp(18px, 4vh, 26px); }
     .personal-score {
-      font-size: clamp(30px, 12vh, 62px);
+      max-width: 100%;
+      overflow: hidden;
+      font-size: clamp(28px, 10.5vh, 54px);
       font-weight: 900;
       line-height: 1;
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
     }
+    .personal-score.long-score { font-size: clamp(24px, 8.8vh, 46px); }
     .personal-score.diff-pos { color: #60a5fa; }
     .personal-score.diff-neg { color: #f87171; }
     .personal-score-card.is-me .personal-score {
-      font-size: clamp(52px, 18vh, 96px);
+      font-size: clamp(44px, 15vh, 78px);
+    }
+    .personal-score-card.is-me .personal-score.long-score {
+      font-size: clamp(38px, 12.5vh, 64px);
     }
     .personal-score-line {
       display: flex;
@@ -1604,22 +1621,24 @@
     .personal-seat-card {
       color: #fff;
       font-family: inherit;
-      padding: 12px;
+      padding: clamp(10px, 2.8vh, 22px);
       cursor: pointer;
       display: grid;
       place-items: center;
-      gap: 4px;
       min-width: 0;
     }
-    .personal-seat-wind { color: #fbbf24; font-size: 30px; font-weight: 900; }
     .personal-seat-name {
-      font-size: 13px;
-      font-weight: 800;
-      color: rgba(255,255,255,0.72);
+      font-size: clamp(18px, 5.4vh, 34px);
+      font-weight: 900;
+      color: rgba(255,255,255,0.9);
       max-width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      text-align: center;
+    }
+    .personal-seat-name.long-name {
+      font-size: clamp(14px, 4vh, 24px);
     }
     .personal-action {
       border: 1px solid rgba(255,255,255,0.18);
@@ -1643,6 +1662,224 @@
       text-align: center;
       line-height: 1.7;
     }
+    .personal-seat-change-top {
+      position: fixed;
+      top: calc(max(10px, env(safe-area-inset-top)) + 4px);
+      right: max(10px, env(safe-area-inset-right));
+      z-index: 3;
+      margin: 0;
+    }
+    .personal-result-shell {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.6fr);
+      gap: clamp(8px, 2vh, 16px);
+      min-width: 0;
+      min-height: 0;
+      padding-top: 8px;
+    }
+    .personal-result-panel {
+      min-width: 0;
+      min-height: 0;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.24);
+      padding: clamp(10px, 2.4vh, 18px);
+      overflow: hidden;
+    }
+    .personal-result-panel.scrollable {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .personal-result-title {
+      color: #fbbf24;
+      font-size: clamp(18px, 4.8vh, 30px);
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: clamp(8px, 2vh, 14px);
+    }
+    .personal-result-list {
+      display: grid;
+      gap: 8px;
+    }
+    .personal-result-row {
+      display: grid;
+      grid-template-columns: 42px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      min-width: 0;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.07);
+      font-weight: 900;
+    }
+    .personal-result-rank { color: rgba(255,255,255,0.45); font-size: 13px; }
+    .personal-result-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: rgba(255,255,255,0.86);
+      font-size: clamp(14px, 3.4vh, 22px);
+    }
+    .personal-result-score {
+      color: #fff;
+      font-size: clamp(16px, 4vh, 24px);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .personal-result-graph {
+      width: 100%;
+      height: calc(100% - 68px);
+      min-height: 150px;
+    }
+    .personal-graph-legend {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      margin: -2px 0 8px;
+    }
+    .personal-graph-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      color: rgba(255,255,255,0.78);
+      font-size: clamp(10px, 2.5vh, 13px);
+      font-weight: 900;
+    }
+    .personal-graph-legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--p-color, #fff);
+      flex-shrink: 0;
+    }
+    .personal-graph-legend-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .personal-stat-table-wrap {
+      margin-top: clamp(10px, 2.4vh, 18px);
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .personal-stat-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: clamp(11px, 2.8vh, 15px);
+      font-weight: 800;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .personal-stat-table th {
+      color: rgba(255,255,255,0.45);
+      font-size: 0.86em;
+      text-align: center;
+      padding: 6px 5px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      white-space: nowrap;
+    }
+    .personal-stat-table th:first-child,
+    .personal-stat-table td:first-child {
+      text-align: left;
+    }
+    .personal-stat-table td {
+      color: rgba(255,255,255,0.78);
+      text-align: center;
+      padding: 7px 5px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      font-variant-numeric: tabular-nums;
+    }
+    .personal-stat-player {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      color: rgba(255,255,255,0.9);
+    }
+    .personal-stat-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--p-color, #fff);
+      flex-shrink: 0;
+    }
+    .personal-stat-player-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .personal-history-wrap {
+      margin-top: clamp(10px, 2.4vh, 18px);
+      display: grid;
+      gap: 8px;
+    }
+    .personal-history-empty {
+      color: rgba(255,255,255,0.42);
+      font-size: clamp(12px, 3vh, 16px);
+      font-weight: 800;
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+    }
+    .personal-history-item {
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.055);
+      padding: 8px 10px;
+      min-width: 0;
+    }
+    .personal-history-item.my-plus {
+      border-color: rgba(74,222,128,0.42);
+      background: rgba(22,101,52,0.28);
+    }
+    .personal-history-item.my-minus {
+      border-color: rgba(248,113,113,0.42);
+      background: rgba(127,29,29,0.28);
+    }
+    .personal-history-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-width: 0;
+      margin-bottom: 5px;
+    }
+    .personal-history-round {
+      color: rgba(255,255,255,0.46);
+      font-size: clamp(10px, 2.5vh, 13px);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .personal-history-role {
+      color: rgba(255,255,255,0.84);
+      font-size: clamp(12px, 3vh, 16px);
+      font-weight: 900;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .personal-history-delta {
+      font-size: clamp(14px, 3.7vh, 20px);
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .personal-history-delta.plus { color: #4ade80; }
+    .personal-history-delta.minus { color: #f87171; }
+    .personal-history-detail {
+      color: rgba(255,255,255,0.58);
+      font-size: clamp(11px, 2.7vh, 14px);
+      font-weight: 800;
+      line-height: 1.45;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     .portrait-hint {
       display: none;
       position: fixed;
@@ -1660,18 +1897,22 @@
     @media (orientation: portrait) {
       body.personal-view-active .portrait-hint { display: grid; }
       body.personal-view-active .personal-shell,
-      body.personal-view-active .personal-seat-grid {
+      body.personal-view-active .personal-seat-grid,
+      body.personal-view-active .personal-result-shell {
         display: none;
       }
     }
     @media (orientation: landscape) and (max-height: 430px) {
-      .personal-view { padding-top: 8px; padding-bottom: 8px; }
+      .personal-view {
+        padding-top: calc(max(14px, env(safe-area-inset-top)) + 8px);
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+      }
       .personal-shell {
         grid-template-rows: minmax(92px, 1fr) auto minmax(112px, 1.08fr);
         gap: 8px;
       }
       .personal-board-info {
-        font-size: 14px;
+        font-size: 18px;
         margin-bottom: 6px;
       }
       .personal-action {
@@ -1700,8 +1941,10 @@
       }
       .personal-name { font-size: 15px; }
       .personal-score-card.is-me .personal-name { font-size: 20px; }
-      .personal-score { font-size: clamp(32px, 12vh, 48px); }
-      .personal-score-card.is-me .personal-score { font-size: clamp(54px, 17vh, 72px); }
+      .personal-score { font-size: clamp(30px, 10.5vh, 42px); }
+      .personal-score.long-score { font-size: clamp(24px, 8.8vh, 36px); }
+      .personal-score-card.is-me .personal-score { font-size: clamp(48px, 14.5vh, 62px); }
+      .personal-score-card.is-me .personal-score.long-score { font-size: clamp(38px, 12vh, 52px); }
       .personal-score-line { gap: 10px; }
       .personal-diff-btn {
         width: 42px;
@@ -1730,7 +1973,10 @@
       }
     }
     @media (orientation: landscape) and (max-height: 380px) {
-      .personal-view { padding-top: 6px; padding-bottom: 6px; }
+      .personal-view {
+        padding-top: calc(max(12px, env(safe-area-inset-top)) + 6px);
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
+      }
       .personal-shell {
         grid-template-rows: minmax(82px, 1fr) auto minmax(98px, 1fr);
         gap: 6px;
@@ -1757,8 +2003,10 @@
       }
       .personal-name { font-size: 13px; }
       .personal-score-card.is-me .personal-name { font-size: 17px; }
-      .personal-score { font-size: clamp(28px, 11vh, 40px); }
-      .personal-score-card.is-me .personal-score { font-size: clamp(46px, 15vh, 58px); }
+      .personal-score { font-size: clamp(26px, 9.6vh, 36px); }
+      .personal-score.long-score { font-size: clamp(22px, 8vh, 31px); }
+      .personal-score-card.is-me .personal-score { font-size: clamp(42px, 13vh, 52px); }
+      .personal-score-card.is-me .personal-score.long-score { font-size: clamp(34px, 11vh, 44px); }
       .personal-diff-btn {
         width: 36px;
         height: 36px;
@@ -2812,6 +3060,7 @@
 
     const WINDS = ['東', '南', '西', '北'];
     const ROUND_WINDS = ['東', '南', '西', '北'];
+    const PERSONAL_COLORS = ['#fbbf24', '#4ade80', '#60a5fa', '#f87171'];
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyBC0X3taGcEclIO8g7Lg7odIdTwaA6gnGY",
       authDomain: "wakuda-tools.firebaseapp.com",
@@ -2889,6 +3138,7 @@
     let tableRoundLog = [];
     let riichiCounts = [0, 0, 0, 0];
     let gameRecorded = false;
+    let tableGameEnded = false;
     let kiichaSlot = 0;
     let randomSpinInterval = null;
     let randomTimeouts = [];
@@ -3005,6 +3255,7 @@
         state: captureSnapshot(),
         tableRoundLog: tableRoundLog.map(ev => ({ ...ev })),
         riichiCounts: riichiCounts.slice(),
+        gameEnded: tableGameEnded,
         kiichaSlot,
         playerWinds: playerWinds.slice(),
         settings: {
@@ -3023,6 +3274,7 @@
       await fb.setDoc(fb.doc(fb.db, ROOM_COLLECTION, tableRoomId), {
         roomId: tableRoomId,
         active: true,
+        gameEnded: tableGameEnded,
         updatedAt: fb.serverTimestamp(),
         payload: buildRoomPayload()
       }, { merge: true });
@@ -3034,6 +3286,12 @@
       tableRoomPublishTimer = setTimeout(() => {
         writeRoomPayload().catch(() => updateShareStatus('同期できませんでした'));
       }, 180);
+    }
+
+    function publishRoomStateNow() {
+      if (isPersonalView || !tableRoomId || !isGameInProgress()) return;
+      clearTimeout(tableRoomPublishTimer);
+      writeRoomPayload().catch(() => updateShareStatus('同期できませんでした'));
     }
 
     async function ensureRoom() {
@@ -3077,7 +3335,8 @@
       refreshShareModal();
     }
 
-    function applyRoomPayload(payload) {
+    function applyRoomSnapshot(roomDoc) {
+      const payload = roomDoc?.payload || roomDoc;
       if (!payload?.state || !Array.isArray(payload.state.players)) return;
       const s = payload.state;
       state = freshState();
@@ -3125,6 +3384,7 @@
       settingHakoshita = !!settings.hakoshita;
       settingHakoshitaRiichi = !!settings.hakoshitaRiichi;
       personalRoomLoaded = true;
+      tableGameEnded = !!(payload.gameEnded || roomDoc?.gameEnded);
       syncSettingsUI();
       renderStartWindBtns();
       document.getElementById('startScreen').style.display = 'none';
@@ -3205,7 +3465,11 @@
 
     function setPersonalScoreText(idx, score) {
       const el = document.querySelector(`.personal-score[data-score-idx="${idx}"]`);
-      if (el) el.textContent = fmtPersonalScore(score);
+      if (el) {
+        const text = fmtPersonalScore(score);
+        el.textContent = text;
+        el.classList.toggle('long-score', text.length >= 7);
+      }
     }
 
     function animatePersonalScores(scoresBefore, deltas) {
@@ -3228,6 +3492,194 @@
         }
       };
       requestAnimationFrame(tick);
+    }
+
+    function personalTimeline() {
+      const n = state.players.length;
+      const initial = tableRoundLog.length && Array.isArray(tableRoundLog[0]?.scoresBefore)
+        ? tableRoundLog[0].scoresBefore.slice(0, n).map(score => Number(score || 0))
+        : Array(n).fill(25000);
+      const timeline = [initial.slice()];
+      const cur = initial.slice();
+      tableRoundLog.forEach(ev => {
+        const deltas = Array.isArray(ev.deltas) ? ev.deltas : [];
+        for (let i = 0; i < n; i++) cur[i] += Number(deltas[i] || 0);
+        timeline.push(cur.slice());
+      });
+      return timeline;
+    }
+
+    function buildPersonalGraph(timeline) {
+      const n = state.players.length;
+      const W = 360, H = 180, PX = 28, PY = 18;
+      const iW = W - PX * 2;
+      const iH = H - PY * 2;
+      const steps = Math.max(1, timeline.length - 1);
+      const all = timeline.flat();
+      let minS = Math.min(...all);
+      let maxS = Math.max(...all);
+      const rng = (maxS - minS) || 5000;
+      minS -= rng * 0.08;
+      maxS += rng * 0.08;
+      const yRng = maxS - minS || 1;
+      const tx = i => PX + iW * (i / steps);
+      const ty = s => PY + (1 - (s - minS) / yRng) * iH;
+      let svg = '<line x1="28" y1="90" x2="332" y2="90" stroke="rgba(255,255,255,0.1)" stroke-width="1" stroke-dasharray="4 4"/>';
+      for (let pi = 0; pi < n; pi++) {
+        const color = PERSONAL_COLORS[pi] || '#fff';
+        const pts = timeline.map((row, ri) => `${tx(ri).toFixed(1)},${ty(row[pi]).toFixed(1)}`).join(' ');
+        svg += `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+        timeline.forEach((row, ri) => {
+          svg += `<circle cx="${tx(ri).toFixed(1)}" cy="${ty(row[pi]).toFixed(1)}" r="2.4" fill="${color}" stroke="rgba(0,0,0,0.5)" stroke-width="0.8"/>`;
+        });
+      }
+      return `<svg viewBox="0 0 ${W} ${H}" class="personal-result-graph" preserveAspectRatio="none">${svg}</svg>`;
+    }
+
+    function renderPersonalGraphLegend() {
+      return `
+        <div class="personal-graph-legend">
+          ${state.players.map((p, i) => `
+            <div class="personal-graph-legend-item" style="--p-color:${PERSONAL_COLORS[i] || '#fff'}">
+              <span class="personal-graph-legend-dot"></span>
+              <span class="personal-graph-legend-name">${escPersonal(p.name)}</span>
+            </div>
+          `).join('')}
+        </div>`;
+    }
+
+    function personalStats() {
+      const stats = state.players.map(() => ({ ron: 0, tsumo: 0, houju: 0, riichi: 0 }));
+      tableRoundLog.forEach(ev => {
+        if (ev.type !== 'agari') return;
+        const winners = ev.winnerIdxs || (Number.isInteger(ev.winnerIdx) ? [ev.winnerIdx] : []);
+        winners.forEach(idx => {
+          if (idx < 0 || !stats[idx]) return;
+          if (ev.winType === 'tsumo') stats[idx].tsumo++;
+          else stats[idx].ron++;
+        });
+        if (ev.winType === 'ron' && ev.loserIdx >= 0 && stats[ev.loserIdx]) stats[ev.loserIdx].houju++;
+      });
+      riichiCounts.forEach((count, i) => { if (stats[i]) stats[i].riichi = Number(count || 0); });
+      return stats;
+    }
+
+    function personalRoundHistory() {
+      const myIdx = Number.isInteger(personalSeatIndex) ? personalSeatIndex : -1;
+      return tableRoundLog.map((ev, i) => {
+        const deltas = Array.isArray(ev.deltas) ? ev.deltas : [];
+        const myDelta = Number(deltas[myIdx] || 0);
+        const winners = ev.winnerIdxs || (Number.isInteger(ev.winnerIdx) ? [ev.winnerIdx] : []);
+        const winnerNames = winners.map(idx => state.players[idx]?.name || `P${idx + 1}`).join('・');
+        const loserName = ev.loserIdx >= 0 ? (state.players[ev.loserIdx]?.name || `P${ev.loserIdx + 1}`) : '';
+        let role = '';
+        let detail = '';
+        if (ev.type === 'agari') {
+          const winType = ev.winType === 'tsumo' ? 'ツモ' : 'ロン';
+          role = `${winnerNames} ${winType}`;
+          detail = ev.winType === 'ron' && loserName ? `${loserName} 放銃` : '全員支払い';
+          if (winners.includes(myIdx)) role = `自分の和了 ${winType}`;
+          else if (ev.winType === 'ron' && ev.loserIdx === myIdx) role = '自分の放銃';
+        } else if (ev.type === 'ryukyoku') {
+          const tenpai = Array.isArray(ev.tenpai) ? ev.tenpai : [];
+          const tenpaiNames = tenpai.map((v, idx) => v ? state.players[idx]?.name : null).filter(Boolean);
+          role = '流局';
+          detail = tenpaiNames.length ? `${tenpaiNames.join('・')} 聴牌` : '全員ノーテン';
+        } else if (ev.type === 'chonbo') {
+          const playerName = ev.playerIdx >= 0 ? (state.players[ev.playerIdx]?.name || `P${ev.playerIdx + 1}`) : '';
+          role = ev.playerIdx === myIdx ? '自分のチョンボ' : 'チョンボ';
+          detail = playerName;
+        } else {
+          role = '記録';
+          detail = '';
+        }
+        const deltaClass = myDelta > 0 ? 'plus' : myDelta < 0 ? 'minus' : '';
+        const itemClass = myDelta > 0 ? 'my-plus' : myDelta < 0 ? 'my-minus' : '';
+        return {
+          idx: i,
+          roundLabel: ev.roundLabel || `${i + 1}局`,
+          role,
+          detail,
+          myDelta,
+          deltaClass,
+          itemClass,
+        };
+      }).reverse();
+    }
+
+    function renderPersonalHistory() {
+      const history = personalRoundHistory();
+      if (!history.length) return '<div class="personal-history-empty">履歴なし</div>';
+      return history.map(item => `
+        <div class="personal-history-item ${item.itemClass}">
+          <div class="personal-history-head">
+            <span class="personal-history-round">${escPersonal(item.roundLabel)}</span>
+            <span class="personal-history-delta ${item.deltaClass}">${item.myDelta > 0 ? '+' : ''}${fmtPersonalScore(item.myDelta)}</span>
+          </div>
+          <div class="personal-history-role">${escPersonal(item.role)}</div>
+          <div class="personal-history-detail">${escPersonal(item.detail)}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderPersonalResult() {
+      const root = document.getElementById('personalView');
+      if (!root) return;
+      const sorted = state.players
+        .map((p, i) => ({ ...p, idx: i }))
+        .sort((a, b) => b.score - a.score);
+      const timeline = personalTimeline();
+      const stats = personalStats();
+      root.innerHTML = `
+        <div class="personal-result-shell">
+          <section class="personal-result-panel scrollable">
+            <div class="personal-result-title">対局結果</div>
+            <div class="personal-result-list">
+              ${sorted.map((p, i) => `
+                <div class="personal-result-row">
+                  <span class="personal-result-rank">${i + 1}位</span>
+                  <span class="personal-result-name">${escPersonal(p.name)}</span>
+                  <span class="personal-result-score">${fmtPersonalScore(p.score)}</span>
+                </div>
+              `).join('')}
+            </div>
+            <div class="personal-stat-table-wrap">
+              <div class="personal-result-title" style="font-size:clamp(15px,3.6vh,22px);margin-bottom:6px">統計</div>
+              <table class="personal-stat-table">
+                <thead>
+                  <tr><th>名前</th><th>ロン</th><th>ツモ</th><th>放銃</th><th>リーチ</th></tr>
+                </thead>
+                <tbody>
+                  ${state.players.map((p, i) => {
+                    const s = stats[i];
+                    return `<tr>
+                      <td>
+                        <span class="personal-stat-player" style="--p-color:${PERSONAL_COLORS[i] || '#fff'}">
+                          <span class="personal-stat-dot"></span>
+                          <span class="personal-stat-player-name">${escPersonal(p.name)}</span>
+                        </span>
+                      </td>
+                      <td>${s.ron}</td>
+                      <td>${s.tsumo}</td>
+                      <td>${s.houju}</td>
+                      <td>${s.riichi}</td>
+                    </tr>`;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+            <div class="personal-history-wrap">
+              <div class="personal-result-title" style="font-size:clamp(15px,3.6vh,22px);margin-bottom:0">ラウンド履歴</div>
+              ${renderPersonalHistory()}
+            </div>
+          </section>
+          <section class="personal-result-panel">
+            <div class="personal-result-title">スコア推移</div>
+            ${renderPersonalGraphLegend()}
+            ${buildPersonalGraph(timeline)}
+          </section>
+        </div>
+        <div class="portrait-hint">横向きにしてください<br>この画面は横向き専用です</div>`;
     }
 
     function showPersonalPointMove(deltas, scoresBefore = null) {
@@ -3328,14 +3780,25 @@
         root.innerHTML = '<div class="personal-empty">卓に接続中</div>';
         return;
       }
+      if (tableGameEnded) {
+        try {
+          renderPersonalResult();
+        } catch {
+          root.innerHTML = `<div class="personal-empty">対局終了<br>${state.players
+            .slice()
+            .sort((a, b) => b.score - a.score)
+            .map((p, i) => `${i + 1}位 ${escPersonal(p.name)} ${fmtPersonalScore(p.score)}`)
+            .join('<br>')}</div>`;
+        }
+        return;
+      }
       if (personalSeatIndex < 0 || personalSeatIndex > 3) {
         root.innerHTML = `
           <div>
             <div class="personal-seat-grid">
               ${state.players.map((p, i) => `
                 <button class="personal-seat-card" data-seat="${i}">
-                  <span class="personal-seat-wind">${escPersonal(p.wind)}</span>
-                  <span class="personal-seat-name">${escPersonal(p.name)}</span>
+                  <span class="personal-seat-name${String(p.name || '').length >= 8 ? ' long-name' : ''}">${escPersonal(p.name)}</span>
                 </button>
               `).join('')}
             </div>
@@ -3368,6 +3831,7 @@
         const scoreText = personalDiffOn && !isMe
           ? `${diff >= 0 ? '+' : ''}${fmtPersonalScore(diff)}`
           : fmtPersonalScore(displayScore);
+        const isLongScore = scoreText.length >= 7;
         const diffClass = personalDiffOn && !isMe
           ? diff >= 0 ? ' diff-pos' : ' diff-neg'
           : '';
@@ -3380,7 +3844,7 @@
               </div>
               <div class="personal-score-line">
                 ${isMe ? `<button class="personal-diff-btn${personalDiffOn ? ' active' : ''}" id="personalDiffBtn" aria-label="点差"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>` : ''}
-                <div class="personal-score${diffClass}" data-score-idx="${idx}">${scoreText}</div>
+                <div class="personal-score${isLongScore ? ' long-score' : ''}${diffClass}" data-score-idx="${idx}">${scoreText}</div>
               </div>
               <div class="personal-riichi-stick${p.riichi ? ' on' : ''}" aria-label="${p.riichi ? 'リーチ' : ''}"></div>
             </div>
@@ -3388,9 +3852,12 @@
       };
       root.innerHTML = `
         <div class="personal-shell">
+          <button class="personal-action personal-seat-change-top" id="personalSeatChange">席変更</button>
           <div class="personal-center">
-            <div class="personal-board-info">${GT_NAMES[settingGameType]}　${ROUND_WINDS[state.roundWind]}${state.roundNum}局　${state.honba}本場　供託${state.kyotaku}本</div>
-            <button class="personal-action" id="personalSeatChange">席変更</button>
+            <div class="personal-board-info">
+              ${GT_NAMES[settingGameType]}　${ROUND_WINDS[state.roundWind]}${state.roundNum}局
+              <span class="personal-board-info-sub">${state.honba}本場　供託${state.kyotaku}本</span>
+            </div>
           </div>
           ${seatPositions.map(cardHtml).join('')}
           <div class="personal-fx-layer"></div>
@@ -3427,7 +3894,7 @@
             if (root) root.innerHTML = '<div class="personal-empty">卓が見つかりません<br>QRを読み直してください</div>';
             return;
           }
-          applyRoomPayload(snap.data().payload);
+          applyRoomSnapshot(snap.data());
         }, () => {
           const root = document.getElementById('personalView');
           if (root) root.innerHTML = '<div class="personal-empty">接続できませんでした</div>';
@@ -3976,6 +4443,7 @@
       tableRoundLog = [];
       riichiCounts = [0, 0, 0, 0];
       gameRecorded = false;
+      tableGameEnded = false;
       document.getElementById('startScreen').style.display = 'none';
       render();
     });
@@ -4814,6 +5282,7 @@
             state.inEnchosen = h.snapshot.inEnchosen ?? false;
             gameHistory = gameHistory.slice(0, idx);
             tableRoundLog = tableRoundLog.slice(0, idx);
+            tableGameEnded = false;
             updateHistBadge();
             document.getElementById('historyModal').style.display = 'none';
             setBackFabVisible(true);
@@ -4905,6 +5374,7 @@
 
     // ── 対局終了 ─────────────────────────────────
     function showGameEnd() {
+      tableGameEnded = true;
       const sorted = state.players.slice().sort((a, b) => b.score - a.score);
       const ranks = ['1位', '2位', '3位', '4位'];
       let html = '';
@@ -4914,6 +5384,7 @@
       });
       document.getElementById('gameEndScores').innerHTML = html;
       document.getElementById('gameEndModal').style.display = 'flex';
+      publishRoomStateNow();
     }
 
     document.getElementById('endBtn').addEventListener('click', () => {
@@ -4929,6 +5400,7 @@
       tableRoundLog = [];
       riichiCounts = [0, 0, 0, 0];
       gameRecorded = false;
+      tableGameEnded = false;
       updateHistBadge();
       playerWinds = ['東', '南', '西', '北'];
       renderStartWindBtns();
@@ -4955,6 +5427,7 @@
         gameHistory = [];
         tableRoundLog = [];
         riichiCounts = [0, 0, 0, 0];
+        tableGameEnded = false;
         updateHistBadge();
         playerWinds = ['東', '南', '西', '北'];
         renderStartWindBtns();
