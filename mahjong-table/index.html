@@ -702,9 +702,11 @@
       display:flex; align-items:center; gap:8px;
       padding:8px 10px; border-radius:6px; cursor:pointer;
       color:rgba(255,255,255,0.5); font-size:12px; font-weight:600;
+      background:rgba(255,255,255,0.06);
+      border:1.5px solid rgba(255,255,255,0.1);
       transition:background 0.1s; user-select:none;
     }
-    .fu-row.sel { background:rgba(37,99,235,0.22); color:#93c5fd; }
+    .fu-row.sel { background:rgba(37,99,235,0.22); border-color:rgba(96,165,250,0.55); color:#93c5fd; }
     .fu-dot { width:6px; height:6px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.25); flex-shrink:0; transition:all 0.1s; }
     .fu-row.sel .fu-dot { background:#60a5fa; border-color:#60a5fa; }
     .fu-score { margin-left:auto; font-size:11px; color:rgba(255,255,255,0.38); font-weight:600; white-space:nowrap; }
@@ -941,6 +943,22 @@
     }
     .resume-btn.primary { background:#15803d; border-color:#15803d; }
     .resume-btn.ghost { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.62); }
+    .preset-row { display:flex; gap:6px; align-items:center; margin-top:8px; }
+    .preset-row select,
+    .preset-row input {
+      min-width:0;
+      flex:1;
+      background:rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.16);
+      border-radius:8px;
+      color:#fff;
+      font-size:13px;
+      font-weight:800;
+      padding:10px;
+      font-family:inherit;
+    }
+    .preset-row input::placeholder { color:rgba(255,255,255,0.28); }
+    .preset-row .wtype { flex:0 0 auto; min-width:64px; padding:10px 9px; }
     /* 席ぎめ */
     #sekigimeOverlay { position:fixed; inset:0; background:rgba(8,24,14,0.97); z-index:900; flex-direction:column; align-items:center; justify-content:center; padding:28px 20px; gap:0; }
     .sgm-title { font-size:22px; font-weight:900; color:#fff; letter-spacing:4px; margin-bottom:6px; }
@@ -2140,6 +2158,19 @@
           </div>
           <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:10px;line-height:1.7">ONのとき、局の終了時にいずれかのプレイヤーの持ち点が0点未満になった場合、対局を終了します</div>
         </div>
+
+        <div class="setup-card" style="margin-top:12px">
+          <div class="setup-card-lbl">ルールプリセット</div>
+          <div class="preset-row">
+            <select id="rulePresetSelect"></select>
+            <button class="wtype" id="rulePresetApply">適用</button>
+            <button class="wtype" id="rulePresetDelete">削除</button>
+          </div>
+          <div class="preset-row">
+            <input id="rulePresetName" type="text" maxlength="16" placeholder="プリセット名">
+            <button class="wtype" id="rulePresetSave">保存</button>
+          </div>
+        </div>
       </div>
 
       <!-- 戦績タブ -->
@@ -2479,16 +2510,21 @@
             </div>
           </div>
 
-          <div class="han-row" data-idx="4">満貫</div>
-          <div class="han-row" data-idx="5">跳満</div>
-          <div class="han-row" data-idx="6">倍満</div>
-          <div class="han-row" data-idx="7">三倍満</div>
-          <div class="han-row" data-idx="8">役満</div>
-          <div class="han-row" data-idx="9">二倍役満</div>
-          <div class="han-row" data-idx="10">三倍役満</div>
-          <div class="han-row" data-idx="11">四倍役満</div>
-          <div class="han-row" data-idx="12">五倍役満</div>
-          <div class="han-row" data-idx="13">六倍役満</div>
+          <div class="han-row limit-row" data-idx="4">満貫<span class="han-score"></span></div>
+          <div class="han-row limit-row" data-idx="5">跳満<span class="han-score"></span></div>
+          <div class="han-row limit-row" data-idx="6">倍満<span class="han-score"></span></div>
+          <div class="han-row limit-row" data-idx="7">三倍満<span class="han-score"></span></div>
+          <div class="han-row limit-row" data-idx="8">役満<span class="han-score"></span></div>
+          <div class="han-group">
+            <div class="han-row yakuman-folder"><span class="arr">▶</span>二倍以上</div>
+            <div class="fu-children">
+              <div class="han-row limit-row" data-idx="9">二倍役満<span class="han-score"></span></div>
+              <div class="han-row limit-row" data-idx="10">三倍役満<span class="han-score"></span></div>
+              <div class="han-row limit-row" data-idx="11">四倍役満<span class="han-score"></span></div>
+              <div class="han-row limit-row" data-idx="12">五倍役満<span class="han-score"></span></div>
+              <div class="han-row limit-row" data-idx="13">六倍役満<span class="han-score"></span></div>
+            </div>
+          </div>
 
         </div>
       </div>
@@ -2955,7 +2991,7 @@
         <div class="detail-stats-scroll">
         <table class="detail-stats-table">
           <thead><tr>
-            <th>名前</th><th>和了(R)</th><th>和了(T)</th><th>放銃</th><th>リーチ</th><th>和了率</th><th>放銃率</th>
+            <th>名前</th><th>ロン</th><th>ツモ</th><th>放銃</th><th>リーチ</th><th>和了率</th><th>放銃率</th>
           </tr></thead>
           <tbody>${seatNames.map((name,i) => {
             const s = stats[i];
@@ -3061,6 +3097,7 @@
     const WINDS = ['東', '南', '西', '北'];
     const ROUND_WINDS = ['東', '南', '西', '北'];
     const PERSONAL_COLORS = ['#fbbf24', '#4ade80', '#60a5fa', '#f87171'];
+    const RULE_PRESET_KEY = 'mahjong_table_rule_presets_v1';
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyBC0X3taGcEclIO8g7Lg7odIdTwaA6gnGY",
       authDomain: "wakuda-tools.firebaseapp.com",
@@ -3189,7 +3226,8 @@
       const time = savedAt && !Number.isNaN(savedAt.getTime())
         ? `${savedAt.getMonth() + 1}/${savedAt.getDate()} ${String(savedAt.getHours()).padStart(2, '0')}:${String(savedAt.getMinutes()).padStart(2, '0')}`
         : '';
-      return `${escResumeText(round)}<br>${players}${time ? `<br>保存 ${escResumeText(time)}` : ''}`;
+      const historyCount = Array.isArray(data.tableRoundLog) ? data.tableRoundLog.length : 0;
+      return `${escResumeText(round)}<br>${players}<br>履歴 ${historyCount}局${time ? `<br>保存 ${escResumeText(time)}` : ''}`;
     }
 
     function readSavedGame() {
@@ -3930,6 +3968,48 @@
       }
     }
 
+    function currentRuleSettings() {
+      return {
+        gameType: settingGameType,
+        enchosen: settingEnchosen,
+        kijunten: settingKijunten,
+        hakoshita: settingHakoshita,
+        hakoshitaRiichi: settingHakoshitaRiichi,
+      };
+    }
+
+    function applyRuleSettings(settings = {}) {
+      settingGameType = Number(settings.gameType ?? settingGameType);
+      settingEnchosen = !!settings.enchosen;
+      settingKijunten = Number(settings.kijunten || settingKijunten);
+      settingHakoshita = !!settings.hakoshita;
+      settingHakoshitaRiichi = !!settings.hakoshitaRiichi;
+      syncSettingsUI();
+      saveGameProgress();
+    }
+
+    function readRulePresets() {
+      try {
+        const data = JSON.parse(localStorage.getItem(RULE_PRESET_KEY) || '[]');
+        return Array.isArray(data) ? data.filter(p => p?.name && p.settings) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function writeRulePresets(presets) {
+      try { localStorage.setItem(RULE_PRESET_KEY, JSON.stringify(presets)); } catch {}
+    }
+
+    function renderRulePresetSelect() {
+      const select = document.getElementById('rulePresetSelect');
+      if (!select) return;
+      const presets = readRulePresets();
+      select.innerHTML = presets.length
+        ? presets.map((p, i) => `<option value="${i}">${escResumeText(p.name)}</option>`).join('')
+        : '<option value="">プリセットなし</option>';
+    }
+
     function applySavedGame(data) {
       if (!data?.state) return;
       const s = data.state;
@@ -3945,8 +4025,14 @@
       state.roundWind = Number(s.roundWind || 0);
       state.roundNum = Number(s.roundNum || 1);
       state.inEnchosen = !!s.inEnchosen;
-      gameHistory = Array.isArray(data.gameHistory) ? data.gameHistory : [];
-      tableRoundLog = Array.isArray(data.tableRoundLog) ? data.tableRoundLog : [];
+      gameHistory = Array.isArray(data.gameHistory) ? data.gameHistory.map(h => ({
+        ...h,
+        snapshot: h?.snapshot ? {
+          ...h.snapshot,
+          players: Array.isArray(h.snapshot.players) ? h.snapshot.players.map(p => ({ ...p })) : [],
+        } : h?.snapshot,
+      })) : [];
+      tableRoundLog = Array.isArray(data.tableRoundLog) ? data.tableRoundLog.map(ev => ({ ...ev })) : [];
       riichiCounts = Array.isArray(data.riichiCounts) ? data.riichiCounts.slice(0, 4) : [0, 0, 0, 0];
       while (riichiCounts.length < 4) riichiCounts.push(0);
       gameRecorded = !!data.gameRecorded;
@@ -3958,13 +4044,7 @@
         const input = document.getElementById(`sn${i}`);
         if (input) input.value = name;
       });
-      const settings = data.settings || {};
-      settingGameType = Number(settings.gameType ?? settingGameType);
-      settingEnchosen = !!settings.enchosen;
-      settingKijunten = Number(settings.kijunten || settingKijunten);
-      settingHakoshita = !!settings.hakoshita;
-      settingHakoshitaRiichi = !!settings.hakoshitaRiichi;
-      syncSettingsUI();
+      applyRuleSettings(data.settings || {});
       renderStartWindBtns();
       updateHistBadge();
       document.getElementById('startScreen').style.display = 'none';
@@ -4454,7 +4534,7 @@
     document.querySelectorAll('[data-gt]').forEach(btn => {
       btn.addEventListener('click', () => {
         settingGameType = +btn.dataset.gt;
-        document.querySelectorAll('[data-gt]').forEach(b => b.classList.toggle('sel', b === btn));
+        syncSettingsUI();
         saveGameProgress();
       });
     });
@@ -4469,14 +4549,11 @@
         if (v === 30000) opt.selected = true;
         kjSel.appendChild(opt);
       }
-      kjSel.addEventListener('change', () => { settingKijunten = +kjSel.value; saveGameProgress(); });
+      kjSel.addEventListener('change', () => { settingKijunten = +kjSel.value; syncSettingsUI(); saveGameProgress(); });
 
       document.getElementById('enchosenToggle').addEventListener('click', () => {
         settingEnchosen = !settingEnchosen;
-        const btn = document.getElementById('enchosenToggle');
-        btn.textContent = settingEnchosen ? 'ON' : 'OFF';
-        btn.classList.toggle('sel', settingEnchosen);
-        document.getElementById('kijuntenWrap').style.display = settingEnchosen ? 'block' : 'none';
+        syncSettingsUI();
         saveGameProgress();
       });
     }
@@ -4484,19 +4561,45 @@
     // ── 設定タブ: 箱下終了 ───────────────────────
     document.getElementById('hakoshitaToggle').addEventListener('click', () => {
       settingHakoshita = !settingHakoshita;
-      const btn = document.getElementById('hakoshitaToggle');
-      btn.textContent = settingHakoshita ? 'ON' : 'OFF';
-      btn.classList.toggle('sel', settingHakoshita);
-      document.getElementById('hakoshitaRiichiWrap').style.display = settingHakoshita ? 'block' : 'none';
+      syncSettingsUI();
       render();
     });
 
     document.getElementById('hakoshitaRiichiToggle').addEventListener('click', () => {
       settingHakoshitaRiichi = !settingHakoshitaRiichi;
-      const btn = document.getElementById('hakoshitaRiichiToggle');
-      btn.textContent = settingHakoshitaRiichi ? 'ON' : 'OFF';
-      btn.classList.toggle('sel', settingHakoshitaRiichi);
+      syncSettingsUI();
       render();
+    });
+
+    document.getElementById('rulePresetSave').addEventListener('click', () => {
+      const input = document.getElementById('rulePresetName');
+      const name = input.value.trim();
+      if (!name) { alert('プリセット名を入力してください'); return; }
+      const presets = readRulePresets();
+      const next = { name, settings: currentRuleSettings(), savedAt: Date.now() };
+      const idx = presets.findIndex(p => p.name === name);
+      if (idx >= 0) presets[idx] = next;
+      else presets.push(next);
+      writeRulePresets(presets);
+      input.value = '';
+      renderRulePresetSelect();
+    });
+
+    document.getElementById('rulePresetApply').addEventListener('click', () => {
+      const presets = readRulePresets();
+      const idx = +document.getElementById('rulePresetSelect').value;
+      if (!presets[idx]) return;
+      applyRuleSettings(presets[idx].settings);
+      render();
+    });
+
+    document.getElementById('rulePresetDelete').addEventListener('click', () => {
+      const presets = readRulePresets();
+      const idx = +document.getElementById('rulePresetSelect').value;
+      if (!presets[idx]) return;
+      presets.splice(idx, 1);
+      writeRulePresets(presets);
+      renderRulePresetSelect();
     });
 
     document.getElementById('resumeGameBtn').addEventListener('click', () => {
@@ -4509,6 +4612,7 @@
     });
 
     showResumeCard();
+    renderRulePresetSelect();
     window.addEventListener('beforeunload', saveGameProgress);
 
     // ── 和了スコア計算 ──────────────────────────
@@ -4895,7 +4999,7 @@
     }
 
     // Tree: expandable han rows (1–4翻)
-    document.querySelectorAll('#hanTree .han-group .han-row').forEach(row => {
+    document.querySelectorAll('#hanTree > .han-group > .han-row[data-idx]').forEach(row => {
       row.addEventListener('click', () => {
         const fuChildren = row.nextElementSibling;
         const isOpen = row.classList.contains('open');
@@ -4915,13 +5019,35 @@
       });
     });
 
+    document.querySelector('#hanTree .yakuman-folder')?.addEventListener('click', (ev) => {
+      const row = ev.currentTarget;
+      const children = row.nextElementSibling;
+      const isOpen = row.classList.contains('open');
+      document.querySelectorAll('#hanTree .han-row').forEach(r => r.classList.remove('sel', 'open'));
+      document.querySelectorAll('#hanTree .fu-children').forEach(fc => closeFuChildren(fc));
+      document.querySelectorAll('#hanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
+      if (!isOpen) {
+        row.classList.add('sel', 'open');
+        children?.classList.add('open');
+      }
+      agHanIdx = -1;
+      agFu = -1;
+    });
+
     // Tree: limit hand rows (満貫〜役満)
-    document.querySelectorAll('#hanTree > .han-row').forEach(row => {
+    document.querySelectorAll('#hanTree .limit-row').forEach(row => {
       row.addEventListener('click', () => {
+        const yakumanChildren = row.closest('.fu-children');
         document.querySelectorAll('#hanTree .han-row').forEach(r => r.classList.remove('sel', 'open'));
-        document.querySelectorAll('#hanTree .fu-children').forEach(fc => closeFuChildren(fc));
+        document.querySelectorAll('#hanTree .fu-children').forEach(fc => {
+          if (fc !== yakumanChildren) closeFuChildren(fc);
+        });
         document.querySelectorAll('#hanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
         row.classList.add('sel');
+        if (yakumanChildren) {
+          yakumanChildren.classList.add('open');
+          yakumanChildren.previousElementSibling?.classList.add('open');
+        }
         agHanIdx = +row.dataset.idx;
         agFu = -1;
         tryCalcAgari();
@@ -4934,7 +5060,7 @@
     function renderLimitScores() {
       if (agWinner < 0) return;
       const isParent = state.players[agWinner].wind === '東';
-      document.querySelectorAll('#hanTree > .han-row').forEach(row => {
+      document.querySelectorAll('#hanTree .limit-row').forEach(row => {
         const el = row.querySelector('.han-score');
         if (!el) return;
         const def = HAN_DEFS[+row.dataset.idx];
@@ -5543,21 +5669,51 @@
           mwTryCalc();
         });
       }
-      HAN_DEFS.slice(4).forEach((def, i) => {
-        const idx = i + 4;
+      const addMwLimitRow = (def, idx, parent = container) => {
         const row = document.createElement('div');
-        row.className = 'han-row';
+        row.className = 'han-row limit-row';
         row.dataset.idx = idx;
         row.innerHTML = `${def.name}<span class="han-score"></span>`;
-        container.appendChild(row);
+        parent.appendChild(row);
         row.addEventListener('click', () => {
+          const yakumanChildren = row.closest('.fu-children');
           document.querySelectorAll('#mwHanTree .han-row').forEach(r => r.classList.remove('sel','open'));
-          document.querySelectorAll('#mwHanTree .fu-children').forEach(f => f.classList.remove('open'));
+          document.querySelectorAll('#mwHanTree .fu-children').forEach(f => {
+            if (f !== yakumanChildren) f.classList.remove('open');
+          });
           document.querySelectorAll('#mwHanTree .fu-row').forEach(f => f.classList.remove('sel'));
           row.classList.add('sel');
+          if (yakumanChildren) {
+            yakumanChildren.classList.add('open');
+            yakumanChildren.previousElementSibling?.classList.add('open');
+          }
           mwHanIdx = idx; mwFu = -1;
           mwTryCalc();
         });
+      };
+      HAN_DEFS.slice(4, 9).forEach((def, i) => addMwLimitRow(def, i + 4));
+      const yGroup = document.createElement('div');
+      yGroup.className = 'han-group';
+      const yHead = document.createElement('div');
+      yHead.className = 'han-row yakuman-folder';
+      yHead.innerHTML = '<span class="arr">▶</span>二倍以上';
+      const yChildren = document.createElement('div');
+      yChildren.className = 'fu-children';
+      HAN_DEFS.slice(9).forEach((def, i) => addMwLimitRow(def, i + 9, yChildren));
+      yGroup.append(yHead, yChildren);
+      container.appendChild(yGroup);
+      yHead.addEventListener('click', () => {
+        const isOpen = yHead.classList.contains('open');
+        document.querySelectorAll('#mwHanTree .han-row').forEach(r => r.classList.remove('sel','open'));
+        document.querySelectorAll('#mwHanTree .fu-children').forEach(f => f.classList.remove('open'));
+        document.querySelectorAll('#mwHanTree .fu-row').forEach(f => f.classList.remove('sel'));
+        if (!isOpen) {
+          yHead.classList.add('sel','open');
+          yChildren.classList.add('open');
+        }
+        mwHanIdx = -1;
+        mwFu = -1;
+        mwTryCalc();
       });
       mwRenderLimitScores();
     }
@@ -5579,7 +5735,7 @@
       const winnerIdx = mwSortedWinners[mwWinnerStep];
       if (winnerIdx === undefined) return;
       const isParent = state.players[winnerIdx].wind === '東';
-      document.querySelectorAll('#mwHanTree > .han-row').forEach(row => {
+      document.querySelectorAll('#mwHanTree .limit-row').forEach(row => {
         const def = HAN_DEFS[+row.dataset.idx];
         if (!def || !def.base) return;
         const el = row.querySelector('.han-score');
@@ -5622,6 +5778,12 @@
             row.classList.add('open'); fc.classList.add('open');
             mwRenderFuScores(mwHanIdx, fc);
             if (mwFu >= 0) fc.querySelector(`.fu-row[data-fu="${mwFu}"]`)?.classList.add('sel');
+          } else {
+            const yakumanChildren = row.closest('.fu-children');
+            if (yakumanChildren) {
+              yakumanChildren.classList.add('open');
+              yakumanChildren.previousElementSibling?.classList.add('open');
+            }
           }
         }
       }
