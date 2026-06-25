@@ -3587,8 +3587,6 @@
           requestAnimationFrame(tick);
         } else {
           personalScoreOverrides = null;
-          personalStateOverride = null;
-          refreshPersonalStaticInfo();
           finalScores.forEach((score, i) => setPersonalScoreText(i, score));
         }
       };
@@ -3870,6 +3868,8 @@
       setTimeout(() => animatePersonalScores(scoresBefore, deltas), 1700);
       setTimeout(() => {
         if (layer) layer.innerHTML = '';
+        personalStateOverride = null;
+        refreshPersonalStaticInfo();
       }, 5000);
     }
 
