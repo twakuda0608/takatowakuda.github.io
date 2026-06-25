@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>麻雀テーブル</title>
   <link rel="icon" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
@@ -622,6 +622,9 @@
       z-index: 300; padding: 16px 12px 24px;
       overflow-y: auto;
     }
+    .ag-overlay.centered {
+      align-items: center;
+    }
     .ag-card {
       background: #1c3a25;
       border: 1px solid rgba(255,255,255,0.15);
@@ -649,6 +652,19 @@
     .psel:disabled { opacity:0.28; cursor:default; }
     .psel-col { display:flex; flex-direction:column; gap:4px; }
     .psel-col .psel { flex:none; width:100%; }
+    .ag-sec.needs-input .psel:not(.sel) {
+      border-color:rgba(251,191,36,0.55);
+      background:rgba(251,191,36,0.10);
+    }
+    .dealer-hint {
+      display:none;
+      margin-top:6px;
+      color:#fbbf24;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:0.5px;
+    }
+    .ag-sec.needs-input .dealer-hint { display:block; }
     .wtype {
       flex:1; padding:9px 4px;
       background:rgba(255,255,255,0.08);
@@ -671,9 +687,30 @@
     .han-row.sel { background:rgba(251,191,36,0.18); border-color:rgba(251,191,36,0.6); color:#fbbf24; }
     .han-row .arr { font-size:9px; color:rgba(255,255,255,0.35); transition:transform 0.15s; flex-shrink:0; }
     .han-row.open .arr { transform:rotate(90deg); }
-    .fu-children { display:none; flex-direction:column; gap:2px; padding:3px 0 2px 24px; transform-origin: top center; }
-    .fu-children.open    { display:flex; animation: fuSlideDown 0.2s cubic-bezier(0.25,0.46,0.45,0.94) both; }
-    .fu-children.closing { display:flex; animation: fuSlideUp   0.18s cubic-bezier(0.55,0,0.75,0.05)  both; }
+    .fu-children {
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      max-height:0;
+      overflow:hidden;
+      padding:0 0 0 24px;
+      opacity:0;
+      transform:scaleY(0.96);
+      transform-origin:top center;
+      pointer-events:none;
+      transition:
+        max-height 0.24s cubic-bezier(0.25,0.46,0.45,0.94),
+        padding 0.24s cubic-bezier(0.25,0.46,0.45,0.94),
+        opacity 0.18s ease,
+        transform 0.22s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    .fu-children.open {
+      max-height:520px;
+      padding:3px 0 2px 24px;
+      opacity:1;
+      transform:scaleY(1);
+      pointer-events:auto;
+    }
     @keyframes fuSlideDown {
       from { opacity:0; transform: scaleY(0.6) translateY(-8px); }
       to   { opacity:1; transform: scaleY(1)   translateY(0);    }
@@ -686,9 +723,11 @@
       display:flex; align-items:center; gap:8px;
       padding:8px 10px; border-radius:6px; cursor:pointer;
       color:rgba(255,255,255,0.5); font-size:12px; font-weight:600;
+      background:rgba(255,255,255,0.06);
+      border:1.5px solid rgba(255,255,255,0.1);
       transition:background 0.1s; user-select:none;
     }
-    .fu-row.sel { background:rgba(37,99,235,0.22); color:#93c5fd; }
+    .fu-row.sel { background:rgba(37,99,235,0.22); border-color:rgba(96,165,250,0.55); color:#93c5fd; }
     .fu-dot { width:6px; height:6px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.25); flex-shrink:0; transition:all 0.1s; }
     .fu-row.sel .fu-dot { background:#60a5fa; border-color:#60a5fa; }
     .fu-score { margin-left:auto; font-size:11px; color:rgba(255,255,255,0.38); font-weight:600; white-space:nowrap; }
@@ -876,7 +915,71 @@
     .wind-sel-btn.wind-settle {
       animation: windSettle 0.4s ease 3;
     }
-    .start-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; margin-bottom: 12px; }
+    .start-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; margin-bottom: 12px; flex-wrap:wrap; }
+    .wind-shift-actions { display:flex; gap:8px; margin-right:auto; }
+    .wind-shift-btn {
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      border-radius: 50%;
+      font-size: 20px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .resume-card {
+      display:none;
+      margin:0 0 12px;
+      padding:12px;
+      border-radius:14px;
+      background:rgba(251,191,36,0.10);
+      border:1px solid rgba(251,191,36,0.32);
+    }
+    .resume-card.vis { display:block; }
+    .resume-title {
+      color:#fbbf24;
+      font-size:13px;
+      font-weight:900;
+      letter-spacing:1.5px;
+      margin-bottom:4px;
+    }
+    .resume-meta {
+      color:rgba(255,255,255,0.66);
+      font-size:12px;
+      line-height:1.55;
+      margin-bottom:10px;
+    }
+    .resume-actions { display:flex; gap:8px; }
+    .resume-btn {
+      flex:1;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.18);
+      color:#fff;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+      font-family:inherit;
+    }
+    .resume-btn.primary { background:#15803d; border-color:#15803d; }
+    .resume-btn.ghost { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.62); }
+    .preset-row { display:flex; gap:6px; align-items:center; margin-top:8px; }
+    .preset-row select,
+    .preset-row input {
+      min-width:0;
+      flex:1;
+      background:rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.16);
+      border-radius:8px;
+      color:#fff;
+      font-size:13px;
+      font-weight:800;
+      padding:10px;
+      font-family:inherit;
+    }
+    .preset-row input::placeholder { color:rgba(255,255,255,0.28); }
+    .preset-row .wtype { flex:0 0 auto; min-width:64px; padding:10px 9px; }
     /* 席ぎめ */
     #sekigimeOverlay { position:fixed; inset:0; background:rgba(8,24,14,0.97); z-index:900; flex-direction:column; align-items:center; justify-content:center; padding:28px 20px; gap:0; }
     .sgm-title { font-size:22px; font-weight:900; color:#fff; letter-spacing:4px; margin-bottom:6px; }
@@ -1205,11 +1308,897 @@
     .goal-ok { color:#4ade80; font-weight:900; }
     .goal-ng { color:#f87171; font-weight:900; }
     .goal-alt { display:block; color:rgba(255,255,255,0.42); font-size:10px; margin-top:2px; }
+    .ag-type-card { min-height: 250px; display:flex; flex-direction:column; justify-content:center; }
+    .ag-type-actions { display:flex; flex-direction:column; gap:10px; }
+    .device-share-btn {
+      position: fixed;
+      right: 12px;
+      bottom: 76px;
+      z-index: 90;
+      width: 88px;
+      height: 38px;
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 999px;
+      background: rgba(14,165,233,0.28);
+      color: rgba(255,255,255,0.9);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.28);
+    }
+    .device-share-btn:active { background: rgba(14,165,233,0.42); }
+    .share-card { max-width: 330px; text-align: center; }
+    .share-qr {
+      width: 188px;
+      height: 188px;
+      border-radius: 14px;
+      background: #fff;
+      padding: 8px;
+      margin: 8px auto 12px;
+      display: block;
+    }
+    .share-url {
+      color: rgba(255,255,255,0.64);
+      font-size: 11px;
+      line-height: 1.5;
+      word-break: break-all;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 8px;
+      user-select: text;
+    }
+    .share-status {
+      min-height: 18px;
+      margin-top: 8px;
+      color: rgba(255,255,255,0.42);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .personal-view {
+      position: fixed;
+      inset: 0;
+      z-index: 20000;
+      display: none;
+      background: radial-gradient(circle at 10% 0%, rgba(251,191,36,0.16), transparent 34%), #0f3f23;
+      color: #fff;
+      overflow: hidden;
+      padding:
+        calc(max(clamp(12px, 3.2vh, 28px), env(safe-area-inset-top)) + 8px)
+        max(clamp(8px, 2.2vh, 18px), env(safe-area-inset-right))
+        max(clamp(10px, 2.6vh, 22px), env(safe-area-inset-bottom))
+        max(clamp(8px, 2.2vh, 18px), env(safe-area-inset-left));
+      font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
+    }
+    body.personal-view-active .personal-view { display: grid; }
+    body.personal-view-active > :not(.personal-view):not(script) { display: none !important; }
+    .personal-shell {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1.18fr 1fr;
+      grid-template-rows: minmax(86px, 0.9fr) max-content minmax(174px, 1.45fr);
+      gap: clamp(8px, 2vh, 16px);
+      min-width: 0;
+      min-height: 0;
+    }
+    .personal-center {
+      grid-column: 2;
+      grid-row: 2;
+      align-self: center;
+      justify-self: center;
+      text-align: center;
+      min-width: 0;
+    }
+    .personal-board-info {
+      color: rgba(255,255,255,0.64);
+      font-size: clamp(18px, 4.6vh, 30px);
+      font-weight: 900;
+      line-height: 1.25;
+      letter-spacing: 0;
+      white-space: nowrap;
+      margin-bottom: clamp(6px, 1.4vh, 12px);
+    }
+    .personal-board-info-sub {
+      display: block;
+      color: rgba(255,255,255,0.46);
+      font-size: 0.72em;
+      margin-top: 2px;
+    }
+    .personal-seat {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      min-height: 0;
+    }
+    .personal-seat.top {
+      grid-column: 2;
+      grid-row: 1;
+      align-self: end;
+    }
+    .personal-seat.left {
+      grid-column: 1;
+      grid-row: 2;
+      justify-self: end;
+    }
+    .personal-seat.right {
+      grid-column: 3;
+      grid-row: 2;
+      justify-self: start;
+    }
+    .personal-seat.bottom {
+      grid-column: 2;
+      grid-row: 3;
+      align-self: end;
+    }
+    .personal-score-card, .personal-seat-card {
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.24);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.22);
+    }
+    .personal-score-card {
+      width: min(48vw, 44vh, 330px);
+      padding: clamp(9px, 1.9vh, 16px) clamp(12px, 2.6vh, 20px);
+      display: grid;
+      gap: clamp(4px, 1vh, 8px);
+      text-align: center;
+      min-width: 0;
+      max-height: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+      position: relative;
+    }
+    .personal-score-card.is-me {
+      width: min(62vw, 58vh, 430px);
+      padding: clamp(10px, 2vh, 18px) clamp(16px, 3vh, 26px);
+      border-color: rgba(251,191,36,0.48);
+      background: rgba(0,0,0,0.34);
+    }
+    .personal-score-card.top { transform: rotate(180deg); }
+    .personal-score-card.left { transform: rotate(90deg); }
+    .personal-score-card.right { transform: rotate(-90deg); }
+    .personal-name-line {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(7px, 1.5vh, 12px);
+      min-width: 0;
+      padding-left: clamp(32px, 7.6vh, 50px);
+      padding-right: clamp(32px, 7.6vh, 50px);
+    }
+    .personal-wind {
+      position: absolute;
+      top: clamp(6px, 1.5vh, 11px);
+      left: clamp(6px, 1.5vh, 11px);
+      width: clamp(30px, 7.2vh, 44px);
+      height: clamp(30px, 7.2vh, 44px);
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      color: #f97316;
+      font-size: clamp(18px, 4.4vh, 27px);
+      font-weight: 900;
+      flex-shrink: 0;
+      box-shadow: 0 5px 12px rgba(0,0,0,0.22);
+    }
+    .personal-wind.east {
+      background: #f97316;
+      color: #fff;
+    }
+    .personal-score-card.is-me .personal-wind {
+      width: clamp(38px, 9.5vh, 56px);
+      height: clamp(38px, 9.5vh, 56px);
+      font-size: clamp(23px, 5.8vh, 34px);
+    }
+    .personal-name {
+      color: rgba(255,255,255,0.74);
+      font-size: clamp(14px, 3.3vh, 22px);
+      font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .personal-score-card.is-me .personal-name { font-size: clamp(18px, 4vh, 26px); }
+    .personal-score {
+      max-width: 100%;
+      overflow: hidden;
+      font-size: clamp(28px, 10.5vh, 54px);
+      font-weight: 900;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .personal-score-card.is-me .personal-score {
+      cursor: pointer;
+      border-radius: 8px;
+      padding: 4px 8px;
+    }
+    .personal-score-card.is-me .personal-score:active {
+      background: rgba(251,191,36,0.12);
+    }
+    .personal-score.long-score { font-size: clamp(24px, 8.8vh, 46px); }
+    .personal-score.diff-pos { color: #60a5fa; }
+    .personal-score.diff-neg { color: #f87171; }
+    .personal-score-card.is-me .personal-score {
+      font-size: clamp(44px, 15vh, 78px);
+    }
+    .personal-score-card.is-me .personal-score.long-score {
+      font-size: clamp(38px, 12.5vh, 64px);
+    }
+    .personal-score-line {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(9px, 2vh, 16px);
+      min-width: 0;
+    }
+    .personal-diff-btn {
+      width: clamp(38px, 9.5vh, 58px);
+      height: clamp(38px, 9.5vh, 58px);
+      border: 1.5px solid rgba(255,255,255,0.24);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.09);
+      color: rgba(255,255,255,0.62);
+      font-family: inherit;
+      font-size: clamp(16px, 3.8vh, 23px);
+      font-weight: 900;
+      line-height: 1;
+      padding: 0;
+      cursor: pointer;
+      touch-action: none;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .personal-diff-btn .plus,
+    .personal-diff-btn .minus {
+      position: absolute;
+      font-size: clamp(10px, 2.4vh, 14px);
+      line-height: 1;
+    }
+    .personal-diff-btn .plus { top: 16%; left: 16%; }
+    .personal-diff-btn .minus { bottom: 16%; right: 16%; }
+    .personal-diff-btn .slash {
+      font-size: clamp(15px, 3.8vh, 23px);
+      line-height: 1;
+    }
+    .personal-diff-btn.active {
+      background: rgba(96,165,250,0.22);
+      border-color: rgba(96,165,250,0.55);
+      color: #fff;
+    }
+    .personal-meta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: rgba(255,255,255,0.58);
+      font-size: 11px;
+      font-weight: 800;
+      min-width: 0;
+    }
+    .personal-riichi-stick {
+      width: clamp(78px, 20vh, 120px);
+      height: clamp(12px, 2.8vh, 18px);
+      border-radius: 999px;
+      background: #f8fafc;
+      border: 1px solid rgba(0,0,0,0.2);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      margin: 0 auto;
+      opacity: 0;
+      position: relative;
+    }
+    .personal-riichi-stick.on { opacity: 1; }
+    .personal-riichi-stick::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: clamp(10px, 2.2vh, 14px);
+      height: clamp(10px, 2.2vh, 14px);
+      border-radius: 50%;
+      background: #ef4444;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 0 1px rgba(127,29,29,0.18);
+    }
+    .personal-score-card.is-me .personal-riichi-stick {
+      width: clamp(108px, 25vh, 150px);
+      height: clamp(14px, 3.2vh, 20px);
+    }
+    .personal-score-card.is-me .personal-riichi-stick::after {
+      width: clamp(12px, 2.6vh, 16px);
+      height: clamp(12px, 2.6vh, 16px);
+    }
+    .personal-command-row {
+      display: grid;
+      justify-content: stretch;
+      min-width: 0;
+    }
+    .personal-command-btn {
+      width: 100%;
+      border: 1.5px solid rgba(255,255,255,0.22);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.09);
+      color: rgba(255,255,255,0.7);
+      font-family: inherit;
+      font-size: clamp(14px, 3.4vh, 20px);
+      font-weight: 900;
+      padding: clamp(8px, 1.8vh, 12px) clamp(14px, 3vh, 22px);
+      cursor: pointer;
+      min-width: 0;
+    }
+    .personal-command-btn.on {
+      background: #b91c1c;
+      border-color: #f87171;
+      color: #fff;
+      box-shadow: 0 0 18px rgba(239,68,68,0.65);
+    }
+    .personal-command-btn:disabled {
+      opacity: 0.38;
+      cursor: default;
+    }
+    .personal-agari-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      background: rgba(0,0,0,0.72);
+      padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+    }
+    .personal-agari-card {
+      width: min(92vw, 680px);
+      max-height: 92vh;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 8px;
+      background: #1c3a25;
+      padding: clamp(10px, 2.4vh, 18px);
+      box-shadow: 0 18px 44px rgba(0,0,0,0.45);
+    }
+    .personal-agari-head {
+      color: #fbbf24;
+      font-size: clamp(17px, 4vh, 24px);
+      font-weight: 900;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .personal-agari-sec { margin-top: 10px; }
+    .personal-agari-label {
+      color: rgba(255,255,255,0.48);
+      font-size: clamp(10px, 2.4vh, 13px);
+      font-weight: 900;
+      margin-bottom: 5px;
+    }
+    .personal-agari-row {
+      display: flex;
+      gap: 6px;
+    }
+    .personal-agari-row .wtype,
+    .personal-agari-actions .ag-cancel,
+    .personal-agari-actions .ag-apply {
+      min-height: 38px;
+    }
+    .personal-agari-tree {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+    .personal-agari-tree .han-group,
+    .personal-agari-tree > .han-row {
+      min-width: 0;
+    }
+    .personal-agari-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .personal-fx-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .personal-move-label {
+      position: fixed;
+      left: 0;
+      top: 0;
+      transform: translate(-50%, -50%);
+      min-width: 60px;
+      max-width: min(34vw, 132px);
+      padding: clamp(5px, 1.2vh, 8px) clamp(8px, 2vh, 12px);
+      border-radius: 999px;
+      background: rgba(251,191,36,0.95);
+      color: #1f2937;
+      font-size: clamp(11px, 2.7vh, 17px);
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.34);
+      white-space: nowrap;
+      opacity: 0;
+    }
+    .personal-move-label.plus {
+      background: rgba(74,222,128,0.96);
+      color: #052e16;
+    }
+    .personal-move-label.minus {
+      background: rgba(248,113,113,0.96);
+      color: #450a0a;
+    }
+    .personal-move-arrow {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 0;
+      height: 0;
+      transform-origin: 0 50%;
+      border-top: 3px solid rgba(251,191,36,0.94);
+      filter: drop-shadow(0 3px 8px rgba(0,0,0,0.4));
+    }
+    @media (orientation: landscape) and (max-height: 430px) {
+      .personal-move-label {
+        min-width: 54px;
+        max-width: 118px;
+        font-size: 12px;
+        padding: 5px 8px;
+      }
+      .personal-move-arrow {
+        border-top-width: 2px;
+      }
+      .personal-move-arrow::after {
+        top: -6px;
+        border-left-width: 10px;
+        border-top-width: 5px;
+        border-bottom-width: 5px;
+      }
+    }
+    .personal-move-arrow.corner {
+      border-top-style: solid;
+    }
+    .personal-move-arrow::after {
+      content: "";
+      position: absolute;
+      right: -1px;
+      top: -8px;
+      width: 0;
+      height: 0;
+      border-left: 13px solid rgba(251,191,36,0.94);
+      border-top: 6px solid transparent;
+      border-bottom: 6px solid transparent;
+    }
+    .personal-move-arrow.no-head::after { display: none; }
+    .personal-seat-grid {
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      align-items: stretch;
+    }
+    .personal-seat-card {
+      color: #fff;
+      font-family: inherit;
+      padding: clamp(10px, 2.8vh, 22px);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      min-width: 0;
+    }
+    .personal-seat-name {
+      font-size: clamp(18px, 5.4vh, 34px);
+      font-weight: 900;
+      color: rgba(255,255,255,0.9);
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .personal-seat-name.long-name {
+      font-size: clamp(14px, 4vh, 24px);
+    }
+    .personal-action {
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.7);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      padding: clamp(8px, 1.8vh, 12px) clamp(14px, 3vh, 22px);
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .personal-empty {
+      height: 100%;
+      display: grid;
+      place-items: center;
+      color: rgba(255,255,255,0.55);
+      font-size: 13px;
+      font-weight: 800;
+      text-align: center;
+      line-height: 1.7;
+    }
+    .personal-seat-change-top {
+      position: fixed;
+      top: calc(max(10px, env(safe-area-inset-top)) + 4px);
+      right: max(10px, env(safe-area-inset-right));
+      z-index: 3;
+      margin: 0;
+    }
+    .personal-result-shell {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.6fr);
+      gap: clamp(8px, 2vh, 16px);
+      min-width: 0;
+      min-height: 0;
+      padding-top: 8px;
+    }
+    .personal-result-panel {
+      min-width: 0;
+      min-height: 0;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.24);
+      padding: clamp(10px, 2.4vh, 18px);
+      overflow: hidden;
+    }
+    .personal-result-panel.scrollable {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .personal-result-title {
+      color: #fbbf24;
+      font-size: clamp(18px, 4.8vh, 30px);
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: clamp(8px, 2vh, 14px);
+    }
+    .personal-result-list {
+      display: grid;
+      gap: 8px;
+    }
+    .personal-result-row {
+      display: grid;
+      grid-template-columns: 42px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      min-width: 0;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.07);
+      font-weight: 900;
+    }
+    .personal-result-rank { color: rgba(255,255,255,0.45); font-size: 13px; }
+    .personal-result-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: rgba(255,255,255,0.86);
+      font-size: clamp(14px, 3.4vh, 22px);
+    }
+    .personal-result-score {
+      color: #fff;
+      font-size: clamp(16px, 4vh, 24px);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .personal-result-graph {
+      width: 100%;
+      height: calc(100% - 68px);
+      min-height: 150px;
+    }
+    .personal-graph-legend {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      margin: -2px 0 8px;
+    }
+    .personal-graph-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      color: rgba(255,255,255,0.78);
+      font-size: clamp(10px, 2.5vh, 13px);
+      font-weight: 900;
+    }
+    .personal-graph-legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--p-color, #fff);
+      flex-shrink: 0;
+    }
+    .personal-graph-legend-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .personal-stat-table-wrap {
+      margin-top: clamp(10px, 2.4vh, 18px);
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .personal-stat-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: clamp(11px, 2.8vh, 15px);
+      font-weight: 800;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .personal-stat-table th {
+      color: rgba(255,255,255,0.45);
+      font-size: 0.86em;
+      text-align: center;
+      padding: 6px 5px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      white-space: nowrap;
+    }
+    .personal-stat-table th:first-child,
+    .personal-stat-table td:first-child {
+      text-align: left;
+    }
+    .personal-stat-table td {
+      color: rgba(255,255,255,0.78);
+      text-align: center;
+      padding: 7px 5px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      font-variant-numeric: tabular-nums;
+    }
+    .personal-stat-player {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      color: rgba(255,255,255,0.9);
+    }
+    .personal-stat-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--p-color, #fff);
+      flex-shrink: 0;
+    }
+    .personal-stat-player-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .personal-history-wrap {
+      margin-top: clamp(10px, 2.4vh, 18px);
+      display: grid;
+      gap: 8px;
+    }
+    .personal-history-empty {
+      color: rgba(255,255,255,0.42);
+      font-size: clamp(12px, 3vh, 16px);
+      font-weight: 800;
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+    }
+    .personal-history-item {
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.055);
+      padding: 8px 10px;
+      min-width: 0;
+    }
+    .personal-history-item.my-plus {
+      border-color: rgba(74,222,128,0.42);
+      background: rgba(22,101,52,0.28);
+    }
+    .personal-history-item.my-minus {
+      border-color: rgba(248,113,113,0.42);
+      background: rgba(127,29,29,0.28);
+    }
+    .personal-history-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-width: 0;
+      margin-bottom: 5px;
+    }
+    .personal-history-round {
+      color: rgba(255,255,255,0.46);
+      font-size: clamp(10px, 2.5vh, 13px);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .personal-history-role {
+      color: rgba(255,255,255,0.84);
+      font-size: clamp(12px, 3vh, 16px);
+      font-weight: 900;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .personal-history-delta {
+      font-size: clamp(14px, 3.7vh, 20px);
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .personal-history-delta.plus { color: #4ade80; }
+    .personal-history-delta.minus { color: #f87171; }
+    .personal-history-detail {
+      color: rgba(255,255,255,0.58);
+      font-size: clamp(11px, 2.7vh, 14px);
+      font-weight: 800;
+      line-height: 1.45;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .portrait-hint {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      place-items: center;
+      background: #0f3f23;
+      color: rgba(255,255,255,0.82);
+      font-size: 15px;
+      font-weight: 900;
+      text-align: center;
+      line-height: 1.8;
+      padding: 24px;
+    }
+    @media (orientation: portrait) {
+      body.personal-view-active .portrait-hint { display: grid; }
+      body.personal-view-active .personal-shell,
+      body.personal-view-active .personal-seat-grid,
+      body.personal-view-active .personal-result-shell {
+        display: none;
+      }
+    }
+    @media (orientation: landscape) and (max-height: 430px) {
+      .personal-view {
+        padding-top: calc(max(14px, env(safe-area-inset-top)) + 8px);
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+      }
+      .personal-shell {
+        grid-template-rows: minmax(76px, 0.8fr) max-content minmax(174px, 1.45fr);
+        gap: 6px;
+      }
+      .personal-board-info {
+        font-size: 16px;
+        margin-bottom: 0;
+      }
+      .personal-board-info-sub { margin-top: 0; }
+      .personal-action {
+        font-size: 13px;
+        padding: 8px 14px;
+        margin-top: 4px;
+      }
+      .personal-score-card {
+        width: min(44vw, 260px);
+        padding: 9px 12px;
+        gap: 4px;
+      }
+      .personal-score-card.is-me {
+        width: min(52vw, 340px);
+        padding: 8px 14px;
+      }
+      .personal-wind {
+        width: 32px;
+        height: 32px;
+        font-size: 19px;
+      }
+      .personal-score-card.is-me .personal-wind {
+        width: 40px;
+        height: 40px;
+        font-size: 24px;
+      }
+      .personal-name { font-size: 15px; }
+      .personal-score-card.is-me .personal-name { font-size: 20px; }
+      .personal-score { font-size: clamp(30px, 10.5vh, 42px); }
+      .personal-score.long-score { font-size: clamp(24px, 8.8vh, 36px); }
+      .personal-score-card.is-me .personal-score { font-size: clamp(42px, 13vh, 56px); }
+      .personal-score-card.is-me .personal-score.long-score { font-size: clamp(34px, 11vh, 48px); }
+      .personal-score-line { gap: 10px; }
+      .personal-diff-btn {
+        width: 42px;
+        height: 42px;
+        font-size: 18px;
+      }
+      .personal-riichi-stick {
+        width: 80px;
+        height: 12px;
+      }
+      .personal-riichi-stick::after {
+        width: 10px;
+        height: 10px;
+      }
+      .personal-score-card.is-me .personal-riichi-stick {
+        width: 112px;
+        height: 14px;
+      }
+      .personal-score-card.is-me .personal-riichi-stick::after {
+        width: 12px;
+        height: 12px;
+      }
+      .personal-command-btn {
+        font-size: 14px;
+        padding: 7px 12px;
+      }
+      .personal-meta {
+        gap: 7px;
+        font-size: 10px;
+      }
+    }
+    @media (orientation: landscape) and (max-height: 380px) {
+      .personal-view {
+        padding-top: calc(max(12px, env(safe-area-inset-top)) + 6px);
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
+      }
+      .personal-shell {
+        grid-template-rows: minmax(64px, 0.7fr) max-content minmax(150px, 1.35fr);
+        gap: 5px;
+      }
+      .personal-board-info { font-size: 12px; margin-bottom: 4px; }
+      .personal-action { font-size: 11px; padding: 6px 12px; }
+      .personal-score-card {
+        width: min(42vw, 235px);
+        padding: 8px 10px;
+      }
+      .personal-score-card.is-me {
+        width: min(48vw, 310px);
+        padding: 7px 12px;
+      }
+      .personal-wind {
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+      }
+      .personal-score-card.is-me .personal-wind {
+        width: 34px;
+        height: 34px;
+        font-size: 20px;
+      }
+      .personal-name { font-size: 13px; }
+      .personal-score-card.is-me .personal-name { font-size: 17px; }
+      .personal-score { font-size: clamp(26px, 9.6vh, 36px); }
+      .personal-score.long-score { font-size: clamp(22px, 8vh, 31px); }
+      .personal-score-card.is-me .personal-score { font-size: clamp(36px, 12vh, 46px); }
+      .personal-score-card.is-me .personal-score.long-score { font-size: clamp(30px, 10vh, 40px); }
+      .personal-diff-btn {
+        width: 36px;
+        height: 36px;
+      }
+      .personal-riichi-stick {
+        width: 72px;
+        height: 11px;
+      }
+      .personal-score-card.is-me .personal-riichi-stick {
+        width: 96px;
+        height: 13px;
+      }
+      .personal-command-btn {
+        font-size: 12px;
+        padding: 6px 10px;
+      }
+    }
   </style>
 </head>
 <body>
 <script>
-  if (!new URLSearchParams(location.search).get('embedded')) {
+  const bootParams = new URLSearchParams(location.search);
+  if (!bootParams.get('embedded') && bootParams.get('view') !== 'personal') {
     window.location.replace('/mahjong/');
   }
 </script>
@@ -1225,6 +2214,15 @@
       <div id="tabKyoku">
         <div class="start-title">麻 雀 テ ー ブ ル</div>
         <div class="start-subtitle">対 局 設 定</div>
+
+        <div class="resume-card" id="resumeCard">
+          <div class="resume-title">途中の対局</div>
+          <div class="resume-meta" id="resumeMeta"></div>
+          <div class="resume-actions">
+            <button class="resume-btn primary" id="resumeGameBtn">復元</button>
+            <button class="resume-btn ghost" id="discardResumeBtn">新規開始</button>
+          </div>
+        </div>
 
         <div class="setup-card">
           <div class="setup-card-lbl">PLAYERS</div>
@@ -1271,6 +2269,10 @@
         </div>
 
         <div class="start-actions">
+          <div class="wind-shift-actions">
+            <button class="random-btn wind-shift-btn" id="windShiftLeft" aria-label="左回転" title="左回転">↺</button>
+            <button class="random-btn wind-shift-btn" id="windShiftRight" aria-label="右回転" title="右回転">↻</button>
+          </div>
           <button class="random-btn" id="sekigimeBtn">🀅 席ぎめ</button>
           <button class="random-btn" id="randomWindBtn">🎲 ランダム</button>
         </div>
@@ -1310,6 +2312,19 @@
             <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:8px;line-height:1.7">ONのとき、持ち点が1000点未満でもリーチ可能（一時的にマイナスになる場合あり）</div>
           </div>
           <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:10px;line-height:1.7">ONのとき、局の終了時にいずれかのプレイヤーの持ち点が0点未満になった場合、対局を終了します</div>
+        </div>
+
+        <div class="setup-card" style="margin-top:12px">
+          <div class="setup-card-lbl">ルールプリセット</div>
+          <div class="preset-row">
+            <select id="rulePresetSelect"></select>
+            <button class="wtype" id="rulePresetApply">適用</button>
+            <button class="wtype" id="rulePresetDelete">削除</button>
+          </div>
+          <div class="preset-row">
+            <input id="rulePresetName" type="text" maxlength="16" placeholder="プリセット名">
+            <button class="wtype" id="rulePresetSave">保存</button>
+          </div>
         </div>
       </div>
 
@@ -1463,6 +2478,25 @@
   <button class="end-btn" id="endBtn">終　了</button>
   <button class="ryuu-btn" id="ryuuBtn">終局</button>
   <button class="score-edit-btn" id="scoreEditBtn">点数修正</button>
+  <button class="device-share-btn" id="deviceShareBtn">端末表示</button>
+
+  <div class="ag-overlay" id="deviceShareModal" style="display:none">
+    <div class="ag-card share-card">
+      <div class="ag-head">端 末 表 示</div>
+      <img class="share-qr" id="deviceShareQr" alt="端末表示QR">
+      <div class="share-url" id="deviceShareUrl"></div>
+      <div class="share-status" id="deviceShareStatus"></div>
+      <div class="ag-actions" style="margin-top:12px">
+        <button class="ag-apply" id="deviceShareCopy">コピー</button>
+        <button class="ag-cancel" id="deviceShareRefresh">QR更新</button>
+        <button class="ag-cancel" id="deviceShareClose">閉</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="personal-view" id="personalView">
+    <div class="personal-empty">卓に接続中</div>
+  </div>
 
   <!-- 履歴モーダル -->
   <div class="ag-overlay" id="historyModal" style="display:none">
@@ -1543,8 +2577,19 @@
     <div class="ag-card">
       <div class="ag-head" id="agHead">の和了</div>
 
+      <div id="typeScreen" class="ag-type-card">
+        <div class="ag-sec">
+          <div class="ag-lbl">和了方法</div>
+          <div class="ag-type-actions">
+            <button class="kc-btn kc-agari" id="agTypeRon">ロン</button>
+            <button class="kc-btn kc-agari" id="agTypeTsumo">ツモ</button>
+            <button class="ag-cancel" id="agTypeCancel" style="margin-top:4px;padding:12px;width:100%">キャンセル</button>
+          </div>
+        </div>
+      </div>
+
       <div id="selScreen">
-      <div class="ag-sec">
+      <div class="ag-sec" style="display:none">
         <div class="ag-lbl">和了方法</div>
         <div class="ag-row">
           <button class="wtype sel" id="wtRon">ロン</button>
@@ -1560,6 +2605,7 @@
           <button class="psel" id="ad-2"></button>
           <button class="psel" id="ad-3"></button>
         </div>
+        <div class="dealer-hint" id="dealerHint">放銃者の選択</div>
       </div>
 
       <div class="ag-sec">
@@ -1619,28 +2665,33 @@
             </div>
           </div>
 
-          <div class="han-row" data-idx="4">満貫</div>
-          <div class="han-row" data-idx="5">跳満</div>
-          <div class="han-row" data-idx="6">倍満</div>
-          <div class="han-row" data-idx="7">三倍満</div>
-          <div class="han-row" data-idx="8">役満</div>
-          <div class="han-row" data-idx="9">二倍役満</div>
-          <div class="han-row" data-idx="10">三倍役満</div>
-          <div class="han-row" data-idx="11">四倍役満</div>
-          <div class="han-row" data-idx="12">五倍役満</div>
-          <div class="han-row" data-idx="13">六倍役満</div>
+          <div class="han-row limit-row" data-idx="4">満貫<span class="han-score"></span></div>
+          <div class="han-row limit-row" data-idx="5">跳満<span class="han-score"></span></div>
+          <div class="han-row limit-row" data-idx="6">倍満<span class="han-score"></span></div>
+          <div class="han-row limit-row" data-idx="7">三倍満<span class="han-score"></span></div>
+          <div class="han-row limit-row" data-idx="8">役満<span class="han-score"></span></div>
+          <div class="han-group">
+            <div class="han-row yakuman-folder"><span class="arr">▶</span>二倍以上</div>
+            <div class="fu-children">
+              <div class="han-row limit-row" data-idx="9">二倍役満<span class="han-score"></span></div>
+              <div class="han-row limit-row" data-idx="10">三倍役満<span class="han-score"></span></div>
+              <div class="han-row limit-row" data-idx="11">四倍役満<span class="han-score"></span></div>
+              <div class="han-row limit-row" data-idx="12">五倍役満<span class="han-score"></span></div>
+              <div class="han-row limit-row" data-idx="13">六倍役満<span class="han-score"></span></div>
+            </div>
+          </div>
 
         </div>
       </div>
 
-        <button class="ag-cancel" id="agariCancel">キャンセル</button>
+        <button class="ag-cancel" id="agariCancel">戻　る</button>
       </div>
 
       <div id="confScreen" style="display:none">
         <div class="ag-result" id="agariResult"></div>
         <div class="ag-actions">
           <button class="ag-apply" id="agariApply">適　用</button>
-          <button class="ag-cancel" id="backBtn">やり直し</button>
+          <button class="ag-cancel" id="backBtn">戻　る</button>
         </div>
       </div>
     </div>
@@ -2095,7 +3146,7 @@
         <div class="detail-stats-scroll">
         <table class="detail-stats-table">
           <thead><tr>
-            <th>名前</th><th>和了(R)</th><th>和了(T)</th><th>放銃</th><th>リーチ</th><th>和了率</th><th>放銃率</th>
+            <th>名前</th><th>ロン</th><th>ツモ</th><th>放銃</th><th>リーチ</th><th>和了率</th><th>放銃率</th>
           </tr></thead>
           <tbody>${seatNames.map((name,i) => {
             const s = stats[i];
@@ -2185,14 +3236,82 @@
 
   <script src="/common.js"></script>
   <script>
-    const isEmbedded = new URLSearchParams(location.search).get('embedded') === '1';
+    const pageParams = new URLSearchParams(location.search);
+    const isEmbedded = pageParams.get('embedded') === '1';
+    const isPersonalView = pageParams.get('view') === 'personal' && !!pageParams.get('room');
     if (isEmbedded) {
+      const banner = document.getElementById('dev-banner');
+      if (banner) banner.style.display = 'none';
+    }
+    if (isPersonalView) {
+      document.body.classList.add('personal-view-active');
       const banner = document.getElementById('dev-banner');
       if (banner) banner.style.display = 'none';
     }
 
     const WINDS = ['東', '南', '西', '北'];
     const ROUND_WINDS = ['東', '南', '西', '北'];
+    const PERSONAL_COLORS = ['#fbbf24', '#4ade80', '#60a5fa', '#f87171'];
+    const RULE_PRESET_KEY = 'mahjong_table_rule_presets_v1';
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyBC0X3taGcEclIO8g7Lg7odIdTwaA6gnGY",
+      authDomain: "wakuda-tools.firebaseapp.com",
+      projectId: "wakuda-tools",
+      storageBucket: "wakuda-tools.firebasestorage.app",
+      messagingSenderId: "812175144918",
+      appId: "1:812175144918:web:e93ea5bec2fcad8810d677"
+    };
+    const ROOM_COLLECTION = 'mahjong_table_rooms';
+    const ROOM_ID_KEY = 'mahjong_table_room_id_v1';
+    let tableRoomId = cleanRoomId(pageParams.get('room')) || sessionStorage.getItem(ROOM_ID_KEY) || '';
+    let tableFbPromise = null;
+    let tableRoomPublishTimer = null;
+    let tableRequestUnsub = null;
+    const processedTableRequests = new Set();
+    let personalSeatIndex = Number(localStorage.getItem(`mahjong_personal_seat_${tableRoomId}`) ?? -1);
+    let personalRoomLoaded = false;
+    let personalDiffOn = false;
+    let personalPendingMove = null;
+    let personalScoreOverrides = null;
+    let personalStateOverride = null;
+    let personalActionRequests = { riichi: null, agari: null };
+    let personalAgariOpen = false;
+    let personalAgariInput = { winType: 'ron', dealerIdx: -1, hanIdx: -1, fu: -1, confirm: false };
+    let personalYakumanOpen = false;
+
+    function cleanRoomId(roomId) {
+      return String(roomId || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+    }
+
+    function makeRoomId() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let roomId = '';
+      for (let i = 0; i < 6; i++) roomId += chars[Math.floor(Math.random() * chars.length)];
+      return roomId;
+    }
+
+    function getTableFirebase() {
+      if (tableFbPromise) return tableFbPromise;
+      tableFbPromise = Promise.all([
+        import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js')
+      ]).then(([appMod, firestoreMod]) => {
+        const app = appMod.getApps().length ? appMod.getApp() : appMod.initializeApp(FIREBASE_CONFIG);
+        return {
+          db: firestoreMod.getFirestore(app),
+          doc: firestoreMod.doc,
+          collection: firestoreMod.collection,
+          addDoc: firestoreMod.addDoc,
+          setDoc: firestoreMod.setDoc,
+          updateDoc: firestoreMod.updateDoc,
+          query: firestoreMod.query,
+          orderBy: firestoreMod.orderBy,
+          onSnapshot: firestoreMod.onSnapshot,
+          serverTimestamp: firestoreMod.serverTimestamp
+        };
+      });
+      return tableFbPromise;
+    }
 
     function freshState() {
       return {
@@ -2223,9 +3342,11 @@
     let tableRoundLog = [];
     let riichiCounts = [0, 0, 0, 0];
     let gameRecorded = false;
+    let tableGameEnded = false;
     let kiichaSlot = 0;
     let randomSpinInterval = null;
     let randomTimeouts = [];
+    const AUTO_SAVE_KEY = 'mahjong_table_autosave_v1';
 
     function captureSnapshot() {
       return {
@@ -2255,6 +3376,1273 @@
       } else {
         badge.style.display = 'none';
       }
+    }
+
+    function escResumeText(v) {
+      return String(v ?? '').replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      }[ch]));
+    }
+
+    function savedGameLabel(data) {
+      const s = data?.state;
+      if (!s || !Array.isArray(s.players)) return '';
+      const players = s.players.map(p => `${escResumeText(p.wind || '')}${escResumeText(p.name || '')}`).join(' / ');
+      const round = `${GT_NAMES[data.settings?.gameType ?? settingGameType] || '対局'} ${ROUND_WINDS[s.roundWind] || '東'}${s.roundNum || 1}局 ${s.honba || 0}本場`;
+      const savedAt = data.savedAt ? new Date(data.savedAt) : null;
+      const time = savedAt && !Number.isNaN(savedAt.getTime())
+        ? `${savedAt.getMonth() + 1}/${savedAt.getDate()} ${String(savedAt.getHours()).padStart(2, '0')}:${String(savedAt.getMinutes()).padStart(2, '0')}`
+        : '';
+      const historyCount = Array.isArray(data.tableRoundLog) ? data.tableRoundLog.length : 0;
+      return `${escResumeText(round)}<br>${players}<br>履歴 ${historyCount}局${time ? `<br>保存 ${escResumeText(time)}` : ''}`;
+    }
+
+    function readSavedGame() {
+      try {
+        const raw = localStorage.getItem(AUTO_SAVE_KEY);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        if (!data || data.version !== 1 || !data.state || !Array.isArray(data.state.players)) return null;
+        return data;
+      } catch {
+        return null;
+      }
+    }
+
+    function clearSavedGame() {
+      try { localStorage.removeItem(AUTO_SAVE_KEY); } catch {}
+      const card = document.getElementById('resumeCard');
+      if (card) card.classList.remove('vis');
+    }
+
+    function isGameInProgress() {
+      const startScreen = document.getElementById('startScreen');
+      return startScreen && getComputedStyle(startScreen).display === 'none';
+    }
+
+    function buildSaveData() {
+      return {
+        version: 1,
+        savedAt: new Date().toISOString(),
+        state: captureSnapshot(),
+        gameHistory: gameHistory.map(h => ({
+          ...h,
+          snapshot: {
+            ...h.snapshot,
+            players: Array.isArray(h.snapshot?.players) ? h.snapshot.players.map(p => ({ ...p })) : [],
+          },
+        })),
+        tableRoundLog: tableRoundLog.map(ev => ({ ...ev })),
+        riichiCounts: riichiCounts.slice(),
+        gameRecorded,
+        kiichaSlot,
+        playerWinds: playerWinds.slice(),
+        setupNames: [0, 1, 2, 3].map(i => document.getElementById(`sn${i}`)?.value || ''),
+        settings: {
+          gameType: settingGameType,
+          enchosen: settingEnchosen,
+          kijunten: settingKijunten,
+          hakoshita: settingHakoshita,
+          hakoshitaRiichi: settingHakoshitaRiichi,
+        },
+      };
+    }
+
+    function saveGameProgress() {
+      if (!isGameInProgress()) return;
+      try { localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(buildSaveData())); } catch {}
+    }
+
+    function buildRoomPayload() {
+      return {
+        version: 1,
+        updatedAt: Date.now(),
+        state: captureSnapshot(),
+        tableRoundLog: tableRoundLog.map(ev => ({ ...ev })),
+        riichiCounts: riichiCounts.slice(),
+        gameEnded: tableGameEnded,
+        kiichaSlot,
+        playerWinds: playerWinds.slice(),
+        settings: {
+          gameType: settingGameType,
+          enchosen: settingEnchosen,
+          kijunten: settingKijunten,
+          hakoshita: settingHakoshita,
+          hakoshitaRiichi: settingHakoshitaRiichi,
+        },
+      };
+    }
+
+    async function writeRoomPayload() {
+      if (isPersonalView || !tableRoomId) return;
+      const fb = await getTableFirebase();
+      await fb.setDoc(fb.doc(fb.db, ROOM_COLLECTION, tableRoomId), {
+        roomId: tableRoomId,
+        active: true,
+        gameEnded: tableGameEnded,
+        updatedAt: fb.serverTimestamp(),
+        payload: buildRoomPayload()
+      }, { merge: true });
+      startTableRequestListener();
+    }
+
+    function publishRoomState() {
+      if (isPersonalView || !tableRoomId || !isGameInProgress()) return;
+      clearTimeout(tableRoomPublishTimer);
+      tableRoomPublishTimer = setTimeout(() => {
+        writeRoomPayload().catch(() => updateShareStatus('同期できませんでした'));
+      }, 180);
+    }
+
+    function publishRoomStateNow() {
+      if (isPersonalView || !tableRoomId || !isGameInProgress()) return;
+      clearTimeout(tableRoomPublishTimer);
+      writeRoomPayload().catch(() => updateShareStatus('同期できませんでした'));
+    }
+
+    async function ensureRoom() {
+      if (!tableRoomId) {
+        tableRoomId = makeRoomId();
+        sessionStorage.setItem(ROOM_ID_KEY, tableRoomId);
+      }
+      await writeRoomPayload();
+      startTableRequestListener();
+      return tableRoomId;
+    }
+
+    async function sendPersonalRequest(type, extra = {}) {
+      if (!isPersonalView || !tableRoomId || personalSeatIndex < 0 || personalSeatIndex > 3) return;
+      const fb = await getTableFirebase();
+      const docRef = await fb.addDoc(fb.collection(fb.db, ROOM_COLLECTION, tableRoomId, 'requests'), {
+        type,
+        seatIndex: personalSeatIndex,
+        status: 'pending',
+        createdAt: fb.serverTimestamp(),
+        clientAt: Date.now(),
+        ...extra,
+      });
+      return docRef.id;
+    }
+
+    async function cancelPersonalRequest(targetType) {
+      const targetRequestId = personalActionRequests[targetType];
+      await sendPersonalRequest('cancel', { targetType, targetRequestId: targetRequestId || '' });
+      personalActionRequests[targetType] = null;
+      renderPersonalView();
+    }
+
+    function startTableRequestListener() {
+      if (isPersonalView || !tableRoomId || tableRequestUnsub) return;
+      getTableFirebase().then(fb => {
+        const q = fb.query(
+          fb.collection(fb.db, ROOM_COLLECTION, tableRoomId, 'requests'),
+          fb.orderBy('clientAt', 'asc')
+        );
+        tableRequestUnsub = fb.onSnapshot(q, snap => {
+          snap.docChanges().forEach(change => {
+            if (change.type !== 'added') return;
+            const ref = change.doc.ref;
+            const requestId = change.doc.id;
+            if (processedTableRequests.has(requestId)) return;
+            const req = change.doc.data();
+            if (req.status && req.status !== 'pending') return;
+            processedTableRequests.add(requestId);
+            handleTableRequest(req)
+              .then(() => fb.updateDoc(ref, { status: 'done', processedAt: fb.serverTimestamp() }))
+              .catch(err => fb.updateDoc(ref, { status: 'error', error: String(err?.message || err), processedAt: fb.serverTimestamp() }).catch(() => {}));
+          });
+        });
+      }).catch(() => updateShareStatus('子機操作を受信できません'));
+    }
+
+    async function handleTableRequest(req) {
+      const seatIndex = Number(req?.seatIndex);
+      if (!Number.isInteger(seatIndex) || seatIndex < 0 || seatIndex > 3) return;
+      if (req.type === 'riichi') {
+        if (!state.players[seatIndex]?.riichi) applyRiichi(seatIndex);
+      } else if (req.type === 'agari') {
+        applyPersonalAgariRequest(req, seatIndex);
+      } else if (req.type === 'cancel') {
+        handleCancelTableRequest(req, seatIndex);
+      }
+    }
+
+    function getPersonalUrl() {
+      const url = new URL('/mahjong-table/', location.origin);
+      url.searchParams.set('room', tableRoomId);
+      url.searchParams.set('view', 'personal');
+      return url.toString();
+    }
+
+    function updateShareStatus(text) {
+      const status = document.getElementById('deviceShareStatus');
+      if (status) status.textContent = text || '';
+    }
+
+    async function refreshShareModal() {
+      updateShareStatus('同期準備中');
+      try {
+        await ensureRoom();
+        const url = getPersonalUrl();
+        document.getElementById('deviceShareUrl').textContent = url;
+        document.getElementById('deviceShareQr').src =
+          `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(url)}`;
+        updateShareStatus('QRを読み取ると個人表示に入れます');
+      } catch {
+        updateShareStatus('QRを作成できませんでした');
+      }
+    }
+
+    function openShareModal() {
+      document.getElementById('deviceShareModal').style.display = 'flex';
+      setBackFabVisible(false);
+      refreshShareModal();
+    }
+
+    function applyRoomSnapshot(roomDoc) {
+      const payload = roomDoc?.payload || roomDoc;
+      if (!payload?.state || !Array.isArray(payload.state.players)) return;
+      const s = payload.state;
+      const previousPersonalState = {
+        players: state.players.map(p => ({ ...p })),
+        honba: state.honba,
+        kyotaku: state.kyotaku,
+        roundWind: state.roundWind,
+        roundNum: state.roundNum,
+      };
+      state = freshState();
+      state.players = s.players.slice(0, 4).map((p, i) => ({
+        score: Number(p.score ?? 25000),
+        wind: WINDS.includes(p.wind) ? p.wind : WINDS[i],
+        riichi: !!p.riichi,
+        name: p.name || `P${i + 1}`,
+      }));
+      state.honba = Number(s.honba || 0);
+      state.kyotaku = Number(s.kyotaku || 0);
+      state.roundWind = Number(s.roundWind || 0);
+      state.roundNum = Number(s.roundNum || 1);
+      state.inEnchosen = !!s.inEnchosen;
+      const prevRoundLogLength = tableRoundLog.length;
+      const nextRoundLog = Array.isArray(payload.tableRoundLog) ? payload.tableRoundLog : [];
+      const shouldAnimateMove = isPersonalView
+        && personalRoomLoaded
+        && nextRoundLog.length > prevRoundLogLength
+        && nextRoundLog[nextRoundLog.length - 1]?.type === 'agari'
+        && Array.isArray(nextRoundLog[nextRoundLog.length - 1]?.deltas);
+      if (isPersonalView && personalRoomLoaded && nextRoundLog.length > prevRoundLogLength) {
+        personalActionRequests = { riichi: null, agari: null };
+      }
+      tableRoundLog = nextRoundLog;
+      if (shouldAnimateMove) {
+        const lastMove = tableRoundLog[tableRoundLog.length - 1];
+        const beforeScores = Array.isArray(lastMove.scoresBefore)
+          ? lastMove.scoresBefore.slice(0, 4).map(score => Number(score || 0))
+          : null;
+        if (beforeScores && beforeScores.length === 4) personalScoreOverrides = beforeScores;
+        if (previousPersonalState.players.length === 4) personalStateOverride = previousPersonalState;
+        personalPendingMove = {
+          deltas: lastMove.deltas.slice(0, 4),
+          scoresBefore: beforeScores,
+          token: Date.now()
+        };
+      }
+      riichiCounts = Array.isArray(payload.riichiCounts) ? payload.riichiCounts.slice(0, 4) : [0, 0, 0, 0];
+      while (riichiCounts.length < 4) riichiCounts.push(0);
+      kiichaSlot = Number.isInteger(payload.kiichaSlot) ? payload.kiichaSlot : state.players.findIndex(p => p.wind === '東');
+      if (kiichaSlot < 0) kiichaSlot = 0;
+      playerWinds = Array.isArray(payload.playerWinds) ? payload.playerWinds.slice(0, 4) : state.players.map(p => p.wind);
+      while (playerWinds.length < 4) playerWinds.push(WINDS[playerWinds.length]);
+      const settings = payload.settings || {};
+      settingGameType = Number(settings.gameType ?? settingGameType);
+      settingEnchosen = !!settings.enchosen;
+      settingKijunten = Number(settings.kijunten || settingKijunten);
+      settingHakoshita = !!settings.hakoshita;
+      settingHakoshitaRiichi = !!settings.hakoshitaRiichi;
+      personalRoomLoaded = true;
+      tableGameEnded = !!(payload.gameEnded || roomDoc?.gameEnded);
+      syncSettingsUI();
+      renderStartWindBtns();
+      document.getElementById('startScreen').style.display = 'none';
+      document.querySelectorAll('.ag-overlay').forEach(el => { el.style.display = 'none'; });
+      setBackFabVisible(false);
+      render();
+    }
+
+    function fmtPersonalScore(score) {
+      return Number(score || 0).toLocaleString();
+    }
+
+    function escPersonal(s) {
+      return String(s ?? '').replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+      }[ch]));
+    }
+
+    function buildPointFlows(deltas) {
+      const positives = [];
+      const negatives = [];
+      deltas.forEach((raw, idx) => {
+        const amount = Number(raw || 0);
+        if (amount > 0) positives.push({ idx, amount });
+        if (amount < 0) negatives.push({ idx, amount: -amount });
+      });
+      const flows = [];
+      let pi = 0;
+      let ni = 0;
+      while (pi < positives.length && ni < negatives.length) {
+        const amount = Math.min(positives[pi].amount, negatives[ni].amount);
+        if (amount > 0) {
+          flows.push({ from: negatives[ni].idx, to: positives[pi].idx, amount });
+        }
+        positives[pi].amount -= amount;
+        negatives[ni].amount -= amount;
+        if (positives[pi].amount <= 0) pi++;
+        if (negatives[ni].amount <= 0) ni++;
+      }
+      return flows;
+    }
+
+    function rectCenter(el) {
+      const rect = el.getBoundingClientRect();
+      return {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+      };
+    }
+
+    function personalFxBounds() {
+      const view = document.getElementById('personalView');
+      const rect = view?.getBoundingClientRect();
+      return {
+        left: (rect?.left || 0) + 12,
+        right: (rect?.right || innerWidth) - 12,
+        top: (rect?.top || 0) + 12,
+        bottom: (rect?.bottom || innerHeight) - 12,
+      };
+    }
+
+    function clampPersonalPoint(point, pad = 18) {
+      const b = personalFxBounds();
+      return {
+        x: Math.min(b.right - pad, Math.max(b.left + pad, point.x)),
+        y: Math.min(b.bottom - pad, Math.max(b.top + pad, point.y)),
+      };
+    }
+
+    function personalDeltaLabelPoint(card) {
+      const rect = card.getBoundingClientRect();
+      const pos = card.dataset.seatPos;
+      let point;
+      const tight = innerHeight < 430;
+      const offset = tight ? 6 : 14;
+      if (pos === 'bottom') {
+        point = { x: rect.left + rect.width / 2, y: rect.top - offset };
+      } else if (pos === 'top') {
+        point = { x: rect.left + rect.width / 2, y: rect.bottom + offset };
+      } else if (pos === 'left') {
+        point = { x: rect.right + offset, y: rect.top + rect.height / 2 };
+      } else if (pos === 'right') {
+        point = { x: rect.left - offset, y: rect.top + rect.height / 2 };
+      } else {
+        point = rectCenter(card);
+      }
+      return clampPersonalPoint(point, 32);
+    }
+
+    function personalOuterElbow(start, end) {
+      const a = { x: end.x, y: start.y };
+      const b = { x: start.x, y: end.y };
+      const cx = innerWidth / 2;
+      const cy = innerHeight / 2;
+      const da = Math.hypot(a.x - cx, a.y - cy);
+      const db = Math.hypot(b.x - cx, b.y - cy);
+      return clampPersonalPoint(db > da ? b : a, 10);
+    }
+
+    function setPersonalScoreText(idx, score) {
+      const el = document.querySelector(`.personal-score[data-score-idx="${idx}"]`);
+      if (el) {
+        const text = fmtPersonalScore(score);
+        el.textContent = text;
+        el.classList.toggle('long-score', text.length >= 7);
+      }
+    }
+
+    function refreshPersonalStaticInfo() {
+      const board = document.querySelector('.personal-board-info');
+      if (board) {
+        board.innerHTML = `
+          ${GT_NAMES[settingGameType]}　${ROUND_WINDS[state.roundWind]}${state.roundNum}局
+          <span class="personal-board-info-sub">${state.honba}本場　供託${state.kyotaku}本</span>`;
+      }
+      state.players.forEach((p, idx) => {
+        const card = document.querySelector(`.personal-score-card[data-player-idx="${idx}"]`);
+        if (!card) return;
+        const wind = card.querySelector('.personal-wind');
+        if (wind) {
+          wind.textContent = p.wind;
+          wind.classList.toggle('east', p.wind === '東');
+        }
+        const name = card.querySelector('.personal-name');
+        if (name) name.textContent = p.name;
+      });
+    }
+
+    function animatePersonalScores(scoresBefore, deltas) {
+      if (!Array.isArray(scoresBefore) || !Array.isArray(deltas)) return;
+      const duration = 1100;
+      const startAt = performance.now();
+      const finalScores = scoresBefore.map((score, i) => Number(score || 0) + Number(deltas[i] || 0));
+      const tick = now => {
+        const t = Math.min(1, (now - startAt) / duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+        scoresBefore.forEach((score, i) => {
+          const next = Math.round((Number(score || 0) + (finalScores[i] - Number(score || 0)) * eased) / 100) * 100;
+          setPersonalScoreText(i, next);
+        });
+        if (t < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          personalScoreOverrides = null;
+          finalScores.forEach((score, i) => setPersonalScoreText(i, score));
+        }
+      };
+      requestAnimationFrame(tick);
+    }
+
+    function personalTimeline() {
+      const n = state.players.length;
+      const initial = tableRoundLog.length && Array.isArray(tableRoundLog[0]?.scoresBefore)
+        ? tableRoundLog[0].scoresBefore.slice(0, n).map(score => Number(score || 0))
+        : Array(n).fill(25000);
+      const timeline = [initial.slice()];
+      const cur = initial.slice();
+      tableRoundLog.forEach(ev => {
+        const deltas = Array.isArray(ev.deltas) ? ev.deltas : [];
+        for (let i = 0; i < n; i++) cur[i] += Number(deltas[i] || 0);
+        timeline.push(cur.slice());
+      });
+      return timeline;
+    }
+
+    function buildPersonalGraph(timeline) {
+      const n = state.players.length;
+      const W = 360, H = 180, PX = 28, PY = 18;
+      const iW = W - PX * 2;
+      const iH = H - PY * 2;
+      const steps = Math.max(1, timeline.length - 1);
+      const all = timeline.flat();
+      let minS = Math.min(...all);
+      let maxS = Math.max(...all);
+      const rng = (maxS - minS) || 5000;
+      minS -= rng * 0.08;
+      maxS += rng * 0.08;
+      const yRng = maxS - minS || 1;
+      const tx = i => PX + iW * (i / steps);
+      const ty = s => PY + (1 - (s - minS) / yRng) * iH;
+      let svg = '<line x1="28" y1="90" x2="332" y2="90" stroke="rgba(255,255,255,0.1)" stroke-width="1" stroke-dasharray="4 4"/>';
+      for (let pi = 0; pi < n; pi++) {
+        const color = PERSONAL_COLORS[pi] || '#fff';
+        const pts = timeline.map((row, ri) => `${tx(ri).toFixed(1)},${ty(row[pi]).toFixed(1)}`).join(' ');
+        svg += `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+        timeline.forEach((row, ri) => {
+          svg += `<circle cx="${tx(ri).toFixed(1)}" cy="${ty(row[pi]).toFixed(1)}" r="2.4" fill="${color}" stroke="rgba(0,0,0,0.5)" stroke-width="0.8"/>`;
+        });
+      }
+      return `<svg viewBox="0 0 ${W} ${H}" class="personal-result-graph" preserveAspectRatio="none">${svg}</svg>`;
+    }
+
+    function renderPersonalGraphLegend() {
+      return `
+        <div class="personal-graph-legend">
+          ${state.players.map((p, i) => `
+            <div class="personal-graph-legend-item" style="--p-color:${PERSONAL_COLORS[i] || '#fff'}">
+              <span class="personal-graph-legend-dot"></span>
+              <span class="personal-graph-legend-name">${escPersonal(p.name)}</span>
+            </div>
+          `).join('')}
+        </div>`;
+    }
+
+    function personalStats() {
+      const stats = state.players.map(() => ({ ron: 0, tsumo: 0, houju: 0, riichi: 0 }));
+      tableRoundLog.forEach(ev => {
+        if (ev.type !== 'agari') return;
+        const winners = ev.winnerIdxs || (Number.isInteger(ev.winnerIdx) ? [ev.winnerIdx] : []);
+        winners.forEach(idx => {
+          if (idx < 0 || !stats[idx]) return;
+          if (ev.winType === 'tsumo') stats[idx].tsumo++;
+          else stats[idx].ron++;
+        });
+        if (ev.winType === 'ron' && ev.loserIdx >= 0 && stats[ev.loserIdx]) stats[ev.loserIdx].houju++;
+      });
+      riichiCounts.forEach((count, i) => { if (stats[i]) stats[i].riichi = Number(count || 0); });
+      return stats;
+    }
+
+    function personalRoundHistory() {
+      const myIdx = Number.isInteger(personalSeatIndex) ? personalSeatIndex : -1;
+      return tableRoundLog.map((ev, i) => {
+        const deltas = Array.isArray(ev.deltas) ? ev.deltas : [];
+        const myDelta = Number(deltas[myIdx] || 0);
+        const winners = ev.winnerIdxs || (Number.isInteger(ev.winnerIdx) ? [ev.winnerIdx] : []);
+        const winnerNames = winners.map(idx => state.players[idx]?.name || `P${idx + 1}`).join('・');
+        const loserName = ev.loserIdx >= 0 ? (state.players[ev.loserIdx]?.name || `P${ev.loserIdx + 1}`) : '';
+        let role = '';
+        let detail = '';
+        if (ev.type === 'agari') {
+          const winType = ev.winType === 'tsumo' ? 'ツモ' : 'ロン';
+          role = `${winnerNames} ${winType}`;
+          detail = ev.winType === 'ron' && loserName ? `${loserName} 放銃` : '全員支払い';
+          if (winners.includes(myIdx)) role = `自分の和了 ${winType}`;
+          else if (ev.winType === 'ron' && ev.loserIdx === myIdx) role = '自分の放銃';
+        } else if (ev.type === 'ryukyoku') {
+          const tenpai = Array.isArray(ev.tenpai) ? ev.tenpai : [];
+          const tenpaiNames = tenpai.map((v, idx) => v ? state.players[idx]?.name : null).filter(Boolean);
+          role = '流局';
+          detail = tenpaiNames.length ? `${tenpaiNames.join('・')} 聴牌` : '全員ノーテン';
+        } else if (ev.type === 'chonbo') {
+          const playerName = ev.playerIdx >= 0 ? (state.players[ev.playerIdx]?.name || `P${ev.playerIdx + 1}`) : '';
+          role = ev.playerIdx === myIdx ? '自分のチョンボ' : 'チョンボ';
+          detail = playerName;
+        } else {
+          role = '記録';
+          detail = '';
+        }
+        const deltaClass = myDelta > 0 ? 'plus' : myDelta < 0 ? 'minus' : '';
+        const itemClass = myDelta > 0 ? 'my-plus' : myDelta < 0 ? 'my-minus' : '';
+        return {
+          idx: i,
+          roundLabel: ev.roundLabel || `${i + 1}局`,
+          role,
+          detail,
+          myDelta,
+          deltaClass,
+          itemClass,
+        };
+      }).reverse();
+    }
+
+    function renderPersonalHistory() {
+      const history = personalRoundHistory();
+      if (!history.length) return '<div class="personal-history-empty">履歴なし</div>';
+      return history.map(item => `
+        <div class="personal-history-item ${item.itemClass}">
+          <div class="personal-history-head">
+            <span class="personal-history-round">${escPersonal(item.roundLabel)}</span>
+            <span class="personal-history-delta ${item.deltaClass}">${item.myDelta > 0 ? '+' : ''}${fmtPersonalScore(item.myDelta)}</span>
+          </div>
+          <div class="personal-history-role">${escPersonal(item.role)}</div>
+          <div class="personal-history-detail">${escPersonal(item.detail)}</div>
+        </div>
+      `).join('');
+    }
+
+    function personalFuOptions(hanIdx) {
+      return [
+        [30, 40, 50, 60, 70, 80, 90, 100, 110],
+        [20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110],
+        [20, 25, 30, 40, 50, 60],
+        [20, 25, 30],
+      ][hanIdx] || [];
+    }
+
+    function personalFuAllowed(hanIdx, fu) {
+      if (personalAgariInput.winType === 'tsumo' && hanIdx === 1 && fu === 25) return false;
+      if (personalAgariInput.winType === 'ron' && ((hanIdx === 1 && fu === 20) || (hanIdx === 2 && fu === 20) || (hanIdx === 3 && fu === 20))) return false;
+      return true;
+    }
+
+    function renderPersonalAgariTree() {
+      const low = [0, 1, 2, 3].map(hi => `
+        <div class="han-group">
+          <div class="han-row${personalAgariInput.hanIdx === hi ? ' sel open' : ''}" data-p-han="${hi}">
+            <span class="arr">▶</span>${hi + 1}翻
+          </div>
+          <div class="fu-children${personalAgariInput.hanIdx === hi ? ' open' : ''}">
+            ${personalFuOptions(hi).filter(fu => personalFuAllowed(hi, fu)).map(fu => `
+              <div class="fu-row${personalAgariInput.hanIdx === hi && personalAgariInput.fu === fu ? ' sel' : ''}" data-p-fu="${fu}">
+                <span class="fu-dot"></span>${fu}符
+              </div>
+            `).join('')}
+          </div>
+        </div>`).join('');
+      const limits = HAN_DEFS.slice(4, 9).map((def, i) => {
+        const idx = i + 4;
+        return `<div class="han-row limit-row${personalAgariInput.hanIdx === idx ? ' sel' : ''}" data-p-limit="${idx}">${def.name}</div>`;
+      }).join('');
+      const yakuman = `
+        <div class="han-group">
+          <div class="han-row yakuman-folder${personalYakumanOpen || personalAgariInput.hanIdx >= 9 ? ' open' : ''}" data-p-folder="yakuman"><span class="arr">▶</span>二倍以上</div>
+          <div class="fu-children${personalYakumanOpen || personalAgariInput.hanIdx >= 9 ? ' open' : ''}">
+            ${HAN_DEFS.slice(9).map((def, i) => {
+              const idx = i + 9;
+              return `<div class="han-row limit-row${personalAgariInput.hanIdx === idx ? ' sel' : ''}" data-p-limit="${idx}">${def.name}</div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      return `${low}${limits}${yakuman}`;
+    }
+
+    function personalAgariReady() {
+      const def = HAN_DEFS[personalAgariInput.hanIdx];
+      return !!def
+        && (def.needsFu ? personalAgariInput.fu >= 0 : true)
+        && (personalAgariInput.winType === 'tsumo' || personalAgariInput.dealerIdx >= 0);
+    }
+
+    function maybePersonalAgariConfirm() {
+      if (personalAgariReady()) personalAgariInput.confirm = true;
+    }
+
+    function calcPersonalAgariPreview() {
+      const winnerIdx = personalSeatIndex;
+      const def = HAN_DEFS[personalAgariInput.hanIdx];
+      if (!def) return null;
+      let base = def.needsFu
+        ? personalAgariInput.fu * Math.pow(2, def.han + 2)
+        : def.base;
+      if (def.needsFu && base > 2000) base = 2000;
+      const isParent = state.players[winnerIdx]?.wind === '東';
+      const honba = state.honba;
+      const riichiPot = state.kyotaku * 1000;
+      const deltas = [0, 0, 0, 0];
+      let scoreText = '';
+      if (personalAgariInput.winType === 'ron') {
+        const pay = isParent ? roundUp100(base * 6) : roundUp100(base * 4);
+        const honbaPay = honba * 300;
+        deltas[winnerIdx] += pay + honbaPay + riichiPot;
+        deltas[personalAgariInput.dealerIdx] -= pay + honbaPay;
+        scoreText = `${pay.toLocaleString()}点${honba ? ` +${honbaPay}(本場)` : ''}`;
+      } else if (isParent) {
+        const each = roundUp100(base * 2);
+        const honbaEach = honba * 100;
+        let get = riichiPot;
+        for (let i = 0; i < 4; i++) {
+          if (i === winnerIdx) continue;
+          deltas[i] -= each + honbaEach;
+          get += each + honbaEach;
+        }
+        deltas[winnerIdx] = get;
+        scoreText = `オール${each.toLocaleString()}点${honba ? ` +${honbaEach}(本場)` : ''}`;
+      } else {
+        const parentPay = roundUp100(base * 2);
+        const childPay = roundUp100(base);
+        const honbaEach = honba * 100;
+        let get = riichiPot;
+        for (let i = 0; i < 4; i++) {
+          if (i === winnerIdx) continue;
+          const pay = (state.players[i]?.wind === '東' ? parentPay : childPay) + honbaEach;
+          deltas[i] -= pay;
+          get += pay;
+        }
+        deltas[winnerIdx] = get;
+        scoreText = `親${parentPay.toLocaleString()} / 子${childPay.toLocaleString()}`;
+        if (honba) scoreText += ` +${honbaEach}(本場)`;
+      }
+      const hanName = def.needsFu ? `${def.han}翻${personalAgariInput.fu}符` : def.name;
+      return { deltas, scoreText, hanName, riichiPot };
+    }
+
+    function renderPersonalAgariConfirm() {
+      const preview = calcPersonalAgariPreview();
+      if (!preview) return '';
+      return `
+        <div class="ag-result" style="margin-bottom:0">
+          <div class="ag-result-hl">${escPersonal(preview.hanName)}　${escPersonal(preview.scoreText)}</div>
+          ${preview.deltas.map((d, i) => {
+            if (!d) return '';
+            const after = Number(state.players[i]?.score || 0) + d;
+            const sign = d > 0 ? '+' : '';
+            const col = d > 0 ? '#4ade80' : '#f87171';
+            return `<div>${escPersonal(state.players[i]?.wind || '')}: ${Number(state.players[i]?.score || 0).toLocaleString()} → <b>${after.toLocaleString()}</b> <span style="color:${col}">(${sign}${d.toLocaleString()})</span></div>`;
+          }).join('')}
+          ${preview.riichiPot > 0 ? `<div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:4px">リーチ棒 +${preview.riichiPot.toLocaleString()}</div>` : ''}
+        </div>`;
+    }
+
+    function renderPersonalAgariModal() {
+      if (!personalAgariOpen) return '';
+      const me = state.players[personalSeatIndex] || {};
+      const canSend = personalAgariReady();
+      return `
+        <div class="personal-agari-modal">
+          <div class="personal-agari-card">
+            <div class="personal-agari-head">${escPersonal(me.name || '')} の和了</div>
+            ${personalAgariInput.confirm ? `
+              ${renderPersonalAgariConfirm()}
+              <div class="personal-agari-actions">
+                <button class="ag-apply" id="personalAgariSend" ${canSend ? '' : 'disabled'}>適用</button>
+                <button class="ag-cancel" id="personalAgariBack">戻る</button>
+              </div>
+            ` : `
+            <div class="personal-agari-sec">
+              <div class="personal-agari-label">和了方法</div>
+              <div class="personal-agari-row">
+                <button class="wtype${personalAgariInput.winType === 'ron' ? ' sel' : ''}" data-p-win="ron">ロン</button>
+                <button class="wtype${personalAgariInput.winType === 'tsumo' ? ' sel' : ''}" data-p-win="tsumo">ツモ</button>
+              </div>
+            </div>
+            ${personalAgariInput.winType === 'ron' ? `
+              <div class="personal-agari-sec">
+                <div class="personal-agari-label">放銃者</div>
+                <div class="psel-col">
+                  ${state.players.map((p, i) => i === personalSeatIndex ? '' : `
+                    <button class="psel${personalAgariInput.dealerIdx === i ? ' sel' : ''}" data-p-dealer="${i}">
+                      <span style="font-size:11px;opacity:0.5;font-weight:600;min-width:14px;text-align:center">${escPersonal(p.wind)}</span>
+                      <span style="font-size:14px;font-weight:800">${escPersonal(p.name)}</span>
+                    </button>
+                  `).join('')}
+                </div>
+              </div>` : ''}
+            <div class="personal-agari-sec">
+              <div class="personal-agari-label">飜数</div>
+              <div class="han-tree personal-agari-tree">${renderPersonalAgariTree()}</div>
+            </div>
+            <div class="personal-agari-actions">
+              <button class="ag-apply" id="personalAgariSend" ${canSend ? '' : 'disabled'}>適用</button>
+              <button class="ag-cancel" id="personalAgariClose">閉じる</button>
+            </div>
+            `}
+          </div>
+        </div>`;
+    }
+
+    function bindPersonalAgariModal() {
+      if (!personalAgariOpen) return;
+      document.getElementById('personalAgariClose')?.addEventListener('click', () => {
+        personalAgariOpen = false;
+        renderPersonalView();
+      });
+      document.getElementById('personalAgariBack')?.addEventListener('click', () => {
+        personalAgariInput.confirm = false;
+        renderPersonalView();
+      });
+      document.querySelectorAll('[data-p-win]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          personalAgariInput.winType = btn.dataset.pWin;
+          personalAgariInput.dealerIdx = -1;
+          personalAgariInput.confirm = false;
+          if (personalAgariInput.hanIdx >= 0 && HAN_DEFS[personalAgariInput.hanIdx]?.needsFu && !personalFuAllowed(personalAgariInput.hanIdx, personalAgariInput.fu)) {
+            personalAgariInput.fu = -1;
+          }
+          maybePersonalAgariConfirm();
+          renderPersonalView();
+        });
+      });
+      document.querySelectorAll('[data-p-dealer]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          personalAgariInput.dealerIdx = Number(btn.dataset.pDealer);
+          maybePersonalAgariConfirm();
+          renderPersonalView();
+        });
+      });
+      document.querySelectorAll('[data-p-han]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.dataset.pHan);
+          personalAgariInput.hanIdx = personalAgariInput.hanIdx === idx ? -1 : idx;
+          personalAgariInput.fu = -1;
+          personalAgariInput.confirm = false;
+          personalYakumanOpen = false;
+          renderPersonalView();
+        });
+      });
+      document.querySelectorAll('[data-p-fu]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          personalAgariInput.fu = Number(btn.dataset.pFu);
+          maybePersonalAgariConfirm();
+          renderPersonalView();
+        });
+      });
+      document.querySelectorAll('[data-p-limit]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          personalAgariInput.hanIdx = Number(btn.dataset.pLimit);
+          personalAgariInput.fu = -1;
+          personalYakumanOpen = personalAgariInput.hanIdx >= 9;
+          maybePersonalAgariConfirm();
+          renderPersonalView();
+        });
+      });
+      document.querySelectorAll('[data-p-folder]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          personalYakumanOpen = !personalYakumanOpen;
+          renderPersonalView();
+        });
+      });
+      document.getElementById('personalAgariSend')?.addEventListener('click', () => {
+        const sendBtn = document.getElementById('personalAgariSend');
+        if (!sendBtn || sendBtn.disabled) return;
+        sendBtn.disabled = true;
+        sendBtn.textContent = '送信中';
+        sendPersonalRequest('agari', {
+          winType: personalAgariInput.winType,
+          dealerIdx: personalAgariInput.winType === 'ron' ? personalAgariInput.dealerIdx : -1,
+          hanIdx: personalAgariInput.hanIdx,
+          fu: personalAgariInput.fu,
+        }).then(id => {
+          personalActionRequests.agari = id || true;
+          personalAgariOpen = false;
+          renderPersonalView();
+        }).catch(() => {
+          sendBtn.disabled = false;
+          sendBtn.textContent = '適用';
+        });
+      });
+    }
+
+    function renderPersonalResult() {
+      const root = document.getElementById('personalView');
+      if (!root) return;
+      const sorted = state.players
+        .map((p, i) => ({ ...p, idx: i }))
+        .sort((a, b) => b.score - a.score);
+      const timeline = personalTimeline();
+      const stats = personalStats();
+      root.innerHTML = `
+        <div class="personal-result-shell">
+          <section class="personal-result-panel scrollable">
+            <div class="personal-result-title">対局結果</div>
+            <div class="personal-result-list">
+              ${sorted.map((p, i) => `
+                <div class="personal-result-row">
+                  <span class="personal-result-rank">${i + 1}位</span>
+                  <span class="personal-result-name">${escPersonal(p.name)}</span>
+                  <span class="personal-result-score">${fmtPersonalScore(p.score)}</span>
+                </div>
+              `).join('')}
+            </div>
+            <div class="personal-stat-table-wrap">
+              <div class="personal-result-title" style="font-size:clamp(15px,3.6vh,22px);margin-bottom:6px">統計</div>
+              <table class="personal-stat-table">
+                <thead>
+                  <tr><th>名前</th><th>ロン</th><th>ツモ</th><th>放銃</th><th>リーチ</th></tr>
+                </thead>
+                <tbody>
+                  ${state.players.map((p, i) => {
+                    const s = stats[i];
+                    return `<tr>
+                      <td>
+                        <span class="personal-stat-player" style="--p-color:${PERSONAL_COLORS[i] || '#fff'}">
+                          <span class="personal-stat-dot"></span>
+                          <span class="personal-stat-player-name">${escPersonal(p.name)}</span>
+                        </span>
+                      </td>
+                      <td>${s.ron}</td>
+                      <td>${s.tsumo}</td>
+                      <td>${s.houju}</td>
+                      <td>${s.riichi}</td>
+                    </tr>`;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+            <div class="personal-history-wrap">
+              <div class="personal-result-title" style="font-size:clamp(15px,3.6vh,22px);margin-bottom:0">ラウンド履歴</div>
+              ${renderPersonalHistory()}
+            </div>
+          </section>
+          <section class="personal-result-panel">
+            <div class="personal-result-title">スコア推移</div>
+            ${renderPersonalGraphLegend()}
+            ${buildPersonalGraph(timeline)}
+          </section>
+        </div>
+        <div class="portrait-hint">横向きにしてください<br>この画面は横向き専用です</div>`;
+    }
+
+    function showPersonalPointMove(deltas, scoresBefore = null) {
+      if (!isPersonalView || !Array.isArray(deltas)) return;
+      const root = document.getElementById('personalView');
+      if (!root) return;
+      const flows = buildPointFlows(deltas).slice(0, 8);
+      if (!flows.length) return;
+      const layer = root.querySelector('.personal-fx-layer');
+      if (!layer) return;
+      layer.innerHTML = '';
+      const drawSegment = (start, end, hasHead = true, delay = 0, duration = 720) => {
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const length = Math.hypot(dx, dy);
+        if (length < 16) return;
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        const arrow = document.createElement('div');
+        arrow.className = `personal-move-arrow${hasHead ? '' : ' no-head'}`;
+        arrow.style.left = `${start.x}px`;
+        arrow.style.top = `${start.y}px`;
+        arrow.style.width = `${Math.max(0, length - (hasHead ? 10 : 0))}px`;
+        arrow.style.transform = `rotate(${angle}deg) scaleX(0)`;
+        layer.appendChild(arrow);
+        arrow.animate([
+          { transform: `rotate(${angle}deg) scaleX(0)`, opacity: 1 },
+          { transform: `rotate(${angle}deg) scaleX(1)`, opacity: 1 }
+        ], {
+          duration,
+          delay,
+          easing: 'cubic-bezier(.2,.7,.2,1)',
+          fill: 'forwards'
+        });
+      };
+      flows.forEach((flow, i) => {
+        const fromCard = root.querySelector(`.personal-score-card[data-player-idx="${flow.from}"]`);
+        const toCard = root.querySelector(`.personal-score-card[data-player-idx="${flow.to}"]`);
+        if (!fromCard || !toCard) return;
+        const fromPos = fromCard.dataset.seatPos;
+        const toPos = toCard.dataset.seatPos;
+        const from = rectCenter(fromCard);
+        const to = rectCenter(toCard);
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+        const angleRad = Math.atan2(dy, dx);
+        const startPad = 44;
+        const endPad = 44;
+        const start = clampPersonalPoint({
+          x: from.x + Math.cos(angleRad) * startPad,
+          y: from.y + Math.sin(angleRad) * startPad
+        }, 12);
+        const end = clampPersonalPoint({
+          x: to.x - Math.cos(angleRad) * endPad,
+          y: to.y - Math.sin(angleRad) * endPad
+        }, 12);
+        const isCornerMove = Math.abs(dx) > 80 && Math.abs(dy) > 80;
+        if (isCornerMove) {
+          const corner = personalOuterElbow(start, end);
+          drawSegment(start, corner, false, 0, 430);
+          drawSegment(corner, end, true, 430, 430);
+        } else {
+          drawSegment(start, end, true, 0, 720);
+        }
+      });
+      deltas.forEach((raw, idx) => {
+        const amount = Number(raw || 0);
+        if (!amount) return;
+        const card = root.querySelector(`.personal-score-card[data-player-idx="${idx}"]`);
+        if (!card) return;
+        const center = personalDeltaLabelPoint(card);
+        const label = document.createElement('div');
+        label.className = `personal-move-label ${amount > 0 ? 'plus' : 'minus'}`;
+        label.textContent = `${amount > 0 ? '+' : ''}${fmtPersonalScore(amount)}`;
+        label.style.left = `${center.x}px`;
+        label.style.top = `${center.y}px`;
+        layer.appendChild(label);
+        label.animate([
+          { opacity: 0, transform: 'translate(-50%, -50%) scale(0.88)' },
+          { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' }
+        ], {
+          duration: 260,
+          delay: 980,
+          easing: 'ease-out',
+          fill: 'forwards'
+        });
+      });
+      setTimeout(() => animatePersonalScores(scoresBefore, deltas), 1700);
+      setTimeout(() => {
+        if (layer) layer.innerHTML = '';
+        personalStateOverride = null;
+        refreshPersonalStaticInfo();
+      }, 5000);
+    }
+
+    function renderPersonalView() {
+      if (!isPersonalView) return;
+      const root = document.getElementById('personalView');
+      if (!root) return;
+      if (!personalRoomLoaded) {
+        root.innerHTML = '<div class="personal-empty">卓に接続中</div>';
+        return;
+      }
+      if (tableGameEnded) {
+        try {
+          renderPersonalResult();
+        } catch {
+          root.innerHTML = `<div class="personal-empty">対局終了<br>${state.players
+            .slice()
+            .sort((a, b) => b.score - a.score)
+            .map((p, i) => `${i + 1}位 ${escPersonal(p.name)} ${fmtPersonalScore(p.score)}`)
+            .join('<br>')}</div>`;
+        }
+        return;
+      }
+      if (personalSeatIndex < 0 || personalSeatIndex > 3) {
+        root.innerHTML = `
+          <div>
+            <div class="personal-seat-grid">
+              ${state.players.map((p, i) => `
+                <button class="personal-seat-card" data-seat="${i}">
+                  <span class="personal-seat-name${String(p.name || '').length >= 8 ? ' long-name' : ''}">${escPersonal(p.name)}</span>
+                </button>
+              `).join('')}
+            </div>
+            <div class="portrait-hint">横向きにしてください<br>この画面は横向き専用です</div>
+          </div>`;
+        root.querySelectorAll('[data-seat]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            personalSeatIndex = Number(btn.dataset.seat);
+            localStorage.setItem(`mahjong_personal_seat_${tableRoomId}`, String(personalSeatIndex));
+            renderPersonalView();
+          });
+        });
+        return;
+      }
+
+      const displayState = personalStateOverride || state;
+      const displayPlayers = displayState.players || state.players;
+      const me = displayPlayers[personalSeatIndex] || displayPlayers[0] || state.players[0];
+      const seatPositions = [
+        { pos: 'bottom', idx: personalSeatIndex },
+        { pos: 'right', idx: (personalSeatIndex + 1) % 4 },
+        { pos: 'top', idx: (personalSeatIndex + 2) % 4 },
+        { pos: 'left', idx: (personalSeatIndex + 3) % 4 },
+      ];
+      const cardHtml = ({ pos, idx }) => {
+        const p = displayPlayers[idx] || state.players[idx] || {};
+        const isMe = idx === personalSeatIndex;
+        const displayScore = Array.isArray(personalScoreOverrides)
+          ? Number(personalScoreOverrides[idx] || 0)
+          : Number(p.score || 0);
+        const diff = Number(me.score || 0) - Number(p.score || 0);
+        const scoreText = personalDiffOn && !isMe
+          ? `${diff >= 0 ? '+' : ''}${fmtPersonalScore(diff)}`
+          : fmtPersonalScore(displayScore);
+        const isLongScore = scoreText.length >= 7;
+        const diffClass = personalDiffOn && !isMe
+          ? diff >= 0 ? ' diff-pos' : ' diff-neg'
+          : '';
+        const riichiPending = !!personalActionRequests.riichi;
+        const riichiOnLike = riichiPending || !!p.riichi;
+        const canPersonalRiichi = isMe && (riichiPending || (!p.riichi && !(settingHakoshita && !settingHakoshitaRiichi && Number(p.score || 0) < 1000)));
+        return `
+          <div class="personal-seat ${pos}">
+            <div class="personal-score-card ${pos}${isMe ? ' is-me' : ''}" data-player-idx="${idx}" data-seat-pos="${pos}">
+              <div class="personal-name-line">
+                <span class="personal-wind${p.wind === '東' ? ' east' : ''}">${escPersonal(p.wind)}</span>
+                <span class="personal-name">${escPersonal(p.name)}</span>
+              </div>
+              <div class="personal-score-line">
+                ${isMe ? `<button class="personal-diff-btn${personalDiffOn ? ' active' : ''}" id="personalDiffBtn" aria-label="点差"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>` : ''}
+                <div class="personal-score${isLongScore ? ' long-score' : ''}${diffClass}" data-score-idx="${idx}" ${isMe ? 'id="personalAgariScore"' : ''}>${scoreText}</div>
+              </div>
+              <div class="personal-riichi-stick${p.riichi ? ' on' : ''}" aria-label="${p.riichi ? 'リーチ' : ''}"></div>
+              ${isMe ? `
+                <div class="personal-command-row">
+                  <button class="personal-command-btn${riichiOnLike ? ' on' : ''}" id="personalRiichiBtn" ${canPersonalRiichi ? '' : 'disabled'}>${riichiOnLike ? 'リーチ取消' : 'リーチ'}</button>
+                </div>` : ''}
+            </div>
+          </div>`;
+      };
+      root.innerHTML = `
+        <div class="personal-shell">
+          <button class="personal-action personal-seat-change-top" id="personalSeatChange">席変更</button>
+          <div class="personal-center">
+            <div class="personal-board-info">
+              ${GT_NAMES[settingGameType]}　${ROUND_WINDS[displayState.roundWind]}${displayState.roundNum}局
+              <span class="personal-board-info-sub">${displayState.honba}本場　供託${displayState.kyotaku}本</span>
+            </div>
+          </div>
+          ${seatPositions.map(cardHtml).join('')}
+          <div class="personal-fx-layer"></div>
+          <div class="portrait-hint">横向きにしてください<br>この画面は横向き専用です</div>
+        </div>
+        ${renderPersonalAgariModal()}`;
+      document.getElementById('personalSeatChange').addEventListener('click', () => {
+        personalSeatIndex = -1;
+        personalDiffOn = false;
+        localStorage.removeItem(`mahjong_personal_seat_${tableRoomId}`);
+        renderPersonalView();
+      });
+      const diffBtn = document.getElementById('personalDiffBtn');
+      if (diffBtn) {
+        diffBtn.addEventListener('pointerdown', e => {
+          e.preventDefault();
+          personalDiffOn = true;
+          renderPersonalView();
+        });
+      }
+      const riichiBtn = document.getElementById('personalRiichiBtn');
+      if (riichiBtn) {
+        riichiBtn.addEventListener('click', () => {
+          if (personalActionRequests.riichi || state.players[personalSeatIndex]?.riichi) {
+            riichiBtn.disabled = true;
+            riichiBtn.textContent = '取消中';
+            cancelPersonalRequest('riichi').catch(() => {
+              riichiBtn.disabled = false;
+              riichiBtn.textContent = 'リーチ取消';
+            });
+            return;
+          }
+          riichiBtn.disabled = true;
+          riichiBtn.textContent = '送信中';
+          sendPersonalRequest('riichi')
+            .then(id => {
+              personalActionRequests.riichi = id || true;
+              renderPersonalView();
+            })
+            .catch(() => {
+              riichiBtn.disabled = false;
+              riichiBtn.textContent = 'リーチ';
+            });
+        });
+      }
+      const agariScore = document.getElementById('personalAgariScore');
+      if (agariScore) {
+        agariScore.addEventListener('click', () => {
+          if (personalActionRequests.agari) {
+            cancelPersonalRequest('agari').catch(() => {
+              personalActionRequests.agari = true;
+              renderPersonalView();
+            });
+            return;
+          }
+          personalAgariOpen = true;
+          personalAgariInput = { winType: 'ron', dealerIdx: -1, hanIdx: -1, fu: -1, confirm: false };
+          personalYakumanOpen = false;
+          renderPersonalView();
+        });
+      }
+      bindPersonalAgariModal();
+      if (personalPendingMove) {
+        const move = personalPendingMove;
+        personalPendingMove = null;
+        requestAnimationFrame(() => showPersonalPointMove(move.deltas, move.scoresBefore));
+      }
+    }
+
+    async function startPersonalSubscription() {
+      if (!isPersonalView || !tableRoomId) return;
+      try {
+        const fb = await getTableFirebase();
+        fb.onSnapshot(fb.doc(fb.db, ROOM_COLLECTION, tableRoomId), snap => {
+          if (!snap.exists()) {
+            const root = document.getElementById('personalView');
+            if (root) root.innerHTML = '<div class="personal-empty">卓が見つかりません<br>QRを読み直してください</div>';
+            return;
+          }
+          applyRoomSnapshot(snap.data());
+        }, () => {
+          const root = document.getElementById('personalView');
+          if (root) root.innerHTML = '<div class="personal-empty">接続できませんでした</div>';
+        });
+      } catch {
+        const root = document.getElementById('personalView');
+        if (root) root.innerHTML = '<div class="personal-empty">Firebaseに接続できませんでした</div>';
+      }
+    }
+
+    function syncSettingsUI() {
+      document.querySelectorAll('[data-gt]').forEach(b => b.classList.toggle('sel', +b.dataset.gt === settingGameType));
+      const kjSel = document.getElementById('kijuntenSelect');
+      if (kjSel) kjSel.value = String(settingKijunten);
+      const enchosenBtn = document.getElementById('enchosenToggle');
+      if (enchosenBtn) {
+        enchosenBtn.textContent = settingEnchosen ? 'ON' : 'OFF';
+        enchosenBtn.classList.toggle('sel', settingEnchosen);
+      }
+      const kijuntenWrap = document.getElementById('kijuntenWrap');
+      if (kijuntenWrap) kijuntenWrap.style.display = settingEnchosen ? 'block' : 'none';
+      const hakoshitaBtn = document.getElementById('hakoshitaToggle');
+      if (hakoshitaBtn) {
+        hakoshitaBtn.textContent = settingHakoshita ? 'ON' : 'OFF';
+        hakoshitaBtn.classList.toggle('sel', settingHakoshita);
+      }
+      const hakoshitaWrap = document.getElementById('hakoshitaRiichiWrap');
+      if (hakoshitaWrap) hakoshitaWrap.style.display = settingHakoshita ? 'block' : 'none';
+      const hakoshitaRiichiBtn = document.getElementById('hakoshitaRiichiToggle');
+      if (hakoshitaRiichiBtn) {
+        hakoshitaRiichiBtn.textContent = settingHakoshitaRiichi ? 'ON' : 'OFF';
+        hakoshitaRiichiBtn.classList.toggle('sel', settingHakoshitaRiichi);
+      }
+    }
+
+    function currentRuleSettings() {
+      return {
+        gameType: settingGameType,
+        enchosen: settingEnchosen,
+        kijunten: settingKijunten,
+        hakoshita: settingHakoshita,
+        hakoshitaRiichi: settingHakoshitaRiichi,
+      };
+    }
+
+    function applyRuleSettings(settings = {}) {
+      settingGameType = Number(settings.gameType ?? settingGameType);
+      settingEnchosen = !!settings.enchosen;
+      settingKijunten = Number(settings.kijunten || settingKijunten);
+      settingHakoshita = !!settings.hakoshita;
+      settingHakoshitaRiichi = !!settings.hakoshitaRiichi;
+      syncSettingsUI();
+      saveGameProgress();
+    }
+
+    function readRulePresets() {
+      try {
+        const data = JSON.parse(localStorage.getItem(RULE_PRESET_KEY) || '[]');
+        return Array.isArray(data) ? data.filter(p => p?.name && p.settings) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function writeRulePresets(presets) {
+      try { localStorage.setItem(RULE_PRESET_KEY, JSON.stringify(presets)); } catch {}
+    }
+
+    function renderRulePresetSelect() {
+      const select = document.getElementById('rulePresetSelect');
+      if (!select) return;
+      const presets = readRulePresets();
+      select.innerHTML = presets.length
+        ? presets.map((p, i) => `<option value="${i}">${escResumeText(p.name)}</option>`).join('')
+        : '<option value="">プリセットなし</option>';
+    }
+
+    function applySavedGame(data) {
+      if (!data?.state) return;
+      const s = data.state;
+      state = freshState();
+      state.players = (Array.isArray(s.players) ? s.players : state.players).slice(0, 4).map((p, i) => ({
+        score: Number(p.score ?? 25000),
+        wind: WINDS.includes(p.wind) ? p.wind : WINDS[i],
+        riichi: !!p.riichi,
+        name: p.name || `P${i + 1}`,
+      }));
+      state.honba = Number(s.honba || 0);
+      state.kyotaku = Number(s.kyotaku || 0);
+      state.roundWind = Number(s.roundWind || 0);
+      state.roundNum = Number(s.roundNum || 1);
+      state.inEnchosen = !!s.inEnchosen;
+      gameHistory = Array.isArray(data.gameHistory) ? data.gameHistory.map(h => ({
+        ...h,
+        snapshot: h?.snapshot ? {
+          ...h.snapshot,
+          players: Array.isArray(h.snapshot.players) ? h.snapshot.players.map(p => ({ ...p })) : [],
+        } : h?.snapshot,
+      })) : [];
+      tableRoundLog = Array.isArray(data.tableRoundLog) ? data.tableRoundLog.map(ev => ({ ...ev })) : [];
+      riichiCounts = Array.isArray(data.riichiCounts) ? data.riichiCounts.slice(0, 4) : [0, 0, 0, 0];
+      while (riichiCounts.length < 4) riichiCounts.push(0);
+      gameRecorded = !!data.gameRecorded;
+      kiichaSlot = Number.isInteger(data.kiichaSlot) ? data.kiichaSlot : state.players.findIndex(p => p.wind === '東');
+      if (kiichaSlot < 0) kiichaSlot = 0;
+      playerWinds = Array.isArray(data.playerWinds) ? data.playerWinds.slice(0, 4) : ['東', '南', '西', '北'];
+      while (playerWinds.length < 4) playerWinds.push(WINDS[playerWinds.length]);
+      (data.setupNames || []).forEach((name, i) => {
+        const input = document.getElementById(`sn${i}`);
+        if (input) input.value = name;
+      });
+      applyRuleSettings(data.settings || {});
+      renderStartWindBtns();
+      updateHistBadge();
+      document.getElementById('startScreen').style.display = 'none';
+      document.querySelectorAll('.ag-overlay').forEach(el => { el.style.display = 'none'; });
+      setBackFabVisible(true);
+      render();
+    }
+
+    function showResumeCard() {
+      const data = readSavedGame();
+      const card = document.getElementById('resumeCard');
+      if (!data || !card) return;
+      document.getElementById('resumeMeta').innerHTML = savedGameLabel(data);
+      card.classList.add('vis');
     }
 
     function render() {
@@ -2288,6 +4676,9 @@
       document.getElementById('topInfo').textContent =
         `${GT_NAMES[settingGameType]}　${ROUND_WINDS[state.roundWind]}${state.roundNum}局　${state.honba}本場　供託${state.kyotaku}本`;
       renderHonba();
+      saveGameProgress();
+      publishRoomState();
+      renderPersonalView();
     }
 
     function renderHonba() {
@@ -2316,17 +4707,46 @@
       diffPlayer = -1;
       render();
     });
+    document.addEventListener('pointerup', () => {
+      if (!personalDiffOn) return;
+      personalDiffOn = false;
+      renderPersonalView();
+    });
 
     // Riichi toggle: deduct/return 1000, track kyotaku pot
+    function applyRiichi(playerIdx) {
+      const p = state.players[playerIdx];
+      if (!p) return;
+      if (!p.riichi && settingHakoshita && !settingHakoshitaRiichi && p.score < 1000) return;
+      p.riichi = !p.riichi;
+      if (p.riichi) riichiCounts[playerIdx]++;
+      p.score += p.riichi ? -1000 : 1000;
+      state.kyotaku += p.riichi ? 1 : -1;
+      render();
+    }
+
+    function undoRiichi(playerIdx) {
+      const p = state.players[playerIdx];
+      if (!p || !p.riichi) return;
+      p.riichi = false;
+      p.score += 1000;
+      state.kyotaku = Math.max(0, state.kyotaku - 1);
+      riichiCounts[playerIdx] = Math.max(0, Number(riichiCounts[playerIdx] || 0) - 1);
+      render();
+    }
+
+    function handleCancelTableRequest(req, seatIndex) {
+      if (req.targetType === 'riichi') {
+        undoRiichi(seatIndex);
+      } else if (req.targetType === 'agari') {
+        const modal = document.getElementById('agariModal');
+        if (modal?.style.display !== 'none' && agWinner === seatIndex) closeAgariModal();
+      }
+    }
+
     for (let i = 0; i < 4; i++) {
       document.getElementById(`r${i}`).addEventListener('click', () => {
-        const p = state.players[i];
-        if (!p.riichi && settingHakoshita && !settingHakoshitaRiichi && p.score < 1000) return;
-        p.riichi = !p.riichi;
-        if (p.riichi) riichiCounts[i]++;
-        p.score += p.riichi ? -1000 : 1000;
-        state.kyotaku += p.riichi ? 1 : -1;
-        render();
+        applyRiichi(i);
       });
     }
 
@@ -2371,6 +4791,17 @@
         renderStartWindBtns();
       });
     });
+
+    function rotateAllWinds(dir) {
+      cancelRandomAnimation();
+      playerWinds = dir > 0
+        ? [playerWinds[3], playerWinds[0], playerWinds[1], playerWinds[2]]
+        : [playerWinds[1], playerWinds[2], playerWinds[3], playerWinds[0]];
+      renderStartWindBtns();
+    }
+
+    document.getElementById('windShiftLeft').addEventListener('click', () => rotateAllWinds(-1));
+    document.getElementById('windShiftRight').addEventListener('click', () => rotateAllWinds(1));
 
     function cancelRandomAnimation() {
       if (randomSpinInterval !== null) { clearInterval(randomSpinInterval); randomSpinInterval = null; }
@@ -2681,6 +5112,7 @@
 
     document.getElementById('startGameBtn').addEventListener('click', () => {
       cancelRandomAnimation();
+      clearSavedGame();
       // Collect setup entries; P1 (index 0) always sits at bottom
       const setup = [];
       for (let i = 0; i < 4; i++) {
@@ -2699,6 +5131,7 @@
       tableRoundLog = [];
       riichiCounts = [0, 0, 0, 0];
       gameRecorded = false;
+      tableGameEnded = false;
       document.getElementById('startScreen').style.display = 'none';
       render();
     });
@@ -2709,7 +5142,8 @@
     document.querySelectorAll('[data-gt]').forEach(btn => {
       btn.addEventListener('click', () => {
         settingGameType = +btn.dataset.gt;
-        document.querySelectorAll('[data-gt]').forEach(b => b.classList.toggle('sel', b === btn));
+        syncSettingsUI();
+        saveGameProgress();
       });
     });
 
@@ -2723,34 +5157,71 @@
         if (v === 30000) opt.selected = true;
         kjSel.appendChild(opt);
       }
-      kjSel.addEventListener('change', () => { settingKijunten = +kjSel.value; });
+      kjSel.addEventListener('change', () => { settingKijunten = +kjSel.value; syncSettingsUI(); saveGameProgress(); });
 
       document.getElementById('enchosenToggle').addEventListener('click', () => {
         settingEnchosen = !settingEnchosen;
-        const btn = document.getElementById('enchosenToggle');
-        btn.textContent = settingEnchosen ? 'ON' : 'OFF';
-        btn.classList.toggle('sel', settingEnchosen);
-        document.getElementById('kijuntenWrap').style.display = settingEnchosen ? 'block' : 'none';
+        syncSettingsUI();
+        saveGameProgress();
       });
     }
 
     // ── 設定タブ: 箱下終了 ───────────────────────
     document.getElementById('hakoshitaToggle').addEventListener('click', () => {
       settingHakoshita = !settingHakoshita;
-      const btn = document.getElementById('hakoshitaToggle');
-      btn.textContent = settingHakoshita ? 'ON' : 'OFF';
-      btn.classList.toggle('sel', settingHakoshita);
-      document.getElementById('hakoshitaRiichiWrap').style.display = settingHakoshita ? 'block' : 'none';
+      syncSettingsUI();
       render();
     });
 
     document.getElementById('hakoshitaRiichiToggle').addEventListener('click', () => {
       settingHakoshitaRiichi = !settingHakoshitaRiichi;
-      const btn = document.getElementById('hakoshitaRiichiToggle');
-      btn.textContent = settingHakoshitaRiichi ? 'ON' : 'OFF';
-      btn.classList.toggle('sel', settingHakoshitaRiichi);
+      syncSettingsUI();
       render();
     });
+
+    document.getElementById('rulePresetSave').addEventListener('click', () => {
+      const input = document.getElementById('rulePresetName');
+      const name = input.value.trim();
+      if (!name) { alert('プリセット名を入力してください'); return; }
+      const presets = readRulePresets();
+      const next = { name, settings: currentRuleSettings(), savedAt: Date.now() };
+      const idx = presets.findIndex(p => p.name === name);
+      if (idx >= 0) presets[idx] = next;
+      else presets.push(next);
+      writeRulePresets(presets);
+      input.value = '';
+      renderRulePresetSelect();
+    });
+
+    document.getElementById('rulePresetApply').addEventListener('click', () => {
+      const presets = readRulePresets();
+      const idx = +document.getElementById('rulePresetSelect').value;
+      if (!presets[idx]) return;
+      applyRuleSettings(presets[idx].settings);
+      render();
+    });
+
+    document.getElementById('rulePresetDelete').addEventListener('click', () => {
+      const presets = readRulePresets();
+      const idx = +document.getElementById('rulePresetSelect').value;
+      if (!presets[idx]) return;
+      presets.splice(idx, 1);
+      writeRulePresets(presets);
+      renderRulePresetSelect();
+    });
+
+    document.getElementById('resumeGameBtn').addEventListener('click', () => {
+      const data = readSavedGame();
+      if (data) applySavedGame(data);
+    });
+
+    document.getElementById('discardResumeBtn').addEventListener('click', () => {
+      clearSavedGame();
+    });
+
+    showResumeCard();
+    renderRulePresetSelect();
+    window.addEventListener('beforeunload', saveGameProgress);
 
     // ── 和了スコア計算 ──────────────────────────
     function roundUp100(n) { return Math.ceil(n / 100) * 100; }
@@ -3002,6 +5473,59 @@
         b.classList.remove('sel');
         b.style.display = i === agWinner ? 'none' : '';
       }
+      clearDealerPrompt();
+    }
+
+    function clearDealerPrompt() {
+      const dealerSec = document.getElementById('dealerSec');
+      if (dealerSec) dealerSec.classList.remove('needs-input');
+    }
+
+    function promptDealerSelection() {
+      const dealerSec = document.getElementById('dealerSec');
+      if (!dealerSec) return;
+      dealerSec.classList.add('needs-input');
+      dealerSec.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+
+    function applyPersonalAgariRequest(req, seatIndex) {
+      const winType = req.winType === 'tsumo' ? 'tsumo' : req.winType === 'ron' ? 'ron' : '';
+      const hanIdx = Number(req.hanIdx);
+      const fu = Number(req.fu);
+      const dealerIdx = Number(req.dealerIdx);
+      const def = HAN_DEFS[hanIdx];
+      if (!winType || !def || (def.needsFu && !Number.isInteger(fu)) || (winType === 'ron' && (!Number.isInteger(dealerIdx) || dealerIdx < 0 || dealerIdx > 3 || dealerIdx === seatIndex))) {
+        openAgariModal(seatIndex);
+        return;
+      }
+      openAgariModal(seatIndex);
+      showAgariScoreScreen(winType);
+      agDealer = winType === 'ron' ? dealerIdx : -1;
+      agHanIdx = hanIdx;
+      agFu = def.needsFu ? fu : -1;
+      if (winType === 'ron') {
+        for (let j = 0; j < 4; j++) document.getElementById(`ad-${j}`)?.classList.toggle('sel', j === dealerIdx);
+      }
+      const row = document.querySelector(`#hanTree .han-row[data-idx="${hanIdx}"]`);
+      if (row) {
+        document.querySelectorAll('#hanTree .han-row').forEach(r => r.classList.remove('sel', 'open'));
+        document.querySelectorAll('#hanTree .fu-children').forEach(fc => fc.classList.remove('open'));
+        row.classList.add('sel');
+        const children = row.nextElementSibling;
+        if (children?.classList.contains('fu-children')) {
+          row.classList.add('open');
+          children.classList.add('open');
+          children.querySelector(`.fu-row[data-fu="${fu}"]`)?.classList.add('sel');
+        } else {
+          const parent = row.closest('.fu-children');
+          if (parent) {
+            parent.classList.add('open');
+            parent.previousElementSibling?.classList.add('open');
+          }
+        }
+      }
+      tryCalcAgari();
+      if (agDeltas) document.getElementById('agariApply').click();
     }
 
     for (let i = 0; i < 4; i++) {
@@ -3010,6 +5534,7 @@
         for (let j = 0; j < 4; j++) {
           document.getElementById(`ad-${j}`).classList.toggle('sel', j === i);
         }
+        clearDealerPrompt();
         tryCalcAgari();
       });
     }
@@ -3027,7 +5552,7 @@
       document.getElementById('agHead').textContent = state.players[playerIdx].wind + 'の和了';
       document.getElementById('wtRon').classList.add('sel');
       document.getElementById('wtTsumo').classList.remove('sel');
-      document.getElementById('dealerSec').style.display = 'block';
+      document.getElementById('dealerSec').style.display = 'none';
       repopulateDealerRow();
       applyFuRestrictions();
 
@@ -3035,15 +5560,49 @@
       document.querySelectorAll('#hanTree .fu-children').forEach(fc => fc.classList.remove('open'));
       document.querySelectorAll('#hanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
 
-      document.getElementById('selScreen').style.display = 'block';
+      document.getElementById('typeScreen').style.display = 'block';
+      document.getElementById('selScreen').style.display = 'none';
       document.getElementById('confScreen').style.display = 'none';
+      document.getElementById('agariModal').classList.add('centered');
       document.getElementById('agariModal').style.display = 'flex';
       setBackFabVisible(false);
     }
 
-    document.getElementById('agariCancel').addEventListener('click', () => {
+    function closeAgariModal() {
       document.getElementById('agariModal').style.display = 'none';
+      document.getElementById('agariModal').classList.remove('centered');
       setBackFabVisible(true);
+    }
+
+    function showAgariScoreScreen(winType) {
+      agWinType = winType;
+      agDealer = -1;
+      agHanIdx = -1;
+      agFu = -1;
+      agDeltas = null;
+      document.getElementById('wtRon').classList.toggle('sel', winType === 'ron');
+      document.getElementById('wtTsumo').classList.toggle('sel', winType === 'tsumo');
+      document.getElementById('dealerSec').style.display = winType === 'ron' ? 'block' : 'none';
+      clearDealerPrompt();
+      document.querySelectorAll('#hanTree .han-row').forEach(r => r.classList.remove('sel', 'open'));
+      document.querySelectorAll('#hanTree .fu-children').forEach(fc => fc.classList.remove('open'));
+      document.querySelectorAll('#hanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
+      document.getElementById('typeScreen').style.display = 'none';
+      document.getElementById('selScreen').style.display = 'block';
+      document.getElementById('confScreen').style.display = 'none';
+      document.getElementById('agariModal').classList.remove('centered');
+      repopulateDealerRow();
+      applyFuRestrictions();
+      tryCalcAgari();
+    }
+
+    document.getElementById('agTypeRon').addEventListener('click', () => showAgariScoreScreen('ron'));
+    document.getElementById('agTypeTsumo').addEventListener('click', () => showAgariScoreScreen('tsumo'));
+    document.getElementById('agTypeCancel').addEventListener('click', closeAgariModal);
+    document.getElementById('agariCancel').addEventListener('click', () => {
+      document.getElementById('selScreen').style.display = 'none';
+      document.getElementById('typeScreen').style.display = 'block';
+      document.getElementById('agariModal').classList.add('centered');
     });
 
     function applyFuRestrictions() {
@@ -3073,33 +5632,20 @@
     }
 
     document.getElementById('wtRon').addEventListener('click', () => {
-      agWinType = 'ron'; agDealer = -1;
-      document.getElementById('wtRon').classList.add('sel');
-      document.getElementById('wtTsumo').classList.remove('sel');
-      document.getElementById('dealerSec').style.display = 'block';
-      repopulateDealerRow();
-      applyFuRestrictions();
-      tryCalcAgari();
+      showAgariScoreScreen('ron');
     });
 
     document.getElementById('wtTsumo').addEventListener('click', () => {
-      agWinType = 'tsumo'; agDealer = -1;
-      document.getElementById('wtTsumo').classList.add('sel');
-      document.getElementById('wtRon').classList.remove('sel');
-      document.getElementById('dealerSec').style.display = 'none';
-      applyFuRestrictions();
-      tryCalcAgari();
+      showAgariScoreScreen('tsumo');
     });
 
     function closeFuChildren(fc) {
       if (!fc.classList.contains('open')) return;
       fc.classList.remove('open');
-      fc.classList.add('closing');
-      fc.addEventListener('animationend', () => fc.classList.remove('closing'), { once: true });
     }
 
     // Tree: expandable han rows (1–4翻)
-    document.querySelectorAll('#hanTree .han-group .han-row').forEach(row => {
+    document.querySelectorAll('#hanTree > .han-group > .han-row[data-idx]').forEach(row => {
       row.addEventListener('click', () => {
         const fuChildren = row.nextElementSibling;
         const isOpen = row.classList.contains('open');
@@ -3119,13 +5665,35 @@
       });
     });
 
+    document.querySelector('#hanTree .yakuman-folder')?.addEventListener('click', (ev) => {
+      const row = ev.currentTarget;
+      const children = row.nextElementSibling;
+      const isOpen = row.classList.contains('open');
+      document.querySelectorAll('#hanTree .han-row').forEach(r => r.classList.remove('sel', 'open'));
+      document.querySelectorAll('#hanTree .fu-children').forEach(fc => closeFuChildren(fc));
+      document.querySelectorAll('#hanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
+      if (!isOpen) {
+        row.classList.add('sel', 'open');
+        children?.classList.add('open');
+      }
+      agHanIdx = -1;
+      agFu = -1;
+    });
+
     // Tree: limit hand rows (満貫〜役満)
-    document.querySelectorAll('#hanTree > .han-row').forEach(row => {
+    document.querySelectorAll('#hanTree .limit-row').forEach(row => {
       row.addEventListener('click', () => {
+        const yakumanChildren = row.closest('.fu-children');
         document.querySelectorAll('#hanTree .han-row').forEach(r => r.classList.remove('sel', 'open'));
-        document.querySelectorAll('#hanTree .fu-children').forEach(fc => closeFuChildren(fc));
+        document.querySelectorAll('#hanTree .fu-children').forEach(fc => {
+          if (fc !== yakumanChildren) closeFuChildren(fc);
+        });
         document.querySelectorAll('#hanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
         row.classList.add('sel');
+        if (yakumanChildren) {
+          yakumanChildren.classList.add('open');
+          yakumanChildren.previousElementSibling?.classList.add('open');
+        }
         agHanIdx = +row.dataset.idx;
         agFu = -1;
         tryCalcAgari();
@@ -3138,7 +5706,7 @@
     function renderLimitScores() {
       if (agWinner < 0) return;
       const isParent = state.players[agWinner].wind === '東';
-      document.querySelectorAll('#hanTree > .han-row').forEach(row => {
+      document.querySelectorAll('#hanTree .limit-row').forEach(row => {
         const el = row.querySelector('.han-score');
         if (!el) return;
         const def = HAN_DEFS[+row.dataset.idx];
@@ -3198,8 +5766,11 @@
     function tryCalcAgari() {
       const def = HAN_DEFS[agHanIdx];
       if (!def) return;
-      if (agWinType === 'ron' && agDealer < 0) return;
       if (def.needsFu && agFu < 0) return;
+      if (agWinType === 'ron' && agDealer < 0) {
+        promptDealerSelection();
+        return;
+      }
 
       let base, limitName;
       if (def.needsFu) {
@@ -3482,6 +6053,8 @@
             state.roundNum  = h.snapshot.roundNum;
             state.inEnchosen = h.snapshot.inEnchosen ?? false;
             gameHistory = gameHistory.slice(0, idx);
+            tableRoundLog = tableRoundLog.slice(0, idx);
+            tableGameEnded = false;
             updateHistBadge();
             document.getElementById('historyModal').style.display = 'none';
             setBackFabVisible(true);
@@ -3573,6 +6146,7 @@
 
     // ── 対局終了 ─────────────────────────────────
     function showGameEnd() {
+      tableGameEnded = true;
       const sorted = state.players.slice().sort((a, b) => b.score - a.score);
       const ranks = ['1位', '2位', '3位', '4位'];
       let html = '';
@@ -3582,6 +6156,7 @@
       });
       document.getElementById('gameEndScores').innerHTML = html;
       document.getElementById('gameEndModal').style.display = 'flex';
+      publishRoomStateNow();
     }
 
     document.getElementById('endBtn').addEventListener('click', () => {
@@ -3591,11 +6166,13 @@
     document.getElementById('gameEndNewGame').addEventListener('click', () => {
       if (!gameRecorded && !confirm('スコアを記録せずにテーブルに戻りますか？')) return;
       document.getElementById('gameEndModal').style.display = 'none';
+      clearSavedGame();
       state = freshState();
       gameHistory = [];
       tableRoundLog = [];
       riichiCounts = [0, 0, 0, 0];
       gameRecorded = false;
+      tableGameEnded = false;
       updateHistBadge();
       playerWinds = ['東', '南', '西', '北'];
       renderStartWindBtns();
@@ -3617,10 +6194,12 @@
         }, '*');
         gameRecorded = true;
         document.getElementById('gameEndModal').style.display = 'none';
+        clearSavedGame();
         state = freshState();
         gameHistory = [];
         tableRoundLog = [];
         riichiCounts = [0, 0, 0, 0];
+        tableGameEnded = false;
         updateHistBadge();
         playerWinds = ['東', '南', '西', '北'];
         renderStartWindBtns();
@@ -3632,6 +6211,7 @@
           tableGame: tableGameData,
         };
         localStorage.setItem('mahjong_table_import', JSON.stringify(importData));
+        clearSavedGame();
         window.location.href = '/mahjong/';
       }
     });
@@ -3735,21 +6315,51 @@
           mwTryCalc();
         });
       }
-      HAN_DEFS.slice(4).forEach((def, i) => {
-        const idx = i + 4;
+      const addMwLimitRow = (def, idx, parent = container) => {
         const row = document.createElement('div');
-        row.className = 'han-row';
+        row.className = 'han-row limit-row';
         row.dataset.idx = idx;
         row.innerHTML = `${def.name}<span class="han-score"></span>`;
-        container.appendChild(row);
+        parent.appendChild(row);
         row.addEventListener('click', () => {
+          const yakumanChildren = row.closest('.fu-children');
           document.querySelectorAll('#mwHanTree .han-row').forEach(r => r.classList.remove('sel','open'));
-          document.querySelectorAll('#mwHanTree .fu-children').forEach(f => f.classList.remove('open'));
+          document.querySelectorAll('#mwHanTree .fu-children').forEach(f => {
+            if (f !== yakumanChildren) f.classList.remove('open');
+          });
           document.querySelectorAll('#mwHanTree .fu-row').forEach(f => f.classList.remove('sel'));
           row.classList.add('sel');
+          if (yakumanChildren) {
+            yakumanChildren.classList.add('open');
+            yakumanChildren.previousElementSibling?.classList.add('open');
+          }
           mwHanIdx = idx; mwFu = -1;
           mwTryCalc();
         });
+      };
+      HAN_DEFS.slice(4, 9).forEach((def, i) => addMwLimitRow(def, i + 4));
+      const yGroup = document.createElement('div');
+      yGroup.className = 'han-group';
+      const yHead = document.createElement('div');
+      yHead.className = 'han-row yakuman-folder';
+      yHead.innerHTML = '<span class="arr">▶</span>二倍以上';
+      const yChildren = document.createElement('div');
+      yChildren.className = 'fu-children';
+      HAN_DEFS.slice(9).forEach((def, i) => addMwLimitRow(def, i + 9, yChildren));
+      yGroup.append(yHead, yChildren);
+      container.appendChild(yGroup);
+      yHead.addEventListener('click', () => {
+        const isOpen = yHead.classList.contains('open');
+        document.querySelectorAll('#mwHanTree .han-row').forEach(r => r.classList.remove('sel','open'));
+        document.querySelectorAll('#mwHanTree .fu-children').forEach(f => f.classList.remove('open'));
+        document.querySelectorAll('#mwHanTree .fu-row').forEach(f => f.classList.remove('sel'));
+        if (!isOpen) {
+          yHead.classList.add('sel','open');
+          yChildren.classList.add('open');
+        }
+        mwHanIdx = -1;
+        mwFu = -1;
+        mwTryCalc();
       });
       mwRenderLimitScores();
     }
@@ -3771,7 +6381,7 @@
       const winnerIdx = mwSortedWinners[mwWinnerStep];
       if (winnerIdx === undefined) return;
       const isParent = state.players[winnerIdx].wind === '東';
-      document.querySelectorAll('#mwHanTree > .han-row').forEach(row => {
+      document.querySelectorAll('#mwHanTree .limit-row').forEach(row => {
         const def = HAN_DEFS[+row.dataset.idx];
         if (!def || !def.base) return;
         const el = row.querySelector('.han-score');
@@ -3814,6 +6424,12 @@
             row.classList.add('open'); fc.classList.add('open');
             mwRenderFuScores(mwHanIdx, fc);
             if (mwFu >= 0) fc.querySelector(`.fu-row[data-fu="${mwFu}"]`)?.classList.add('sel');
+          } else {
+            const yakumanChildren = row.closest('.fu-children');
+            if (yakumanChildren) {
+              yakumanChildren.classList.add('open');
+              yakumanChildren.previousElementSibling?.classList.add('open');
+            }
           }
         }
       }
@@ -4311,6 +6927,25 @@
       setBackFabVisible(true);
       render();
     });
+
+    document.getElementById('deviceShareBtn').addEventListener('click', openShareModal);
+    document.getElementById('deviceShareClose').addEventListener('click', () => {
+      document.getElementById('deviceShareModal').style.display = 'none';
+      setBackFabVisible(true);
+    });
+    document.getElementById('deviceShareRefresh').addEventListener('click', refreshShareModal);
+    document.getElementById('deviceShareCopy').addEventListener('click', async () => {
+      const url = document.getElementById('deviceShareUrl').textContent;
+      if (!url) return;
+      try {
+        await navigator.clipboard.writeText(url);
+        updateShareStatus('URLをコピーしました');
+      } catch {
+        updateShareStatus('URLを選択してコピーしてください');
+      }
+    });
+
+    startPersonalSubscription();
 
     // ── Embedded mode: postMessage bridge ─────────────────────
     if (isEmbedded) {
