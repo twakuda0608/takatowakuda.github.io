@@ -1379,8 +1379,8 @@
       height: 100%;
       display: grid;
       grid-template-columns: 1fr 1.18fr 1fr;
-      grid-template-rows: minmax(0, 1fr) auto minmax(0, 1.08fr);
-      gap: clamp(6px, 1.8vh, 14px);
+      grid-template-rows: minmax(86px, 0.9fr) max-content minmax(174px, 1.45fr);
+      gap: clamp(8px, 2vh, 16px);
       min-width: 0;
       min-height: 0;
     }
@@ -1447,6 +1447,9 @@
       gap: clamp(4px, 1vh, 8px);
       text-align: center;
       min-width: 0;
+      max-height: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
       position: relative;
     }
     .personal-score-card.is-me {
@@ -1509,6 +1512,14 @@
       line-height: 1;
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
+    }
+    .personal-score-card.is-me .personal-score {
+      cursor: pointer;
+      border-radius: 8px;
+      padding: 4px 8px;
+    }
+    .personal-score-card.is-me .personal-score:active {
+      background: rgba(251,191,36,0.12);
     }
     .personal-score.long-score { font-size: clamp(24px, 8.8vh, 46px); }
     .personal-score.diff-pos { color: #60a5fa; }
@@ -1603,6 +1614,91 @@
       width: clamp(12px, 2.6vh, 16px);
       height: clamp(12px, 2.6vh, 16px);
     }
+    .personal-command-row {
+      display: grid;
+      justify-content: stretch;
+      min-width: 0;
+    }
+    .personal-command-btn {
+      width: 100%;
+      border: 1.5px solid rgba(255,255,255,0.22);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.09);
+      color: rgba(255,255,255,0.7);
+      font-family: inherit;
+      font-size: clamp(14px, 3.4vh, 20px);
+      font-weight: 900;
+      padding: clamp(8px, 1.8vh, 12px) clamp(14px, 3vh, 22px);
+      cursor: pointer;
+      min-width: 0;
+    }
+    .personal-command-btn.on {
+      background: #b91c1c;
+      border-color: #f87171;
+      color: #fff;
+      box-shadow: 0 0 18px rgba(239,68,68,0.65);
+    }
+    .personal-command-btn:disabled {
+      opacity: 0.38;
+      cursor: default;
+    }
+    .personal-agari-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      background: rgba(0,0,0,0.72);
+      padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+    }
+    .personal-agari-card {
+      width: min(92vw, 680px);
+      max-height: 92vh;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 8px;
+      background: #1c3a25;
+      padding: clamp(10px, 2.4vh, 18px);
+      box-shadow: 0 18px 44px rgba(0,0,0,0.45);
+    }
+    .personal-agari-head {
+      color: #fbbf24;
+      font-size: clamp(17px, 4vh, 24px);
+      font-weight: 900;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .personal-agari-sec { margin-top: 10px; }
+    .personal-agari-label {
+      color: rgba(255,255,255,0.48);
+      font-size: clamp(10px, 2.4vh, 13px);
+      font-weight: 900;
+      margin-bottom: 5px;
+    }
+    .personal-agari-row {
+      display: flex;
+      gap: 6px;
+    }
+    .personal-agari-row .wtype,
+    .personal-agari-actions .ag-cancel,
+    .personal-agari-actions .ag-apply {
+      min-height: 38px;
+    }
+    .personal-agari-tree {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+    .personal-agari-tree .han-group,
+    .personal-agari-tree > .han-row {
+      min-width: 0;
+    }
+    .personal-agari-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
     .personal-fx-layer {
       position: fixed;
       inset: 0;
@@ -1615,12 +1711,13 @@
       left: 0;
       top: 0;
       transform: translate(-50%, -50%);
-      min-width: 74px;
-      padding: 8px 12px;
+      min-width: 60px;
+      max-width: min(34vw, 132px);
+      padding: clamp(5px, 1.2vh, 8px) clamp(8px, 2vh, 12px);
       border-radius: 999px;
       background: rgba(251,191,36,0.95);
       color: #1f2937;
-      font-size: clamp(12px, 3vh, 18px);
+      font-size: clamp(11px, 2.7vh, 17px);
       font-weight: 900;
       font-variant-numeric: tabular-nums;
       text-align: center;
@@ -1645,6 +1742,23 @@
       transform-origin: 0 50%;
       border-top: 3px solid rgba(251,191,36,0.94);
       filter: drop-shadow(0 3px 8px rgba(0,0,0,0.4));
+    }
+    @media (orientation: landscape) and (max-height: 430px) {
+      .personal-move-label {
+        min-width: 54px;
+        max-width: 118px;
+        font-size: 12px;
+        padding: 5px 8px;
+      }
+      .personal-move-arrow {
+        border-top-width: 2px;
+      }
+      .personal-move-arrow::after {
+        top: -6px;
+        border-left-width: 10px;
+        border-top-width: 5px;
+        border-bottom-width: 5px;
+      }
     }
     .personal-move-arrow.corner {
       border-top-style: solid;
@@ -1958,13 +2072,14 @@
         padding-bottom: max(10px, env(safe-area-inset-bottom));
       }
       .personal-shell {
-        grid-template-rows: minmax(92px, 1fr) auto minmax(112px, 1.08fr);
-        gap: 8px;
+        grid-template-rows: minmax(76px, 0.8fr) max-content minmax(174px, 1.45fr);
+        gap: 6px;
       }
       .personal-board-info {
-        font-size: 18px;
-        margin-bottom: 6px;
+        font-size: 16px;
+        margin-bottom: 0;
       }
+      .personal-board-info-sub { margin-top: 0; }
       .personal-action {
         font-size: 13px;
         padding: 8px 14px;
@@ -1977,7 +2092,7 @@
       }
       .personal-score-card.is-me {
         width: min(52vw, 340px);
-        padding: 10px 16px;
+        padding: 8px 14px;
       }
       .personal-wind {
         width: 32px;
@@ -1993,8 +2108,8 @@
       .personal-score-card.is-me .personal-name { font-size: 20px; }
       .personal-score { font-size: clamp(30px, 10.5vh, 42px); }
       .personal-score.long-score { font-size: clamp(24px, 8.8vh, 36px); }
-      .personal-score-card.is-me .personal-score { font-size: clamp(48px, 14.5vh, 62px); }
-      .personal-score-card.is-me .personal-score.long-score { font-size: clamp(38px, 12vh, 52px); }
+      .personal-score-card.is-me .personal-score { font-size: clamp(42px, 13vh, 56px); }
+      .personal-score-card.is-me .personal-score.long-score { font-size: clamp(34px, 11vh, 48px); }
       .personal-score-line { gap: 10px; }
       .personal-diff-btn {
         width: 42px;
@@ -2017,6 +2132,10 @@
         width: 12px;
         height: 12px;
       }
+      .personal-command-btn {
+        font-size: 14px;
+        padding: 7px 12px;
+      }
       .personal-meta {
         gap: 7px;
         font-size: 10px;
@@ -2028,8 +2147,8 @@
         padding-bottom: max(8px, env(safe-area-inset-bottom));
       }
       .personal-shell {
-        grid-template-rows: minmax(82px, 1fr) auto minmax(98px, 1fr);
-        gap: 6px;
+        grid-template-rows: minmax(64px, 0.7fr) max-content minmax(150px, 1.35fr);
+        gap: 5px;
       }
       .personal-board-info { font-size: 12px; margin-bottom: 4px; }
       .personal-action { font-size: 11px; padding: 6px 12px; }
@@ -2039,7 +2158,7 @@
       }
       .personal-score-card.is-me {
         width: min(48vw, 310px);
-        padding: 8px 14px;
+        padding: 7px 12px;
       }
       .personal-wind {
         width: 28px;
@@ -2055,8 +2174,8 @@
       .personal-score-card.is-me .personal-name { font-size: 17px; }
       .personal-score { font-size: clamp(26px, 9.6vh, 36px); }
       .personal-score.long-score { font-size: clamp(22px, 8vh, 31px); }
-      .personal-score-card.is-me .personal-score { font-size: clamp(42px, 13vh, 52px); }
-      .personal-score-card.is-me .personal-score.long-score { font-size: clamp(34px, 11vh, 44px); }
+      .personal-score-card.is-me .personal-score { font-size: clamp(36px, 12vh, 46px); }
+      .personal-score-card.is-me .personal-score.long-score { font-size: clamp(30px, 10vh, 40px); }
       .personal-diff-btn {
         width: 36px;
         height: 36px;
@@ -2068,6 +2187,10 @@
       .personal-score-card.is-me .personal-riichi-stick {
         width: 96px;
         height: 13px;
+      }
+      .personal-command-btn {
+        font-size: 12px;
+        padding: 6px 10px;
       }
     }
   </style>
@@ -3143,12 +3266,18 @@
     let tableRoomId = cleanRoomId(pageParams.get('room')) || sessionStorage.getItem(ROOM_ID_KEY) || '';
     let tableFbPromise = null;
     let tableRoomPublishTimer = null;
+    let tableRequestUnsub = null;
+    const processedTableRequests = new Set();
     let personalSeatIndex = Number(localStorage.getItem(`mahjong_personal_seat_${tableRoomId}`) ?? -1);
     let personalRoomLoaded = false;
     let personalDiffOn = false;
     let personalPendingMove = null;
     let personalScoreOverrides = null;
     let personalStateOverride = null;
+    let personalActionRequests = { riichi: null, agari: null };
+    let personalAgariOpen = false;
+    let personalAgariInput = { winType: 'ron', dealerIdx: -1, hanIdx: -1, fu: -1, confirm: false };
+    let personalYakumanOpen = false;
 
     function cleanRoomId(roomId) {
       return String(roomId || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
@@ -3171,7 +3300,12 @@
         return {
           db: firestoreMod.getFirestore(app),
           doc: firestoreMod.doc,
+          collection: firestoreMod.collection,
+          addDoc: firestoreMod.addDoc,
           setDoc: firestoreMod.setDoc,
+          updateDoc: firestoreMod.updateDoc,
+          query: firestoreMod.query,
+          orderBy: firestoreMod.orderBy,
           onSnapshot: firestoreMod.onSnapshot,
           serverTimestamp: firestoreMod.serverTimestamp
         };
@@ -3349,6 +3483,7 @@
         updatedAt: fb.serverTimestamp(),
         payload: buildRoomPayload()
       }, { merge: true });
+      startTableRequestListener();
     }
 
     function publishRoomState() {
@@ -3371,7 +3506,65 @@
         sessionStorage.setItem(ROOM_ID_KEY, tableRoomId);
       }
       await writeRoomPayload();
+      startTableRequestListener();
       return tableRoomId;
+    }
+
+    async function sendPersonalRequest(type, extra = {}) {
+      if (!isPersonalView || !tableRoomId || personalSeatIndex < 0 || personalSeatIndex > 3) return;
+      const fb = await getTableFirebase();
+      const docRef = await fb.addDoc(fb.collection(fb.db, ROOM_COLLECTION, tableRoomId, 'requests'), {
+        type,
+        seatIndex: personalSeatIndex,
+        status: 'pending',
+        createdAt: fb.serverTimestamp(),
+        clientAt: Date.now(),
+        ...extra,
+      });
+      return docRef.id;
+    }
+
+    async function cancelPersonalRequest(targetType) {
+      const targetRequestId = personalActionRequests[targetType];
+      await sendPersonalRequest('cancel', { targetType, targetRequestId: targetRequestId || '' });
+      personalActionRequests[targetType] = null;
+      renderPersonalView();
+    }
+
+    function startTableRequestListener() {
+      if (isPersonalView || !tableRoomId || tableRequestUnsub) return;
+      getTableFirebase().then(fb => {
+        const q = fb.query(
+          fb.collection(fb.db, ROOM_COLLECTION, tableRoomId, 'requests'),
+          fb.orderBy('clientAt', 'asc')
+        );
+        tableRequestUnsub = fb.onSnapshot(q, snap => {
+          snap.docChanges().forEach(change => {
+            if (change.type !== 'added') return;
+            const ref = change.doc.ref;
+            const requestId = change.doc.id;
+            if (processedTableRequests.has(requestId)) return;
+            const req = change.doc.data();
+            if (req.status && req.status !== 'pending') return;
+            processedTableRequests.add(requestId);
+            handleTableRequest(req)
+              .then(() => fb.updateDoc(ref, { status: 'done', processedAt: fb.serverTimestamp() }))
+              .catch(err => fb.updateDoc(ref, { status: 'error', error: String(err?.message || err), processedAt: fb.serverTimestamp() }).catch(() => {}));
+          });
+        });
+      }).catch(() => updateShareStatus('子機操作を受信できません'));
+    }
+
+    async function handleTableRequest(req) {
+      const seatIndex = Number(req?.seatIndex);
+      if (!Number.isInteger(seatIndex) || seatIndex < 0 || seatIndex > 3) return;
+      if (req.type === 'riichi') {
+        if (!state.players[seatIndex]?.riichi) applyRiichi(seatIndex);
+      } else if (req.type === 'agari') {
+        applyPersonalAgariRequest(req, seatIndex);
+      } else if (req.type === 'cancel') {
+        handleCancelTableRequest(req, seatIndex);
+      }
     }
 
     function getPersonalUrl() {
@@ -3436,6 +3629,9 @@
         && nextRoundLog.length > prevRoundLogLength
         && nextRoundLog[nextRoundLog.length - 1]?.type === 'agari'
         && Array.isArray(nextRoundLog[nextRoundLog.length - 1]?.deltas);
+      if (isPersonalView && personalRoomLoaded && nextRoundLog.length > prevRoundLogLength) {
+        personalActionRequests = { riichi: null, agari: null };
+      }
       tableRoundLog = nextRoundLog;
       if (shouldAnimateMove) {
         const lastMove = tableRoundLog[tableRoundLog.length - 1];
@@ -3514,22 +3710,43 @@
       };
     }
 
+    function personalFxBounds() {
+      const view = document.getElementById('personalView');
+      const rect = view?.getBoundingClientRect();
+      return {
+        left: (rect?.left || 0) + 12,
+        right: (rect?.right || innerWidth) - 12,
+        top: (rect?.top || 0) + 12,
+        bottom: (rect?.bottom || innerHeight) - 12,
+      };
+    }
+
+    function clampPersonalPoint(point, pad = 18) {
+      const b = personalFxBounds();
+      return {
+        x: Math.min(b.right - pad, Math.max(b.left + pad, point.x)),
+        y: Math.min(b.bottom - pad, Math.max(b.top + pad, point.y)),
+      };
+    }
+
     function personalDeltaLabelPoint(card) {
       const rect = card.getBoundingClientRect();
       const pos = card.dataset.seatPos;
+      let point;
+      const tight = innerHeight < 430;
+      const offset = tight ? 6 : 14;
       if (pos === 'bottom') {
-        return { x: rect.left + rect.width / 2, y: Math.max(18, rect.top - 18) };
+        point = { x: rect.left + rect.width / 2, y: rect.top - offset };
+      } else if (pos === 'top') {
+        point = { x: rect.left + rect.width / 2, y: rect.bottom + offset };
+      } else if (pos === 'left') {
+        point = { x: rect.right + offset, y: rect.top + rect.height / 2 };
+      } else if (pos === 'right') {
+        point = { x: rect.left - offset, y: rect.top + rect.height / 2 };
+      } else {
+        point = rectCenter(card);
       }
-      if (pos === 'top') {
-        return { x: rect.left + rect.width / 2, y: Math.min(innerHeight - 18, rect.bottom + 18) };
-      }
-      if (pos === 'left') {
-        return { x: Math.min(innerWidth - 18, rect.right + 18), y: rect.top + rect.height / 2 };
-      }
-      if (pos === 'right') {
-        return { x: Math.max(18, rect.left - 18), y: rect.top + rect.height / 2 };
-      }
-      return rectCenter(card);
+      return clampPersonalPoint(point, 32);
     }
 
     function personalOuterElbow(start, end) {
@@ -3539,7 +3756,7 @@
       const cy = innerHeight / 2;
       const da = Math.hypot(a.x - cx, a.y - cy);
       const db = Math.hypot(b.x - cx, b.y - cy);
-      return db > da ? b : a;
+      return clampPersonalPoint(db > da ? b : a, 10);
     }
 
     function setPersonalScoreText(idx, score) {
@@ -3721,6 +3938,258 @@
       `).join('');
     }
 
+    function personalFuOptions(hanIdx) {
+      return [
+        [30, 40, 50, 60, 70, 80, 90, 100, 110],
+        [20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110],
+        [20, 25, 30, 40, 50, 60],
+        [20, 25, 30],
+      ][hanIdx] || [];
+    }
+
+    function personalFuAllowed(hanIdx, fu) {
+      if (personalAgariInput.winType === 'tsumo' && hanIdx === 1 && fu === 25) return false;
+      if (personalAgariInput.winType === 'ron' && ((hanIdx === 1 && fu === 20) || (hanIdx === 2 && fu === 20) || (hanIdx === 3 && fu === 20))) return false;
+      return true;
+    }
+
+    function renderPersonalAgariTree() {
+      const low = [0, 1, 2, 3].map(hi => `
+        <div class="han-group">
+          <div class="han-row${personalAgariInput.hanIdx === hi ? ' sel open' : ''}" data-p-han="${hi}">
+            <span class="arr">▶</span>${hi + 1}翻
+          </div>
+          <div class="fu-children${personalAgariInput.hanIdx === hi ? ' open' : ''}">
+            ${personalFuOptions(hi).filter(fu => personalFuAllowed(hi, fu)).map(fu => `
+              <div class="fu-row${personalAgariInput.hanIdx === hi && personalAgariInput.fu === fu ? ' sel' : ''}" data-p-fu="${fu}">
+                <span class="fu-dot"></span>${fu}符
+              </div>
+            `).join('')}
+          </div>
+        </div>`).join('');
+      const limits = HAN_DEFS.slice(4, 9).map((def, i) => {
+        const idx = i + 4;
+        return `<div class="han-row limit-row${personalAgariInput.hanIdx === idx ? ' sel' : ''}" data-p-limit="${idx}">${def.name}</div>`;
+      }).join('');
+      const yakuman = `
+        <div class="han-group">
+          <div class="han-row yakuman-folder${personalYakumanOpen || personalAgariInput.hanIdx >= 9 ? ' open' : ''}" data-p-folder="yakuman"><span class="arr">▶</span>二倍以上</div>
+          <div class="fu-children${personalYakumanOpen || personalAgariInput.hanIdx >= 9 ? ' open' : ''}">
+            ${HAN_DEFS.slice(9).map((def, i) => {
+              const idx = i + 9;
+              return `<div class="han-row limit-row${personalAgariInput.hanIdx === idx ? ' sel' : ''}" data-p-limit="${idx}">${def.name}</div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      return `${low}${limits}${yakuman}`;
+    }
+
+    function personalAgariReady() {
+      const def = HAN_DEFS[personalAgariInput.hanIdx];
+      return !!def
+        && (def.needsFu ? personalAgariInput.fu >= 0 : true)
+        && (personalAgariInput.winType === 'tsumo' || personalAgariInput.dealerIdx >= 0);
+    }
+
+    function maybePersonalAgariConfirm() {
+      if (personalAgariReady()) personalAgariInput.confirm = true;
+    }
+
+    function calcPersonalAgariPreview() {
+      const winnerIdx = personalSeatIndex;
+      const def = HAN_DEFS[personalAgariInput.hanIdx];
+      if (!def) return null;
+      let base = def.needsFu
+        ? personalAgariInput.fu * Math.pow(2, def.han + 2)
+        : def.base;
+      if (def.needsFu && base > 2000) base = 2000;
+      const isParent = state.players[winnerIdx]?.wind === '東';
+      const honba = state.honba;
+      const riichiPot = state.kyotaku * 1000;
+      const deltas = [0, 0, 0, 0];
+      let scoreText = '';
+      if (personalAgariInput.winType === 'ron') {
+        const pay = isParent ? roundUp100(base * 6) : roundUp100(base * 4);
+        const honbaPay = honba * 300;
+        deltas[winnerIdx] += pay + honbaPay + riichiPot;
+        deltas[personalAgariInput.dealerIdx] -= pay + honbaPay;
+        scoreText = `${pay.toLocaleString()}点${honba ? ` +${honbaPay}(本場)` : ''}`;
+      } else if (isParent) {
+        const each = roundUp100(base * 2);
+        const honbaEach = honba * 100;
+        let get = riichiPot;
+        for (let i = 0; i < 4; i++) {
+          if (i === winnerIdx) continue;
+          deltas[i] -= each + honbaEach;
+          get += each + honbaEach;
+        }
+        deltas[winnerIdx] = get;
+        scoreText = `オール${each.toLocaleString()}点${honba ? ` +${honbaEach}(本場)` : ''}`;
+      } else {
+        const parentPay = roundUp100(base * 2);
+        const childPay = roundUp100(base);
+        const honbaEach = honba * 100;
+        let get = riichiPot;
+        for (let i = 0; i < 4; i++) {
+          if (i === winnerIdx) continue;
+          const pay = (state.players[i]?.wind === '東' ? parentPay : childPay) + honbaEach;
+          deltas[i] -= pay;
+          get += pay;
+        }
+        deltas[winnerIdx] = get;
+        scoreText = `親${parentPay.toLocaleString()} / 子${childPay.toLocaleString()}`;
+        if (honba) scoreText += ` +${honbaEach}(本場)`;
+      }
+      const hanName = def.needsFu ? `${def.han}翻${personalAgariInput.fu}符` : def.name;
+      return { deltas, scoreText, hanName, riichiPot };
+    }
+
+    function renderPersonalAgariConfirm() {
+      const preview = calcPersonalAgariPreview();
+      if (!preview) return '';
+      return `
+        <div class="ag-result" style="margin-bottom:0">
+          <div class="ag-result-hl">${escPersonal(preview.hanName)}　${escPersonal(preview.scoreText)}</div>
+          ${preview.deltas.map((d, i) => {
+            if (!d) return '';
+            const after = Number(state.players[i]?.score || 0) + d;
+            const sign = d > 0 ? '+' : '';
+            const col = d > 0 ? '#4ade80' : '#f87171';
+            return `<div>${escPersonal(state.players[i]?.wind || '')}: ${Number(state.players[i]?.score || 0).toLocaleString()} → <b>${after.toLocaleString()}</b> <span style="color:${col}">(${sign}${d.toLocaleString()})</span></div>`;
+          }).join('')}
+          ${preview.riichiPot > 0 ? `<div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:4px">リーチ棒 +${preview.riichiPot.toLocaleString()}</div>` : ''}
+        </div>`;
+    }
+
+    function renderPersonalAgariModal() {
+      if (!personalAgariOpen) return '';
+      const me = state.players[personalSeatIndex] || {};
+      const canSend = personalAgariReady();
+      return `
+        <div class="personal-agari-modal">
+          <div class="personal-agari-card">
+            <div class="personal-agari-head">${escPersonal(me.name || '')} の和了</div>
+            ${personalAgariInput.confirm ? `
+              ${renderPersonalAgariConfirm()}
+              <div class="personal-agari-actions">
+                <button class="ag-apply" id="personalAgariSend" ${canSend ? '' : 'disabled'}>適用</button>
+                <button class="ag-cancel" id="personalAgariBack">戻る</button>
+              </div>
+            ` : `
+            <div class="personal-agari-sec">
+              <div class="personal-agari-label">和了方法</div>
+              <div class="personal-agari-row">
+                <button class="wtype${personalAgariInput.winType === 'ron' ? ' sel' : ''}" data-p-win="ron">ロン</button>
+                <button class="wtype${personalAgariInput.winType === 'tsumo' ? ' sel' : ''}" data-p-win="tsumo">ツモ</button>
+              </div>
+            </div>
+            ${personalAgariInput.winType === 'ron' ? `
+              <div class="personal-agari-sec">
+                <div class="personal-agari-label">放銃者</div>
+                <div class="psel-col">
+                  ${state.players.map((p, i) => i === personalSeatIndex ? '' : `
+                    <button class="psel${personalAgariInput.dealerIdx === i ? ' sel' : ''}" data-p-dealer="${i}">
+                      <span style="font-size:11px;opacity:0.5;font-weight:600;min-width:14px;text-align:center">${escPersonal(p.wind)}</span>
+                      <span style="font-size:14px;font-weight:800">${escPersonal(p.name)}</span>
+                    </button>
+                  `).join('')}
+                </div>
+              </div>` : ''}
+            <div class="personal-agari-sec">
+              <div class="personal-agari-label">飜数</div>
+              <div class="han-tree personal-agari-tree">${renderPersonalAgariTree()}</div>
+            </div>
+            <div class="personal-agari-actions">
+              <button class="ag-apply" id="personalAgariSend" ${canSend ? '' : 'disabled'}>適用</button>
+              <button class="ag-cancel" id="personalAgariClose">閉じる</button>
+            </div>
+            `}
+          </div>
+        </div>`;
+    }
+
+    function bindPersonalAgariModal() {
+      if (!personalAgariOpen) return;
+      document.getElementById('personalAgariClose')?.addEventListener('click', () => {
+        personalAgariOpen = false;
+        renderPersonalView();
+      });
+      document.getElementById('personalAgariBack')?.addEventListener('click', () => {
+        personalAgariInput.confirm = false;
+        renderPersonalView();
+      });
+      document.querySelectorAll('[data-p-win]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          personalAgariInput.winType = btn.dataset.pWin;
+          personalAgariInput.dealerIdx = -1;
+          personalAgariInput.confirm = false;
+          if (personalAgariInput.hanIdx >= 0 && HAN_DEFS[personalAgariInput.hanIdx]?.needsFu && !personalFuAllowed(personalAgariInput.hanIdx, personalAgariInput.fu)) {
+            personalAgariInput.fu = -1;
+          }
+          maybePersonalAgariConfirm();
+          renderPersonalView();
+        });
+      });
+      document.querySelectorAll('[data-p-dealer]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          personalAgariInput.dealerIdx = Number(btn.dataset.pDealer);
+          maybePersonalAgariConfirm();
+          renderPersonalView();
+        });
+      });
+      document.querySelectorAll('[data-p-han]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.dataset.pHan);
+          personalAgariInput.hanIdx = personalAgariInput.hanIdx === idx ? -1 : idx;
+          personalAgariInput.fu = -1;
+          personalAgariInput.confirm = false;
+          personalYakumanOpen = false;
+          renderPersonalView();
+        });
+      });
+      document.querySelectorAll('[data-p-fu]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          personalAgariInput.fu = Number(btn.dataset.pFu);
+          maybePersonalAgariConfirm();
+          renderPersonalView();
+        });
+      });
+      document.querySelectorAll('[data-p-limit]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          personalAgariInput.hanIdx = Number(btn.dataset.pLimit);
+          personalAgariInput.fu = -1;
+          personalYakumanOpen = personalAgariInput.hanIdx >= 9;
+          maybePersonalAgariConfirm();
+          renderPersonalView();
+        });
+      });
+      document.querySelectorAll('[data-p-folder]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          personalYakumanOpen = !personalYakumanOpen;
+          renderPersonalView();
+        });
+      });
+      document.getElementById('personalAgariSend')?.addEventListener('click', () => {
+        const sendBtn = document.getElementById('personalAgariSend');
+        if (!sendBtn || sendBtn.disabled) return;
+        sendBtn.disabled = true;
+        sendBtn.textContent = '送信中';
+        sendPersonalRequest('agari', {
+          winType: personalAgariInput.winType,
+          dealerIdx: personalAgariInput.winType === 'ron' ? personalAgariInput.dealerIdx : -1,
+          hanIdx: personalAgariInput.hanIdx,
+          fu: personalAgariInput.fu,
+        }).then(id => {
+          personalActionRequests.agari = id || true;
+          personalAgariOpen = false;
+          renderPersonalView();
+        }).catch(() => {
+          sendBtn.disabled = false;
+          sendBtn.textContent = '適用';
+        });
+      });
+    }
+
     function renderPersonalResult() {
       const root = document.getElementById('personalView');
       if (!root) return;
@@ -3826,14 +4295,14 @@
         const angleRad = Math.atan2(dy, dx);
         const startPad = 44;
         const endPad = 44;
-        const start = {
+        const start = clampPersonalPoint({
           x: from.x + Math.cos(angleRad) * startPad,
           y: from.y + Math.sin(angleRad) * startPad
-        };
-        const end = {
+        }, 12);
+        const end = clampPersonalPoint({
           x: to.x - Math.cos(angleRad) * endPad,
           y: to.y - Math.sin(angleRad) * endPad
-        };
+        }, 12);
         const isCornerMove = Math.abs(dx) > 80 && Math.abs(dy) > 80;
         if (isCornerMove) {
           const corner = personalOuterElbow(start, end);
@@ -3938,6 +4407,9 @@
         const diffClass = personalDiffOn && !isMe
           ? diff >= 0 ? ' diff-pos' : ' diff-neg'
           : '';
+        const riichiPending = !!personalActionRequests.riichi;
+        const riichiOnLike = riichiPending || !!p.riichi;
+        const canPersonalRiichi = isMe && (riichiPending || (!p.riichi && !(settingHakoshita && !settingHakoshitaRiichi && Number(p.score || 0) < 1000)));
         return `
           <div class="personal-seat ${pos}">
             <div class="personal-score-card ${pos}${isMe ? ' is-me' : ''}" data-player-idx="${idx}" data-seat-pos="${pos}">
@@ -3947,9 +4419,13 @@
               </div>
               <div class="personal-score-line">
                 ${isMe ? `<button class="personal-diff-btn${personalDiffOn ? ' active' : ''}" id="personalDiffBtn" aria-label="点差"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>` : ''}
-                <div class="personal-score${isLongScore ? ' long-score' : ''}${diffClass}" data-score-idx="${idx}">${scoreText}</div>
+                <div class="personal-score${isLongScore ? ' long-score' : ''}${diffClass}" data-score-idx="${idx}" ${isMe ? 'id="personalAgariScore"' : ''}>${scoreText}</div>
               </div>
               <div class="personal-riichi-stick${p.riichi ? ' on' : ''}" aria-label="${p.riichi ? 'リーチ' : ''}"></div>
+              ${isMe ? `
+                <div class="personal-command-row">
+                  <button class="personal-command-btn${riichiOnLike ? ' on' : ''}" id="personalRiichiBtn" ${canPersonalRiichi ? '' : 'disabled'}>${riichiOnLike ? 'リーチ取消' : 'リーチ'}</button>
+                </div>` : ''}
             </div>
           </div>`;
       };
@@ -3965,7 +4441,8 @@
           ${seatPositions.map(cardHtml).join('')}
           <div class="personal-fx-layer"></div>
           <div class="portrait-hint">横向きにしてください<br>この画面は横向き専用です</div>
-        </div>`;
+        </div>
+        ${renderPersonalAgariModal()}`;
       document.getElementById('personalSeatChange').addEventListener('click', () => {
         personalSeatIndex = -1;
         personalDiffOn = false;
@@ -3980,6 +4457,48 @@
           renderPersonalView();
         });
       }
+      const riichiBtn = document.getElementById('personalRiichiBtn');
+      if (riichiBtn) {
+        riichiBtn.addEventListener('click', () => {
+          if (personalActionRequests.riichi || state.players[personalSeatIndex]?.riichi) {
+            riichiBtn.disabled = true;
+            riichiBtn.textContent = '取消中';
+            cancelPersonalRequest('riichi').catch(() => {
+              riichiBtn.disabled = false;
+              riichiBtn.textContent = 'リーチ取消';
+            });
+            return;
+          }
+          riichiBtn.disabled = true;
+          riichiBtn.textContent = '送信中';
+          sendPersonalRequest('riichi')
+            .then(id => {
+              personalActionRequests.riichi = id || true;
+              renderPersonalView();
+            })
+            .catch(() => {
+              riichiBtn.disabled = false;
+              riichiBtn.textContent = 'リーチ';
+            });
+        });
+      }
+      const agariScore = document.getElementById('personalAgariScore');
+      if (agariScore) {
+        agariScore.addEventListener('click', () => {
+          if (personalActionRequests.agari) {
+            cancelPersonalRequest('agari').catch(() => {
+              personalActionRequests.agari = true;
+              renderPersonalView();
+            });
+            return;
+          }
+          personalAgariOpen = true;
+          personalAgariInput = { winType: 'ron', dealerIdx: -1, hanIdx: -1, fu: -1, confirm: false };
+          personalYakumanOpen = false;
+          renderPersonalView();
+        });
+      }
+      bindPersonalAgariModal();
       if (personalPendingMove) {
         const move = personalPendingMove;
         personalPendingMove = null;
@@ -4195,15 +4714,39 @@
     });
 
     // Riichi toggle: deduct/return 1000, track kyotaku pot
+    function applyRiichi(playerIdx) {
+      const p = state.players[playerIdx];
+      if (!p) return;
+      if (!p.riichi && settingHakoshita && !settingHakoshitaRiichi && p.score < 1000) return;
+      p.riichi = !p.riichi;
+      if (p.riichi) riichiCounts[playerIdx]++;
+      p.score += p.riichi ? -1000 : 1000;
+      state.kyotaku += p.riichi ? 1 : -1;
+      render();
+    }
+
+    function undoRiichi(playerIdx) {
+      const p = state.players[playerIdx];
+      if (!p || !p.riichi) return;
+      p.riichi = false;
+      p.score += 1000;
+      state.kyotaku = Math.max(0, state.kyotaku - 1);
+      riichiCounts[playerIdx] = Math.max(0, Number(riichiCounts[playerIdx] || 0) - 1);
+      render();
+    }
+
+    function handleCancelTableRequest(req, seatIndex) {
+      if (req.targetType === 'riichi') {
+        undoRiichi(seatIndex);
+      } else if (req.targetType === 'agari') {
+        const modal = document.getElementById('agariModal');
+        if (modal?.style.display !== 'none' && agWinner === seatIndex) closeAgariModal();
+      }
+    }
+
     for (let i = 0; i < 4; i++) {
       document.getElementById(`r${i}`).addEventListener('click', () => {
-        const p = state.players[i];
-        if (!p.riichi && settingHakoshita && !settingHakoshitaRiichi && p.score < 1000) return;
-        p.riichi = !p.riichi;
-        if (p.riichi) riichiCounts[i]++;
-        p.score += p.riichi ? -1000 : 1000;
-        state.kyotaku += p.riichi ? 1 : -1;
-        render();
+        applyRiichi(i);
       });
     }
 
@@ -4943,6 +5486,46 @@
       if (!dealerSec) return;
       dealerSec.classList.add('needs-input');
       dealerSec.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+
+    function applyPersonalAgariRequest(req, seatIndex) {
+      const winType = req.winType === 'tsumo' ? 'tsumo' : req.winType === 'ron' ? 'ron' : '';
+      const hanIdx = Number(req.hanIdx);
+      const fu = Number(req.fu);
+      const dealerIdx = Number(req.dealerIdx);
+      const def = HAN_DEFS[hanIdx];
+      if (!winType || !def || (def.needsFu && !Number.isInteger(fu)) || (winType === 'ron' && (!Number.isInteger(dealerIdx) || dealerIdx < 0 || dealerIdx > 3 || dealerIdx === seatIndex))) {
+        openAgariModal(seatIndex);
+        return;
+      }
+      openAgariModal(seatIndex);
+      showAgariScoreScreen(winType);
+      agDealer = winType === 'ron' ? dealerIdx : -1;
+      agHanIdx = hanIdx;
+      agFu = def.needsFu ? fu : -1;
+      if (winType === 'ron') {
+        for (let j = 0; j < 4; j++) document.getElementById(`ad-${j}`)?.classList.toggle('sel', j === dealerIdx);
+      }
+      const row = document.querySelector(`#hanTree .han-row[data-idx="${hanIdx}"]`);
+      if (row) {
+        document.querySelectorAll('#hanTree .han-row').forEach(r => r.classList.remove('sel', 'open'));
+        document.querySelectorAll('#hanTree .fu-children').forEach(fc => fc.classList.remove('open'));
+        row.classList.add('sel');
+        const children = row.nextElementSibling;
+        if (children?.classList.contains('fu-children')) {
+          row.classList.add('open');
+          children.classList.add('open');
+          children.querySelector(`.fu-row[data-fu="${fu}"]`)?.classList.add('sel');
+        } else {
+          const parent = row.closest('.fu-children');
+          if (parent) {
+            parent.classList.add('open');
+            parent.previousElementSibling?.classList.add('open');
+          }
+        }
+      }
+      tryCalcAgari();
+      if (agDeltas) document.getElementById('agariApply').click();
     }
 
     for (let i = 0; i < 4; i++) {
