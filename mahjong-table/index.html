@@ -687,9 +687,30 @@
     .han-row.sel { background:rgba(251,191,36,0.18); border-color:rgba(251,191,36,0.6); color:#fbbf24; }
     .han-row .arr { font-size:9px; color:rgba(255,255,255,0.35); transition:transform 0.15s; flex-shrink:0; }
     .han-row.open .arr { transform:rotate(90deg); }
-    .fu-children { display:none; flex-direction:column; gap:2px; padding:3px 0 2px 24px; transform-origin: top center; }
-    .fu-children.open    { display:flex; animation: fuSlideDown 0.2s cubic-bezier(0.25,0.46,0.45,0.94) both; }
-    .fu-children.closing { display:flex; animation: fuSlideUp   0.18s cubic-bezier(0.55,0,0.75,0.05)  both; }
+    .fu-children {
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      max-height:0;
+      overflow:hidden;
+      padding:0 0 0 24px;
+      opacity:0;
+      transform:scaleY(0.96);
+      transform-origin:top center;
+      pointer-events:none;
+      transition:
+        max-height 0.24s cubic-bezier(0.25,0.46,0.45,0.94),
+        padding 0.24s cubic-bezier(0.25,0.46,0.45,0.94),
+        opacity 0.18s ease,
+        transform 0.22s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    .fu-children.open {
+      max-height:520px;
+      padding:3px 0 2px 24px;
+      opacity:1;
+      transform:scaleY(1);
+      pointer-events:auto;
+    }
     @keyframes fuSlideDown {
       from { opacity:0; transform: scaleY(0.6) translateY(-8px); }
       to   { opacity:1; transform: scaleY(1)   translateY(0);    }
@@ -1426,6 +1447,7 @@
       gap: clamp(4px, 1vh, 8px);
       text-align: center;
       min-width: 0;
+      position: relative;
     }
     .personal-score-card.is-me {
       width: min(62vw, 58vh, 430px);
@@ -1442,23 +1464,33 @@
       justify-content: center;
       gap: clamp(7px, 1.5vh, 12px);
       min-width: 0;
+      padding-left: clamp(32px, 7.6vh, 50px);
+      padding-right: clamp(32px, 7.6vh, 50px);
     }
     .personal-wind {
-      width: clamp(34px, 8.5vh, 52px);
-      height: clamp(34px, 8.5vh, 52px);
-      border-radius: 50%;
+      position: absolute;
+      top: clamp(6px, 1.5vh, 11px);
+      left: clamp(6px, 1.5vh, 11px);
+      width: clamp(30px, 7.2vh, 44px);
+      height: clamp(30px, 7.2vh, 44px);
+      border-radius: 7px;
       display: grid;
       place-items: center;
-      background: #f97316;
-      color: #fff;
-      font-size: clamp(19px, 4.8vh, 30px);
+      background: #fff;
+      color: #f97316;
+      font-size: clamp(18px, 4.4vh, 27px);
       font-weight: 900;
       flex-shrink: 0;
+      box-shadow: 0 5px 12px rgba(0,0,0,0.22);
+    }
+    .personal-wind.east {
+      background: #f97316;
+      color: #fff;
     }
     .personal-score-card.is-me .personal-wind {
-      width: clamp(44px, 11vh, 66px);
-      height: clamp(44px, 11vh, 66px);
-      font-size: clamp(25px, 6.2vh, 38px);
+      width: clamp(38px, 9.5vh, 56px);
+      height: clamp(38px, 9.5vh, 56px);
+      font-size: clamp(23px, 5.8vh, 34px);
     }
     .personal-name {
       color: rgba(255,255,255,0.74);
@@ -1948,14 +1980,14 @@
         padding: 10px 16px;
       }
       .personal-wind {
-        width: 34px;
-        height: 34px;
+        width: 32px;
+        height: 32px;
         font-size: 19px;
       }
       .personal-score-card.is-me .personal-wind {
-        width: 44px;
-        height: 44px;
-        font-size: 25px;
+        width: 40px;
+        height: 40px;
+        font-size: 24px;
       }
       .personal-name { font-size: 15px; }
       .personal-score-card.is-me .personal-name { font-size: 20px; }
@@ -2010,14 +2042,14 @@
         padding: 8px 14px;
       }
       .personal-wind {
-        width: 30px;
-        height: 30px;
-        font-size: 17px;
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
       }
       .personal-score-card.is-me .personal-wind {
-        width: 38px;
-        height: 38px;
-        font-size: 22px;
+        width: 34px;
+        height: 34px;
+        font-size: 20px;
       }
       .personal-name { font-size: 13px; }
       .personal-score-card.is-me .personal-name { font-size: 17px; }
@@ -3116,6 +3148,7 @@
     let personalDiffOn = false;
     let personalPendingMove = null;
     let personalScoreOverrides = null;
+    let personalStateOverride = null;
 
     function cleanRoomId(roomId) {
       return String(roomId || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
@@ -3377,6 +3410,13 @@
       const payload = roomDoc?.payload || roomDoc;
       if (!payload?.state || !Array.isArray(payload.state.players)) return;
       const s = payload.state;
+      const previousPersonalState = {
+        players: state.players.map(p => ({ ...p })),
+        honba: state.honba,
+        kyotaku: state.kyotaku,
+        roundWind: state.roundWind,
+        roundNum: state.roundNum,
+      };
       state = freshState();
       state.players = s.players.slice(0, 4).map((p, i) => ({
         score: Number(p.score ?? 25000),
@@ -3403,6 +3443,7 @@
           ? lastMove.scoresBefore.slice(0, 4).map(score => Number(score || 0))
           : null;
         if (beforeScores && beforeScores.length === 4) personalScoreOverrides = beforeScores;
+        if (previousPersonalState.players.length === 4) personalStateOverride = previousPersonalState;
         personalPendingMove = {
           deltas: lastMove.deltas.slice(0, 4),
           scoresBefore: beforeScores,
@@ -3510,6 +3551,26 @@
       }
     }
 
+    function refreshPersonalStaticInfo() {
+      const board = document.querySelector('.personal-board-info');
+      if (board) {
+        board.innerHTML = `
+          ${GT_NAMES[settingGameType]}　${ROUND_WINDS[state.roundWind]}${state.roundNum}局
+          <span class="personal-board-info-sub">${state.honba}本場　供託${state.kyotaku}本</span>`;
+      }
+      state.players.forEach((p, idx) => {
+        const card = document.querySelector(`.personal-score-card[data-player-idx="${idx}"]`);
+        if (!card) return;
+        const wind = card.querySelector('.personal-wind');
+        if (wind) {
+          wind.textContent = p.wind;
+          wind.classList.toggle('east', p.wind === '東');
+        }
+        const name = card.querySelector('.personal-name');
+        if (name) name.textContent = p.name;
+      });
+    }
+
     function animatePersonalScores(scoresBefore, deltas) {
       if (!Array.isArray(scoresBefore) || !Array.isArray(deltas)) return;
       const duration = 1100;
@@ -3526,6 +3587,8 @@
           requestAnimationFrame(tick);
         } else {
           personalScoreOverrides = null;
+          personalStateOverride = null;
+          refreshPersonalStaticInfo();
           finalScores.forEach((score, i) => setPersonalScoreText(i, score));
         }
       };
@@ -3852,7 +3915,9 @@
         return;
       }
 
-      const me = state.players[personalSeatIndex] || state.players[0];
+      const displayState = personalStateOverride || state;
+      const displayPlayers = displayState.players || state.players;
+      const me = displayPlayers[personalSeatIndex] || displayPlayers[0] || state.players[0];
       const seatPositions = [
         { pos: 'bottom', idx: personalSeatIndex },
         { pos: 'right', idx: (personalSeatIndex + 1) % 4 },
@@ -3860,7 +3925,7 @@
         { pos: 'left', idx: (personalSeatIndex + 3) % 4 },
       ];
       const cardHtml = ({ pos, idx }) => {
-        const p = state.players[idx] || {};
+        const p = displayPlayers[idx] || state.players[idx] || {};
         const isMe = idx === personalSeatIndex;
         const displayScore = Array.isArray(personalScoreOverrides)
           ? Number(personalScoreOverrides[idx] || 0)
@@ -3877,7 +3942,7 @@
           <div class="personal-seat ${pos}">
             <div class="personal-score-card ${pos}${isMe ? ' is-me' : ''}" data-player-idx="${idx}" data-seat-pos="${pos}">
               <div class="personal-name-line">
-                <span class="personal-wind">${escPersonal(p.wind)}</span>
+                <span class="personal-wind${p.wind === '東' ? ' east' : ''}">${escPersonal(p.wind)}</span>
                 <span class="personal-name">${escPersonal(p.name)}</span>
               </div>
               <div class="personal-score-line">
@@ -3893,8 +3958,8 @@
           <button class="personal-action personal-seat-change-top" id="personalSeatChange">席変更</button>
           <div class="personal-center">
             <div class="personal-board-info">
-              ${GT_NAMES[settingGameType]}　${ROUND_WINDS[state.roundWind]}${state.roundNum}局
-              <span class="personal-board-info-sub">${state.honba}本場　供託${state.kyotaku}本</span>
+              ${GT_NAMES[settingGameType]}　${ROUND_WINDS[displayState.roundWind]}${displayState.roundNum}局
+              <span class="personal-board-info-sub">${displayState.honba}本場　供託${displayState.kyotaku}本</span>
             </div>
           </div>
           ${seatPositions.map(cardHtml).join('')}
@@ -4994,8 +5059,6 @@
     function closeFuChildren(fc) {
       if (!fc.classList.contains('open')) return;
       fc.classList.remove('open');
-      fc.classList.add('closing');
-      fc.addEventListener('animationend', () => fc.classList.remove('closing'), { once: true });
     }
 
     // Tree: expandable han rows (1–4翻)
