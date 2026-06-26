@@ -1373,7 +1373,10 @@
       font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif;
     }
     body.personal-view-active .personal-view { display: grid; }
-    body.personal-view-active > :not(.personal-view):not(script) { display: none !important; }
+    body.personal-view-active > :not(.personal-view):not(#goalModal):not(script) { display: none !important; }
+    body.personal-view-active #goalModal {
+      z-index: 30000;
+    }
     .personal-shell {
       width: 100%;
       height: 100%;
@@ -1391,12 +1394,13 @@
       justify-self: center;
       text-align: center;
       min-width: 0;
+      transform: translateY(clamp(8px, 2.2vh, 18px));
     }
     .personal-board-info {
       color: rgba(255,255,255,0.64);
-      font-size: clamp(18px, 4.6vh, 30px);
+      font-size: clamp(24px, 6.4vh, 42px);
       font-weight: 900;
-      line-height: 1.25;
+      line-height: 1.12;
       letter-spacing: 0;
       white-space: nowrap;
       margin-bottom: clamp(6px, 1.4vh, 12px);
@@ -1404,7 +1408,7 @@
     .personal-board-info-sub {
       display: block;
       color: rgba(255,255,255,0.46);
-      font-size: 0.72em;
+      font-size: 0.62em;
       margin-top: 2px;
     }
     .personal-seat {
@@ -1418,6 +1422,11 @@
       grid-column: 2;
       grid-row: 1;
       align-self: end;
+      padding-top: clamp(8px, 2vh, 18px);
+      transform: translateY(clamp(18px, 4.5vh, 36px));
+    }
+    .personal-seat.top .personal-score-card {
+      margin-top: clamp(18px, 4.2vh, 32px);
     }
     .personal-seat.left {
       grid-column: 1;
@@ -1451,6 +1460,9 @@
       box-sizing: border-box;
       overflow: hidden;
       position: relative;
+    }
+    .personal-score-card-inner {
+      display: contents;
     }
     .personal-score-card.is-me {
       width: min(62vw, 58vh, 430px);
@@ -1641,6 +1653,12 @@
     .personal-command-btn:disabled {
       opacity: 0.38;
       cursor: default;
+    }
+    .personal-score-line .goal-btn {
+      width: clamp(42px, 9.5vh, 58px);
+      height: clamp(34px, 7.8vh, 48px);
+      font-size: clamp(11px, 2.6vh, 15px);
+      border-radius: 8px;
     }
     .personal-agari-modal {
       position: fixed;
@@ -2059,12 +2077,7 @@
       padding: 24px;
     }
     @media (orientation: portrait) {
-      body.personal-view-active .portrait-hint { display: grid; }
-      body.personal-view-active .personal-shell,
-      body.personal-view-active .personal-seat-grid,
-      body.personal-view-active .personal-result-shell {
-        display: none;
-      }
+      body.personal-view-active .portrait-hint { display: none; }
     }
     @media (orientation: landscape) and (max-height: 430px) {
       .personal-view {
@@ -2075,8 +2088,11 @@
         grid-template-rows: minmax(76px, 0.8fr) max-content minmax(174px, 1.45fr);
         gap: 6px;
       }
+      .personal-seat.top { padding-top: 8px; }
+      .personal-seat.top { transform: translateY(30px); }
+      .personal-seat.top .personal-score-card { margin-top: 20px; }
       .personal-board-info {
-        font-size: 16px;
+        font-size: 24px;
         margin-bottom: 0;
       }
       .personal-board-info-sub { margin-top: 0; }
@@ -2150,7 +2166,11 @@
         grid-template-rows: minmax(64px, 0.7fr) max-content minmax(150px, 1.35fr);
         gap: 5px;
       }
-      .personal-board-info { font-size: 12px; margin-bottom: 4px; }
+      .personal-seat.top { padding-top: 6px; }
+      .personal-seat.top { transform: translateY(32px); }
+      .personal-seat.top .personal-score-card { margin-top: 22px; }
+      .personal-center { transform: translateY(14px); }
+      .personal-board-info { font-size: 20px; margin-bottom: 2px; }
       .personal-action { font-size: 11px; padding: 6px 12px; }
       .personal-score-card {
         width: min(42vw, 235px);
@@ -2191,6 +2211,360 @@
       .personal-command-btn {
         font-size: 12px;
         padding: 6px 10px;
+      }
+    }
+    @media (orientation: portrait) {
+      .personal-view {
+        overflow: hidden;
+        padding:
+          calc(max(12px, env(safe-area-inset-top)) + 8px)
+          max(10px, env(safe-area-inset-right))
+          calc(max(10px, env(safe-area-inset-bottom)) + 8px)
+          max(10px, env(safe-area-inset-left));
+      }
+      .personal-shell {
+        --personal-opponent-w: clamp(244px, 64vw, 260px);
+        --personal-opponent-h: clamp(98px, 12.4vh, 112px);
+        --personal-side-gap: clamp(2px, 0.8vw, 5px);
+        position: relative;
+        display: block;
+      }
+      .personal-center {
+        position: absolute;
+        left: 50%;
+        top: clamp(34px, 5.8vh, 54px);
+        transform: translate(-50%, -50%);
+        z-index: 2;
+        width: min(52vw, 210px);
+      }
+      .personal-board-info {
+        font-size: clamp(16px, 4.7vw, 22px);
+        line-height: 1.12;
+        white-space: normal;
+        margin-bottom: 5px;
+      }
+      .personal-board-info-sub {
+        font-size: 0.55em;
+        margin-top: 2px;
+      }
+      .personal-seat {
+        position: absolute;
+        display: flex;
+      }
+      .personal-seat.top {
+        top: clamp(112px, 15.5vh, 140px);
+        left: 50%;
+        width: var(--personal-opponent-w);
+        height: var(--personal-opponent-h);
+        padding-top: 0;
+        transform: translateX(-50%);
+      }
+      .personal-seat.top .personal-score-card {
+        margin-top: 0;
+      }
+      .personal-seat.left {
+        left: var(--personal-side-gap);
+        top: 46.5%;
+        width: var(--personal-opponent-h);
+        height: var(--personal-opponent-w);
+        transform: translateY(-50%);
+      }
+      .personal-seat.right {
+        right: var(--personal-side-gap);
+        top: 46.5%;
+        width: var(--personal-opponent-h);
+        height: var(--personal-opponent-w);
+        transform: translateY(-50%);
+      }
+      .personal-seat.bottom {
+        left: 50%;
+        bottom: clamp(62px, 8.5vh, 86px);
+        width: min(100%, 430px);
+        min-height: clamp(206px, 28vh, 256px);
+        transform: translateX(-50%);
+      }
+      .personal-score-card,
+      .personal-score-card.top,
+      .personal-score-card.left,
+      .personal-score-card.right {
+        width: var(--personal-opponent-w);
+        height: var(--personal-opponent-h);
+        max-width: none;
+      }
+      .personal-score-card.top,
+      .personal-score-card.left,
+      .personal-score-card.right {
+        transform: none;
+        transform-origin: center;
+        overflow: hidden;
+        padding: 0;
+      }
+      .personal-score-card.left,
+      .personal-score-card.right {
+        width: var(--personal-opponent-h);
+        height: var(--personal-opponent-w);
+      }
+      .personal-score-card.top .personal-score-card-inner,
+      .personal-score-card.left .personal-score-card-inner,
+      .personal-score-card.right .personal-score-card-inner {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: var(--personal-opponent-w);
+        height: var(--personal-opponent-h);
+        display: grid;
+        gap: clamp(3px, 0.65vh, 6px);
+        box-sizing: border-box;
+        padding: clamp(8px, 1.45vh, 12px) clamp(9px, 2.6vw, 14px);
+        text-align: center;
+        transform-origin: center;
+      }
+      .personal-score-card.top .personal-score-card-inner {
+        transform: translate(-50%, -50%) rotate(180deg);
+      }
+      .personal-score-card.left .personal-score-card-inner {
+        transform: translate(-50%, -50%) rotate(90deg);
+      }
+      .personal-score-card.right .personal-score-card-inner {
+        transform: translate(-50%, -50%) rotate(-90deg);
+      }
+      .personal-score-card {
+        min-height: 0;
+        padding: clamp(8px, 1.45vh, 12px) clamp(9px, 2.6vw, 14px);
+        gap: clamp(3px, 0.65vh, 6px);
+      }
+      .personal-score-card.top,
+      .personal-score-card.left,
+      .personal-score-card.right {
+        padding: 0;
+      }
+      .personal-score-card.is-me {
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        padding: clamp(12px, 2vh, 18px) clamp(14px, 4vw, 22px);
+        transform: none;
+      }
+      .personal-name-line {
+        gap: 6px;
+        padding-left: clamp(31px, 8.6vw, 44px);
+        padding-right: clamp(20px, 5.8vw, 36px);
+      }
+      .personal-score-card.top .personal-name-line,
+      .personal-score-card.left .personal-name-line,
+      .personal-score-card.right .personal-name-line {
+        gap: 5px;
+        padding-left: clamp(34px, 8.4vw, 44px);
+        padding-right: clamp(34px, 8.4vw, 44px);
+        justify-content: center;
+      }
+      .personal-wind {
+        width: clamp(28px, 7.2vw, 36px);
+        height: clamp(28px, 7.2vw, 36px);
+        font-size: clamp(17px, 4.4vw, 22px);
+      }
+      .personal-score-card.is-me .personal-wind {
+        width: clamp(38px, 10vw, 54px);
+        height: clamp(38px, 10vw, 54px);
+        font-size: clamp(23px, 6.2vw, 32px);
+      }
+      .personal-name {
+        font-size: clamp(13px, 3.5vw, 17px);
+      }
+      .personal-score-card.is-me .personal-name {
+        font-size: clamp(18px, 4.5vw, 24px);
+      }
+      .personal-score {
+        font-size: clamp(30px, 8.2vw, 38px);
+      }
+      .personal-score.long-score {
+        font-size: clamp(26px, 7vw, 33px);
+      }
+      .personal-score-card.left .personal-score,
+      .personal-score-card.right .personal-score {
+        max-width: none;
+        overflow: visible;
+      }
+      .personal-score-card.top .personal-wind,
+      .personal-score-card.left .personal-wind,
+      .personal-score-card.right .personal-wind {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        width: 30px;
+        height: 30px;
+        font-size: 18px;
+      }
+      .personal-score-card.left .personal-name,
+      .personal-score-card.right .personal-name {
+        max-width: 54px;
+        font-size: 12px;
+      }
+      .personal-score-card.is-me .personal-score {
+        font-size: clamp(48px, 14.5vw, 78px);
+      }
+      .personal-score-card.is-me .personal-score.long-score {
+        font-size: clamp(40px, 12vw, 64px);
+      }
+      .personal-score-line {
+        gap: clamp(8px, 2.5vw, 14px);
+      }
+      .personal-diff-btn {
+        width: clamp(38px, 10vw, 54px);
+        height: clamp(38px, 10vw, 54px);
+        font-size: clamp(16px, 4.6vw, 22px);
+      }
+      .personal-command-btn {
+        font-size: clamp(16px, 4.2vw, 22px);
+        padding: clamp(9px, 1.6vh, 13px) 16px;
+      }
+      .personal-score-card.is-me .personal-riichi-stick {
+        width: min(42vw, 170px);
+        height: clamp(14px, 3.6vw, 18px);
+      }
+      .personal-seat-change-top {
+        top: calc(max(10px, env(safe-area-inset-top)) + 8px);
+        right: max(10px, env(safe-area-inset-right));
+        font-size: 13px;
+        padding: 8px 12px;
+      }
+      .personal-seat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-rows: minmax(132px, 1fr);
+        align-content: center;
+      }
+      .personal-seat-card {
+        min-height: 132px;
+        padding: 14px;
+      }
+      .personal-seat-name {
+        font-size: clamp(22px, 6.8vw, 34px);
+      }
+      .personal-result-shell {
+        display: block;
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-top: 0;
+        padding-bottom: max(18px, env(safe-area-inset-bottom));
+      }
+      .personal-result-panel {
+        padding: 12px;
+        overflow: visible;
+        margin-bottom: 10px;
+      }
+      .personal-result-panel.scrollable {
+        overflow: visible;
+      }
+      .personal-result-panel:not(.scrollable) {
+        min-height: 0;
+      }
+      .personal-result-title {
+        font-size: clamp(18px, 5.6vw, 28px);
+      }
+      .personal-result-name {
+        font-size: clamp(14px, 4.4vw, 20px);
+      }
+      .personal-result-score {
+        font-size: clamp(15px, 4.6vw, 22px);
+      }
+      .personal-result-graph {
+        height: clamp(220px, 48vh, 360px);
+        min-height: 220px;
+      }
+      .personal-graph-legend {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .personal-agari-card {
+        width: min(94vw, 520px);
+        max-height: calc(100dvh - max(24px, env(safe-area-inset-top)) - max(24px, env(safe-area-inset-bottom)));
+      }
+      .personal-agari-tree {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .personal-fx-layer {
+        inset:
+          calc(max(12px, env(safe-area-inset-top)) + 8px)
+          max(10px, env(safe-area-inset-right))
+          calc(max(10px, env(safe-area-inset-bottom)) + 8px)
+          max(10px, env(safe-area-inset-left));
+      }
+      .personal-fx-delta {
+        font-size: clamp(19px, 6vw, 30px);
+        padding: 6px 10px;
+      }
+    }
+    @media (orientation: portrait) and (max-height: 720px) {
+      .personal-view {
+        padding:
+          calc(max(8px, env(safe-area-inset-top)) + 6px)
+          max(8px, env(safe-area-inset-right))
+          calc(max(6px, env(safe-area-inset-bottom)) + 6px)
+          max(8px, env(safe-area-inset-left));
+      }
+      .personal-shell {
+        --personal-opponent-w: clamp(220px, 58vw, 236px);
+        --personal-opponent-h: clamp(86px, 11.8vh, 96px);
+      }
+      .personal-center {
+        top: clamp(30px, 5.4vh, 42px);
+      }
+      .personal-board-info {
+        font-size: clamp(14px, 4.2vw, 18px);
+      }
+      .personal-seat.top {
+        top: clamp(82px, 12.4vh, 98px);
+      }
+      .personal-seat.left,
+      .personal-seat.right {
+        top: 44.5%;
+      }
+      .personal-seat.bottom {
+        bottom: max(14px, env(safe-area-inset-bottom));
+        min-height: clamp(172px, 25.5vh, 188px);
+      }
+      .personal-score {
+        font-size: clamp(27px, 7.4vw, 34px);
+      }
+      .personal-score.long-score {
+        font-size: clamp(24px, 6.7vw, 30px);
+      }
+      .personal-score-card.is-me {
+        padding: clamp(9px, 1.6vh, 13px) clamp(12px, 3.5vw, 18px);
+      }
+      .personal-score-card.is-me .personal-score {
+        font-size: clamp(42px, 12vw, 58px);
+      }
+      .personal-score-card.is-me .personal-score.long-score {
+        font-size: clamp(36px, 10.5vw, 50px);
+      }
+      .personal-command-btn {
+        font-size: clamp(14px, 3.8vw, 18px);
+        padding: 8px 14px;
+      }
+      .personal-score-card.is-me .personal-wind {
+        width: 36px;
+        height: 36px;
+        font-size: 22px;
+      }
+      .personal-diff-btn {
+        width: 42px;
+        height: 42px;
+        font-size: 18px;
+      }
+      .personal-score-card.top .personal-wind,
+      .personal-score-card.left .personal-wind,
+      .personal-score-card.right .personal-wind {
+        width: 28px;
+        height: 28px;
+        font-size: 17px;
+      }
+      .personal-result-graph {
+        height: 220px;
+        min-height: 220px;
+      }
+      .personal-agari-card {
+        max-height: calc(100dvh - 18px);
       }
     }
   </style>
@@ -3278,6 +3652,7 @@
     let personalAgariOpen = false;
     let personalAgariInput = { winType: 'ron', dealerIdx: -1, hanIdx: -1, fu: -1, confirm: false };
     let personalYakumanOpen = false;
+    let personalAgariScrollTop = 0;
 
     function cleanRoomId(roomId) {
       return String(roomId || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
@@ -4110,13 +4485,21 @@
 
     function bindPersonalAgariModal() {
       if (!personalAgariOpen) return;
+      const agariCard = document.querySelector('.personal-agari-card');
+      if (agariCard) agariCard.scrollTop = personalAgariScrollTop;
+      const rerenderPersonalAgari = () => {
+        const card = document.querySelector('.personal-agari-card');
+        personalAgariScrollTop = card ? card.scrollTop : 0;
+        renderPersonalView();
+      };
       document.getElementById('personalAgariClose')?.addEventListener('click', () => {
         personalAgariOpen = false;
+        personalAgariScrollTop = 0;
         renderPersonalView();
       });
       document.getElementById('personalAgariBack')?.addEventListener('click', () => {
         personalAgariInput.confirm = false;
-        renderPersonalView();
+        rerenderPersonalAgari();
       });
       document.querySelectorAll('[data-p-win]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -4127,14 +4510,14 @@
             personalAgariInput.fu = -1;
           }
           maybePersonalAgariConfirm();
-          renderPersonalView();
+          rerenderPersonalAgari();
         });
       });
       document.querySelectorAll('[data-p-dealer]').forEach(btn => {
         btn.addEventListener('click', () => {
           personalAgariInput.dealerIdx = Number(btn.dataset.pDealer);
           maybePersonalAgariConfirm();
-          renderPersonalView();
+          rerenderPersonalAgari();
         });
       });
       document.querySelectorAll('[data-p-han]').forEach(btn => {
@@ -4144,14 +4527,14 @@
           personalAgariInput.fu = -1;
           personalAgariInput.confirm = false;
           personalYakumanOpen = false;
-          renderPersonalView();
+          rerenderPersonalAgari();
         });
       });
       document.querySelectorAll('[data-p-fu]').forEach(btn => {
         btn.addEventListener('click', () => {
           personalAgariInput.fu = Number(btn.dataset.pFu);
           maybePersonalAgariConfirm();
-          renderPersonalView();
+          rerenderPersonalAgari();
         });
       });
       document.querySelectorAll('[data-p-limit]').forEach(btn => {
@@ -4160,13 +4543,13 @@
           personalAgariInput.fu = -1;
           personalYakumanOpen = personalAgariInput.hanIdx >= 9;
           maybePersonalAgariConfirm();
-          renderPersonalView();
+          rerenderPersonalAgari();
         });
       });
       document.querySelectorAll('[data-p-folder]').forEach(btn => {
         btn.addEventListener('click', () => {
           personalYakumanOpen = !personalYakumanOpen;
-          renderPersonalView();
+          rerenderPersonalAgari();
         });
       });
       document.getElementById('personalAgariSend')?.addEventListener('click', () => {
@@ -4182,6 +4565,7 @@
         }).then(id => {
           personalActionRequests.agari = id || true;
           personalAgariOpen = false;
+          personalAgariScrollTop = 0;
           renderPersonalView();
         }).catch(() => {
           sendBtn.disabled = false;
@@ -4413,19 +4797,22 @@
         return `
           <div class="personal-seat ${pos}">
             <div class="personal-score-card ${pos}${isMe ? ' is-me' : ''}" data-player-idx="${idx}" data-seat-pos="${pos}">
-              <div class="personal-name-line">
-                <span class="personal-wind${p.wind === '東' ? ' east' : ''}">${escPersonal(p.wind)}</span>
-                <span class="personal-name">${escPersonal(p.name)}</span>
+              <div class="personal-score-card-inner">
+                <div class="personal-name-line">
+                  <span class="personal-wind${p.wind === '東' ? ' east' : ''}">${escPersonal(p.wind)}</span>
+                  <span class="personal-name">${escPersonal(p.name)}</span>
+                </div>
+                <div class="personal-score-line">
+                  ${isMe ? `<button class="personal-diff-btn${personalDiffOn ? ' active' : ''}" id="personalDiffBtn" aria-label="点差"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>` : ''}
+                  <div class="personal-score${isLongScore ? ' long-score' : ''}${diffClass}" data-score-idx="${idx}" ${isMe ? 'id="personalAgariScore"' : ''}>${scoreText}</div>
+                  ${isMe ? `<button class="goal-btn" id="personalGoalBtn">目標</button>` : ''}
+                </div>
+                <div class="personal-riichi-stick${p.riichi ? ' on' : ''}" aria-label="${p.riichi ? 'リーチ' : ''}"></div>
+                ${isMe ? `
+                  <div class="personal-command-row">
+                    <button class="personal-command-btn${riichiOnLike ? ' on' : ''}" id="personalRiichiBtn" ${canPersonalRiichi ? '' : 'disabled'}>${riichiOnLike ? 'リーチ' : 'リーチ'}</button>
+                  </div>` : ''}
               </div>
-              <div class="personal-score-line">
-                ${isMe ? `<button class="personal-diff-btn${personalDiffOn ? ' active' : ''}" id="personalDiffBtn" aria-label="点差"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>` : ''}
-                <div class="personal-score${isLongScore ? ' long-score' : ''}${diffClass}" data-score-idx="${idx}" ${isMe ? 'id="personalAgariScore"' : ''}>${scoreText}</div>
-              </div>
-              <div class="personal-riichi-stick${p.riichi ? ' on' : ''}" aria-label="${p.riichi ? 'リーチ' : ''}"></div>
-              ${isMe ? `
-                <div class="personal-command-row">
-                  <button class="personal-command-btn${riichiOnLike ? ' on' : ''}" id="personalRiichiBtn" ${canPersonalRiichi ? '' : 'disabled'}>${riichiOnLike ? 'リーチ取消' : 'リーチ'}</button>
-                </div>` : ''}
             </div>
           </div>`;
       };
@@ -4482,6 +4869,13 @@
             });
         });
       }
+      const goalBtn = document.getElementById('personalGoalBtn');
+      if (goalBtn) {
+        goalBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          openGoalModal(personalSeatIndex);
+        });
+      }
       const agariScore = document.getElementById('personalAgariScore');
       if (agariScore) {
         agariScore.addEventListener('click', () => {
@@ -4495,6 +4889,7 @@
           personalAgariOpen = true;
           personalAgariInput = { winType: 'ron', dealerIdx: -1, hanIdx: -1, fu: -1, confirm: false };
           personalYakumanOpen = false;
+          personalAgariScrollTop = 0;
           renderPersonalView();
         });
       }
