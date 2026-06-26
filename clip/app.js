@@ -22,6 +22,14 @@ const auth     = getAuth(app);
 const provider = new GoogleAuthProvider();
 
 const EXPIRE_MS = 3 * 60 * 1000;
+const EXPIRY_OPTIONS = [
+  { label: "3分", ms: 3 * 60 * 1000 },
+  { label: "10分", ms: 10 * 60 * 1000 },
+  { label: "1時間", ms: 60 * 60 * 1000 },
+  { label: "今日中", endOfDay: true }
+];
+const LONG_CLIP_CHARS = 360;
+const LONG_CLIP_LINES = 8;
 
 // DOM
 const loginScreen     = document.getElementById("login-screen");
@@ -49,6 +57,7 @@ const qrContainer       = document.getElementById("qr-container");
 const qrCardUrl         = document.getElementById("qr-card-url");
 const qrCloseBtn        = document.getElementById("qr-close-btn");
 const qrBackdrop        = document.getElementById("qr-backdrop");
+const floatingPostBtn   = document.getElementById("floating-post-btn");
 const postTargetRow   = document.getElementById("post-target-row");
 const targetUserBtn   = document.getElementById("target-user-btn");
 const targetRoomBtn   = document.getElementById("target-room-btn");
@@ -251,6 +260,7 @@ postBtn.addEventListener("click", async () => {
   const text = textInput.value.trim();
   if (!text || (!currentUser && !roomCode)) return;
   postBtn.disabled = true;
+  updateFloatingPostButton();
   const expireAt = Timestamp.fromMillis(Date.now() + EXPIRE_MS);
   if (currentUser && (!roomCode || postTarget === "user")) {
     await addDoc(collection(db, "clips"), {
@@ -270,6 +280,7 @@ postBtn.addEventListener("click", async () => {
   textInput.value  = "";
   autoGrow(textInput);
   postBtn.disabled = false;
+  updateFloatingPostButton();
 });
 
 function autoGrow(el) {
@@ -277,7 +288,22 @@ function autoGrow(el) {
   el.style.height = el.scrollHeight + "px";
 }
 
-textInput.addEventListener("input", () => autoGrow(textInput));
+function updateFloatingPostButton() {
+  const hasText = textInput.value.trim().length > 0;
+  const isTyping = document.activeElement === textInput;
+  floatingPostBtn.classList.toggle("show", hasText || isTyping);
+  floatingPostBtn.disabled = postBtn.disabled || !hasText || (!currentUser && !roomCode);
+}
+
+floatingPostBtn.addEventListener("pointerdown", e => e.preventDefault());
+floatingPostBtn.addEventListener("click", () => postBtn.click());
+
+textInput.addEventListener("input", () => {
+  autoGrow(textInput);
+  updateFloatingPostButton();
+});
+textInput.addEventListener("focus", updateFloatingPostButton);
+textInput.addEventListener("blur", () => setTimeout(updateFloatingPostButton, 120));
 
 textInput.addEventListener("keydown", e => {
   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") postBtn.click();
@@ -373,7 +399,7 @@ function renderClips() {
   }
 }
 
-function buildClipEl(clip, showSource) {
+function buildClipElLegacy(clip, showSource) {
   const item = document.createElement("div");
   item.className  = "clip-item";
   item.dataset.id = clip.id;
@@ -430,6 +456,151 @@ function buildClipEl(clip, showSource) {
   footer.append(timer, extBtn, actions);
   const previews = buildLinkPreviews(clip.text);
   item.append(footer, textEl, ...previews);
+  return item;
+}
+
+function isLongClip(text) {
+  return text.length > LONG_CLIP_CHARS || text.split(/\r?\n/).length > LONG_CLIP_LINES;
+}
+
+function expireTimeFromOption(option) {
+  if (option.endOfDay) {
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    return end.getTime();
+  }
+  return Date.now() + option.ms;
+}
+
+function buildClipEl(clip, showSource) {
+  const item = document.createElement("div");
+  item.className  = "clip-item";
+  item.dataset.id = clip.id;
+
+  if (showSource) {
+    const badge = document.createElement("div");
+    badge.className   = `clip-source ${clip.source === "room" ? "clip-source-room" : "clip-source-user"}`;
+    badge.textContent = clip.source === "room" ? `🔑 ${roomCode}` : "👤 アカウント";
+    item.appendChild(badge);
+  }
+
+  const textEl = document.createElement("div");
+  textEl.className   = "clip-text";
+  textEl.textContent = clip.text;
+
+  const isLong = isLongClip(clip.text);
+  if (isLong) textEl.classList.add("collapsed");
+
+  const expandBtn = document.createElement("button");
+  expandBtn.className = "expand-btn";
+  expandBtn.type = "button";
+  expandBtn.textContent = "もっと見る";
+  expandBtn.style.display = isLong ? "" : "none";
+  expandBtn.addEventListener("click", () => {
+    const collapsed = textEl.classList.toggle("collapsed");
+    expandBtn.textContent = collapsed ? "もっと見る" : "閉じる";
+  });
+
+  const editArea = document.createElement("textarea");
+  editArea.className = "clip-edit-input";
+  editArea.value = clip.text;
+  editArea.style.display = "none";
+
+  const footer = document.createElement("div");
+  footer.className = "clip-footer";
+
+  const timer = document.createElement("span");
+  timer.className      = "clip-timer";
+  timer.dataset.expire = clip.expireAt;
+  refreshTimer(timer, clip.expireAt);
+
+  const expirySelect = document.createElement("select");
+  expirySelect.className = "expiry-select";
+  expirySelect.title = "期限を延長";
+  expirySelect.innerHTML = `<option value="">延長</option>${EXPIRY_OPTIONS.map((opt, i) => `<option value="${i}">${opt.label}</option>`).join("")}`;
+  expirySelect.addEventListener("change", async () => {
+    if (expirySelect.value === "") return;
+    expirySelect.disabled = true;
+    await updateDoc(clipRef(clip), {
+      expireAt: Timestamp.fromMillis(expireTimeFromOption(EXPIRY_OPTIONS[Number(expirySelect.value)]))
+    });
+    expirySelect.value = "";
+    expirySelect.disabled = false;
+  });
+
+  const actions = document.createElement("div");
+  actions.className = "clip-actions";
+
+  const copyBtn = document.createElement("button");
+  copyBtn.className   = "copy-btn";
+  copyBtn.type        = "button";
+  copyBtn.textContent = "コピー";
+  copyBtn.addEventListener("click", () => {
+    navigator.clipboard.writeText(clip.text).then(() => {
+      copyBtn.textContent = "済み";
+      setTimeout(() => { copyBtn.textContent = "コピー"; }, 1500);
+    });
+  });
+
+  const editBtn = document.createElement("button");
+  editBtn.className   = "edit-btn";
+  editBtn.type        = "button";
+  editBtn.textContent = "編集";
+
+  const delBtn = document.createElement("button");
+  delBtn.className   = "delete-btn";
+  delBtn.type        = "button";
+  delBtn.textContent = "削除";
+  delBtn.addEventListener("click", () => deleteDoc(clipRef(clip)));
+
+  const editActions = document.createElement("div");
+  editActions.className = "clip-edit-actions";
+  editActions.style.display = "none";
+
+  const saveBtn = document.createElement("button");
+  saveBtn.className   = "save-btn";
+  saveBtn.type        = "button";
+  saveBtn.textContent = "保存";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.className   = "cancel-btn";
+  cancelBtn.type        = "button";
+  cancelBtn.textContent = "キャンセル";
+
+  function setEditing(editing) {
+    textEl.style.display = editing ? "none" : "";
+    expandBtn.style.display = !editing && isLong ? "" : "none";
+    editArea.style.display = editing ? "block" : "none";
+    editActions.style.display = editing ? "flex" : "none";
+    editBtn.style.display = editing ? "none" : "";
+    if (editing) {
+      editArea.value = clip.text;
+      autoGrow(editArea);
+      editArea.focus();
+    }
+  }
+
+  editBtn.addEventListener("click", () => setEditing(true));
+  cancelBtn.addEventListener("click", () => setEditing(false));
+  saveBtn.addEventListener("click", async () => {
+    const nextText = editArea.value.trim();
+    if (!nextText) return;
+    saveBtn.disabled = true;
+    await updateDoc(clipRef(clip), { text: nextText });
+    saveBtn.disabled = false;
+    setEditing(false);
+  });
+  editArea.addEventListener("input", () => autoGrow(editArea));
+  editArea.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") saveBtn.click();
+    if (e.key === "Escape") setEditing(false);
+  });
+
+  actions.append(copyBtn, editBtn, delBtn);
+  editActions.append(saveBtn, cancelBtn);
+  footer.append(timer, expirySelect, actions);
+  const previews = buildLinkPreviews(clip.text);
+  item.append(footer, textEl, expandBtn, editArea, editActions, ...previews);
   return item;
 }
 
