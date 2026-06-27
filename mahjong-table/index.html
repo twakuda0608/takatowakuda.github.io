@@ -1515,6 +1515,25 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    .personal-kicha-mark {
+      position: absolute;
+      top: clamp(6px, 1.5vh, 11px);
+      right: clamp(6px, 1.5vh, 11px);
+      background: #ea580c;
+      border: 1.5px solid rgba(255, 255, 255, 0.35);
+      border-radius: 4px;
+      color: #fff;
+      font-size: clamp(10px, 2.4vh, 13px);
+      font-weight: 900;
+      width: clamp(26px, 6.4vh, 32px);
+      height: clamp(20px, 4.8vh, 24px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0;
+    }
     .personal-score-card.is-me .personal-name { font-size: clamp(18px, 4vh, 26px); }
     .personal-score {
       max-width: 100%;
@@ -1581,8 +1600,8 @@
       line-height: 1;
     }
     .personal-diff-btn.active {
-      background: rgba(96,165,250,0.22);
-      border-color: rgba(96,165,250,0.55);
+      background: rgba(255,255,255,0.22);
+      border-color: rgba(255,255,255,0.55);
       color: #fff;
     }
     .personal-meta {
@@ -1636,25 +1655,31 @@
     .personal-command-btn {
       width: 100%;
       border: 1.5px solid rgba(255,255,255,0.22);
-      border-radius: 999px;
+      border-radius: 22px;
       background: rgba(255,255,255,0.09);
-      color: rgba(255,255,255,0.7);
+      color: rgba(255,255,255,0.55);
       font-family: inherit;
       font-size: clamp(14px, 3.4vh, 20px);
-      font-weight: 900;
+      font-weight: 700;
       padding: clamp(8px, 1.8vh, 12px) clamp(14px, 3vh, 22px);
       cursor: pointer;
       min-width: 0;
+      letter-spacing: 2px;
+      transition: all 0.12s;
     }
     .personal-command-btn.on {
       background: #b91c1c;
       border-color: #f87171;
       color: #fff;
-      box-shadow: 0 0 18px rgba(239,68,68,0.65);
+      box-shadow: 0 0 18px rgba(239, 68, 68, 0.65);
     }
     .personal-command-btn:disabled {
-      opacity: 0.38;
-      cursor: default;
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    .personal-command-btn.on:disabled {
+      opacity: 1;
+      cursor: pointer;
     }
     .personal-score-line .goal-btn {
       width: clamp(42px, 9.5vh, 58px);
@@ -4016,7 +4041,20 @@
           ? lastMove.scoresBefore.slice(0, 4).map(score => Number(score || 0))
           : null;
         if (beforeScores && beforeScores.length === 4) personalScoreOverrides = beforeScores;
-        if (previousPersonalState.players.length === 4) personalStateOverride = previousPersonalState;
+        if (previousPersonalState.players.length === 4) {
+          personalStateOverride = {
+            ...previousPersonalState,
+            players: previousPersonalState.players.map((p, i) => ({
+              ...p,
+              riichi: !!state.players[i]?.riichi,
+              wind: state.players[i]?.wind || p.wind,
+            })),
+            honba: state.honba,
+            kyotaku: state.kyotaku,
+            roundWind: state.roundWind,
+            roundNum: state.roundNum,
+          };
+        }
         personalPendingMove = {
           deltas: lastMove.deltas.slice(0, 4),
           scoresBefore: beforeScores,
@@ -4162,6 +4200,20 @@
         }
         const name = card.querySelector('.personal-name');
         if (name) name.textContent = p.name;
+        const stick = card.querySelector('.personal-riichi-stick');
+        if (stick) {
+          stick.classList.toggle('on', !!p.riichi);
+          stick.setAttribute('aria-label', p.riichi ? 'リーチ' : '');
+        }
+        const command = card.querySelector('.personal-command-btn');
+        if (command && idx === personalSeatIndex) {
+          const riichiPending = !!personalActionRequests.riichi;
+          const onLike = riichiPending || !!p.riichi;
+          const canRiichi = riichiPending || p.riichi || !(settingHakoshita && !settingHakoshitaRiichi && Number(p.score || 0) < 1000);
+          command.classList.toggle('on', onLike);
+          command.disabled = !canRiichi;
+          command.textContent = 'リーチ';
+        }
       });
     }
 
@@ -4724,7 +4776,7 @@
       setTimeout(() => {
         if (layer) layer.innerHTML = '';
         personalStateOverride = null;
-        refreshPersonalStaticInfo();
+        renderPersonalView();
       }, 5000);
     }
 
@@ -4795,7 +4847,7 @@
           : '';
         const riichiPending = !!personalActionRequests.riichi;
         const riichiOnLike = riichiPending || !!p.riichi;
-        const canPersonalRiichi = isMe && (riichiPending || (!p.riichi && !(settingHakoshita && !settingHakoshitaRiichi && Number(p.score || 0) < 1000)));
+        const canPersonalRiichi = isMe && (riichiPending || p.riichi || !(settingHakoshita && !settingHakoshitaRiichi && Number(p.score || 0) < 1000));
         return `
           <div class="personal-seat ${pos}">
             <div class="personal-score-card ${pos}${isMe ? ' is-me' : ''}" data-player-idx="${idx}" data-seat-pos="${pos}">
@@ -4803,6 +4855,7 @@
                 <div class="personal-name-line">
                   <span class="personal-wind${p.wind === '東' ? ' east' : ''}">${escPersonal(p.wind)}</span>
                   <span class="personal-name">${escPersonal(p.name)}</span>
+                  ${idx === kiichaSlot ? `<span class="personal-kicha-mark">${escPersonal(ROUND_WINDS[displayState.roundWind])}</span>` : ''}
                 </div>
                 <div class="personal-score-line">
                   ${isMe ? `<button class="personal-diff-btn${personalDiffOn ? ' active' : ''}" id="personalDiffBtn" aria-label="点差"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>` : ''}
