@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>早押しボタン</title>
+  <link rel="icon" href="/icon.png">
+  <link rel="apple-touch-icon" href="/icon.png">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5XPYDMQ921"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-5XPYDMQ921');
+</script>
+  <link rel="stylesheet" href="/common.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+  <header class="page-header">
+    <span class="page-header-title">早押しボタン</span>
+  </header>
+
+  <main class="app-shell">
+    <section id="entry-view" class="entry-panel">
+      <div class="title-block">
+        <p class="eyebrow">Buzzer Room</p>
+        <h1>早押しボタン</h1>
+        <p class="lead">親機で部屋を作って、子機はQRコードから参加。</p>
+      </div>
+
+      <div class="entry-form">
+        <label class="field-label" for="room-input">ルームコード</label>
+        <div class="room-row">
+          <input id="room-input" class="text-input code-input" type="text" maxlength="24" autocomplete="off" spellcheck="false" inputmode="latin">
+          <button id="random-btn" class="secondary-btn" type="button">自動生成</button>
+        </div>
+
+        <label class="field-label" for="name-input">名前</label>
+        <input id="name-input" class="text-input" type="text" maxlength="18" autocomplete="nickname" placeholder="例：たかと">
+
+        <div class="role-tabs" aria-label="参加モード">
+          <button id="host-tab" class="role-tab active" type="button">親機</button>
+          <button id="player-tab" class="role-tab" type="button">子機</button>
+        </div>
+
+        <button id="join-btn" class="primary-btn" type="button">入室</button>
+      </div>
+    </section>
+
+    <section id="room-view" class="room-view hidden">
+      <div class="room-toolbar">
+        <div>
+          <p class="toolbar-label">ルーム</p>
+          <p id="room-code-label" class="room-code"></p>
+        </div>
+        <div class="toolbar-actions">
+          <button id="qr-btn" class="icon-btn" type="button" title="QRコード">QR</button>
+          <button id="copy-btn" class="icon-btn" type="button" title="URLコピー">コピー</button>
+          <button id="leave-btn" class="icon-btn danger" type="button" title="退室">退室</button>
+        </div>
+      </div>
+
+      <div class="room-grid">
+        <section class="status-panel">
+          <div class="round-row">
+            <span id="role-label" class="role-badge">親機</span>
+            <span id="round-label" class="round-label">第1問</span>
+          </div>
+          <div id="winner-card" class="winner-card waiting">
+            <span class="winner-caption">現在の1着</span>
+            <strong id="winner-name">待機中</strong>
+            <span id="winner-time" class="winner-time">子機の回答を待っています</span>
+          </div>
+          <div id="host-actions" class="host-actions">
+            <button id="reset-btn" class="primary-btn reset-btn" type="button">リセット</button>
+          </div>
+        </section>
+
+        <section id="player-panel" class="player-panel">
+          <label class="field-label" for="room-name-input">子機名</label>
+          <div class="name-row">
+            <input id="room-name-input" class="text-input" type="text" maxlength="18" autocomplete="nickname">
+            <button id="save-name-btn" class="secondary-btn" type="button">名前保存</button>
+          </div>
+          <button id="buzz-btn" class="buzz-btn" type="button">回答</button>
+          <p id="player-message" class="player-message">準備完了</p>
+        </section>
+
+        <section class="ranking-panel">
+          <div class="panel-heading">
+            <h2>回答順</h2>
+            <span id="player-count" class="count-badge">0人</span>
+          </div>
+          <ol id="ranking-list" class="ranking-list"></ol>
+          <p id="empty-ranking" class="empty-ranking">まだ回答はありません</p>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div id="qr-modal" class="qr-modal hidden">
+    <div id="qr-backdrop" class="qr-backdrop"></div>
+    <div class="qr-card">
+      <p class="qr-title">子機用QRコード</p>
+      <div id="qr-container"></div>
+      <p id="qr-url" class="qr-url"></p>
+      <button id="qr-close-btn" class="secondary-btn" type="button">終了</button>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+  <script src="/common.js"></script>
+</body>
+</html>

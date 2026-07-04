@@ -652,7 +652,8 @@
     .psel:disabled { opacity:0.28; cursor:default; }
     .psel-col { display:flex; flex-direction:column; gap:4px; }
     .psel-col .psel { flex:none; width:100%; }
-    .ag-sec.needs-input .psel:not(.sel) {
+    .ag-sec.needs-input .psel:not(.sel),
+    .personal-agari-sec.needs-input .psel:not(.sel) {
       border-color:rgba(251,191,36,0.55);
       background:rgba(251,191,36,0.10);
     }
@@ -664,7 +665,8 @@
       font-weight:800;
       letter-spacing:0.5px;
     }
-    .ag-sec.needs-input .dealer-hint { display:block; }
+    .ag-sec.needs-input .dealer-hint,
+    .personal-agari-sec.needs-input .dealer-hint { display:block; }
     .wtype {
       flex:1; padding:9px 4px;
       background:rgba(255,255,255,0.08);
@@ -1942,6 +1944,80 @@
       height: calc(100% - 68px);
       min-height: 150px;
     }
+    .personal-result-intro {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      padding: clamp(14px, 4vh, 32px);
+      box-sizing: border-box;
+    }
+    .personal-result-intro-inner {
+      width: min(720px, 94vw);
+      display: grid;
+      gap: clamp(10px, 2.8vh, 18px);
+    }
+    .personal-result-intro-title {
+      color: #fbbf24;
+      font-size: clamp(26px, 8vh, 54px);
+      font-weight: 900;
+      line-height: 1;
+      text-align: center;
+    }
+    .personal-result-intro-list {
+      display: grid;
+      gap: clamp(7px, 1.8vh, 12px);
+    }
+    .personal-result-intro-row {
+      display: grid;
+      grid-template-columns: clamp(48px, 13vw, 78px) minmax(0, 1fr) auto;
+      align-items: center;
+      gap: clamp(8px, 2.4vh, 16px);
+      padding: clamp(10px, 2.8vh, 18px) clamp(12px, 3.4vh, 24px);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 14px 34px rgba(0,0,0,0.22);
+      opacity: 0;
+      transform: translateY(14px) scale(0.98);
+      animation: personal-result-intro-row 0.48s cubic-bezier(.2,.7,.2,1) forwards;
+      animation-delay: var(--rank-delay, 0ms);
+    }
+    .personal-result-intro-row:first-child {
+      background: rgba(251,191,36,0.18);
+      border-color: rgba(251,191,36,0.45);
+    }
+    .personal-result-intro-rank {
+      color: rgba(255,255,255,0.62);
+      font-size: clamp(16px, 4.4vh, 28px);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .personal-result-intro-row:first-child .personal-result-intro-rank {
+      color: #fbbf24;
+    }
+    .personal-result-intro-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: rgba(255,255,255,0.92);
+      font-size: clamp(18px, 5.8vh, 38px);
+      font-weight: 900;
+    }
+    .personal-result-intro-score {
+      color: #fff;
+      font-size: clamp(18px, 5.2vh, 34px);
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    @keyframes personal-result-intro-row {
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
     .personal-graph-legend {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2249,6 +2325,43 @@
           calc(max(10px, env(safe-area-inset-bottom)) + 8px)
           max(10px, env(safe-area-inset-left));
       }
+      .personal-result-intro {
+        align-content: center;
+        padding: clamp(14px, 4vw, 22px);
+      }
+      .personal-result-intro-inner {
+        width: min(100%, 430px);
+        gap: clamp(14px, 4vw, 22px);
+      }
+      .personal-result-intro-title {
+        font-size: clamp(38px, 13vw, 52px);
+      }
+      .personal-result-intro-list {
+        gap: 10px;
+      }
+      .personal-result-intro-row {
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-areas:
+          "rank name"
+          "score score";
+        gap: 4px 12px;
+        padding: 12px 16px;
+      }
+      .personal-result-intro-rank {
+        grid-area: rank;
+        font-size: clamp(22px, 7.2vw, 30px);
+      }
+      .personal-result-intro-name {
+        grid-area: name;
+        font-size: clamp(28px, 9.4vw, 40px);
+      }
+      .personal-result-intro-score {
+        grid-area: score;
+        justify-self: end;
+        max-width: 100%;
+        font-size: clamp(30px, 10vw, 44px);
+        line-height: 1.05;
+      }
       .personal-shell {
         --personal-opponent-w: clamp(244px, 64vw, 260px);
         --personal-opponent-h: clamp(98px, 12.4vh, 112px);
@@ -2259,27 +2372,28 @@
       .personal-center {
         position: absolute;
         left: 50%;
-        top: clamp(34px, 5.8vh, 54px);
+        top: clamp(40px, 6.8vh, 66px);
         transform: translate(-50%, -50%);
         z-index: 2;
-        width: min(52vw, 210px);
+        width: min(86vw, 360px);
       }
       .personal-board-info {
-        font-size: clamp(16px, 4.7vw, 22px);
-        line-height: 1.12;
+        font-size: clamp(24px, 8.4vw, 38px);
+        line-height: 1.02;
         white-space: normal;
-        margin-bottom: 5px;
+        margin-bottom: 4px;
       }
       .personal-board-info-sub {
-        font-size: 0.55em;
-        margin-top: 2px;
+        font-size: clamp(18px, 6.2vw, 28px);
+        line-height: 1.05;
+        margin-top: 4px;
       }
       .personal-seat {
         position: absolute;
         display: flex;
       }
       .personal-seat.top {
-        top: clamp(112px, 15.5vh, 140px);
+        top: clamp(128px, 17.5vh, 162px);
         left: 50%;
         width: var(--personal-opponent-w);
         height: var(--personal-opponent-h);
@@ -2534,13 +2648,17 @@
         --personal-opponent-h: clamp(86px, 11.8vh, 96px);
       }
       .personal-center {
-        top: clamp(30px, 5.4vh, 42px);
+        top: clamp(34px, 6.1vh, 48px);
       }
       .personal-board-info {
-        font-size: clamp(14px, 4.2vw, 18px);
+        font-size: clamp(21px, 7vw, 30px);
+      }
+      .personal-board-info-sub {
+        font-size: clamp(16px, 5.4vw, 22px);
+        margin-top: 3px;
       }
       .personal-seat.top {
-        top: clamp(82px, 12.4vh, 98px);
+        top: clamp(104px, 15.6vh, 122px);
       }
       .personal-seat.left,
       .personal-seat.right {
@@ -3121,6 +3239,21 @@
     </div>
   </div>
 
+  <!-- 対局終了確認モーダル -->
+  <div class="ag-overlay" id="endConfirmModal" style="display:none">
+    <div class="ag-card" style="max-width:300px">
+      <div class="ag-head">終 了 確 認</div>
+      <div class="ag-result" style="min-height:auto">
+        対局を終了しますか？<br>
+        <span style="color:rgba(255,255,255,0.52);font-size:11px">終了後も結果画面から記録できます</span>
+      </div>
+      <div class="ag-actions" style="margin-top:12px">
+        <button class="ag-apply" id="endConfirmApply">終了</button>
+        <button class="ag-cancel" id="endConfirmCancel">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 終局選択モーダル -->
   <div class="ag-overlay" id="kyokuChoiceModal" style="display:none">
     <div class="ag-card" style="max-width:300px">
@@ -3673,11 +3806,16 @@
     let personalRoomLoaded = false;
     let personalDiffOn = false;
     let personalPendingMove = null;
+    let personalActiveMove = null;
+    let personalMoveResizeTimer = null;
     let personalScoreOverrides = null;
     let personalStateOverride = null;
+    let personalResultIntroShown = false;
+    let personalResultIntroTimer = null;
     let personalActionRequests = { riichi: null, agari: null };
     let personalAgariOpen = false;
     let personalAgariInput = { winType: 'ron', dealerIdx: -1, hanIdx: -1, fu: -1, confirm: false };
+    let personalAgariDealerPrompt = false;
     let personalYakumanOpen = false;
     let personalAgariScrollTop = 0;
 
@@ -3790,7 +3928,8 @@
       const s = data?.state;
       if (!s || !Array.isArray(s.players)) return '';
       const players = s.players.map(p => `${escResumeText(p.wind || '')}${escResumeText(p.name || '')}`).join(' / ');
-      const round = `${GT_NAMES[data.settings?.gameType ?? settingGameType] || '対局'} ${ROUND_WINDS[s.roundWind] || '東'}${s.roundNum || 1}局 ${s.honba || 0}本場`;
+      const status = data.gameEnded ? '対局終了' : '途中の対局';
+      const round = `${status}　${GT_NAMES[data.settings?.gameType ?? settingGameType] || '対局'} ${ROUND_WINDS[s.roundWind] || '東'}${s.roundNum || 1}局 ${s.honba || 0}本場`;
       const savedAt = data.savedAt ? new Date(data.savedAt) : null;
       const time = savedAt && !Number.isNaN(savedAt.getTime())
         ? `${savedAt.getMonth() + 1}/${savedAt.getDate()} ${String(savedAt.getHours()).padStart(2, '0')}:${String(savedAt.getMinutes()).padStart(2, '0')}`
@@ -3837,6 +3976,7 @@
         tableRoundLog: tableRoundLog.map(ev => ({ ...ev })),
         riichiCounts: riichiCounts.slice(),
         gameRecorded,
+        gameEnded: tableGameEnded,
         kiichaSlot,
         playerWinds: playerWinds.slice(),
         setupNames: [0, 1, 2, 3].map(i => document.getElementById(`sn${i}`)?.value || ''),
@@ -4058,6 +4198,8 @@
         personalPendingMove = {
           deltas: lastMove.deltas.slice(0, 4),
           scoresBefore: beforeScores,
+          winType: lastMove.winType,
+          winnerIdx: Number(lastMove.winnerIdx),
           token: Date.now()
         };
       }
@@ -4075,6 +4217,13 @@
       settingHakoshitaRiichi = !!settings.hakoshitaRiichi;
       personalRoomLoaded = true;
       tableGameEnded = !!(payload.gameEnded || roomDoc?.gameEnded);
+      if (!tableGameEnded) {
+        personalResultIntroShown = false;
+        if (personalResultIntroTimer) {
+          clearTimeout(personalResultIntroTimer);
+          personalResultIntroTimer = null;
+        }
+      }
       syncSettingsUI();
       renderStartWindBtns();
       document.getElementById('startScreen').style.display = 'none';
@@ -4172,6 +4321,13 @@
       const da = Math.hypot(a.x - cx, a.y - cy);
       const db = Math.hypot(b.x - cx, b.y - cy);
       return clampPersonalPoint(db > da ? b : a, 10);
+    }
+
+    function isPersonalOppositeSeat(fromPos, toPos) {
+      return (fromPos === 'left' && toPos === 'right')
+        || (fromPos === 'right' && toPos === 'left')
+        || (fromPos === 'top' && toPos === 'bottom')
+        || (fromPos === 'bottom' && toPos === 'top');
     }
 
     function setPersonalScoreText(idx, score) {
@@ -4420,8 +4576,18 @@
         && (personalAgariInput.winType === 'tsumo' || personalAgariInput.dealerIdx >= 0);
     }
 
+    function personalAgariHandReady() {
+      const def = HAN_DEFS[personalAgariInput.hanIdx];
+      return !!def && (def.needsFu ? personalAgariInput.fu >= 0 : true);
+    }
+
     function maybePersonalAgariConfirm() {
-      if (personalAgariReady()) personalAgariInput.confirm = true;
+      if (personalAgariReady()) {
+        personalAgariDealerPrompt = false;
+        personalAgariInput.confirm = true;
+      } else if (personalAgariInput.winType === 'ron' && personalAgariHandReady() && personalAgariInput.dealerIdx < 0) {
+        personalAgariDealerPrompt = true;
+      }
     }
 
     function calcPersonalAgariPreview() {
@@ -4513,7 +4679,7 @@
               </div>
             </div>
             ${personalAgariInput.winType === 'ron' ? `
-              <div class="personal-agari-sec">
+              <div class="personal-agari-sec${personalAgariDealerPrompt ? ' needs-input' : ''}" id="personalDealerSec">
                 <div class="personal-agari-label">放銃者</div>
                 <div class="psel-col">
                   ${state.players.map((p, i) => i === personalSeatIndex ? '' : `
@@ -4523,6 +4689,7 @@
                     </button>
                   `).join('')}
                 </div>
+                <div class="dealer-hint">放銃者の選択</div>
               </div>` : ''}
             <div class="personal-agari-sec">
               <div class="personal-agari-label">飜数</div>
@@ -4541,6 +4708,9 @@
       if (!personalAgariOpen) return;
       const agariCard = document.querySelector('.personal-agari-card');
       if (agariCard) agariCard.scrollTop = personalAgariScrollTop;
+      if (personalAgariDealerPrompt) {
+        document.getElementById('personalDealerSec')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
       const rerenderPersonalAgari = () => {
         const card = document.querySelector('.personal-agari-card');
         personalAgariScrollTop = card ? card.scrollTop : 0;
@@ -4548,6 +4718,7 @@
       };
       document.getElementById('personalAgariClose')?.addEventListener('click', () => {
         personalAgariOpen = false;
+        personalAgariDealerPrompt = false;
         personalAgariScrollTop = 0;
         renderPersonalView();
       });
@@ -4560,6 +4731,7 @@
           personalAgariInput.winType = btn.dataset.pWin;
           personalAgariInput.dealerIdx = -1;
           personalAgariInput.confirm = false;
+          personalAgariDealerPrompt = false;
           if (personalAgariInput.hanIdx >= 0 && HAN_DEFS[personalAgariInput.hanIdx]?.needsFu && !personalFuAllowed(personalAgariInput.hanIdx, personalAgariInput.fu)) {
             personalAgariInput.fu = -1;
           }
@@ -4570,6 +4742,7 @@
       document.querySelectorAll('[data-p-dealer]').forEach(btn => {
         btn.addEventListener('click', () => {
           personalAgariInput.dealerIdx = Number(btn.dataset.pDealer);
+          personalAgariDealerPrompt = false;
           maybePersonalAgariConfirm();
           rerenderPersonalAgari();
         });
@@ -4580,6 +4753,7 @@
           personalAgariInput.hanIdx = personalAgariInput.hanIdx === idx ? -1 : idx;
           personalAgariInput.fu = -1;
           personalAgariInput.confirm = false;
+          personalAgariDealerPrompt = false;
           personalYakumanOpen = false;
           rerenderPersonalAgari();
         });
@@ -4688,7 +4862,31 @@
         <div class="portrait-hint">横向きにしてください<br>この画面は横向き専用です</div>`;
     }
 
-    function showPersonalPointMove(deltas, scoresBefore = null) {
+    function renderPersonalResultIntro() {
+      const root = document.getElementById('personalView');
+      if (!root) return;
+      const sorted = state.players
+        .map((p, i) => ({ ...p, idx: i }))
+        .sort((a, b) => b.score - a.score);
+      root.innerHTML = `
+        <div class="personal-result-intro">
+          <div class="personal-result-intro-inner">
+            <div class="personal-result-intro-title">最終順位</div>
+            <div class="personal-result-intro-list">
+              ${sorted.map((p, i) => `
+                <div class="personal-result-intro-row" style="--rank-delay:${i * 520}ms">
+                  <span class="personal-result-intro-rank">${i + 1}位</span>
+                  <span class="personal-result-intro-name">${escPersonal(p.name)}</span>
+                  <span class="personal-result-intro-score">${fmtPersonalScore(p.score)}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="portrait-hint">横向きにしてください<br>この画面は横向き専用です</div>`;
+    }
+
+    function drawPersonalPointMoveFx(deltas, moveInfo = null) {
       if (!isPersonalView || !Array.isArray(deltas)) return;
       const root = document.getElementById('personalView');
       if (!root) return;
@@ -4742,7 +4940,12 @@
           y: to.y - Math.sin(angleRad) * endPad
         }, 12);
         const isCornerMove = Math.abs(dx) > 80 && Math.abs(dy) > 80;
-        if (isCornerMove) {
+        const isTsumoToWinner = moveInfo?.winType === 'tsumo'
+          && Number(moveInfo.winnerIdx) === flow.to;
+        const useElbow = isTsumoToWinner
+          ? !isPersonalOppositeSeat(fromPos, toPos)
+          : isCornerMove;
+        if (useElbow) {
           const corner = personalOuterElbow(start, end);
           drawSegment(start, corner, false, 0, 430);
           drawSegment(corner, end, true, 430, 430);
@@ -4772,13 +4975,36 @@
           fill: 'forwards'
         });
       });
+    }
+
+    function showPersonalPointMove(deltas, scoresBefore = null, moveInfo = null) {
+      if (!isPersonalView || !Array.isArray(deltas)) return;
+      personalActiveMove = {
+        deltas: deltas.slice(0, 4),
+        moveInfo: moveInfo ? { ...moveInfo } : null
+      };
+      drawPersonalPointMoveFx(deltas, moveInfo);
       setTimeout(() => animatePersonalScores(scoresBefore, deltas), 1700);
       setTimeout(() => {
+        const layer = document.getElementById('personalView')?.querySelector('.personal-fx-layer');
         if (layer) layer.innerHTML = '';
+        personalActiveMove = null;
         personalStateOverride = null;
         renderPersonalView();
       }, 5000);
     }
+
+    function redrawPersonalPointMoveOnResize() {
+      if (!personalActiveMove) return;
+      clearTimeout(personalMoveResizeTimer);
+      personalMoveResizeTimer = setTimeout(() => {
+        if (!personalActiveMove) return;
+        drawPersonalPointMoveFx(personalActiveMove.deltas, personalActiveMove.moveInfo);
+      }, 120);
+    }
+
+    window.addEventListener('resize', redrawPersonalPointMoveOnResize);
+    window.addEventListener('orientationchange', redrawPersonalPointMoveOnResize);
 
     function renderPersonalView() {
       if (!isPersonalView) return;
@@ -4788,7 +5014,18 @@
         root.innerHTML = '<div class="personal-empty">卓に接続中</div>';
         return;
       }
-      if (tableGameEnded) {
+      if (tableGameEnded && !personalPendingMove && !personalStateOverride) {
+        if (!personalResultIntroShown) {
+          renderPersonalResultIntro();
+          if (!personalResultIntroTimer) {
+            personalResultIntroTimer = setTimeout(() => {
+              personalResultIntroShown = true;
+              personalResultIntroTimer = null;
+              renderPersonalView();
+            }, 4300);
+          }
+          return;
+        }
         try {
           renderPersonalResult();
         } catch {
@@ -4943,6 +5180,7 @@
           }
           personalAgariOpen = true;
           personalAgariInput = { winType: 'ron', dealerIdx: -1, hanIdx: -1, fu: -1, confirm: false };
+          personalAgariDealerPrompt = false;
           personalYakumanOpen = false;
           personalAgariScrollTop = 0;
           renderPersonalView();
@@ -4952,7 +5190,7 @@
       if (personalPendingMove) {
         const move = personalPendingMove;
         personalPendingMove = null;
-        requestAnimationFrame(() => showPersonalPointMove(move.deltas, move.scoresBefore));
+        requestAnimationFrame(() => showPersonalPointMove(move.deltas, move.scoresBefore, move));
       }
     }
 
@@ -5070,6 +5308,7 @@
       riichiCounts = Array.isArray(data.riichiCounts) ? data.riichiCounts.slice(0, 4) : [0, 0, 0, 0];
       while (riichiCounts.length < 4) riichiCounts.push(0);
       gameRecorded = !!data.gameRecorded;
+      tableGameEnded = !!data.gameEnded;
       kiichaSlot = Number.isInteger(data.kiichaSlot) ? data.kiichaSlot : state.players.findIndex(p => p.wind === '東');
       if (kiichaSlot < 0) kiichaSlot = 0;
       playerWinds = Array.isArray(data.playerWinds) ? data.playerWinds.slice(0, 4) : ['東', '南', '西', '北'];
@@ -5085,12 +5324,15 @@
       document.querySelectorAll('.ag-overlay').forEach(el => { el.style.display = 'none'; });
       setBackFabVisible(true);
       render();
+      if (tableGameEnded) showGameEnd();
     }
 
     function showResumeCard() {
       const data = readSavedGame();
       const card = document.getElementById('resumeCard');
       if (!data || !card) return;
+      const title = card.querySelector('.resume-title');
+      if (title) title.textContent = data.gameEnded ? '終了した対局' : '途中の対局';
       document.getElementById('resumeMeta').innerHTML = savedGameLabel(data);
       card.classList.add('vis');
     }
@@ -6597,6 +6839,7 @@
     // ── 対局終了 ─────────────────────────────────
     function showGameEnd() {
       tableGameEnded = true;
+      saveGameProgress();
       const sorted = state.players.slice().sort((a, b) => b.score - a.score);
       const ranks = ['1位', '2位', '3位', '4位'];
       let html = '';
@@ -6610,6 +6853,17 @@
     }
 
     document.getElementById('endBtn').addEventListener('click', () => {
+      document.getElementById('endConfirmModal').style.display = 'flex';
+      setBackFabVisible(false);
+    });
+
+    document.getElementById('endConfirmCancel').addEventListener('click', () => {
+      document.getElementById('endConfirmModal').style.display = 'none';
+      setBackFabVisible(true);
+    });
+
+    document.getElementById('endConfirmApply').addEventListener('click', () => {
+      document.getElementById('endConfirmModal').style.display = 'none';
       showGameEnd();
     });
 
