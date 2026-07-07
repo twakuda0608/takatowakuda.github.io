@@ -39,8 +39,10 @@
           <button id="random-btn" class="secondary-btn" type="button">自動生成</button>
         </div>
 
-        <label class="field-label" for="name-input">名前</label>
-        <input id="name-input" class="text-input" type="text" maxlength="18" autocomplete="nickname" placeholder="例：たかと">
+        <div id="name-field" class="name-field">
+          <label class="field-label" for="name-input">名前</label>
+          <input id="name-input" class="text-input" type="text" maxlength="18" autocomplete="nickname" placeholder="例：たかと">
+        </div>
 
         <div class="role-tabs" aria-label="参加モード">
           <button id="host-tab" class="role-tab active" type="button">親機</button>
@@ -80,14 +82,8 @@
           </div>
         </section>
 
-        <section id="player-panel" class="player-panel">
-          <label class="field-label" for="room-name-input">子機名</label>
-          <div class="name-row">
-            <input id="room-name-input" class="text-input" type="text" maxlength="18" autocomplete="nickname">
-            <button id="save-name-btn" class="secondary-btn" type="button">名前保存</button>
-          </div>
+        <section id="player-panel" class="player-panel" aria-label="子機">
           <button id="buzz-btn" class="buzz-btn" type="button">回答</button>
-          <p id="player-message" class="player-message">準備完了</p>
         </section>
 
         <section class="ranking-panel">

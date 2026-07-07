@@ -19,6 +19,7 @@ const db = getFirestore(app);
 const ENTRY_KEY = "buzzer_entry_v1";
 const PLAYER_KEY = "buzzer_player_id_v1";
 const EVENT_TTL_MS = 6 * 60 * 60 * 1000;
+const BUZZER_SOUND_SRC = "quiz-button.mp3";
 
 const entryView = document.getElementById("entry-view");
 const roomView = document.getElementById("room-view");
@@ -37,10 +38,7 @@ const winnerTime = document.getElementById("winner-time");
 const hostActions = document.getElementById("host-actions");
 const resetBtn = document.getElementById("reset-btn");
 const playerPanel = document.getElementById("player-panel");
-const roomNameInput = document.getElementById("room-name-input");
-const saveNameBtn = document.getElementById("save-name-btn");
 const buzzBtn = document.getElementById("buzz-btn");
-const playerMessage = document.getElementById("player-message");
 const rankingList = document.getElementById("ranking-list");
 const emptyRanking = document.getElementById("empty-ranking");
 const playerCount = document.getElementById("player-count");
@@ -82,12 +80,12 @@ nameInput.addEventListener("keydown", e => {
 
 resetBtn.addEventListener("click", resetRound);
 buzzBtn.addEventListener("click", buzz);
-saveNameBtn.addEventListener("click", saveName);
 copyBtn.addEventListener("click", copyRoomUrl);
 qrBtn.addEventListener("click", showQr);
 leaveBtn.addEventListener("click", leaveRoom);
 qrBackdrop.addEventListener("click", hideQr);
 qrCloseBtn.addEventListener("click", hideQr);
+document.addEventListener("keydown", handleShortcut);
 
 function restoreEntry() {
   const saved = readJson(ENTRY_KEY) || {};
@@ -101,6 +99,15 @@ function setRole(nextRole) {
   role = nextRole === "player" ? "player" : "host";
   hostTab.classList.toggle("active", role === "host");
   playerTab.classList.toggle("active", role === "player");
+  entryView.classList.toggle("host-selected", role === "host");
+}
+
+function handleShortcut(e) {
+  const tagName = e.target?.tagName?.toLowerCase();
+  const isTyping = tagName === "input" || tagName === "textarea" || tagName === "select";
+  if (isTyping || role !== "host" || !roomCode || e.code !== "Space" || e.repeat) return;
+  e.preventDefault();
+  if (!resetBtn.disabled) resetRound();
 }
 
 async function enterRoom() {
@@ -114,20 +121,23 @@ async function enterRoom() {
   roomCode = nextCode;
   playerName = nextName;
   localStorage.setItem(ENTRY_KEY, JSON.stringify({ roomCode, name: playerName, role }));
-  roomNameInput.value = playerName;
   roomCodeLabel.textContent = roomCode;
   roleLabel.textContent = role === "host" ? "親機" : "子機";
   hostActions.classList.toggle("hidden", role !== "host");
   playerPanel.classList.toggle("hidden", role !== "player");
+  document.body.classList.toggle("player-room", role === "player");
+  document.body.classList.toggle("host-room", role === "host");
   entryView.classList.add("hidden");
   roomView.classList.remove("hidden");
   history.replaceState(null, "", `#${roomCode}`);
 
   startListening();
   try {
-    await sendEvent("join", { text: `[早押し] ${playerName} 参加` });
+    if (role === "player") {
+      await sendEvent("join", { text: `[早押し] ${playerName} 参加` });
+    }
   } catch (error) {
-    playerMessage.textContent = "通信エラー";
+    buzzBtn.textContent = "通信エラー";
     console.error(error);
   }
 }
@@ -140,6 +150,7 @@ function leaveRoom() {
   currentWinnerId = null;
   lastWinnerId = null;
   hideQr();
+  document.body.classList.remove("player-room", "host-room");
   roomView.classList.add("hidden");
   entryView.classList.remove("hidden");
   history.replaceState(null, "", location.pathname);
@@ -151,11 +162,14 @@ function startListening() {
   unsubscribe = onSnapshot(q, snapshot => {
     events = snapshot.docs
       .map(docSnap => ({ id: docSnap.id, ...docSnap.data() }))
-      .filter(item => item.type === "buzzer" && item.createdAt)
-      .map(item => ({ ...item, createdMs: item.createdAt.toMillis() }));
+      .filter(item => item.type === "buzzer")
+      .map(item => ({
+        ...item,
+        createdMs: item.createdAt?.toMillis?.() || item.clientMs || 0
+      }));
     render();
   }, error => {
-    playerMessage.textContent = "通信エラー";
+    buzzBtn.textContent = "通信エラー";
     console.error(error);
   });
 }
@@ -170,13 +184,17 @@ function stopListening() {
 async function resetRound() {
   const nextRound = currentRound + 1;
   resetBtn.disabled = true;
+  applyRound(nextRound);
+  renderWinner(null);
+  renderRanking([]);
+  renderPlayerState([]);
   try {
     await sendEvent("reset", {
       round: nextRound,
       text: `[早押し] 第${nextRound}問 リセット`
     });
   } catch (error) {
-    playerMessage.textContent = "通信エラー";
+    buzzBtn.textContent = "通信エラー";
     console.error(error);
   } finally {
     resetBtn.disabled = false;
@@ -184,10 +202,16 @@ async function resetRound() {
 }
 
 async function buzz() {
-  if (currentWinnerId) return;
-  saveName();
+  const alreadyBuzzed = events.some(item =>
+    item.action === "buzz" &&
+    Number(item.round) === currentRound &&
+    item.playerId === playerId
+  );
+  if (alreadyBuzzed) return;
+  playerName = nameInput.value.trim() || playerName || "名無し";
+  localStorage.setItem(ENTRY_KEY, JSON.stringify({ roomCode, name: playerName, role }));
   buzzBtn.disabled = true;
-  playerMessage.textContent = "送信中";
+  buzzBtn.textContent = "送信中";
   try {
     await sendEvent("buzz", {
       round: currentRound,
@@ -198,17 +222,9 @@ async function buzz() {
     vibrate();
   } catch (error) {
     buzzBtn.disabled = false;
-    playerMessage.textContent = "通信エラー";
+    buzzBtn.textContent = "通信エラー";
     console.error(error);
   }
-}
-
-function saveName() {
-  playerName = roomNameInput.value.trim() || nameInput.value.trim() || "名無し";
-  roomNameInput.value = playerName;
-  nameInput.value = playerName;
-  localStorage.setItem(ENTRY_KEY, JSON.stringify({ roomCode, name: playerName, role }));
-  playerMessage.textContent = "名前保存済み";
 }
 
 async function sendEvent(action, extra = {}) {
@@ -221,21 +237,22 @@ async function sendEvent(action, extra = {}) {
     playerId: extra.playerId || playerId,
     playerName: extra.playerName || playerName,
     text: extra.text || `[早押し] ${action}`,
+    clientMs: Date.now(),
     createdAt: serverTimestamp(),
     expireAt
   });
 }
 
 function render() {
-  const resets = events.filter(item => item.action === "reset");
+  const resets = events
+    .filter(item => item.action === "reset")
+    .sort((a, b) => Number(a.round) - Number(b.round));
   const latestReset = resets[resets.length - 1];
-  currentRound = latestReset ? Number(latestReset.round) || 1 : 1;
+  applyRound(latestReset ? Number(latestReset.round) || 1 : currentRound);
 
-  const resetMs = latestReset ? latestReset.createdMs : 0;
   const roundBuzzes = uniqueByPlayer(events
     .filter(item => item.action === "buzz")
     .filter(item => Number(item.round) === currentRound)
-    .filter(item => item.createdMs >= resetMs)
     .sort((a, b) => a.createdMs - b.createdMs));
 
   const players = new Map();
@@ -252,10 +269,20 @@ function render() {
   playerCount.textContent = `${players.size}人`;
   renderWinner(winner);
   renderRanking(roundBuzzes);
-  renderPlayerState(winner);
+  renderPlayerState(roundBuzzes);
 
   if (winner && winner.playerId !== lastWinnerId && role === "host") playChime();
   lastWinnerId = winner ? winner.playerId : null;
+}
+
+function applyRound(round) {
+  const nextRound = Math.max(1, Number(round) || 1);
+  if (nextRound !== currentRound) {
+    currentRound = nextRound;
+    currentWinnerId = null;
+    lastWinnerId = null;
+  }
+  roundLabel.textContent = `第${currentRound}問`;
 }
 
 function renderWinner(winner) {
@@ -269,33 +296,30 @@ function renderWinner(winner) {
 function renderRanking(roundBuzzes) {
   rankingList.innerHTML = "";
   emptyRanking.classList.toggle("hidden", roundBuzzes.length > 0);
+  const firstMs = roundBuzzes[0]?.createdMs || 0;
   roundBuzzes.forEach((item, index) => {
     const li = document.createElement("li");
     li.innerHTML = `
       <span class="rank-number">${index + 1}着</span>
       <span class="rank-name"></span>
       <span class="rank-time">${formatTime(item.createdMs)}</span>
+      <span class="rank-diff">${formatDiff(item.createdMs - firstMs)}</span>
     `;
     li.querySelector(".rank-name").textContent = item.playerName || "名無し";
     rankingList.appendChild(li);
   });
 }
 
-function renderPlayerState(winner) {
+function renderPlayerState(roundBuzzes) {
   if (role !== "player") return;
-  const ownBuzz = events.some(item =>
-    item.action === "buzz" &&
-    Number(item.round) === currentRound &&
-    item.playerId === playerId
-  );
-  buzzBtn.disabled = !!winner || ownBuzz;
+  const ownIndex = roundBuzzes.findIndex(item => item.playerId === playerId);
+  const ownBuzz = ownIndex >= 0;
+  buzzBtn.disabled = ownBuzz;
 
-  if (!winner) {
-    playerMessage.textContent = "準備完了";
-  } else if (winner.playerId === playerId) {
-    playerMessage.textContent = "1着";
+  if (ownBuzz) {
+    buzzBtn.textContent = `${ownIndex + 1}着`;
   } else {
-    playerMessage.textContent = `${winner.playerName || "名無し"} さんが1着`;
+    buzzBtn.textContent = "回答";
   }
 }
 
@@ -327,7 +351,7 @@ async function copyRoomUrl() {
     copyBtn.textContent = "済み";
     setTimeout(() => { copyBtn.textContent = "コピー"; }, 1200);
   } catch (_) {
-    playerMessage.textContent = "コピー失敗";
+    buzzBtn.textContent = "コピー失敗";
   }
 }
 
@@ -377,20 +401,16 @@ function formatTime(ms) {
   }).format(new Date(ms));
 }
 
+function formatDiff(ms) {
+  if (ms <= 0) return "+0.000秒";
+  return `+${(ms / 1000).toFixed(3)}秒`;
+}
+
 function playChime() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(880, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.12);
-    gain.gain.setValueAtTime(0.001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.2);
+    const sound = new Audio(BUZZER_SOUND_SRC);
+    sound.volume = 1;
+    sound.play();
   } catch (_) {}
 }
 
