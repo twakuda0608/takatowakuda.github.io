@@ -24,10 +24,11 @@ document.querySelectorAll(".ui").forEach((ui, i) => {
 
 
 /* ============================================================
-   グローバル：基準日・基準都道府県 & 照合
+   グローバル：基準日・基準都道府県・基準電話番号 & 照合
 ============================================================ */
 let targetDate = null;
 let targetPref = null;
+let targetPhone = null;
 
 function enforceHalfAscii(el) {
   function sanitize() {
@@ -69,6 +70,35 @@ function checkPref(pref, resultEl, resetFn) {
   }
 }
 
+function normalizePhone(phone) {
+  return String(phone).replace(/\D/g, "");
+}
+
+function formatPhone(phone) {
+  const normalized = normalizePhone(phone);
+  if (normalized.length === 11) {
+    return `${normalized.slice(0, 3)}-${normalized.slice(3, 7)}-${normalized.slice(7)}`;
+  }
+  return normalized;
+}
+
+function checkPhone(phone, resultEl, resetFn, successMessage = "入力を受け付けました") {
+  const normalized = normalizePhone(phone);
+  if (!targetPhone) {
+    resultEl.textContent = "先にNo.0で電話番号を設定してください";
+    resultEl.style.color = "#dc2626";
+    return;
+  }
+  if (normalized === targetPhone) {
+    resultEl.textContent = successMessage;
+    resultEl.style.color = "";
+  } else {
+    resultEl.textContent = "一致しません";
+    resultEl.style.color = "#dc2626";
+    if (resetFn) resetFn();
+  }
+}
+
 
 /* ============================================================
    0. 基準の誕生日設定（親切なUI）
@@ -78,6 +108,7 @@ function checkPref(pref, resultEl, resetFn) {
   const baseMonth  = document.getElementById("base-month");
   const baseDay    = document.getElementById("base-day");
   const basePref   = document.getElementById("base-pref");
+  const basePhone  = document.getElementById("base-phone");
   const baseSubmit = document.getElementById("base-submit");
   const baseResult = document.getElementById("base-result");
 
@@ -88,6 +119,7 @@ function checkPref(pref, resultEl, resetFn) {
     const m = Number(baseMonth.value);
     const d = Number(baseDay.value);
     const p = basePref.value;
+    const phone = normalizePhone(basePhone.value);
     const t = new Date(y, m - 1, d);
     if (!y || !m || !d || t.getFullYear() !== y || t.getMonth() + 1 !== m || t.getDate() !== d) {
       baseResult.textContent = "正しい日付を入力してください";
@@ -97,9 +129,14 @@ function checkPref(pref, resultEl, resetFn) {
       baseResult.textContent = "都道府県を選択してください";
       return;
     }
+    if (phone.length !== 11) {
+      baseResult.textContent = "電話番号は11桁で入力してください";
+      return;
+    }
     targetDate = { y, m, d };
     targetPref = p;
-    baseResult.textContent = `${y}年${m}月${d}日・${p}を設定しました`;
+    targetPhone = phone;
+    baseResult.textContent = `${y}年${m}月${d}日・${p}・${formatPhone(phone)}を設定しました`;
     document.dispatchEvent(new Event("targetDateChanged"));
   });
 })();
@@ -1536,9 +1573,11 @@ resetForm();
   registerBtn.addEventListener("click", () => {
     const prefix = confirmed[0];
     const digs   = confirmed.slice(1).join("");
-    result.textContent = `${prefix}-${digs.slice(0,4)}-${digs.slice(4)} で登録しました`;
-    result.style.color = "";
-    registerWrap.style.display = "none";
+    const phone = prefix + digs;
+    checkPhone(phone, result, null, `${formatPhone(phone)} で登録しました`);
+    if (normalizePhone(phone) === targetPhone) {
+      registerWrap.style.display = "none";
+    }
   });
 
   clearBtn.addEventListener("click", init);
@@ -1712,6 +1751,6 @@ resetForm();
     if (name === "お名前を入力してください" || addr === "住所を入力してください" || ph.length < 11 || ph.includes("X")) {
       result.textContent = "すべて入力してください"; return;
     }
-    result.textContent = `「${name}」さん、登録しました！`;
+    checkPhone(ph, result, null, `「${name}」さん、登録しました！`);
   });
 })();
