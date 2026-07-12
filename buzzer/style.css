@@ -39,6 +39,7 @@ body.player-room {
 .status-panel,
 .player-panel,
 .players-panel,
+.kicked-panel,
 .ranking-panel,
 .room-toolbar {
   background: var(--panel);
@@ -292,11 +293,13 @@ h1 {
 .status-panel,
 .player-panel,
 .players-panel,
+.kicked-panel,
 .ranking-panel {
   padding: 18px;
 }
 
 .players-panel,
+.kicked-panel,
 .ranking-panel {
   grid-column: 1 / -1;
 }
@@ -400,9 +403,74 @@ h1 {
 }
 
 .player-panel {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.wake-lock-control {
+  display: none;
+}
+
+.wake-lock-toggle {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255,255,255,0.72);
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.94);
+  color: #334155;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  box-shadow: 0 4px 14px rgba(15,23,42,0.2);
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+
+.wake-lock-toggle:focus-visible {
+  outline: 3px solid #7dd3fc;
+  outline-offset: 2px;
+}
+
+.wake-lock-toggle:disabled {
+  cursor: default;
+  opacity: 0.82;
+}
+
+.wake-lock-indicator {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.16);
+}
+
+.wake-lock-toggle[data-state="active"] .wake-lock-indicator {
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22,163,74,0.16);
+}
+
+.wake-lock-toggle[data-state="off"] .wake-lock-indicator,
+.wake-lock-toggle[data-state="unsupported"] .wake-lock-indicator {
+  background: #94a3b8;
+  box-shadow: 0 0 0 3px rgba(148,163,184,0.16);
+}
+
+.wake-lock-toggle[data-state="released"] .wake-lock-indicator {
+  background: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.16);
+}
+
+.wake-lock-state {
+  min-width: 42px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-align: right;
 }
 
 .buzz-btn {
@@ -451,6 +519,7 @@ h1 {
 .player-room .room-toolbar,
 .player-room .status-panel,
 .player-room .players-panel,
+.player-room .kicked-panel,
 .player-room .ranking-panel,
 .player-room .sound-credit,
 .player-room .back-fab {
@@ -481,6 +550,14 @@ h1 {
   box-shadow: none;
 }
 
+.player-room .wake-lock-control {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 5;
+  display: block;
+}
+
 .player-room .buzz-btn {
   height: 100%;
   min-height: 0;
@@ -495,6 +572,14 @@ h1 {
 }
 
 .players-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kicked-list {
   display: grid;
   gap: 8px;
   margin: 0;
@@ -572,6 +657,61 @@ h1 {
 
 .kick-btn:hover {
   background: #fef2f2;
+}
+
+.kicked-count {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.kicked-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fff7f7;
+}
+
+.kicked-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.kicked-name {
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.kicked-meta {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.restore-btn {
+  min-height: 44px;
+  border: 1px solid #86efac;
+  border-radius: 8px;
+  padding: 7px 14px;
+  background: #f0fdf4;
+  color: #166534;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.restore-btn:hover {
+  background: #dcfce7;
+}
+
+.restore-btn:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 
 .ranking-list {

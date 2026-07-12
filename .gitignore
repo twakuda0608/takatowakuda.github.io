@@ -4,3 +4,5 @@ notes/
 .claude/
 TODO.md
 AGENTS.md
+.agents/
+.gitignore
