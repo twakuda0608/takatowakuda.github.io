@@ -18,6 +18,7 @@ const db = getFirestore(app);
 
 const ENTRY_KEY = "buzzer_entry_v1";
 const PLAYER_KEY = "buzzer_player_id_v1";
+const WAKE_LOCK_KEY = "buzzer_wake_lock_enabled_v1";
 const EVENT_TTL_MS = 6 * 60 * 60 * 1000;
 const BUZZER_SOUND_SRC = "quiz-button.mp3";
 
@@ -42,8 +43,14 @@ const hostActions = document.getElementById("host-actions");
 const resetBtn = document.getElementById("reset-btn");
 const playerPanel = document.getElementById("player-panel");
 const buzzBtn = document.getElementById("buzz-btn");
+const wakeLockControl = document.getElementById("wake-lock-control");
+const wakeLockToggle = document.getElementById("wake-lock-toggle");
+const wakeLockState = document.getElementById("wake-lock-state");
 const playersList = document.getElementById("players-list");
 const emptyPlayers = document.getElementById("empty-players");
+const kickedList = document.getElementById("kicked-list");
+const emptyKicked = document.getElementById("empty-kicked");
+const kickedCount = document.getElementById("kicked-count");
 const rankingList = document.getElementById("ranking-list");
 const emptyRanking = document.getElementById("empty-ranking");
 const playerCount = document.getElementById("player-count");
@@ -71,8 +78,12 @@ let currentSessionId = "";
 let currentWinnerId = null;
 let lastWinnerId = null;
 let currentKicked = false;
+let wakeLock = null;
+let wakeLockEnabled = readWakeLockPreference();
+let wakeLockWasReleased = false;
 
 restoreEntry();
+updateWakeLockUi();
 
 randomBtn.addEventListener("click", () => {
   roomInput.value = makeRoomCode();
@@ -98,7 +109,9 @@ qrBtn.addEventListener("click", showQr);
 leaveBtn.addEventListener("click", leaveRoom);
 qrBackdrop.addEventListener("click", hideQr);
 qrCloseBtn.addEventListener("click", hideQr);
+wakeLockToggle.addEventListener("click", toggleWakeLock);
 document.addEventListener("keydown", handleShortcut);
+document.addEventListener("visibilitychange", handleVisibilityChange);
 
 function restoreEntry() {
   const saved = readJson(ENTRY_KEY) || {};
@@ -152,11 +165,14 @@ async function enterRoom() {
   roleLabel.textContent = role === "host" ? "親機" : "子機";
   hostActions.classList.toggle("hidden", role !== "host");
   playerPanel.classList.toggle("hidden", role !== "player");
+  wakeLockControl.classList.toggle("hidden", role !== "player");
   document.body.classList.toggle("player-room", role === "player");
   document.body.classList.toggle("host-room", role === "host");
   entryView.classList.add("hidden");
   roomView.classList.remove("hidden");
   history.replaceState(null, "", `#${roomCode}`);
+  updateWakeLockUi();
+  if (role === "player" && wakeLockEnabled) requestWakeLock();
 
   startListening();
   try {
@@ -170,6 +186,7 @@ async function enterRoom() {
 }
 
 function leaveRoom() {
+  releaseWakeLock();
   stopListening();
   roomCode = "";
   events = [];
@@ -180,9 +197,122 @@ function leaveRoom() {
   lastWinnerId = null;
   hideQr();
   document.body.classList.remove("player-room", "host-room");
+  wakeLockControl.classList.add("hidden");
   roomView.classList.add("hidden");
   entryView.classList.remove("hidden");
   history.replaceState(null, "", location.pathname);
+}
+
+async function toggleWakeLock() {
+  if (!("wakeLock" in navigator)) return;
+  if (wakeLockEnabled && wakeLockWasReleased && (!wakeLock || wakeLock.released)) {
+    await requestWakeLock();
+    return;
+  }
+  wakeLockEnabled = !wakeLockEnabled;
+  wakeLockWasReleased = false;
+  saveWakeLockPreference();
+
+  if (wakeLockEnabled) {
+    await requestWakeLock();
+  } else {
+    await releaseWakeLock();
+  }
+  updateWakeLockUi();
+}
+
+async function requestWakeLock() {
+  if (!("wakeLock" in navigator) || !wakeLockEnabled || role !== "player" || !roomCode) {
+    updateWakeLockUi();
+    return false;
+  }
+  if (document.visibilityState !== "visible") {
+    updateWakeLockUi();
+    return false;
+  }
+  if (wakeLock && !wakeLock.released) {
+    updateWakeLockUi();
+    return true;
+  }
+
+  try {
+    const sentinel = await navigator.wakeLock.request("screen");
+    wakeLock = sentinel;
+    wakeLockWasReleased = false;
+    sentinel.addEventListener("release", () => {
+      if (wakeLock === sentinel) wakeLock = null;
+      wakeLockWasReleased = true;
+      updateWakeLockUi();
+    });
+    updateWakeLockUi();
+    return true;
+  } catch (error) {
+    wakeLock = null;
+    wakeLockWasReleased = true;
+    console.warn("画面点灯保持を開始できませんでした", error);
+    updateWakeLockUi();
+    return false;
+  }
+}
+
+async function releaseWakeLock() {
+  const sentinel = wakeLock;
+  wakeLock = null;
+  if (sentinel && !sentinel.released) {
+    try {
+      await sentinel.release();
+    } catch (_) {}
+  }
+  updateWakeLockUi();
+}
+
+async function handleVisibilityChange() {
+  if (document.visibilityState === "visible" && role === "player" && roomCode && wakeLockEnabled) {
+    await requestWakeLock();
+  } else {
+    updateWakeLockUi();
+  }
+}
+
+function updateWakeLockUi() {
+  const supported = "wakeLock" in navigator;
+  let state = "waiting";
+  let label = "準備中";
+
+  if (!supported) {
+    state = "unsupported";
+    label = "非対応";
+  } else if (!wakeLockEnabled) {
+    state = "off";
+    label = "オフ";
+  } else if (wakeLock && !wakeLock.released) {
+    state = "active";
+    label = "オン";
+  } else if (document.visibilityState !== "visible") {
+    label = "待機中";
+  } else if (wakeLockWasReleased) {
+    state = "released";
+    label = "解除";
+  }
+
+  wakeLockToggle.dataset.state = state;
+  wakeLockToggle.disabled = !supported;
+  wakeLockToggle.setAttribute("aria-pressed", String(wakeLockEnabled && supported));
+  wakeLockState.textContent = label;
+}
+
+function readWakeLockPreference() {
+  try {
+    return localStorage.getItem(WAKE_LOCK_KEY) !== "false";
+  } catch (_) {
+    return true;
+  }
+}
+
+function saveWakeLockPreference() {
+  try {
+    localStorage.setItem(WAKE_LOCK_KEY, String(wakeLockEnabled));
+  } catch (_) {}
 }
 
 function startListening() {
@@ -262,6 +392,7 @@ async function prepareRoomState() {
 
 async function resetRound() {
   const nextRound = currentRound + 1;
+  const nextKicked = compactKickedForNewRound(roomState.kicked);
   resetBtn.disabled = true;
   applyRound(nextRound);
   renderWinner(null);
@@ -271,13 +402,14 @@ async function resetRound() {
     roomState = normalizeState({
       ...roomState,
       currentRound: nextRound,
-      sessionId: currentSessionId || roomState.sessionId || makeSessionId()
+      sessionId: currentSessionId || roomState.sessionId || makeSessionId(),
+      kicked: nextKicked
     });
     currentSessionId = roomState.sessionId;
     await setDoc(roomStateRef(), {
       currentRound: nextRound,
       sessionId: roomState.sessionId,
-      kicked: roomState.kicked || {},
+      kicked: nextKicked,
       updatedAt: serverTimestamp(),
       resetBy: playerId
     }, { merge: true });
@@ -302,7 +434,8 @@ async function buzz() {
     belongsToCurrentSession(item) &&
     item.action === "buzz" &&
     Number(item.round) === currentRound &&
-    item.playerId === playerId
+    item.playerId === playerId &&
+    !isClearedBuzz(item)
   );
   if (alreadyBuzzed) return;
   playerName = nameInput.value.trim() || playerName || "名無し";
@@ -352,6 +485,7 @@ function render() {
   const roundBuzzes = uniqueByPlayer(sessionEvents
     .filter(item => item.action === "buzz")
     .filter(item => Number(item.round) === currentRound)
+    .filter(item => !isClearedBuzz(item))
     .sort((a, b) => a.createdMs - b.createdMs));
 
   const players = buildPlayers(sessionEvents);
@@ -367,6 +501,7 @@ function render() {
   toolbarPlayerCount.textContent = `${players.length}人`;
   renderWinner(winner);
   renderPlayers(players, activeRoundBuzzes);
+  renderKickedPlayers();
   renderRanking(activeRoundBuzzes);
   renderPlayerState(activeRoundBuzzes);
 
@@ -397,7 +532,7 @@ function buildPlayers(sourceEvents = events.filter(belongsToCurrentSession)) {
 }
 
 function isPlayerKicked(id) {
-  return Boolean(roomState.kicked?.[id]);
+  return isKickedEntry(roomState.kicked?.[id]);
 }
 
 function renderPlayers(players, roundBuzzes) {
@@ -425,9 +560,15 @@ function renderPlayers(players, roundBuzzes) {
 }
 
 async function kickPlayer(player) {
+  const previous = roomState.kicked?.[player.id] || {};
+  const previousHistory = { ...previous };
+  delete previousHistory.active;
+  delete previousHistory.restoredAt;
+  delete previousHistory.restoredBy;
   const kicked = {
     ...(roomState.kicked || {}),
     [player.id]: {
+      ...previousHistory,
       name: player.name || "名無し",
       kickedAt: Date.now(),
       by: playerId
@@ -445,6 +586,92 @@ async function kickPlayer(player) {
     targetPlayerName: player.name,
     text: `[早押し] ${player.name} キック`
   });
+}
+
+function renderKickedPlayers() {
+  const kickedPlayers = Object.entries(roomState.kicked || {})
+    .filter(([, data]) => isKickedEntry(data))
+    .map(([id, data]) => ({
+      id,
+      name: data?.name || "名無し",
+      kickedAt: Number(data?.kickedAt) || 0
+    }))
+    .sort((a, b) => b.kickedAt - a.kickedAt);
+
+  kickedList.innerHTML = "";
+  kickedCount.textContent = `${kickedPlayers.length}人`;
+  emptyKicked.classList.toggle("hidden", kickedPlayers.length > 0);
+
+  kickedPlayers.forEach(player => {
+    const item = document.createElement("li");
+    item.className = "kicked-item";
+    item.innerHTML = `
+      <div class="kicked-main">
+        <span class="kicked-name"></span>
+        <span class="kicked-meta"></span>
+      </div>
+      <button class="restore-btn" type="button">復帰</button>
+    `;
+    item.querySelector(".kicked-name").textContent = player.name;
+    item.querySelector(".kicked-meta").textContent = player.kickedAt
+      ? `端末 ${shortId(player.id)} ・ ${formatKickedTime(player.kickedAt)}`
+      : `端末 ${shortId(player.id)}`;
+    const restoreBtn = item.querySelector(".restore-btn");
+    restoreBtn.addEventListener("click", async () => {
+      restoreBtn.disabled = true;
+      try {
+        await restorePlayer(player);
+      } finally {
+        restoreBtn.disabled = false;
+      }
+    });
+    kickedList.appendChild(item);
+  });
+}
+
+async function restorePlayer(player) {
+  const previousKicked = { ...(roomState.kicked || {}) };
+  const previous = previousKicked[player.id];
+  if (!isKickedEntry(previous)) return;
+
+  const playerBuzzIds = events
+    .filter(item => belongsToCurrentSession(item))
+    .filter(item => item.action === "buzz")
+    .filter(item => Number(item.round) === currentRound)
+    .filter(item => item.playerId === player.id)
+    .map(item => item.id)
+    .filter(Boolean);
+  const clearedBuzzIds = [...new Set([
+    ...(Array.isArray(previous.clearedBuzzIds) ? previous.clearedBuzzIds : []),
+    ...playerBuzzIds
+  ])].slice(-50);
+  const kicked = {
+    ...previousKicked,
+    [player.id]: {
+      ...previous,
+      active: false,
+      clearedBuzzIds
+    }
+  };
+
+  roomState = normalizeState({ ...roomState, kicked });
+  try {
+    await setDoc(roomStateRef(), {
+      kicked,
+      sessionId: roomState.sessionId,
+      currentRound: roomState.currentRound,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    await sendEvent("restore", {
+      targetPlayerId: player.id,
+      targetPlayerName: player.name,
+      text: `[早押し] ${player.name} 復帰`
+    });
+  } catch (error) {
+    roomState = normalizeState({ ...roomState, kicked: previousKicked });
+    renderKickedPlayers();
+    console.error("復帰エラー:", error);
+  }
 }
 
 function applyRound(round) {
@@ -563,8 +790,23 @@ function normalizeState(state = {}) {
   };
 }
 
+function isKickedEntry(entry) {
+  return Boolean(entry && entry.active !== false);
+}
+
+function compactKickedForNewRound(source = {}) {
+  return Object.fromEntries(Object.entries(source)
+    .filter(([, entry]) => isKickedEntry(entry))
+    .map(([id, entry]) => [id, { ...entry, clearedBuzzIds: [] }]));
+}
+
 function belongsToCurrentSession(item) {
   return !currentSessionId || item.sessionId === currentSessionId;
+}
+
+function isClearedBuzz(item) {
+  const clearedIds = roomState.kicked?.[item?.playerId]?.clearedBuzzIds;
+  return Boolean(item?.id && Array.isArray(clearedIds) && clearedIds.includes(item.id));
 }
 
 function saveEntry() {
@@ -620,6 +862,15 @@ function formatTime(ms) {
 function formatDiff(ms) {
   if (ms <= 0) return "+0.000秒";
   return `+${(ms / 1000).toFixed(3)}秒`;
+}
+
+function formatKickedTime(ms) {
+  return new Intl.DateTimeFormat("ja-JP", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  }).format(new Date(ms));
 }
 
 function shortId(id) {

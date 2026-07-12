@@ -614,7 +614,7 @@ function extractUrls(text) {
 
 function buildLinkPreviews(text) {
   const urls = extractUrls(text);
-  return urls.slice(0, 3).map(url => {
+  return urls.map(url => {
     const href = url.startsWith("http") ? url : `https://${url}`;
     let domain = href;
     try { domain = new URL(href).hostname.replace(/^www\./, ""); } catch {}

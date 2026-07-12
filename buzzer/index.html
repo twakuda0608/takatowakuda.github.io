@@ -92,6 +92,13 @@
         </section>
 
         <section id="player-panel" class="player-panel" aria-label="子機">
+          <div id="wake-lock-control" class="wake-lock-control hidden">
+            <button id="wake-lock-toggle" class="wake-lock-toggle" type="button" aria-pressed="true">
+              <span class="wake-lock-indicator" aria-hidden="true"></span>
+              <span>画面点灯保持</span>
+              <span id="wake-lock-state" class="wake-lock-state">準備中</span>
+            </button>
+          </div>
           <button id="buzz-btn" class="buzz-btn" type="button">回答</button>
         </section>
 
@@ -102,6 +109,15 @@
           </div>
           <ul id="players-list" class="players-list"></ul>
           <p id="empty-players" class="empty-ranking">まだ参加者はいません</p>
+        </section>
+
+        <section id="kicked-panel" class="kicked-panel">
+          <div class="panel-heading">
+            <h2>キックリスト</h2>
+            <span id="kicked-count" class="count-badge kicked-count">0人</span>
+          </div>
+          <ul id="kicked-list" class="kicked-list"></ul>
+          <p id="empty-kicked" class="empty-ranking">キックされた参加者はいません</p>
         </section>
 
         <section class="ranking-panel">
