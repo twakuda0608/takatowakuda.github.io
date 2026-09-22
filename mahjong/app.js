@@ -1122,11 +1122,12 @@ function renderMatches(allMatches) {
       });
     });
 
-    const matchRows = gMatches.map((m, mi) => `
+    const matchRows = gMatches.map((m, mi) => {
+      const isTable = !!(m.tableGame || m.source === 'table');
+      return `
       <tr>
         <td class="date-cell match-label" data-time="${escHtml(formatMatchTime(m.recordedAt))}">
-          <span>${mi + 1}試合目</span>
-          <span class="match-kind ${m.tableGame || m.source === 'table' ? 'match-kind-table' : ''}">${m.tableGame || m.source === 'table' ? 'テーブル' : '点数'}</span>
+          <span class="match-num ${isTable ? 'match-num-table' : ''}" title="${isTable ? 'テーブル' : '点数'}">G${mi + 1}</span>
         </td>
         ${colPlayers.map(pname => {
           const found = (m.players || []).find(p => p.name === pname);
@@ -1137,7 +1138,8 @@ function renderMatches(allMatches) {
           <button class="rec-del-btn match-edit-btn" data-mid="${escHtml(m.id)}" title="編集">✎</button>
           <button class="rec-del-btn match-del-btn"  data-mid="${escHtml(m.id)}" title="削除">×</button>
         </td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
 
     return `
     <fieldset class="session-card">
@@ -1148,16 +1150,21 @@ function renderMatches(allMatches) {
       </div>
       <div class="records-scroll">
         <table class="records-tbl">
+          <colgroup>
+            <col class="col-match">
+            ${colPlayers.map(() => '<col class="col-player">').join('')}
+            <col class="col-actions">
+          </colgroup>
           <thead><tr>
-            <th></th>
-            ${colPlayers.map(n => `<th>${escHtml(n)}</th>`).join('')}
-            <th></th>
+            <th class="th-match"></th>
+            ${colPlayers.map(n => `<th class="th-player" title="${escHtml(n)}"><span class="player-col-name">${escHtml(n)}</span></th>`).join('')}
+            <th class="th-actions"></th>
           </tr></thead>
           <tbody>${matchRows}</tbody>
           <tfoot><tr>
-            <th>合計</th>
-            ${totals.map(t => `<th class="${ptClass(t)}">${fmtPt(t)}</th>`).join('')}
-            <th></th>
+            <th class="th-match">合計</th>
+            ${totals.map(t => `<th class="${ptClass(t)} th-player">${fmtPt(t)}</th>`).join('')}
+            <th class="th-actions"></th>
           </tr></tfoot>
         </table>
       </div>
