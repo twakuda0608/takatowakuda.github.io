@@ -504,6 +504,8 @@ h1 {
 }
 
 .flashcard {
+  position: relative;
+  overflow: hidden;
   width: 100%;
   min-height: 310px;
   border: 1px solid #cfd9e8;
@@ -525,6 +527,68 @@ h1 {
   user-select: none;
 }
 
+.swipe-hint {
+  position: absolute;
+  top: 18px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: .95rem;
+  font-weight: 800;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .12s ease;
+  z-index: 10;
+}
+
+.swipe-hint-left {
+  left: 18px;
+  color: #dc2626;
+  background: rgba(254, 226, 226, .94);
+  border: 1.5px solid #f87171;
+  transform: rotate(-10deg);
+}
+
+.swipe-hint-right {
+  right: 18px;
+  color: #16a34a;
+  background: rgba(220, 252, 231, .94);
+  border: 1.5px solid #4ade80;
+  transform: rotate(10deg);
+}
+
+.card-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+}
+
+.card-known-tag {
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  border-radius: 4px;
+  color: #15803d;
+  font-size: .72rem;
+  font-weight: 800;
+  padding: 2px 6px;
+}
+
+.card-known-tag[hidden] {
+  display: none;
+}
+
+.swipe-guide {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding: 0 4px;
+  color: var(--fc-soft);
+  font-size: .8rem;
+  font-weight: 700;
+}
+
 .flashcard.is-flipping {
   animation: cardFlip .32s ease both;
 }
@@ -535,6 +599,14 @@ h1 {
 
 .flashcard.flick-right {
   animation: flickRight .24s ease;
+}
+
+.flashcard.flick-known {
+  animation: flickKnown .24s ease forwards;
+}
+
+.flashcard.flick-unknown {
+  animation: flickUnknown .24s ease forwards;
 }
 
 .flashcard:focus-visible,
@@ -581,6 +653,16 @@ textarea:focus {
   0% { transform: translateX(0) rotate(0); opacity: 1; }
   48% { transform: translateX(34px) rotate(3deg); opacity: .72; }
   100% { transform: translateX(0) rotate(0); opacity: 1; }
+}
+
+@keyframes flickKnown {
+  0% { transform: translateX(0) rotate(0); opacity: 1; }
+  100% { transform: translateX(110%) rotate(12deg); opacity: 0; }
+}
+
+@keyframes flickUnknown {
+  0% { transform: translateX(0) rotate(0); opacity: 1; }
+  100% { transform: translateX(-110%) rotate(-12deg); opacity: 0; }
 }
 
 @keyframes cardFlip {

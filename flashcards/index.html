@@ -115,15 +115,24 @@
         </div>
 
         <button type="button" class="flashcard" id="flashcard" aria-live="polite">
-          <span class="card-side" id="card-side">表</span>
+          <span class="swipe-hint swipe-hint-left" id="swipe-hint-left" aria-hidden="true">✗ 未暗記</span>
+          <span class="swipe-hint swipe-hint-right" id="swipe-hint-right" aria-hidden="true">✓ 暗記</span>
+          <div class="card-meta-row">
+            <span class="card-side" id="card-side">表</span>
+            <span class="card-known-tag" id="card-known-tag" hidden>暗記済</span>
+          </div>
           <span class="card-main" id="card-main">カード未追加</span>
           <span class="card-sub" id="card-sub">クリックで裏面</span>
         </button>
 
+        <div class="swipe-guide" aria-hidden="true">
+          <span>← 左: 未暗記</span>
+          <span>右: 暗記 →</span>
+        </div>
+
         <div class="card-actions">
           <button type="button" class="secondary-btn" id="shuffle-btn">シャッフル</button>
           <button type="button" class="secondary-btn" id="reset-known-btn">暗記リセット</button>
-          <button type="button" class="primary-btn" id="known-btn">暗記</button>
         </div>
       </section>
 
