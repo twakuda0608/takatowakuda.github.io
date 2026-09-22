@@ -5070,6 +5070,7 @@
       ];
       const cardHtml = ({ pos, idx }) => {
         const p = displayPlayers[idx] || state.players[idx] || {};
+        const livePlayer = state.players[idx] || p;
         const isMe = idx === personalSeatIndex;
         const displayScore = Array.isArray(personalScoreOverrides)
           ? Number(personalScoreOverrides[idx] || 0)
@@ -5082,9 +5083,9 @@
         const diffClass = personalDiffOn && !isMe
           ? diff >= 0 ? ' diff-pos' : ' diff-neg'
           : '';
-        const riichiPending = !!personalActionRequests.riichi;
-        const riichiOnLike = riichiPending || !!p.riichi;
-        const canPersonalRiichi = isMe && (riichiPending || p.riichi || !(settingHakoshita && !settingHakoshitaRiichi && Number(p.score || 0) < 1000));
+        const riichiPending = isMe && !!personalActionRequests.riichi;
+        const isRiichi = !!livePlayer.riichi || riichiPending;
+        const canPersonalRiichi = isMe && (isRiichi || !(settingHakoshita && !settingHakoshitaRiichi && Number(livePlayer.score || 0) < 1000));
         return `
           <div class="personal-seat ${pos}">
             <div class="personal-score-card ${pos}${isMe ? ' is-me' : ''}" data-player-idx="${idx}" data-seat-pos="${pos}">
@@ -5099,10 +5100,10 @@
                   <div class="personal-score${isLongScore ? ' long-score' : ''}${diffClass}" data-score-idx="${idx}" ${isMe ? 'id="personalAgariScore"' : ''}>${scoreText}</div>
                   ${isMe ? `<button class="goal-btn" id="personalGoalBtn">目標</button>` : ''}
                 </div>
-                <div class="personal-riichi-stick${p.riichi ? ' on' : ''}" aria-label="${p.riichi ? 'リーチ' : ''}"></div>
+                <div class="personal-riichi-stick${isRiichi ? ' on' : ''}" aria-label="${isRiichi ? 'リーチ' : ''}"></div>
                 ${isMe ? `
                   <div class="personal-command-row">
-                    <button class="personal-command-btn${riichiOnLike ? ' on' : ''}" id="personalRiichiBtn" ${canPersonalRiichi ? '' : 'disabled'}>${riichiOnLike ? 'リーチ' : 'リーチ'}</button>
+                    <button class="personal-command-btn${isRiichi ? ' on' : ''}" id="personalRiichiBtn" ${canPersonalRiichi ? '' : 'disabled'}>リーチ</button>
                   </div>` : ''}
               </div>
             </div>
@@ -5415,6 +5416,7 @@
       p.score += p.riichi ? -1000 : 1000;
       state.kyotaku += p.riichi ? 1 : -1;
       render();
+      publishRoomStateNow();
     }
 
     function undoRiichi(playerIdx) {
@@ -5425,6 +5427,7 @@
       state.kyotaku = Math.max(0, state.kyotaku - 1);
       riichiCounts[playerIdx] = Math.max(0, Number(riichiCounts[playerIdx] || 0) - 1);
       render();
+      publishRoomStateNow();
     }
 
     function handleCancelTableRequest(req, seatIndex) {
