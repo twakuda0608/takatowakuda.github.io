@@ -1326,6 +1326,14 @@
     .rec-match-detail-badge { font-size:10px; background:rgba(21,128,61,0.3); border:1px solid rgba(74,222,128,0.4); color:#4ade80; border-radius:4px; padding:2px 5px; flex-shrink:0; }
     .rec-match-arrow { color:rgba(255,255,255,0.25); font-size:14px; flex-shrink:0; }
     .rec-empty { color:rgba(255,255,255,0.28); font-size:13px; text-align:center; padding:60px 0; letter-spacing:1px; }
+    .rec-session-summary { display:flex; flex-wrap:wrap; gap:5px 10px; padding:6px 14px 8px; border-bottom:1px solid rgba(255,255,255,0.05); }
+    .rec-session-summary-item { font-size:11px; font-weight:700; color:rgba(255,255,255,0.52); white-space:nowrap; }
+    .rec-session-summary-item .rec-sspt { font-weight:900; }
+    .rec-session-summary-item .rec-sspt.pos { color:#4ade80; }
+    .rec-session-summary-item .rec-sspt.neg { color:#f87171; }
+    .rec-session-footer { display:flex; justify-content:flex-end; padding:6px 10px 8px; }
+    .rec-session-stats-btn { font-size:11px; font-weight:800; color:rgba(255,255,255,0.45); background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:6px; padding:5px 12px; cursor:pointer; letter-spacing:0.5px; }
+    .rec-session-stats-btn:active { background:rgba(255,255,255,0.14); }
     /* Detail overlay */
     #matchDetailOverlay { position:fixed; inset:0; background:#0b2e14; z-index:1100; flex-direction:column; overflow:hidden; }
     .detail-header { display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.1); flex-shrink:0; background:rgba(0,0,0,0.25); }
@@ -3645,8 +3653,31 @@
         return;
       }
       const groups = groupMatches(allMatches);
-      container.innerHTML = groups.map(group => {
+      container.innerHTML = groups.map((group, gi) => {
         const { date, colPlayers, matches: gMatches } = group;
+
+        // ── 通算成績サマリーを計算 ──
+        const totals = {}; // name -> total pt
+        colPlayers.forEach(n => { totals[n] = 0; });
+        gMatches.forEach(m => {
+          (m.players || []).forEach(p => {
+            if (p.name in totals) totals[p.name] += (p.pt || 0);
+          });
+        });
+        const summaryItems = colPlayers.map(name => {
+          const raw = totals[name];
+          const pt = Math.round(raw * 10) / 10;
+          const cls = pt > 0 ? 'pos' : pt < 0 ? 'neg' : '';
+          const sign = pt > 0 ? '+' : '';
+          const disp = pt.toFixed(1);
+          return `<span class="rec-session-summary-item">${escH(name)} <span class="rec-sspt ${cls}">${sign}${disp}</span></span>`;
+        }).join('');
+
+        const hasAnyDetail = gMatches.some(m => !!m.tableGame);
+        const statsBtn = gMatches.length > 0
+          ? `<div class="rec-session-footer"><button class="rec-session-stats-btn" data-gidx="${gi}">この日の統計</button></div>`
+          : '';
+
         const matchRows = gMatches.map((m, mi) => {
           const hasDetail = !!m.tableGame;
           const ptsStr = (m.players || []).slice().sort((a,b)=>(a.rank||9)-(b.rank||9))
@@ -3663,18 +3694,149 @@
             <div class="rec-session-date">${escH(date)}</div>
             <div class="rec-session-players">${colPlayers.map(escH).join(' · ')}</div>
           </div>
+          <div class="rec-session-summary">${summaryItems}</div>
           ${matchRows}
+          ${statsBtn}
         </div>`;
       }).join('');
 
       const matchMap = {};
       allMatches.forEach(m => { matchMap[m.id] = m; });
+      const groups2 = groupMatches(allMatches);
       container.querySelectorAll('.rec-match-row[data-mid]').forEach(row => {
         row.addEventListener('click', () => {
           const match = matchMap[row.dataset.mid];
           if (match) openMatchDetail(match, Number(row.dataset.midx));
         });
       });
+      container.querySelectorAll('.rec-session-stats-btn[data-gidx]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const g = groups2[Number(btn.dataset.gidx)];
+          if (g) openGroupStats(g);
+        });
+      });
+    }
+
+    function openGroupStats(group) {
+      const overlay = document.getElementById('matchDetailOverlay');
+      const body = document.getElementById('detailBody');
+      const title = document.getElementById('detailTitle');
+      title.textContent = `${group.date}　通算統計`;
+      body.innerHTML = buildGroupStatsContent(group);
+      overlay.style.display = 'flex';
+    }
+
+    function buildGroupStatsContent(group) {
+      const { colPlayers, matches: gMatches } = group;
+      const n = colPlayers.length;
+
+      // 通算成績
+      const totals = {};
+      colPlayers.forEach(nm => { totals[nm] = 0; });
+      gMatches.forEach(m => {
+        (m.players || []).forEach(p => {
+          if (p.name in totals) totals[p.name] += (p.pt || 0);
+        });
+      });
+      const sortedByPt = colPlayers.slice().sort((a, b) => totals[b] - totals[a]);
+
+      const resultRows = sortedByPt.map((name, ri) => {
+        const raw = totals[name];
+        const pt = Math.round(raw * 10) / 10;
+        const col = pt > 0 ? '#4ade80' : pt < 0 ? '#f87171' : 'rgba(255,255,255,0.6)';
+        const sign = pt > 0 ? '+' : '';
+        const disp = pt.toFixed(1);
+        return `<div class="detail-result-row">
+          <span style="width:24px;font-size:11px;color:rgba(255,255,255,0.4)">${ri+1}位</span>
+          <span style="flex:1;font-size:13px;font-weight:700;color:rgba(255,255,255,0.85)">${escH(name)}</span>
+          <span style="font-size:14px;font-weight:800;color:${col}">${sign}${disp}</span>
+        </div>`;
+      }).join('');
+
+      let html = `<div class="detail-sec-lbl">通算成績（${gMatches.length}試合）</div>
+        <div style="margin-bottom:16px">${resultRows}</div>`;
+
+      // 合算プレイヤー統計 (tableGame がある試合のみ集計)
+      const nameToIdx = {};
+      colPlayers.forEach((nm, i) => { nameToIdx[nm] = i; });
+      const stats = colPlayers.map(() => ({ ron: 0, tsumo: 0, houju: 0, riichi: 0, totalRounds: 0 }));
+      let hasAnyStats = false;
+
+      gMatches.forEach(m => {
+        const tg = m.tableGame;
+        if (!tg) return;
+        hasAnyStats = true;
+        const roundLog = tg.roundLog || [];
+        const riichiCounts = tg.riichiCounts || [0,0,0,0];
+        const seatToGroup = [];
+        const tgNames = (Array.isArray(tg.playerNames) && tg.playerNames.length)
+          ? tg.playerNames.slice()
+          : (m.players || []).map(p => p.name);
+        tgNames.forEach((nm, si) => {
+          const gi = colPlayers.indexOf(nm);
+          seatToGroup.push(gi);
+        });
+        const tgN = tgNames.length;
+        const validRounds = roundLog.filter(e => e.type === 'agari' || e.type === 'ryukyoku').length;
+        for (let si = 0; si < tgN; si++) {
+          const gi = seatToGroup[si];
+          if (gi < 0) continue;
+          stats[gi].riichi += (riichiCounts[si] || 0);
+          stats[gi].totalRounds += validRounds;
+        }
+        for (const ev of roundLog) {
+          if (ev.type === 'agari') {
+            const winners = ev.winnerIdxs || (ev.winnerIdx >= 0 ? [ev.winnerIdx] : []);
+            if (ev.winType === 'ron') {
+              winners.forEach(wi => {
+                const gi = seatToGroup[wi];
+                if (gi >= 0) stats[gi].ron++;
+              });
+              const li = seatToGroup[ev.loserIdx];
+              if (li >= 0) stats[li].houju++;
+            } else {
+              winners.forEach(wi => {
+                const gi = seatToGroup[wi];
+                if (gi >= 0) stats[gi].tsumo++;
+              });
+            }
+          }
+        }
+      });
+
+      if (hasAnyStats) {
+        // 名前をcolPlayers順で表示
+        html += `<div class="detail-sec-lbl" style="margin-top:16px">プレイヤー統計（合算）</div>
+          <div class="detail-stats-scroll">
+          <table class="detail-stats-table">
+            <thead><tr>
+              <th>名前</th><th>ロン</th><th>ツモ</th><th>放銃</th><th>リーチ</th><th>和了率</th><th>放銃率</th>
+            </tr></thead>
+            <tbody>${colPlayers.map((name, i) => {
+              const s = stats[i];
+              const agari = s.ron + s.tsumo;
+              const rounds = s.totalRounds || 1;
+              const agariPct = Math.round(agari / rounds * 100);
+              const houjuPct = Math.round(s.houju / rounds * 100);
+              const colorIdx = i % COLORS.length;
+              return `<tr style="--p-color:${COLORS[colorIdx]}">
+                <td><span class="detail-stats-name"><span class="detail-stats-dot"></span><span>${escH(name)}</span></span></td>
+                <td>${s.ron}</td><td>${s.tsumo}</td><td>${s.houju}</td>
+                <td>${s.riichi}</td>
+                <td>${agariPct}%</td>
+                <td>${houjuPct}%</td>
+              </tr>`;
+            }).join('')}</tbody>
+          </table>
+          </div>`;
+      } else {
+        html += `<div style="color:rgba(255,255,255,0.25);font-size:12px;text-align:center;padding:24px 0;line-height:2">
+          プレイヤー統計データがありません<br>
+          <span style="font-size:11px">麻雀テーブルで対局すると詳細が記録されます</span>
+        </div>`;
+      }
+
+      return html;
     }
 
     function openMatchDetail(match, matchIdx) {
