@@ -1011,28 +1011,41 @@ function syncTableGameNames(tableGame, players) {
   return { ...tableGame, playerNames: names };
 }
 
-// ====== Tab 3: Group matches by date + player set ======
+// ====== Tab 3: Group matches by 3-hour window + same player set ======
 function groupMatches(allMatches) {
-  const groups = [];
-  const keyToGroup = new Map();
+  // 昇順に並べて処理（古い順）
+  const sorted = [...allMatches].sort((a, b) =>
+    (a.recordedAt || '') < (b.recordedAt || '') ? -1 : 1
+  );
 
-  allMatches.forEach(m => {
-    const date = m.recordedAt
-      ? new Date(m.recordedAt).toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' })
-      : '?';
+  const THREE_HOURS_MS = 5 * 60 * 60 * 1000;
+  const groups = []; // { date, key, colPlayers, matches, lastTs }
+
+  sorted.forEach(m => {
     const sortedNames = (m.players || []).map(p => p.name).sort().join('|');
-    const key = `${date}||${sortedNames}`;
+    const ts = m.recordedAt ? new Date(m.recordedAt).getTime() : null;
 
-    if (!keyToGroup.has(key)) {
+    // 同じメンバーで、最後の試合から3時間以内のグループを探す
+    const existing = groups.find(g =>
+      g.sortedNames === sortedNames &&
+      ts !== null && g.lastTs !== null &&
+      (ts - g.lastTs) <= THREE_HOURS_MS
+    );
+
+    if (existing) {
+      existing.matches.push(m);
+      if (ts !== null) existing.lastTs = ts;
+    } else {
+      const date = m.recordedAt
+        ? new Date(m.recordedAt).toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' })
+        : '?';
       const colPlayers = (m.players || []).map(p => p.name).sort();
-      const group = { date, key, colPlayers, matches: [] };
-      keyToGroup.set(key, group);
-      groups.push(group);
+      groups.push({ date, sortedNames, colPlayers, matches: [m], lastTs: ts });
     }
-    keyToGroup.get(key).matches.push(m);
   });
 
-  groups.forEach(g => g.matches.sort((a, b) => (a.recordedAt || '') < (b.recordedAt || '') ? -1 : 1));
+  // グループ内の試合は昇順（古い順）のまま確定、グループ自体は降順（新しい順）で返す
+  groups.reverse();
   return groups;
 }
 
@@ -1070,7 +1083,7 @@ function renderMatches(allMatches) {
       return `
       <tr>
         <td class="date-cell match-label" data-time="${escHtml(formatMatchTime(m.recordedAt))}">
-          <span class="match-num ${isTable ? 'match-num-table' : ''}" title="${isTable ? 'テーブル' : '点数'}">G${mi + 1}</span>
+          <span class="match-num ${isTable ? 'match-num-table' : ''}" title="${escHtml(formatMatchTime(m.recordedAt) || (isTable ? 'テーブル' : '点数'))}">G${mi + 1}</span>
         </td>
         ${colPlayers.map(pname => {
           const found = (m.players || []).find(p => p.name === pname);
