@@ -3625,23 +3625,39 @@
     });
 
     function groupMatches(allMatches) {
-      const groups = [];
-      const keyToGroup = new Map();
-      allMatches.forEach(m => {
-        const date = m.recordedAt
-          ? new Date(m.recordedAt).toLocaleDateString('ja-JP', { year:'numeric', month:'numeric', day:'numeric', weekday:'short' })
-          : '?';
+      // 昇順に並べて処理（古い順）
+      const sorted = [...allMatches].sort((a, b) =>
+        (a.recordedAt || '') < (b.recordedAt || '') ? -1 : 1
+      );
+
+      const THREE_HOURS_MS = 5 * 60 * 60 * 1000;
+      const groups = []; // { date, sortedNames, colPlayers, matches, lastTs }
+
+      sorted.forEach(m => {
         const sortedNames = (m.players || []).map(p => p.name).sort().join('|');
-        const key = `${date}||${sortedNames}`;
-        if (!keyToGroup.has(key)) {
+        const ts = m.recordedAt ? new Date(m.recordedAt).getTime() : null;
+
+        // 同じメンバーで、最後の試合から3時間以内のグループを探す
+        const existing = groups.find(g =>
+          g.sortedNames === sortedNames &&
+          ts !== null && g.lastTs !== null &&
+          (ts - g.lastTs) <= THREE_HOURS_MS
+        );
+
+        if (existing) {
+          existing.matches.push(m);
+          if (ts !== null) existing.lastTs = ts;
+        } else {
+          const date = m.recordedAt
+            ? new Date(m.recordedAt).toLocaleDateString('ja-JP', { year:'numeric', month:'numeric', day:'numeric', weekday:'short' })
+            : '?';
           const colPlayers = (m.players || []).map(p => p.name).sort();
-          const group = { date, colPlayers, matches: [] };
-          keyToGroup.set(key, group);
-          groups.push(group);
+          groups.push({ date, sortedNames, colPlayers, matches: [m], lastTs: ts });
         }
-        keyToGroup.get(key).matches.push(m);
       });
-      groups.forEach(g => g.matches.sort((a, b) => (a.recordedAt||'') < (b.recordedAt||'') ? -1 : 1));
+
+      // グループ内の試合は昇順（古い順）のまま確定、グループ自体は降順（新しい順）で返す
+      groups.reverse();
       return groups;
     }
 
@@ -3682,8 +3698,9 @@
           const hasDetail = !!m.tableGame;
           const ptsStr = (m.players || []).slice().sort((a,b)=>(a.rank||9)-(b.rank||9))
             .map(p => `${escH(p.name||'')} ${fmtPt(p.pt)}`).join('　');
+          const clock = m.recordedAt ? (() => { const d = new Date(m.recordedAt); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; })() : '';
           return `<div class="rec-match-row" data-mid="${escH(m.id)}" data-midx="${mi}">
-            <div class="rec-match-num">${mi+1}試合目</div>
+            <div class="rec-match-num" title="${escH(clock)}">${mi+1}試合目</div>
             <div class="rec-match-pts">${ptsStr}</div>
             ${hasDetail ? '<div class="rec-match-detail-badge">詳細</div>' : ''}
             <div class="rec-match-arrow">›</div>
