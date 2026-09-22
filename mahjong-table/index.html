@@ -2900,9 +2900,9 @@
           <div class="kicha-mark" id="km2"></div>
         </div>
         <div class="srow">
-          <button class="diff-btn" id="db2"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>
-          <span class="sval" id="sv2">25000</span>
           <button class="goal-btn" id="gb2">目標</button>
+          <span class="sval" id="sv2">25000</span>
+          <button class="diff-btn" id="db2"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>
           <input class="sinp" id="si2" type="number" inputmode="numeric">
         </div>
         <button class="rbtn" id="r2">リーチ</button>
@@ -2919,9 +2919,9 @@
           <div class="kicha-mark" id="km3"></div>
         </div>
         <div class="srow">
-          <button class="diff-btn" id="db3"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>
-          <span class="sval" id="sv3">25000</span>
           <button class="goal-btn" id="gb3">目標</button>
+          <span class="sval" id="sv3">25000</span>
+          <button class="diff-btn" id="db3"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>
           <input class="sinp" id="si3" type="number" inputmode="numeric">
         </div>
         <button class="rbtn" id="r3">リーチ</button>
@@ -2963,9 +2963,9 @@
           <div class="kicha-mark" id="km1"></div>
         </div>
         <div class="srow">
-          <button class="diff-btn" id="db1"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>
-          <span class="sval" id="sv1">25000</span>
           <button class="goal-btn" id="gb1">目標</button>
+          <span class="sval" id="sv1">25000</span>
+          <button class="diff-btn" id="db1"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>
           <input class="sinp" id="si1" type="number" inputmode="numeric">
         </div>
         <button class="rbtn" id="r1">リーチ</button>
@@ -2982,9 +2982,9 @@
           <div class="kicha-mark" id="km0"></div>
         </div>
         <div class="srow">
-          <button class="diff-btn" id="db0"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>
-          <span class="sval" id="sv0">25000</span>
           <button class="goal-btn" id="gb0">目標</button>
+          <span class="sval" id="sv0">25000</span>
+          <button class="diff-btn" id="db0"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>
           <input class="sinp" id="si0" type="number" inputmode="numeric">
         </div>
         <button class="rbtn" id="r0">リーチ</button>
@@ -5096,9 +5096,9 @@
                   ${idx === kiichaSlot ? `<span class="personal-kicha-mark">${escPersonal(ROUND_WINDS[displayState.roundWind])}</span>` : ''}
                 </div>
                 <div class="personal-score-line">
-                  ${isMe ? `<button class="personal-diff-btn${personalDiffOn ? ' active' : ''}" id="personalDiffBtn" aria-label="点差"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>` : ''}
-                  <div class="personal-score${isLongScore ? ' long-score' : ''}${diffClass}" data-score-idx="${idx}" ${isMe ? 'id="personalAgariScore"' : ''}>${scoreText}</div>
                   ${isMe ? `<button class="goal-btn" id="personalGoalBtn">目標</button>` : ''}
+                  <div class="personal-score${isLongScore ? ' long-score' : ''}${diffClass}" data-score-idx="${idx}" ${isMe ? 'id="personalAgariScore"' : ''}>${scoreText}</div>
+                  ${isMe ? `<button class="personal-diff-btn${personalDiffOn ? ' active' : ''}" id="personalDiffBtn" aria-label="点差"><span class="plus">+</span><span class="slash">/</span><span class="minus">−</span></button>` : ''}
                 </div>
                 <div class="personal-riichi-stick${isRiichi ? ' on' : ''}" aria-label="${isRiichi ? 'リーチ' : ''}"></div>
                 ${isMe ? `
@@ -6965,13 +6965,13 @@
       return roundUp100(base * (isParent ? 6 : 4)) + state.honba * 300;
     }
 
-    function pickAtamahaneWinner(winners, loserIdx) {
+    function sortMwWinners(winners, loserIdx) {
       const loserWindIdx = WINDS.indexOf(state.players[loserIdx].wind);
       return [...winners].sort((a, b) => {
         const da = (WINDS.indexOf(state.players[a].wind) - loserWindIdx + 4) % 4;
         const db = (WINDS.indexOf(state.players[b].wind) - loserWindIdx + 4) % 4;
         return da - db;
-      })[0];
+      });
     }
 
     function buildMwHanTree() {
@@ -7273,8 +7273,7 @@
     document.getElementById('mwStep1Next').addEventListener('click', () => {
       if (mwWinners.size === 0) { alert('和了者を選択してください'); return; }
       if (mwLoser < 0) { alert('放銃者を選択してください'); return; }
-      const atamahaneWinner = pickAtamahaneWinner(mwWinners, mwLoser);
-      mwSortedWinners = atamahaneWinner === undefined ? [] : [atamahaneWinner];
+      mwSortedWinners = sortMwWinners(mwWinners, mwLoser);
       mwWinnerStep = 0;
       mwWinnerData = mwSortedWinners.map(() => ({ hanIdx: -1, fu: -1, score: 0 }));
       buildMwHanTree();
