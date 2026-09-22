@@ -73,10 +73,12 @@ const els = {
   prevCard: document.getElementById("prev-card"),
   nextCard: document.getElementById("next-card"),
   flashcard: document.getElementById("flashcard"),
+  swipeHintLeft: document.getElementById("swipe-hint-left"),
+  swipeHintRight: document.getElementById("swipe-hint-right"),
+  cardKnownTag: document.getElementById("card-known-tag"),
   cardSide: document.getElementById("card-side"),
   cardMain: document.getElementById("card-main"),
   cardSub: document.getElementById("card-sub"),
-  knownBtn: document.getElementById("known-btn"),
   shuffleBtn: document.getElementById("shuffle-btn"),
   resetKnownBtn: document.getElementById("reset-known-btn"),
   addForm: document.getElementById("add-form"),
@@ -146,7 +148,6 @@ els.studyOrderSelect.addEventListener("change", () => {
 });
 els.shuffleBtn.addEventListener("click", shuffleCards);
 els.resetKnownBtn.addEventListener("click", resetKnown);
-els.knownBtn.addEventListener("click", toggleKnown);
 els.addForm.addEventListener("submit", addCard);
 els.bulkAddBtn.addEventListener("click", addBulkCards);
 els.bulkInput.addEventListener("input", renderImportPreview);
@@ -425,12 +426,14 @@ function setSyncStatus(state) {
   }
 }
 
-async function saveWithStatus(task) {
-  if (!navigator.onLine) setSyncStatus("pending");
-  else setSyncStatus("saving");
+async function saveWithStatus(task, { silent = false } = {}) {
+  if (!silent) {
+    if (!navigator.onLine) setSyncStatus("pending");
+    else setSyncStatus("saving");
+  }
   try {
     const result = await task();
-    setSyncStatus("saved");
+    if (!silent) setSyncStatus("saved");
     return result;
   } catch (error) {
     setSyncStatus("reconnect");
@@ -573,14 +576,14 @@ function renderCard() {
   els.nextCard.disabled = cards.length <= 1;
   els.shuffleBtn.disabled = cards.length <= 1;
   els.resetKnownBtn.disabled = !cards.some((item) => item.known);
-  els.knownBtn.disabled = !hasCards;
   els.progressText.textContent = hasCards ? `${currentIndex + 1} / ${cards.length}` : "0 / 0";
+  resetSwipeHints();
 
   if (!hasCards) {
     els.cardSide.textContent = "表";
     els.cardMain.textContent = "カード未追加";
     els.cardSub.textContent = "下の入力欄から追加";
-    els.knownBtn.textContent = "暗記";
+    if (els.cardKnownTag) els.cardKnownTag.hidden = true;
     return;
   }
 
@@ -591,7 +594,9 @@ function renderCard() {
   els.cardSide.textContent = showingBack ? answerSide : promptSide;
   els.cardMain.textContent = showingBack ? answerText : promptText;
   els.cardSub.textContent = showingBack ? `${promptSide}へ` : `${answerSide}へ`;
-  els.knownBtn.textContent = card.known ? "未暗記" : "暗記";
+  if (els.cardKnownTag) {
+    els.cardKnownTag.hidden = !card.known;
+  }
   recordCardView(card);
 }
 
@@ -679,7 +684,7 @@ function renderList() {
         await saveWithStatus(() => deleteDoc(cardDoc(card.id)));
         showUndo("カードを削除", () => setDoc(cardDoc(card.id), cardToDoc(card)));
       } else {
-        await saveWithStatus(() => updateDoc(cardDoc(card.id), { known: !card.known, updatedAt: serverTimestamp() }));
+        await saveWithStatus(() => updateDoc(cardDoc(card.id), { known: !card.known, updatedAt: serverTimestamp() }), { silent: true });
       }
     });
   });
@@ -817,6 +822,11 @@ function moveCard(step, direction = step > 0 ? "left" : "right") {
   renderCard();
 }
 
+function resetSwipeHints() {
+  if (els.swipeHintLeft) els.swipeHintLeft.style.opacity = "0";
+  if (els.swipeHintRight) els.swipeHintRight.style.opacity = "0";
+}
+
 function startFlick(event) {
   if (!cards.length) return;
   pointerTracking = true;
@@ -833,8 +843,18 @@ function moveFlick(event) {
   if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return;
   event.preventDefault();
   els.flashcard.dataset.dragged = "true";
-  const limited = Math.max(-90, Math.min(90, dx));
-  els.flashcard.style.transform = `translateX(${limited}px) rotate(${limited / 16}deg)`;
+  const limited = Math.max(-140, Math.min(140, dx));
+  els.flashcard.style.transform = `translateX(${limited}px) rotate(${limited / 14}deg)`;
+
+  if (dx > 0) {
+    const opacity = Math.min(1, Math.max(0, (dx - 10) / 60));
+    if (els.swipeHintRight) els.swipeHintRight.style.opacity = String(opacity);
+    if (els.swipeHintLeft) els.swipeHintLeft.style.opacity = "0";
+  } else {
+    const opacity = Math.min(1, Math.max(0, (-dx - 10) / 60));
+    if (els.swipeHintLeft) els.swipeHintLeft.style.opacity = String(opacity);
+    if (els.swipeHintRight) els.swipeHintRight.style.opacity = "0";
+  }
 }
 
 function endFlick(event) {
@@ -842,16 +862,54 @@ function endFlick(event) {
   const dx = event.clientX - pointerStartX;
   const dy = event.clientY - pointerStartY;
   pointerTracking = false;
-  els.flashcard.style.transform = "";
+  resetSwipeHints();
 
-  if (Math.abs(dx) > 72 && Math.abs(dx) > Math.abs(dy) * 1.2) {
-    moveCard(dx < 0 ? 1 : -1, dx < 0 ? "left" : "right");
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.1) {
+    els.flashcard.style.transform = "";
+    if (dx > 0) {
+      swipeMarkCard(true);
+    } else {
+      swipeMarkCard(false);
+    }
+  } else {
+    els.flashcard.style.transform = "";
   }
 }
 
 function cancelFlick() {
   pointerTracking = false;
+  resetSwipeHints();
   els.flashcard.style.transform = "";
+}
+
+async function swipeMarkCard(isKnown) {
+  const card = cards[currentIndex];
+  if (!card) return;
+
+  animateCardAction(isKnown ? "known" : "unknown");
+
+  const data = {
+    known: isKnown,
+    knownCount: isKnown ? (card.knownCount || 0) + 1 : (card.knownCount || 0),
+    lastStudiedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+  if (isKnown) data.lastKnownAt = serverTimestamp();
+
+  card.known = isKnown;
+  if (isKnown) card.knownCount = (card.knownCount || 0) + 1;
+
+  window.setTimeout(() => {
+    els.flashcard.classList.remove("flick-known", "flick-unknown");
+    els.flashcard.style.transform = "";
+    if (cards.length > 1) {
+      currentIndex = (currentIndex + 1) % cards.length;
+    }
+    showingBack = false;
+    render();
+  }, 200);
+
+  await saveWithStatus(() => updateDoc(cardDoc(card.id), data), { silent: true });
 }
 
 function handleKeyboard(event) {
@@ -861,16 +919,23 @@ function handleKeyboard(event) {
 
   if (event.key === "ArrowLeft") {
     event.preventDefault();
-    moveCard(-1, "right");
+    swipeMarkCard(false);
   } else if (event.key === "ArrowRight") {
     event.preventDefault();
-    moveCard(1, "left");
+    swipeMarkCard(true);
   } else if (event.key === " ") {
     event.preventDefault();
     if (cards.length) flipCard();
-  } else if (event.key === "Enter") {
-    event.preventDefault();
-    toggleKnown();
+  }
+}
+
+function animateCardAction(type) {
+  els.flashcard.classList.remove("flick-known", "flick-unknown", "flick-left", "flick-right");
+  void els.flashcard.offsetWidth;
+  if (type === "known") {
+    els.flashcard.classList.add("flick-known");
+  } else if (type === "unknown") {
+    els.flashcard.classList.add("flick-unknown");
   }
 }
 
@@ -917,7 +982,7 @@ async function toggleKnown() {
     updatedAt: serverTimestamp(),
   };
   if (nextKnown) data.lastKnownAt = serverTimestamp();
-  await saveWithStatus(() => updateDoc(cardDoc(card.id), data));
+  await saveWithStatus(() => updateDoc(cardDoc(card.id), data), { silent: true });
 }
 
 async function resetKnown() {
