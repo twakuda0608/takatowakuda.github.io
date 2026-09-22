@@ -2900,6 +2900,15 @@
         </div>
 
         <div class="setup-card" style="margin-top:12px">
+          <div class="setup-card-lbl">流局時の供託</div>
+          <div class="ag-row">
+            <button class="wtype sel" id="kyotakuEndTop">トップ取り</button>
+            <button class="wtype" id="kyotakuEndNone">供託抜き</button>
+          </div>
+          <div id="kyotakuEndDesc" style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:10px;line-height:1.7">トップ取り: 最終局流局時に残った供託（リーチ棒）を1位に加算</div>
+        </div>
+
+        <div class="setup-card" style="margin-top:12px">
           <div class="setup-card-lbl">ルールプリセット</div>
           <div class="preset-row">
             <select id="rulePresetSelect"></select>
@@ -3974,6 +3983,10 @@
     let settingKijunten = 30000;
     let settingHakoshita = false;
     let settingHakoshitaRiichi = false;
+    let settingKyotakuEnd = 'top'; // 'top' (トップ取り) | 'exclude' (供託抜き)
+    let endKyotakuAwarded = 0;
+    let endKyotakuRecipient = -1;
+    let endKyotakuExcluded = 0;
     let tableRoundLog = [];
     let riichiCounts = [0, 0, 0, 0];
     let gameRecorded = false;
@@ -4078,12 +4091,16 @@
         kiichaSlot,
         playerWinds: playerWinds.slice(),
         setupNames: [0, 1, 2, 3].map(i => document.getElementById(`sn${i}`)?.value || ''),
+        endKyotakuAwarded,
+        endKyotakuRecipient,
+        endKyotakuExcluded,
         settings: {
           gameType: settingGameType,
           enchosen: settingEnchosen,
           kijunten: settingKijunten,
           hakoshita: settingHakoshita,
           hakoshitaRiichi: settingHakoshitaRiichi,
+          kyotakuEnd: settingKyotakuEnd,
         },
       };
     }
@@ -4110,7 +4127,11 @@
           kijunten: settingKijunten,
           hakoshita: settingHakoshita,
           hakoshitaRiichi: settingHakoshitaRiichi,
+          kyotakuEnd: settingKyotakuEnd,
         },
+        endKyotakuAwarded,
+        endKyotakuRecipient,
+        endKyotakuExcluded,
       };
     }
 
@@ -5340,6 +5361,17 @@
         hakoshitaRiichiBtn.textContent = settingHakoshitaRiichi ? 'ON' : 'OFF';
         hakoshitaRiichiBtn.classList.toggle('sel', settingHakoshitaRiichi);
       }
+      const keTopBtn = document.getElementById('kyotakuEndTop');
+      const keNoneBtn = document.getElementById('kyotakuEndNone');
+      const keDesc = document.getElementById('kyotakuEndDesc');
+      const isTop = settingKyotakuEnd === 'top';
+      if (keTopBtn) keTopBtn.classList.toggle('sel', isTop);
+      if (keNoneBtn) keNoneBtn.classList.toggle('sel', !isTop);
+      if (keDesc) {
+        keDesc.textContent = isTop
+          ? 'トップ取り: 最終局流局時に残った供託（リーチ棒）を1位に加算'
+          : '供託抜き: 最終局流局時に残った供託を1位に加算せず精算';
+      }
     }
 
     function currentRuleSettings() {
@@ -5349,6 +5381,7 @@
         kijunten: settingKijunten,
         hakoshita: settingHakoshita,
         hakoshitaRiichi: settingHakoshitaRiichi,
+        kyotakuEnd: settingKyotakuEnd,
       };
     }
 
@@ -5358,6 +5391,7 @@
       settingKijunten = Number(settings.kijunten || settingKijunten);
       settingHakoshita = !!settings.hakoshita;
       settingHakoshitaRiichi = !!settings.hakoshitaRiichi;
+      settingKyotakuEnd = settings.kyotakuEnd === 'exclude' ? 'exclude' : 'top';
       syncSettingsUI();
       saveGameProgress();
     }
@@ -5419,6 +5453,9 @@
         const input = document.getElementById(`sn${i}`);
         if (input) input.value = name;
       });
+      endKyotakuAwarded = Number(data.endKyotakuAwarded || 0);
+      endKyotakuRecipient = Number.isInteger(data.endKyotakuRecipient) ? data.endKyotakuRecipient : -1;
+      endKyotakuExcluded = Number(data.endKyotakuExcluded || 0);
       applyRuleSettings(data.settings || {});
       renderStartWindBtns();
       updateHistBadge();
@@ -5973,6 +6010,19 @@
       settingHakoshitaRiichi = !settingHakoshitaRiichi;
       syncSettingsUI();
       render();
+    });
+
+    // ── 設定タブ: 流局時の供託 ───────────────────
+    document.getElementById('kyotakuEndTop')?.addEventListener('click', () => {
+      settingKyotakuEnd = 'top';
+      syncSettingsUI();
+      saveGameProgress();
+    });
+
+    document.getElementById('kyotakuEndNone')?.addEventListener('click', () => {
+      settingKyotakuEnd = 'exclude';
+      syncSettingsUI();
+      saveGameProgress();
     });
 
     document.getElementById('rulePresetSave').addEventListener('click', () => {
@@ -7065,6 +7115,9 @@
         tableGameEnded: tableGameEnded,
         riichiCounts: riichiCounts.slice(),
         diffPlayer: diffPlayer,
+        endKyotakuAwarded,
+        endKyotakuRecipient,
+        endKyotakuExcluded,
       };
       editingRoundIndex = targetIdx;
 
@@ -7139,12 +7192,22 @@
       tableGameEnded = preEditLiveState.tableGameEnded;
       riichiCounts = preEditLiveState.riichiCounts;
       diffPlayer = preEditLiveState.diffPlayer;
+      endKyotakuAwarded = preEditLiveState.endKyotakuAwarded || 0;
+      endKyotakuRecipient = preEditLiveState.endKyotakuRecipient ?? -1;
+      endKyotakuExcluded = preEditLiveState.endKyotakuExcluded || 0;
       editingRoundIndex = null;
       preEditLiveState = null;
       origRoundScores = null;
 
       const reb = document.getElementById('roundEditBanner');
       if (reb) reb.classList.remove('active');
+
+      closeAgariModal();
+      document.querySelectorAll('.ag-overlay').forEach(el => {
+        el.style.display = 'none';
+        el.classList.remove('centered');
+      });
+      setBackFabVisible(true);
       render();
     }
 
@@ -7233,6 +7296,13 @@
       const reb = document.getElementById('roundEditBanner');
       if (reb) reb.classList.remove('active');
 
+      closeAgariModal();
+      document.querySelectorAll('.ag-overlay').forEach(el => {
+        el.style.display = 'none';
+        el.classList.remove('centered');
+      });
+      setBackFabVisible(true);
+
       saveGameProgress();
       publishRoomStateNow();
       render();
@@ -7310,6 +7380,9 @@
       gameHistory = gameHistory.slice(0, activeHistIdx);
       tableRoundLog = tableRoundLog.slice(0, activeHistIdx);
       tableGameEnded = false;
+      endKyotakuAwarded = 0;
+      endKyotakuRecipient = -1;
+      endKyotakuExcluded = 0;
       updateHistBadge();
       document.getElementById('histDetailModal').style.display = 'none';
       document.getElementById('historyModal').style.display = 'none';
@@ -7400,8 +7473,30 @@
     });
 
     // ── 対局終了 ─────────────────────────────────
+    function handleEndKyotaku() {
+      if (endKyotakuAwarded > 0 || endKyotakuExcluded > 0) return;
+      if (state.kyotaku <= 0) return;
+
+      const pot = state.kyotaku * 1000;
+
+      if (settingKyotakuEnd === 'top') {
+        const topScore = Math.max(...state.players.map(p => p.score));
+        const topCandidates = [0, 1, 2, 3].filter(i => state.players[i].score === topScore);
+        topCandidates.sort((a, b) => ((a - kiichaSlot + 4) % 4) - ((b - kiichaSlot + 4) % 4));
+        const topIdx = topCandidates[0];
+
+        state.players[topIdx].score += pot;
+        endKyotakuAwarded = pot;
+        endKyotakuRecipient = topIdx;
+        state.kyotaku = 0;
+      } else {
+        endKyotakuExcluded = pot;
+      }
+    }
+
     function showGameEnd() {
       tableGameEnded = true;
+      handleEndKyotaku();
       saveGameProgress();
       const sorted = state.players.slice().sort((a, b) => b.score - a.score);
       const ranks = ['1位', '2位', '3位', '4位'];
@@ -7410,8 +7505,16 @@
         const col = i === 0 ? '#fbbf24' : 'rgba(255,255,255,0.75)';
         html += `<div style="color:${col};font-weight:${i===0?'800':'600'}">${ranks[i]}　${p.name}　<b>${p.score.toLocaleString()}</b></div>`;
       });
+      if (endKyotakuAwarded > 0 && endKyotakuRecipient >= 0) {
+        const recip = state.players[endKyotakuRecipient];
+        html += `<div style="margin-top:10px;padding:6px 10px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);border-radius:8px;font-size:11px;color:#4ade80;text-align:center">供託 ${endKyotakuAwarded.toLocaleString()}点を1位（${recip.name}）に加算</div>`;
+      } else if (endKyotakuExcluded > 0 || (settingKyotakuEnd === 'exclude' && state.kyotaku > 0)) {
+        const exc = endKyotakuExcluded || (state.kyotaku * 1000);
+        html += `<div style="margin-top:10px;padding:6px 10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;font-size:11px;color:rgba(255,255,255,0.6);text-align:center">供託 ${exc.toLocaleString()}点（精算除外）</div>`;
+      }
       document.getElementById('gameEndScores').innerHTML = html;
       document.getElementById('gameEndModal').style.display = 'flex';
+      render();
       publishRoomStateNow();
     }
 
@@ -7440,6 +7543,9 @@
       riichiCounts = [0, 0, 0, 0];
       gameRecorded = false;
       tableGameEnded = false;
+      endKyotakuAwarded = 0;
+      endKyotakuRecipient = -1;
+      endKyotakuExcluded = 0;
       updateHistBadge();
       playerWinds = ['東', '南', '西', '北'];
       renderStartWindBtns();
@@ -7451,6 +7557,7 @@
         playerNames: state.players.map(p => p.name),
         roundLog: tableRoundLog,
         riichiCounts: riichiCounts.slice(),
+        kyotakuExcluded: endKyotakuExcluded,
       };
       if (isEmbedded) {
         const sorted = state.players.slice().sort((a, b) => b.score - a.score);
@@ -7458,6 +7565,8 @@
           type: 'game_end',
           players: sorted.map(p => ({ name: p.name, score: p.score })),
           tableGame: tableGameData,
+          kyotaku: endKyotakuExcluded,
+          settingKyotakuEnd: settingKyotakuEnd,
         }, '*');
         gameRecorded = true;
         document.getElementById('gameEndModal').style.display = 'none';
@@ -7467,6 +7576,9 @@
         tableRoundLog = [];
         riichiCounts = [0, 0, 0, 0];
         tableGameEnded = false;
+        endKyotakuAwarded = 0;
+        endKyotakuRecipient = -1;
+        endKyotakuExcluded = 0;
         updateHistBadge();
         playerWinds = ['東', '南', '西', '北'];
         renderStartWindBtns();
@@ -7476,6 +7588,8 @@
           players: state.players.map(p => ({ name: p.name, score: p.score })),
           timestamp: new Date().toISOString(),
           tableGame: tableGameData,
+          kyotaku: endKyotakuExcluded,
+          settingKyotakuEnd: settingKyotakuEnd,
         };
         localStorage.setItem('mahjong_table_import', JSON.stringify(importData));
         clearSavedGame();

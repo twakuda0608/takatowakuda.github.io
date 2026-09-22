@@ -218,7 +218,8 @@ function computeTab1() {
     return;
   }
 
-  const autoScore = I * 4 - manualScoreInputs.reduce((sum, input) => sum + Number(input.value), 0);
+  const kyotakuOffset = pendingTableGame?.kyotakuExcluded || 0;
+  const autoScore = I * 4 - kyotakuOffset - manualScoreInputs.reduce((sum, input) => sum + Number(input.value), 0);
   autoScoreInput.value = autoScore;
   const slotScores = scoreInputs.map(input => Number(input.value));
   const S = getRankedSlotIndexes().map(slotIndex => slotScores[slotIndex]);
@@ -247,7 +248,7 @@ function computeTab1() {
     const direct = S.map((s, idx) => thousandRoundPt1(s * 100) + uma[idx] - okaPt);
 
     // The sum won't be zero when init ≠ oka; distribute the surplus to the top-score group
-    const surplus = -direct.reduce((a, b) => a + b, 0);
+    const surplus = -direct.reduce((a, b) => a + b, 0) - (kyotakuOffset ? (kyotakuOffset * 100 / 1000) : 0);
     const maxS = Math.max(...S);
     const topCount = S.filter(s => s === maxS).length;
     [p1, p2, p3, p4] = direct.map((d, idx) => d + (S[idx] === maxS ? surplus / topCount : 0));
@@ -257,7 +258,7 @@ function computeTab1() {
     p2 = thousandRoundPt1(S[1] * 100) + UX - okaPt;
     p3 = thousandRoundPt1(S[2] * 100) - UX - okaPt;
     p4 = thousandRoundPt1(S[3] * 100) - UY - okaPt;
-    p1 = -(p2 + p3 + p4);
+    p1 = kyotakuOffset ? (thousandRoundPt1(S[0] * 100) + UY) : -(p2 + p3 + p4);
   }
 
   function fmt(pt) {
@@ -1324,6 +1325,10 @@ function applyTableImport() {
     el('s4_1').value = Math.round(sorted[3].score / 100);
 
     pendingTableGame = data.tableGame || null;
+    if (data.kyotaku && data.settingKyotakuEnd === 'exclude') {
+      if (!pendingTableGame) pendingTableGame = {};
+      pendingTableGame.kyotakuExcluded = Math.round(Number(data.kyotaku) / 100);
+    }
     [1, 2, 3, 4].forEach((rank, i) => {
       const inp = el(`sn${rank}_1`);
       if (inp) inp.value = cleanName(sorted[i].name, `P${rank}`);
