@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/fireba
 import {
   getFirestore, collection, addDoc, onSnapshot,
   orderBy, query, deleteDoc, doc,
-  updateDoc, getDoc, setDoc
+  updateDoc, getDoc, setDoc, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup,
@@ -43,8 +43,43 @@ function normalizeNameList(names, fallbackPrefix = 'P') {
   return [0, 1, 2, 3].map(i => cleanName(names?.[i], `${fallbackPrefix}${i + 1}`));
 }
 
-function getRankNames() {
-  return [1, 2, 3, 4].map(rank => cleanName(el(`sn${rank}_1`)?.value, `P${rank}`));
+function getPlayerSlotNames(useFallback = true) {
+  return [1, 2, 3, 4].map(slot =>
+    cleanName(el(`sn${slot}_1`)?.value, useFallback ? `P${slot}` : '')
+  );
+}
+
+function getRankedSlotIndexes() {
+  return [0, 1, 2, 3].sort((a, b) =>
+    Number(el(`sr${a + 1}_1`)?.value || a + 1) - Number(el(`sr${b + 1}_1`)?.value || b + 1)
+  );
+}
+
+function getRankNames(useFallback = true) {
+  const slotNames = getPlayerSlotNames(useFallback);
+  return getRankedSlotIndexes().map(slotIndex => slotNames[slotIndex]);
+}
+
+function resetScoreRankSelections() {
+  [1, 2, 3, 4].forEach(slot => {
+    const select = el(`sr${slot}_1`);
+    if (!select) return;
+    select.value = String(slot);
+    select.dataset.previousRank = String(slot);
+  });
+  reorderScoreRowsByRank();
+}
+
+function reorderScoreRowsByRank() {
+  const container = el('score-rows');
+  if (!container) return;
+  Array.from(container.querySelectorAll('.score-row'))
+    .sort((a, b) => {
+      const aSlot = a.dataset.playerSlot;
+      const bSlot = b.dataset.playerSlot;
+      return Number(el(`sr${aSlot}_1`)?.value || 9) - Number(el(`sr${bSlot}_1`)?.value || 9);
+    })
+    .forEach(row => container.appendChild(row));
 }
 
 function getRankPlayerRecords() {
@@ -123,6 +158,7 @@ window.addEventListener('message', (e) => {
     if (!Array.isArray(players) || players.length !== 4) return;
     pendingTableGame = msg.tableGame || null;
     if (pendingTableGame?.playerNames) setTableSeatNames(pendingTableGame.playerNames, false);
+    resetScoreRankSelections();
     el('s2_1').value = Math.round(players[1].score / 100);
     el('s3_1').value = Math.round(players[2].score / 100);
     el('s4_1').value = Math.round(players[3].score / 100);
@@ -162,20 +198,36 @@ function computeTab1() {
   const R = Number(rate1.value || 0);
   const { x: UX, y: UY } = parseUma1(uma1.value);
 
-  const S2 = Number(s2_1.value || 0);
-  const S3 = Number(s3_1.value || 0);
-  const S4 = Number(s4_1.value || 0);
+  const scoreInputs = [s1_1, s2_1, s3_1, s4_1];
+  const topSlotIndex = getRankedSlotIndexes()[0];
+  const autoScoreInput = scoreInputs[topSlotIndex];
+  const manualScoreInputs = scoreInputs.filter((_, slotIndex) => slotIndex !== topSlotIndex);
 
-  const S1 = I * 4 - S2 - S3 - S4;
-  s1_1.value = S1;
+  scoreInputs.forEach((input, slotIndex) => {
+    const isAuto = slotIndex === topSlotIndex;
+    input.readOnly = isAuto;
+    input.placeholder = isAuto ? '自動計算' : '';
+  });
+
+  if (manualScoreInputs.some(input => input.value.trim() === '')) {
+    autoScoreInput.value = '';
+    [r1_1, r2_1, r3_1, r4_1].forEach(result => { result.textContent = '—'; });
+    lastResult = null;
+    updateRecordSection();
+    updateRankNames();
+    return;
+  }
+
+  const autoScore = I * 4 - manualScoreInputs.reduce((sum, input) => sum + Number(input.value), 0);
+  autoScoreInput.value = autoScore;
+  const slotScores = scoreInputs.map(input => Number(input.value));
+  const S = getRankedSlotIndexes().map(slotIndex => slotScores[slotIndex]);
 
   const okaPt = (O * 100) / 1000;
 
   let p1, p2, p3, p4;
 
   if (tie1 && tie1.checked) {
-    const S = [S1, S2, S3, S4];
-
     // Uma bonus per rank: 1st=+UY, 2nd=+UX, 3rd=-UX, 4th=-UY
     const uma = [UY, UX, -UX, -UY];
 
@@ -202,9 +254,9 @@ function computeTab1() {
 
   } else {
     // Original formula: p1 absorbs all oka surplus (standard mahjong)
-    p2 = thousandRoundPt1(S2 * 100) + UX - okaPt;
-    p3 = thousandRoundPt1(S3 * 100) - UX - okaPt;
-    p4 = thousandRoundPt1(S4 * 100) - UY - okaPt;
+    p2 = thousandRoundPt1(S[1] * 100) + UX - okaPt;
+    p3 = thousandRoundPt1(S[2] * 100) - UX - okaPt;
+    p4 = thousandRoundPt1(S[3] * 100) - UY - okaPt;
     p1 = -(p2 + p3 + p4);
   }
 
@@ -231,7 +283,7 @@ function computeTab1() {
 }
 
 ['input', 'change'].forEach(ev => {
-  [init1, oka1, uma1, rate1, s2_1, s3_1, s4_1, decimal1, tie1].forEach(e =>
+  [init1, oka1, uma1, rate1, s1_1, s2_1, s3_1, s4_1, decimal1, tie1].forEach(e =>
     e.addEventListener(ev, computeTab1)
   );
 });
@@ -240,12 +292,11 @@ computeTab1();
 
 // ====== Rank card name display (Tab 1) ======
 function updateRankNames() {
+  const rankNames = getRankNames(false);
   [1, 2, 3, 4].forEach(i => {
     const nameEl = el(`rn${i}_1`);
     if (!nameEl) return;
-    const field = el(`sn${i}_1`);
-    if (!field) { nameEl.textContent = ''; return; }
-    const name = field.value.trim();
+    const name = rankNames[i - 1];
     nameEl.textContent = name ? ` · ${name}` : '';
   });
   updateRecordSourceUI();
@@ -262,14 +313,33 @@ function getScoreInputNames(rank) {
   return playerHistory.filter(n => !taken.has(n));
 }
 
-[1, 2, 3, 4].forEach(rank => {
-  const inp = el(`sn${rank}_1`);
+[1, 2, 3, 4].forEach(slot => {
+  const inp = el(`sn${slot}_1`);
   if (!inp) return;
   inp.addEventListener('input', () => {
     updateRankNames();
-    if (!pendingTableGame) setTableSeatNames(getRankNames());
+    if (!pendingTableGame) setTableSeatNames(getPlayerSlotNames());
   });
-  makeAutocomplete(inp, () => getScoreInputNames(rank));
+  makeAutocomplete(inp, () => getScoreInputNames(slot));
+
+  const rankSelect = el(`sr${slot}_1`);
+  if (!rankSelect) return;
+  rankSelect.dataset.previousRank = rankSelect.value;
+  rankSelect.addEventListener('change', () => {
+    const previousRank = rankSelect.dataset.previousRank;
+    const nextRank = rankSelect.value;
+    const otherSelect = [1, 2, 3, 4]
+      .filter(otherSlot => otherSlot !== slot)
+      .map(otherSlot => el(`sr${otherSlot}_1`))
+      .find(select => select?.value === nextRank);
+    if (otherSelect) {
+      otherSelect.value = previousRank;
+      otherSelect.dataset.previousRank = previousRank;
+    }
+    rankSelect.dataset.previousRank = nextRank;
+    reorderScoreRowsByRank();
+    computeTab1();
+  });
 });
 
 // ====== Record section (Tab 1 bottom) ======
@@ -278,7 +348,14 @@ function updateRecordSection() {
   const loggedIn   = el('record-logged-in');
   needsLogin.style.display = currentUser ? 'none' : 'block';
   loggedIn.style.display   = currentUser ? 'block' : 'none';
+  const recordBtn = el('record-btn');
+  if (recordBtn) recordBtn.disabled = !lastResult;
   updateRecordSourceUI();
+}
+
+function resetTab1ScoresForNextMatch() {
+  [s1_1, s2_1, s3_1, s4_1].forEach(input => { input.value = ''; });
+  computeTab1();
 }
 
 function updateRecordSourceUI() {
@@ -300,7 +377,7 @@ function updateRecordSourceUI() {
 
 el('record-clear-table').addEventListener('click', () => {
   pendingTableGame = null;
-  setTableSeatNames(getRankNames());
+  setTableSeatNames(getPlayerSlotNames());
   const banner = el('import-banner');
   if (banner) banner.style.display = 'none';
   updateRecordSourceUI();
@@ -332,6 +409,9 @@ el('record-btn').addEventListener('click', async () => {
     updateHistoryWithNames(playerRecords.map(p => p.name));
     await savePlayerHistory();
     pendingTableGame = null;
+    const banner = el('import-banner');
+    if (banner) banner.style.display = 'none';
+    resetTab1ScoresForNextMatch();
     msg.textContent = '記録しました！';
     msg.className = 'record-msg success';
     updateRecordSourceUI();
@@ -341,7 +421,7 @@ el('record-btn').addEventListener('click', async () => {
     msg.textContent = '記録に失敗しました。';
     msg.className = 'record-msg error';
   } finally {
-    btn.disabled = false;
+    btn.disabled = !lastResult;
     btn.textContent = '試合記録';
   }
 });
@@ -487,20 +567,167 @@ function renderPlayerHistory() {
     playerHistory.map(name => `
       <div class="history-row">
         <span class="history-name">${escHtml(name)}</span>
-        <button class="rec-del-btn history-del-btn" data-name="${escHtml(name)}" title="削除">×</button>
+        <div class="history-row-actions">
+          <button type="button" class="history-edit-btn" data-name="${escHtml(name)}">編集</button>
+          <button type="button" class="history-del-btn" data-name="${escHtml(name)}">削除</button>
+        </div>
       </div>`).join('')
   }</div>`;
+
+  container.querySelectorAll('.history-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const oldName = btn.dataset.name;
+      const row = btn.closest('.history-row');
+      if (!row) return;
+
+      row.classList.add('is-editing');
+      row.innerHTML = `
+        <input class="history-name-input" value="${escHtml(oldName)}" aria-label="${escHtml(oldName)}の新しい名前" maxlength="30">
+        <div class="history-edit-actions">
+          <button type="button" class="history-save-btn">保存</button>
+          <button type="button" class="history-cancel-btn">取消</button>
+        </div>
+        <span class="history-edit-msg" aria-live="polite"></span>`;
+
+      const input = row.querySelector('.history-name-input');
+      const saveBtn = row.querySelector('.history-save-btn');
+      const cancelBtn = row.querySelector('.history-cancel-btn');
+      const msg = row.querySelector('.history-edit-msg');
+
+      const showError = text => {
+        msg.textContent = text;
+        msg.className = 'history-edit-msg error';
+      };
+
+      const cancelEdit = () => renderPlayerHistory();
+      const saveEdit = async () => {
+        const newName = cleanName(input.value);
+        if (!newName) { showError('名前を入力してください'); return; }
+        if (newName === oldName) { cancelEdit(); return; }
+        if (playerHistory.includes(newName) || matches.some(match =>
+          (match.players || []).some(player => player.name === newName)
+        )) {
+          showError('同じ名前が既にあります');
+          return;
+        }
+
+        input.disabled = true;
+        saveBtn.disabled = true;
+        cancelBtn.disabled = true;
+        saveBtn.textContent = '保存中';
+        try {
+          await renamePlayer(oldName, newName);
+        } catch (err) {
+          console.error('プレイヤー名の変更エラー:', err);
+          input.disabled = false;
+          saveBtn.disabled = false;
+          cancelBtn.disabled = false;
+          saveBtn.textContent = '保存';
+          showError('名前変更に失敗しました');
+        }
+      };
+
+      saveBtn.addEventListener('click', saveEdit);
+      cancelBtn.addEventListener('click', cancelEdit);
+      input.addEventListener('keydown', event => {
+        if (event.key === 'Enter') saveEdit();
+        if (event.key === 'Escape') cancelEdit();
+      });
+      input.focus();
+      input.select();
+    });
+  });
+
+  function confirmPlayerDeletion(name) {
+    const dialog = el('player-delete-dialog');
+    el('player-delete-name').textContent = `「${name}」`;
+    dialog.returnValue = 'cancel';
+    dialog.showModal();
+    return new Promise(resolve => {
+      dialog.addEventListener('close', () => resolve(dialog.returnValue === 'delete'), { once: true });
+    });
+  }
 
   container.querySelectorAll('.history-del-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const name = btn.dataset.name;
-      if (!confirm(`「${name}」を候補リストから削除しますか？\n試合記録は変わりません。`)) return;
-      btn.disabled = true;
+      if (!await confirmPlayerDeletion(name)) return;
 
-      playerHistory = playerHistory.filter(n => n !== name);
-      await savePlayerHistory();
+      const previousHistory = playerHistory.slice();
+      const row = btn.closest('.history-row');
+      row?.querySelectorAll('button').forEach(button => { button.disabled = true; });
+      playerHistory = playerHistory.filter(playerName => playerName !== name);
+      try {
+        await savePlayerHistory();
+      } catch (err) {
+        console.error('プレイヤー削除エラー:', err);
+        playerHistory = previousHistory;
+        renderPlayerHistory();
+        alert('プレイヤーを削除できませんでした。');
+      }
     });
   });
+}
+
+async function renamePlayer(oldName, newName) {
+  const renamedHistory = playerHistory.map(name => name === oldName ? newName : name);
+  const profilePatch = { playerNames: renamedHistory };
+  if (myName === oldName) profilePatch.myName = newName;
+
+  const matchPatches = matches.flatMap(match => {
+    if (!(match.players || []).some(player => player.name === oldName)) return [];
+    const updatedPlayers = match.players.map(player =>
+      player.name === oldName ? { ...player, name: newName } : player
+    );
+    const patch = { players: updatedPlayers };
+    if (match.tableGame) {
+      patch.tableGame = {
+        ...match.tableGame,
+        playerNames: Array.isArray(match.tableGame.playerNames)
+          ? match.tableGame.playerNames.map(name => name === oldName ? newName : name)
+          : match.tableGame.playerNames
+      };
+    }
+    return [{ id: match.id, patch }];
+  });
+
+  const chunks = [];
+  for (let i = 0; i < matchPatches.length; i += 400) chunks.push(matchPatches.slice(i, i + 400));
+  if (chunks.length === 0) chunks.push([]);
+
+  for (const chunk of chunks) {
+    const batch = writeBatch(db);
+    batch.set(
+      doc(db, 'mahjong_records', currentUser.uid, 'settings', 'profile'),
+      profilePatch,
+      { merge: true }
+    );
+    chunk.forEach(item => {
+      batch.update(doc(db, 'mahjong_records', currentUser.uid, 'matches', item.id), item.patch);
+    });
+    await batch.commit();
+  }
+
+  playerHistory = renamedHistory;
+  matches = matches.map(match => {
+    const item = matchPatches.find(candidate => candidate.id === match.id);
+    return item ? { ...match, ...item.patch } : match;
+  });
+  if (myName === oldName) {
+    myName = newName;
+    el('my-name-input').value = newName;
+  }
+  tableSeatNames = tableSeatNames.map(name => name === oldName ? newName : name);
+  document.querySelectorAll('.player-name-input, #n1_2, #n2_2, #n3_2, #n4_2').forEach(input => {
+    if (input.value.trim() === oldName) input.value = newName;
+  });
+  applyMyNameToUi(oldName);
+  try { localStorage.setItem('mahjong_playerHistory', JSON.stringify(playerHistory)); } catch {}
+  renderPlayerHistory();
+  renderMatches(matches);
+  updateRecordSourceUI();
+  updateRankNames();
+  sendToTable({ type: 'update_players', names: tableSeatNames });
 }
 
 el('my-name-save').addEventListener('click', async () => {
@@ -570,6 +797,247 @@ function fmtPt(pt) {
 
 const ptClass = pt => pt > 0 ? 'pt-pos' : pt < 0 ? 'pt-neg' : '';
 
+function getMatchPlayerRank(match, playerName) {
+  const players = (match.players || []).filter(p => p && p.name);
+  const found = players.find(p => p.name === playerName);
+  if (!found) return null;
+  if (Number.isFinite(found.rank) && found.rank > 0) return found.rank;
+
+  const sorted = players.slice().sort((a, b) => {
+    const pointDiff = (Number(b.pt) || 0) - (Number(a.pt) || 0);
+    return pointDiff || String(a.name).localeCompare(String(b.name), 'ja');
+  });
+  const index = sorted.findIndex(p => p === found);
+  return index >= 0 ? index + 1 : null;
+}
+
+function getSessionStats(group) {
+  return group.colPlayers.map(name => {
+    let total = 0;
+    const ranks = [];
+    const rankCounts = [0, 0, 0, 0];
+
+    group.matches.forEach(match => {
+      const player = (match.players || []).find(p => p.name === name);
+      if (player && typeof player.pt === 'number') total += player.pt;
+      const rank = getMatchPlayerRank(match, name);
+      if (rank) {
+        ranks.push(rank);
+        if (rank <= rankCounts.length) rankCounts[rank - 1]++;
+      }
+    });
+
+    return {
+      name,
+      total: Math.round(total * 10) / 10,
+      averageRank: ranks.length ? ranks.reduce((sum, rank) => sum + rank, 0) / ranks.length : null,
+      rankCounts
+    };
+  }).sort((a, b) =>
+    b.total - a.total ||
+    (a.averageRank ?? 99) - (b.averageRank ?? 99) ||
+    a.name.localeCompare(b.name, 'ja')
+  );
+}
+
+function formatMatchClock(iso) {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+function drawRoundRect(ctx, x, y, width, height, radius, fill, stroke = null) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + width, y, x + width, y + height, r);
+  ctx.arcTo(x + width, y + height, x, y + height, r);
+  ctx.arcTo(x, y + height, x, y, r);
+  ctx.arcTo(x, y, x + width, y, r);
+  ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.stroke(); }
+}
+
+function fitCanvasText(ctx, value, maxWidth) {
+  const text = String(value);
+  if (ctx.measureText(text).width <= maxWidth) return text;
+  let fitted = text;
+  while (fitted.length && ctx.measureText(`${fitted}…`).width > maxWidth) fitted = fitted.slice(0, -1);
+  return `${fitted}…`;
+}
+
+async function exportSessionImage(group) {
+  const width = 1200;
+  const margin = 72;
+  const contentWidth = width - margin * 2;
+  const stats = getSessionStats(group);
+  const playerNames = stats.map(stat => stat.name);
+  const summaryRowHeight = 76;
+  const matchHeaderHeight = 70;
+  const matchRowHeight = 82;
+  const totalRowHeight = 78;
+  const height = 176 + 58 + stats.length * summaryRowHeight + 72 + matchHeaderHeight +
+    group.matches.length * matchRowHeight + totalRowHeight + 96;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas is unavailable');
+
+  const fontFamily = '"Noto Sans JP", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif';
+  const colors = {
+    ink: '#172033', muted: '#64748b', line: '#dbe4ef', brand: '#0078d7',
+    pale: '#eff7ff', positive: '#059669', negative: '#dc2626', white: '#ffffff'
+  };
+
+  ctx.fillStyle = '#edf4fb';
+  ctx.fillRect(0, 0, width, height);
+  drawRoundRect(ctx, 32, 32, width - 64, height - 64, 28, colors.white);
+
+  ctx.fillStyle = colors.brand;
+  ctx.fillRect(32, 32, 10, height - 64);
+  ctx.fillStyle = colors.ink;
+  ctx.font = `700 42px ${fontFamily}`;
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('麻雀 日別成績', margin, 104);
+  ctx.fillStyle = colors.muted;
+  ctx.font = `600 24px ${fontFamily}`;
+  ctx.fillText(group.date, margin, 144);
+  ctx.textAlign = 'right';
+  ctx.fillText(`${group.matches.length}試合`, width - margin, 144);
+  ctx.textAlign = 'left';
+
+  let y = 176;
+  ctx.fillStyle = colors.brand;
+  ctx.font = `700 24px ${fontFamily}`;
+  ctx.fillText('総合順位', margin, y + 32);
+  y += 58;
+
+  stats.forEach((stat, index) => {
+    const rowY = y + index * summaryRowHeight;
+    drawRoundRect(ctx, margin, rowY + 5, contentWidth, summaryRowHeight - 10, 14,
+      index === 0 ? '#eef8ff' : '#f8fafc');
+    const rankColors = ['#f59e0b', '#94a3b8', '#b7791f', '#64748b'];
+    drawRoundRect(ctx, margin + 16, rowY + 17, 42, 42, 21, rankColors[index] || colors.muted);
+    ctx.fillStyle = colors.white;
+    ctx.font = `700 20px ${fontFamily}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(index + 1), margin + 37, rowY + 38);
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = colors.ink;
+    ctx.font = `700 24px ${fontFamily}`;
+    ctx.fillText(fitCanvasText(ctx, stat.name, 260), margin + 78, rowY + 39);
+
+    ctx.fillStyle = colors.muted;
+    ctx.font = `500 18px ${fontFamily}`;
+    const average = stat.averageRank == null ? '—' : `${stat.averageRank.toFixed(2)}位`;
+    const distribution = stat.rankCounts.map((count, rank) => `${rank + 1}着 ${count}`).join('  ');
+    ctx.fillText(`平均 ${average}　${distribution}`, margin + 360, rowY + 39);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = stat.total > 0 ? colors.positive : stat.total < 0 ? colors.negative : colors.ink;
+    ctx.font = `700 28px ${fontFamily}`;
+    ctx.fillText(`${fmtPt(stat.total)} pt`, width - margin - 18, rowY + 39);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+  });
+  y += stats.length * summaryRowHeight + 52;
+
+  ctx.fillStyle = colors.brand;
+  ctx.font = `700 24px ${fontFamily}`;
+  ctx.fillText('各試合', margin, y + 32);
+  y += 52;
+
+  const labelWidth = 196;
+  const playerWidth = (contentWidth - labelWidth) / Math.max(playerNames.length, 1);
+  drawRoundRect(ctx, margin, y, contentWidth, matchHeaderHeight, 14, colors.pale);
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = colors.muted;
+  ctx.font = `700 18px ${fontFamily}`;
+  ctx.fillText('試合', margin + labelWidth / 2, y + matchHeaderHeight / 2);
+  playerNames.forEach((name, index) => {
+    const x = margin + labelWidth + playerWidth * index;
+    ctx.fillStyle = colors.ink;
+    ctx.font = `700 21px ${fontFamily}`;
+    ctx.fillText(fitCanvasText(ctx, name, playerWidth - 24), x + playerWidth / 2, y + matchHeaderHeight / 2);
+  });
+  y += matchHeaderHeight;
+
+  group.matches.forEach((match, matchIndex) => {
+    const rowY = y + matchIndex * matchRowHeight;
+    ctx.fillStyle = matchIndex % 2 ? '#fbfdff' : colors.white;
+    ctx.fillRect(margin, rowY, contentWidth, matchRowHeight);
+    ctx.strokeStyle = colors.line;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(margin, rowY + matchRowHeight);
+    ctx.lineTo(margin + contentWidth, rowY + matchRowHeight);
+    ctx.stroke();
+
+    const source = match.tableGame || match.source === 'table' ? 'テーブル' : '点数';
+    const clock = formatMatchClock(match.recordedAt);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = colors.ink;
+    ctx.font = `700 20px ${fontFamily}`;
+    ctx.fillText(`第${matchIndex + 1}試合`, margin + 18, rowY + 32);
+    ctx.fillStyle = colors.muted;
+    ctx.font = `500 15px ${fontFamily}`;
+    ctx.fillText([clock, source].filter(Boolean).join('  ·  '), margin + 18, rowY + 58);
+
+    playerNames.forEach((name, playerIndex) => {
+      const player = (match.players || []).find(p => p.name === name);
+      const point = player && typeof player.pt === 'number' ? player.pt : 0;
+      const rank = getMatchPlayerRank(match, name);
+      const centerX = margin + labelWidth + playerWidth * playerIndex + playerWidth / 2;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = colors.muted;
+      ctx.font = `600 15px ${fontFamily}`;
+      ctx.fillText(rank ? `${rank}位` : '—', centerX, rowY + 28);
+      ctx.fillStyle = point > 0 ? colors.positive : point < 0 ? colors.negative : colors.ink;
+      ctx.font = `700 23px ${fontFamily}`;
+      ctx.fillText(fmtPt(point), centerX, rowY + 57);
+    });
+  });
+  y += group.matches.length * matchRowHeight;
+
+  ctx.fillStyle = colors.pale;
+  ctx.fillRect(margin, y, contentWidth, totalRowHeight);
+  ctx.textAlign = 'left';
+  ctx.fillStyle = colors.ink;
+  ctx.font = `700 21px ${fontFamily}`;
+  ctx.fillText('合計', margin + 18, y + totalRowHeight / 2);
+  playerNames.forEach((name, index) => {
+    const stat = stats.find(item => item.name === name);
+    const centerX = margin + labelWidth + playerWidth * index + playerWidth / 2;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = stat.total > 0 ? colors.positive : stat.total < 0 ? colors.negative : colors.ink;
+    ctx.font = `700 26px ${fontFamily}`;
+    ctx.fillText(fmtPt(stat.total), centerX, y + totalRowHeight / 2);
+  });
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = `500 16px ${fontFamily}`;
+  ctx.fillText('MAHJONG RESULTS', width / 2, height - 62);
+
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  if (!blob) throw new Error('Image creation failed');
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const safeDate = group.date.replace(/[\\/:*?"<>|\s()（）]+/g, '-').replace(/-+$/g, '');
+  link.href = url;
+  link.download = `麻雀_日別成績_${safeDate}.png`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function syncTableGameNames(tableGame, players) {
   if (!tableGame || !Array.isArray(tableGame.roundLog)) return tableGame;
   const n = Array.isArray(tableGame.playerNames) && tableGame.playerNames.length
@@ -636,7 +1104,7 @@ function renderMatches(allMatches) {
 
   const groups = groupMatches(allMatches);
 
-  container.innerHTML = groups.map(group => {
+  container.innerHTML = groups.map((group, groupIndex) => {
     const { date, colPlayers, matches: gMatches } = group;
     const tableCount = gMatches.filter(m => m.tableGame || m.source === 'table').length;
     const scoreCount = gMatches.length - tableCount;
@@ -694,9 +1162,34 @@ function renderMatches(allMatches) {
       </div>
       <div class="session-footer">
         <span class="muted" style="font-size:12px">${gMatches.length}試合</span>
+        <button class="session-image-btn" type="button" data-group-index="${groupIndex}" aria-label="${escHtml(date)}の結果を画像で保存">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>
+          </svg>
+          結果画像
+        </button>
       </div>
     </fieldset>`;
   }).join('');
+
+  container.querySelectorAll('.session-image-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const group = groups[Number(btn.dataset.groupIndex)];
+      if (!group) return;
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.textContent = '作成中…';
+      try {
+        await exportSessionImage(group);
+      } catch (err) {
+        console.error('結果画像の作成エラー:', err);
+        alert('結果画像を作成できませんでした。');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+    });
+  });
 
   container.querySelectorAll('.match-del-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -822,6 +1315,7 @@ function applyTableImport() {
     } else {
       setTableSeatNames(data.players.map(p => p.name), false);
     }
+    resetScoreRankSelections();
 
     // Fill score inputs (mahjong uses 百点単位: divide by 100)
     // s1_1 is auto-calculated; fill s2_1, s3_1, s4_1

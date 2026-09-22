@@ -78,25 +78,36 @@
 
       <fieldset>
         <legend>点数（百点単位で入力）</legend>
-        <div class="score-row">
-          <span class="score-row-rank">1位</span>
+        <p class="score-rank-note">名前と点数はそのまま、順位に合わせて行が入れ替わります。</p>
+        <div id="score-rows">
+        <div class="score-row" data-player-slot="1">
+          <select id="sr1_1" class="score-row-rank" aria-label="プレイヤー1の順位">
+            <option value="1" selected>1位</option><option value="2">2位</option><option value="3">3位</option><option value="4">4位</option>
+          </select>
           <input id="sn1_1" class="player-name-input score-name" placeholder="プレイヤー1" autocomplete="off">
           <input id="s1_1" type="number" readonly class="score-num" placeholder="自動計算">
         </div>
-        <div class="score-row">
-          <span class="score-row-rank">2位</span>
+        <div class="score-row" data-player-slot="2">
+          <select id="sr2_1" class="score-row-rank" aria-label="プレイヤー2の順位">
+            <option value="1">1位</option><option value="2" selected>2位</option><option value="3">3位</option><option value="4">4位</option>
+          </select>
           <input id="sn2_1" class="player-name-input score-name" placeholder="プレイヤー2" autocomplete="off">
           <input id="s2_1" type="number" value="300" class="score-num">
         </div>
-        <div class="score-row">
-          <span class="score-row-rank">3位</span>
+        <div class="score-row" data-player-slot="3">
+          <select id="sr3_1" class="score-row-rank" aria-label="プレイヤー3の順位">
+            <option value="1">1位</option><option value="2">2位</option><option value="3" selected>3位</option><option value="4">4位</option>
+          </select>
           <input id="sn3_1" class="player-name-input score-name" placeholder="プレイヤー3" autocomplete="off">
           <input id="s3_1" type="number" value="200" class="score-num">
         </div>
-        <div class="score-row">
-          <span class="score-row-rank">4位</span>
+        <div class="score-row" data-player-slot="4">
+          <select id="sr4_1" class="score-row-rank" aria-label="プレイヤー4の順位">
+            <option value="1">1位</option><option value="2">2位</option><option value="3">3位</option><option value="4" selected>4位</option>
+          </select>
           <input id="sn4_1" class="player-name-input score-name" placeholder="プレイヤー4" autocomplete="off">
           <input id="s4_1" type="number" value="100" class="score-num">
+        </div>
         </div>
       </fieldset>
 
@@ -204,13 +215,26 @@
           </fieldset>
         </div>
 
-        <!-- プレイヤー履歴 -->
+        <!-- プレイヤー一覧 -->
         <div id="player-history-section" style="display:none">
           <fieldset>
-            <legend>プレイヤー履歴</legend>
+            <legend>プレイヤー一覧</legend>
+            <p class="player-list-note">名前変更は過去の試合にも反映されます。成績・試合履歴は残ります。</p>
             <div id="player-history-list"></div>
           </fieldset>
         </div>
+
+        <dialog id="player-delete-dialog" class="player-delete-dialog" aria-labelledby="player-delete-title">
+          <form method="dialog">
+            <h2 id="player-delete-title">プレイヤー削除</h2>
+            <p><strong id="player-delete-name"></strong>をプレイヤー一覧から削除しますか？</p>
+            <p class="player-delete-note">過去の戦績は削除されません。</p>
+            <div class="player-delete-actions">
+              <button type="submit" value="cancel" class="history-cancel-btn">取消</button>
+              <button type="submit" value="delete" class="player-delete-confirm-btn">削除</button>
+            </div>
+          </form>
+        </dialog>
       </div>
     </div>
 
