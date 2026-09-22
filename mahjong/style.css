@@ -135,11 +135,27 @@ input[readonly]{
 .sp-br { display: none; }
 
 @media (max-width: 460px) {
-  .page-card { padding: 12px; }
+  .wrap { padding: 8px 4px 0; }
+  .page-card { padding: 10px 4px; }
+  .session-card { padding: 8px 2px; }
   .tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
   .tabbtn { font-size: 9px; padding: 7px 2px; white-space: nowrap; text-align: center; box-sizing: border-box; width: 100%; }
   .score-row .score-num { width: 70px; }
   .sumline { font-size: 13px; }
+  .session-players-row,
+  .session-footer { padding: 0 4px; }
+  .records-scroll { overflow-x: hidden; margin: 6px 0 0; }
+  .records-tbl { font-size: 12px; }
+  .records-tbl th,
+  .records-tbl td { padding: 6px 1px; }
+  .th-match, .col-match { width: 24px; }
+  .th-actions, .col-actions { width: 48px; }
+  .records-tbl thead th { font-size: 11px; padding: 5px 1px; }
+  .date-cell { font-size: 11px; }
+  .date-cell.match-label { padding: 6px 0 6px 2px !important; text-align: left !important; }
+  .match-actions-cell { padding: 4px 1px !important; }
+  .rec-del-btn { padding: 3px 4px; font-size: 13px; }
+  .rec-del-btn + .rec-del-btn { margin-left: 4px; }
 }
 
 /* =========================
@@ -405,57 +421,78 @@ input[type="checkbox"]{ width:auto; }
    Records table (Tab 3)
 ========================= */
 .records-scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
   margin-top: 8px;
 }
 .records-tbl {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 14px;
-  min-width: 300px;
+}
+.alltime-tbl {
+  table-layout: auto;
 }
 .records-tbl th,
 .records-tbl td {
-  padding: 8px 10px;
+  padding: 7px 2px;
   text-align: center;
   border-bottom: 1px solid var(--border-soft, #e4e4e4);
   white-space: nowrap;
+  overflow: hidden;
 }
 .records-tbl thead th {
   background: #f8fafc;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
 }
 .records-tbl tfoot th {
   background: #f0f9ff;
   font-weight: 700;
   border-top: 2px solid var(--brand);
 }
+.records-tbl tfoot th.th-match {
+  font-size: 10px;
+  letter-spacing: -0.5px;
+  padding: 6px 0;
+}
+.th-match,
+.col-match {
+  width: 26px;
+}
+.th-actions,
+.col-actions {
+  width: 48px;
+}
+.player-col-name {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .date-cell {
   font-size: 12px;
   color: #666;
+  text-align: center !important;
+}
+.date-cell.match-label {
+  padding: 6px 0 6px 2px !important;
   text-align: left !important;
 }
 .match-label {
   position: relative;
   cursor: default;
-  white-space: nowrap;
 }
-.match-kind {
-  display: inline-flex;
-  align-items: center;
-  margin-left: 4px;
-  padding: 2px 5px;
-  border-radius: 999px;
-  background: #f1f5f9;
-  color: #64748b;
-  font-size: 10px;
+.match-num {
   font-weight: 700;
+  font-size: 12px;
+  color: #475569;
+  display: inline-block;
+  letter-spacing: -0.5px;
 }
-.match-kind.match-kind-table {
-  background: #e0f2fe;
-  color: #0284c7;
+.match-num.match-num-table {
+  color: var(--brand, #0078d7);
 }
 .match-label[data-time]:hover::after {
   content: attr(data-time);
@@ -478,39 +515,57 @@ input[type="checkbox"]{ width:auto; }
   background: none;
   border: none;
   cursor: pointer;
-  color: #bbb;
-  font-size: 16px;
-  padding: 2px 6px;
+  color: #94a3b8;
+  font-size: 14px;
+  padding: 3px 5px;
   border-radius: 4px;
   line-height: 1;
+  display: inline-block;
+  vertical-align: middle;
+}
+.rec-del-btn + .rec-del-btn {
+  margin-left: 5px;
 }
 .rec-del-btn:hover { background: #fee2e2; color: #dc2626; }
+.match-edit-btn:hover { background: #e0f2fe; color: var(--brand); }
 
 /* Edit match row */
-.match-actions-cell { white-space: nowrap; }
+.match-actions-cell {
+  white-space: nowrap;
+  text-align: center;
+}
+.edit-row td {
+  padding: 4px 1px !important;
+}
+.edit-row .date-cell {
+  font-size: 10px;
+}
+.edit-player-cell {
+  min-width: 0;
+  padding: 4px 1px !important;
+}
+.name-edit-input {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 3px;
+  padding: 2px 2px;
+  font-size: 11px;
+  text-align: center;
+}
 .pt-edit-input {
-  width: 52px;
-  padding: 4px 6px;
-  font-size: 13px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 2px 2px;
+  font-size: 12px;
   border: 1.5px solid var(--brand);
-  border-radius: 6px;
+  border-radius: 4px;
   text-align: center;
   margin: 0;
 }
-.edit-player-cell {
-  min-width: 78px;
-}
-.name-edit-input {
-  width: 76px;
-  margin: 0 0 4px;
-  padding: 4px 6px;
-  font-size: 12px;
-  text-align: center;
-}
 .edit-sum {
   display: block;
-  font-size: 11px;
-  margin-bottom: 4px;
+  font-size: 9px;
+  margin-bottom: 2px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -519,14 +574,15 @@ input[type="checkbox"]{ width:auto; }
 .edit-save-btn {
   display: block;
   width: 100%;
+  box-sizing: border-box;
   background: var(--brand);
   color: #fff;
   border: none;
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 12px;
+  border-radius: 4px;
+  padding: 2px 2px;
+  font-size: 10px;
   cursor: pointer;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 .edit-save-btn:disabled { opacity: 0.45; cursor: default; }
 .edit-save-btn:not(:disabled):hover { background: var(--brand-dark); }
