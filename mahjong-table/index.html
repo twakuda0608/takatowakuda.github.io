@@ -798,6 +798,53 @@
     .hist-empty { color: rgba(255,255,255,0.32); font-size: 12px; text-align: center; padding: 24px 0; }
     .hist-rewind-hint { font-size: 10px; color: rgba(255,255,255,0.3); text-align: center; margin-bottom: 8px; letter-spacing: 0.5px; }
 
+    /* ── 局修正モード ────────────────────── */
+    #roundEditBanner {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 450;
+      background: linear-gradient(90deg, #0284c7, #0369a1);
+      color: #fff;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    #roundEditBanner.active {
+      display: flex;
+    }
+    .reb-badge {
+      background: #fbbf24;
+      color: #000;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 900;
+      flex-shrink: 0;
+      letter-spacing: 0.5px;
+    }
+    .reb-cancel-btn {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      color: #fff;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.1s;
+    }
+    .reb-cancel-btn:active {
+      background: rgba(255,255,255,0.3);
+    }
+
+
     /* ── Start Screen ─────────────────────────── */
     #startScreen {
       position: fixed;
@@ -1124,6 +1171,25 @@
     .kc-ryuu   { background:rgba(251,191,36,0.12); border-color:rgba(251,191,36,0.45); color:rgba(251,191,36,0.9); }
     .kc-agari  { background:rgba(74,222,128,0.12); border-color:rgba(74,222,128,0.45); color:rgba(74,222,128,0.9); }
     .kc-chonbo { background:rgba(239,68,68,0.12);  border-color:rgba(239,68,68,0.45);  color:rgba(239,68,68,0.9); }
+    .kc-agari.orig-sel {
+      background: rgba(74,222,128,0.28);
+      border-color: #4ade80;
+      color: #fff;
+      box-shadow: 0 0 14px rgba(74,222,128,0.38);
+    }
+    .orig-win-badge {
+      font-size: 10px;
+      background: #fbbf24;
+      color: #000;
+      font-weight: 900;
+      padding: 2px 7px;
+      border-radius: 4px;
+      margin-left: 8px;
+      vertical-align: middle;
+      letter-spacing: 0.5px;
+      display: inline-block;
+      pointer-events: none;
+    }
 
     /* ── 点数修正ボタン ─────────────────────────── */
     .score-edit-btn {
@@ -2993,6 +3059,15 @@
 
   </div>
 
+  <!-- 局修正中バナー -->
+  <div id="roundEditBanner">
+    <div style="display:flex;align-items:center;gap:6px;overflow:hidden">
+      <span class="reb-badge">局修正中</span>
+      <span id="rebInfo" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></span>
+    </div>
+    <button class="reb-cancel-btn" id="rebCancelBtn" type="button">修正中止</button>
+  </div>
+
   <div class="top-info" id="topInfo">東1局 0本場</div>
   <button class="end-btn" id="endBtn">終　了</button>
   <button class="ryuu-btn" id="ryuuBtn">終局</button>
@@ -3021,13 +3096,30 @@
   <div class="ag-overlay" id="historyModal" style="display:none">
     <div class="ag-card">
       <div class="ag-head">履　歴</div>
-      <div class="hist-rewind-hint">タップで巻き戻し</div>
+      <div class="hist-rewind-hint">タップで詳細・修正・巻き戻し</div>
       <div class="hist-list" id="historyList"></div>
       <div class="ag-actions" style="margin-top:12px">
         <button class="ag-cancel" id="historyClose">閉じる</button>
       </div>
     </div>
   </div>
+
+  <!-- 履歴詳細・操作モーダル -->
+  <div class="ag-overlay" id="histDetailModal" style="display:none">
+    <div class="ag-card" style="max-width:340px">
+      <div class="ag-head">局 詳 細 ・ 修 正</div>
+      <div id="hdmRoundLabel" style="font-size:12px;color:#fbbf24;font-weight:800;text-align:center;margin-bottom:3px"></div>
+      <div id="hdmDesc" style="font-size:13px;color:rgba(255,255,255,0.85);font-weight:700;text-align:center;margin-bottom:12px;word-break:break-all"></div>
+      <div class="ag-lbl">この局の点数移動</div>
+      <div id="hdmScores" class="ag-result" style="font-size:12px;line-height:1.8;margin-bottom:14px;padding:10px 12px"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="ag-apply" id="hdmEditBtn" style="background:#0284c7;width:100%;padding:11px">この局を修正して現在に反映</button>
+        <button class="ag-cancel" id="hdmRewindBtn" style="color:#f87171;border-color:rgba(239,68,68,0.4);width:100%;padding:10px">この局の直前まで巻き戻し</button>
+        <button class="ag-cancel" id="hdmCloseBtn" style="width:100%;padding:10px">閉じる</button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- 流局モーダル -->
   <div class="ag-overlay" id="ryuuModal" style="display:none">
@@ -3203,7 +3295,10 @@
         </div>
       </div>
 
-        <button class="ag-cancel" id="agariCancel">戻　る</button>
+        <div class="ag-actions" style="margin-top:10px">
+          <button class="ag-apply" id="agariSelConfirm" style="display:none;padding:10px">決　定</button>
+          <button class="ag-cancel" id="agariCancel">戻　る</button>
+        </div>
       </div>
 
       <div id="confScreen" style="display:none">
@@ -3887,6 +3982,9 @@
     let randomSpinInterval = null;
     let randomTimeouts = [];
     const AUTO_SAVE_KEY = 'mahjong_table_autosave_v1';
+    let editingRoundIndex = null;
+    let preEditLiveState = null;
+    let origRoundScores = null;
 
     function captureSnapshot() {
       return {
@@ -3991,6 +4089,7 @@
     }
 
     function saveGameProgress() {
+      if (editingRoundIndex !== null) return;
       if (!isGameInProgress()) return;
       try { localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(buildSaveData())); } catch {}
     }
@@ -4029,6 +4128,7 @@
     }
 
     function publishRoomState() {
+      if (editingRoundIndex !== null) return;
       if (isPersonalView || !tableRoomId || !isGameInProgress()) return;
       clearTimeout(tableRoomPublishTimer);
       tableRoomPublishTimer = setTimeout(() => {
@@ -4037,6 +4137,7 @@
     }
 
     function publishRoomStateNow() {
+      if (editingRoundIndex !== null) return;
       if (isPersonalView || !tableRoomId || !isGameInProgress()) return;
       clearTimeout(tableRoomPublishTimer);
       writeRoomPayload().catch(() => updateShareStatus('同期できませんでした'));
@@ -6255,6 +6356,47 @@
       document.querySelectorAll('#hanTree .fu-children').forEach(fc => fc.classList.remove('open'));
       document.querySelectorAll('#hanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
 
+      const ronBtn = document.getElementById('agTypeRon');
+      const tsumoBtn = document.getElementById('agTypeTsumo');
+      const confirmBtn = document.getElementById('agariSelConfirm');
+      if (confirmBtn) confirmBtn.style.display = 'none';
+
+      if (editingRoundIndex !== null && isRoundWinner(editingRoundIndex, playerIdx)) {
+        const idx = editingRoundIndex;
+        const pLog = tableRoundLog[idx];
+        const h = gameHistory[idx];
+        const origWinType = (pLog?.winType) ? pLog.winType : (h?.label?.includes('ツモ') ? 'tsumo' : 'ron');
+
+        if (origWinType === 'tsumo') {
+          if (tsumoBtn) {
+            tsumoBtn.classList.add('orig-sel');
+            tsumoBtn.innerHTML = 'ツモ<span class="orig-win-badge">元の選択</span>';
+          }
+          if (ronBtn) {
+            ronBtn.classList.remove('orig-sel');
+            ronBtn.textContent = 'ロン';
+          }
+        } else {
+          if (ronBtn) {
+            ronBtn.classList.add('orig-sel');
+            ronBtn.innerHTML = 'ロン<span class="orig-win-badge">元の選択</span>';
+          }
+          if (tsumoBtn) {
+            tsumoBtn.classList.remove('orig-sel');
+            tsumoBtn.textContent = 'ツモ';
+          }
+        }
+      } else {
+        if (ronBtn) {
+          ronBtn.classList.remove('orig-sel');
+          ronBtn.textContent = 'ロン';
+        }
+        if (tsumoBtn) {
+          tsumoBtn.classList.remove('orig-sel');
+          tsumoBtn.textContent = 'ツモ';
+        }
+      }
+
       document.getElementById('typeScreen').style.display = 'block';
       document.getElementById('selScreen').style.display = 'none';
       document.getElementById('confScreen').style.display = 'none';
@@ -6288,7 +6430,26 @@
       document.getElementById('agariModal').classList.remove('centered');
       repopulateDealerRow();
       applyFuRestrictions();
-      tryCalcAgari();
+
+      const confirmBtn = document.getElementById('agariSelConfirm');
+      if (editingRoundIndex !== null && isRoundWinner(editingRoundIndex, agWinner)) {
+        const idx = editingRoundIndex;
+        const pLog = tableRoundLog[idx];
+        let defLoser = (pLog?.loserIdx >= 0) ? pLog.loserIdx : (agWinner === 0 ? 1 : 0);
+        if (defLoser === agWinner) defLoser = (agWinner + 1) % 4;
+        const { hanIdx: defHanIdx, fu: defFu } = parseHanFuFromRound(idx, agWinner);
+
+        if (winType === 'ron') {
+          agDealer = defLoser;
+          for (let j = 0; j < 4; j++) {
+            document.getElementById(`ad-${j}`)?.classList.toggle('sel', j === defLoser);
+          }
+        }
+        preSelectHanAndFu(defHanIdx, defFu);
+        if (confirmBtn) confirmBtn.style.display = 'block';
+      } else {
+        if (confirmBtn) confirmBtn.style.display = 'none';
+      }
     }
 
     document.getElementById('agTypeRon').addEventListener('click', () => showAgariScoreScreen('ron'));
@@ -6540,6 +6701,19 @@
         ? (def.needsFu ? `${def.han}翻${agFu}符` : def.name)
         : '';
       const wLabel = agWinType === 'ron' ? 'ロン' : 'ツモ';
+      const label = `和了: ${state.players[agWinner].name}(${state.players[agWinner].wind}) ${wLabel} ${hanName}`;
+
+      if (editingRoundIndex !== null) {
+        closeAgariModal();
+        const endScores = state.players.map((p, i) => p.score + agDeltas[i]);
+        finishRoundEdit(endScores, label, 'agari', {
+          winnerIdx: agWinner,
+          loserIdx: agWinType === 'ron' ? agDealer : -1,
+          winType: agWinType,
+        });
+        return;
+      }
+
       tableRoundLog.push({
         type: 'agari',
         roundLabel: `${ROUND_WINDS[state.roundWind]}${state.roundNum}局 ${state.honba}本場`,
@@ -6649,13 +6823,22 @@
     function openRyuuModal() {
       ryuuTenpai = [false, false, false, false];
       ryuuDeltas = [0, 0, 0, 0];
+      if (editingRoundIndex !== null) {
+        const pLog = tableRoundLog[editingRoundIndex];
+        const h = gameHistory[editingRoundIndex];
+        if (pLog && Array.isArray(pLog.tenpai)) {
+          ryuuTenpai = pLog.tenpai.slice();
+        } else if (h?.label?.includes('流局')) {
+          ryuuTenpai = state.players.map(p => h.label.includes(p.wind + '聴牌') || h.label.includes('全聴牌'));
+        }
+      }
       for (let i = 0; i < 4; i++) {
         document.getElementById(`rm-wind-${i}`).textContent = state.players[i].wind;
         document.getElementById(`rm-name-${i}`).textContent = state.players[i].name;
         document.getElementById(`rm-score-${i}`).textContent = state.players[i].score.toLocaleString();
-        const isRiichi = state.players[i].riichi;
-        ryuuTenpai[i] = isRiichi;
-        document.getElementById(`rmc-${i}`).classList.toggle('sel', isRiichi);
+        const isTenpai = (editingRoundIndex !== null) ? !!ryuuTenpai[i] : !!state.players[i].riichi;
+        ryuuTenpai[i] = isTenpai;
+        document.getElementById(`rmc-${i}`).classList.toggle('sel', isTenpai);
       }
       updateRyuuPreview();
       document.getElementById('ryuuModal').style.display = 'flex';
@@ -6672,6 +6855,16 @@
       const ryuuLabel = tenpaiWinds.length === 0 ? '流局 (全ノーテン)'
         : tenpaiWinds.length === 4 ? '流局 (全聴牌)'
         : `流局: ${tenpaiWinds.join('・')}聴牌`;
+
+      if (editingRoundIndex !== null) {
+        document.getElementById('ryuuModal').style.display = 'none';
+        const endScores = state.players.map((p, i) => p.score + ryuuDeltas[i]);
+        finishRoundEdit(endScores, ryuuLabel, 'ryukyoku', {
+          tenpai: ryuuTenpai.slice(),
+        });
+        return;
+      }
+
       tableRoundLog.push({
         type: 'ryukyoku',
         roundLabel: `${ROUND_WINDS[state.roundWind]}${state.roundNum}局 ${state.honba}本場`,
@@ -6723,6 +6916,332 @@
       if (gameEnded) showGameEnd();
     });
     // ── 履歴 ────────────────────────────────────
+    function getRoundDeltas(idx) {
+      if (tableRoundLog[idx] && Array.isArray(tableRoundLog[idx].deltas) && tableRoundLog[idx].deltas.length === 4) {
+        return tableRoundLog[idx].deltas.slice();
+      }
+      const before = gameHistory[idx]?.snapshot?.players?.map(p => p.score) || [25000, 25000, 25000, 25000];
+      const after = (idx < gameHistory.length - 1 && gameHistory[idx + 1]?.snapshot?.players)
+        ? gameHistory[idx + 1].snapshot.players.map(p => p.score)
+        : state.players.map(p => p.score + (p.riichi ? 1000 : 0));
+      return after.map((s, i) => s - before[i]);
+    }
+
+    let activeHistIdx = -1;
+
+    function openHistDetailModal(idx) {
+      activeHistIdx = idx;
+      const h = gameHistory[idx];
+      if (!h) return;
+      const pLog = tableRoundLog[idx];
+      const deltas = getRoundDeltas(idx);
+      const beforeScores = (pLog && Array.isArray(pLog.scoresBefore) && pLog.scoresBefore.length === 4)
+        ? pLog.scoresBefore.slice()
+        : h.snapshot.players.map(p => p.score + (p.riichi ? 1000 : 0));
+      const afterScores = beforeScores.map((s, i) => s + deltas[i]);
+
+      document.getElementById('hdmRoundLabel').textContent = h.roundLabel;
+      document.getElementById('hdmDesc').textContent = h.label;
+
+      let scoresHtml = '';
+      for (let i = 0; i < 4; i++) {
+        const p = h.snapshot.players[i];
+        const d = deltas[i];
+        const dText = d > 0 ? `+${d.toLocaleString()}` : d < 0 ? d.toLocaleString() : '±0';
+        const dColor = d > 0 ? '#4ade80' : d < 0 ? '#f87171' : 'rgba(255,255,255,0.4)';
+        scoresHtml += `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+            <span style="font-weight:700"><span style="color:#fbbf24;margin-right:5px">${p.wind}</span>${p.name}</span>
+            <span>
+              <span style="color:rgba(255,255,255,0.5)">${beforeScores[i].toLocaleString()}</span>
+              <span style="color:rgba(255,255,255,0.3);margin:0 4px">→</span>
+              <span style="font-weight:700">${afterScores[i].toLocaleString()}</span>
+              <span style="color:${dColor};font-weight:800;margin-left:6px;font-size:11px">(${dText})</span>
+            </span>
+          </div>
+        `;
+      }
+      document.getElementById('hdmScores').innerHTML = scoresHtml;
+      document.getElementById('histDetailModal').style.display = 'flex';
+      setBackFabVisible(false);
+    }
+
+    function isRoundWinner(idx, playerIdx) {
+      if (idx < 0 || idx >= gameHistory.length) return false;
+      const pLog = tableRoundLog[idx];
+      const h = gameHistory[idx];
+      if (pLog) {
+        if (Array.isArray(pLog.winnerIdxs) && pLog.winnerIdxs.includes(playerIdx)) return true;
+        if (pLog.winnerIdx === playerIdx) return true;
+        if (pLog.winnerIdx !== undefined && pLog.winnerIdx !== -1 && pLog.winnerIdx !== playerIdx) return false;
+      }
+      if (h?.label) {
+        const p = state.players[playerIdx];
+        if (!p) return false;
+        const label = h.label;
+        if (!label.startsWith('和了:')) return false;
+        const winnersPart = label.split('←')[0];
+        return winnersPart.includes(`${p.name}(${p.wind})`) || winnersPart.includes(p.name) || winnersPart.includes(`${p.wind}(`) || winnersPart.includes(`(${p.wind})`);
+      }
+      return false;
+    }
+
+    function parseHanFuFromRound(idx, playerIdx) {
+      const h = gameHistory[idx];
+      let hanIdx = 2; // 3翻
+      let fu = 30;    // 30符
+      if (!h) return { hanIdx, fu };
+
+      let text = h.label || '';
+      if (playerIdx !== undefined && state.players[playerIdx]) {
+        const wind = state.players[playerIdx].wind;
+        const name = state.players[playerIdx].name;
+        const windMatch = text.match(new RegExp(`(?:${wind}|${name})\\(([^)]*(?:翻|符|満|役)[^)]*)\\)`));
+        if (windMatch) {
+          text = windMatch[1];
+        }
+      }
+
+      if (text.includes('六倍役満')) hanIdx = 13;
+      else if (text.includes('五倍役満')) hanIdx = 12;
+      else if (text.includes('四倍役満')) hanIdx = 11;
+      else if (text.includes('三倍役満')) hanIdx = 10;
+      else if (text.includes('二倍役満')) hanIdx = 9;
+      else if (text.includes('役満')) hanIdx = 8;
+      else if (text.includes('三倍満')) hanIdx = 7;
+      else if (text.includes('倍満')) hanIdx = 6;
+      else if (text.includes('跳満')) hanIdx = 5;
+      else if (text.includes('満貫')) hanIdx = 4;
+      else {
+        const m = text.match(/(\d+)翻(?:(\d+)符)?/);
+        if (m) {
+          const hVal = parseInt(m[1], 10);
+          hanIdx = (hVal >= 1 && hVal <= 4) ? hVal - 1 : 2;
+          fu = m[2] ? parseInt(m[2], 10) : 30;
+        }
+      }
+      return { hanIdx, fu };
+    }
+
+    function preSelectHanAndFu(hanIdx, fu) {
+      agHanIdx = hanIdx;
+      const def = HAN_DEFS[hanIdx];
+      agFu = (def && def.needsFu) ? fu : -1;
+
+      document.querySelectorAll('#hanTree .han-row').forEach(r => r.classList.remove('sel', 'open'));
+      document.querySelectorAll('#hanTree .fu-children').forEach(fc => fc.classList.remove('open'));
+      document.querySelectorAll('#hanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
+
+      const row = document.querySelector(`#hanTree .han-row[data-idx="${hanIdx}"]`);
+      if (row) {
+        row.classList.add('sel');
+        const fc = row.nextElementSibling;
+        if (fc && fc.classList.contains('fu-children')) {
+          row.classList.add('open');
+          fc.classList.add('open');
+          renderFuScores();
+          const fRow = fc.querySelector(`.fu-row[data-fu="${fu}"]`);
+          if (fRow) fRow.classList.add('sel');
+        } else {
+          const yakumanParent = row.closest('.fu-children');
+          if (yakumanParent) {
+            yakumanParent.classList.add('open');
+            yakumanParent.previousElementSibling?.classList.add('open');
+          }
+        }
+      }
+      renderLimitScores();
+    }
+
+    function startRoundEdit(targetIdx) {
+      if (targetIdx < 0 || targetIdx >= gameHistory.length) return;
+      const h = gameHistory[targetIdx];
+      if (!h) return;
+      const pLog = tableRoundLog[targetIdx];
+      const oldDeltas = getRoundDeltas(targetIdx);
+
+      preEditLiveState = {
+        state: JSON.parse(JSON.stringify(state)),
+        tableGameEnded: tableGameEnded,
+        riichiCounts: riichiCounts.slice(),
+        diffPlayer: diffPlayer,
+      };
+      editingRoundIndex = targetIdx;
+
+      let startScores = [0, 0, 0, 0];
+      if (targetIdx === 0) {
+        if (pLog && pLog.scoresBefore) {
+          startScores = pLog.scoresBefore.map((s, i) => s + (pLog.riichiAtStart?.[i] ? 1000 : 0));
+        } else {
+          startScores = h.snapshot.players.map(p => p.score + (p.riichi ? 1000 : 0));
+        }
+      } else {
+        const prevLog = tableRoundLog[targetIdx - 1];
+        if (prevLog && prevLog.scoresBefore && prevLog.deltas) {
+          startScores = prevLog.scoresBefore.map((s, i) => s + prevLog.deltas[i]);
+        } else {
+          startScores = h.snapshot.players.map(p => p.score + (p.riichi ? 1000 : 0));
+        }
+      }
+
+      let oldEndScores;
+      if (pLog && pLog.scoresBefore && pLog.deltas) {
+        oldEndScores = pLog.scoresBefore.map((s, i) => s + pLog.deltas[i]);
+      } else {
+        oldEndScores = h.snapshot.players.map((p, i) => p.score + oldDeltas[i]);
+      }
+
+      let riichiAtStart;
+      if (pLog && Array.isArray(pLog.riichiAtStart)) {
+        riichiAtStart = pLog.riichiAtStart.slice();
+      } else {
+        riichiAtStart = h.snapshot.players.map(p => !!p.riichi);
+      }
+
+      origRoundScores = {
+        startScores: startScores.slice(),
+        oldEndScores: oldEndScores.slice(),
+        riichiAtStart: riichiAtStart.slice(),
+      };
+
+      const snapKyotaku = h.snapshot.kyotaku || 0;
+
+      state.roundWind = h.snapshot.roundWind;
+      state.roundNum = h.snapshot.roundNum;
+      state.honba = h.snapshot.honba;
+      state.kyotaku = snapKyotaku;
+      state.inEnchosen = h.snapshot.inEnchosen ?? false;
+      state.players = h.snapshot.players.map((p, i) => ({
+        name: p.name,
+        wind: p.wind,
+        score: startScores[i] - (riichiAtStart[i] ? 1000 : 0),
+        riichi: !!riichiAtStart[i],
+      }));
+
+      document.getElementById('histDetailModal').style.display = 'none';
+      document.getElementById('historyModal').style.display = 'none';
+      setBackFabVisible(true);
+
+      const reb = document.getElementById('roundEditBanner');
+      if (reb) {
+        reb.classList.add('active');
+        const curRoundWind = ROUND_WINDS[preEditLiveState.state.roundWind] || '';
+        const curRoundNum = preEditLiveState.state.roundNum || 1;
+        document.getElementById('rebInfo').textContent =
+          `${h.roundLabel} の修正（現在の${curRoundWind}${curRoundNum}局に反映）`;
+      }
+      render();
+    }
+
+    function cancelRoundEdit() {
+      if (editingRoundIndex === null || !preEditLiveState) return;
+      state = preEditLiveState.state;
+      tableGameEnded = preEditLiveState.tableGameEnded;
+      riichiCounts = preEditLiveState.riichiCounts;
+      diffPlayer = preEditLiveState.diffPlayer;
+      editingRoundIndex = null;
+      preEditLiveState = null;
+      origRoundScores = null;
+
+      const reb = document.getElementById('roundEditBanner');
+      if (reb) reb.classList.remove('active');
+      render();
+    }
+
+    function finishRoundEdit(newEndScores, newLabel, roundType, extra) {
+      if (editingRoundIndex === null || !origRoundScores || !preEditLiveState) return;
+      const targetIdx = editingRoundIndex;
+      const oldEndScores = origRoundScores.oldEndScores;
+      const startScores = origRoundScores.startScores;
+      const diffs = [0, 1, 2, 3].map(i => newEndScores[i] - oldEndScores[i]);
+      const newRoundDeltas = [0, 1, 2, 3].map(i => newEndScores[i] - startScores[i]);
+      const newRiichi = state.players.map(p => p.riichi);
+
+      if (!tableRoundLog[targetIdx]) {
+        tableRoundLog[targetIdx] = { scoresBefore: startScores.slice() };
+      }
+      tableRoundLog[targetIdx].scoresBefore = startScores.map((s, i) => s - (newRiichi[i] ? 1000 : 0));
+      tableRoundLog[targetIdx].deltas = newRoundDeltas.slice();
+      tableRoundLog[targetIdx].riichiAtStart = newRiichi.slice();
+      tableRoundLog[targetIdx].type = roundType;
+      if (roundType === 'agari') {
+        if (extra?.winnerIdxs) {
+          tableRoundLog[targetIdx].winnerIdxs = extra.winnerIdxs.slice();
+        } else if (extra?.winnerIdx !== undefined) {
+          tableRoundLog[targetIdx].winnerIdx = extra.winnerIdx;
+        }
+        tableRoundLog[targetIdx].loserIdx = extra?.loserIdx ?? -1;
+        tableRoundLog[targetIdx].winType = extra?.winType || 'ron';
+      } else if (roundType === 'ryukyoku') {
+        tableRoundLog[targetIdx].tenpai = (extra?.tenpai || []).slice();
+      }
+
+      if (gameHistory[targetIdx]) {
+        gameHistory[targetIdx].label = newLabel;
+        if (gameHistory[targetIdx].snapshot?.players) {
+          for (let p = 0; p < 4; p++) {
+            gameHistory[targetIdx].snapshot.players[p].score = startScores[p] - (newRiichi[p] ? 1000 : 0);
+            gameHistory[targetIdx].snapshot.players[p].riichi = newRiichi[p];
+          }
+          gameHistory[targetIdx].scores = newEndScores
+            .map((s, i) => `${state.players[i].wind}: ${s.toLocaleString()}`)
+            .join('　');
+        }
+      }
+
+      const oldRiichi = origRoundScores.riichiAtStart || [];
+      for (let p = 0; p < 4; p++) {
+        const wasRiichi = !!oldRiichi[p];
+        const isRiichi = !!newRiichi[p];
+        if (isRiichi && !wasRiichi) preEditLiveState.riichiCounts[p] = (preEditLiveState.riichiCounts[p] || 0) + 1;
+        if (!isRiichi && wasRiichi) preEditLiveState.riichiCounts[p] = Math.max(0, (preEditLiveState.riichiCounts[p] || 0) - 1);
+      }
+
+      for (let k = targetIdx + 1; k < gameHistory.length; k++) {
+        if (gameHistory[k]?.snapshot?.players) {
+          for (let p = 0; p < 4; p++) {
+            gameHistory[k].snapshot.players[p].score += diffs[p];
+          }
+          gameHistory[k].scores = gameHistory[k].snapshot.players
+            .map(p => `${p.wind}: ${p.score.toLocaleString()}`)
+            .join('　');
+        }
+        if (tableRoundLog[k]?.scoresBefore) {
+          for (let p = 0; p < 4; p++) {
+            tableRoundLog[k].scoresBefore[p] += diffs[p];
+          }
+        }
+      }
+
+      for (let p = 0; p < 4; p++) {
+        preEditLiveState.state.players[p].score += diffs[p];
+      }
+
+      state = preEditLiveState.state;
+      tableGameEnded = preEditLiveState.tableGameEnded;
+      riichiCounts = preEditLiveState.riichiCounts;
+      diffPlayer = preEditLiveState.diffPlayer;
+
+      if (settingHakoshita && state.players.some(p => p.score < 0)) {
+        tableGameEnded = true;
+      }
+
+      editingRoundIndex = null;
+      preEditLiveState = null;
+      origRoundScores = null;
+
+      const reb = document.getElementById('roundEditBanner');
+      if (reb) reb.classList.remove('active');
+
+      saveGameProgress();
+      publishRoomStateNow();
+      render();
+
+      if (tableGameEnded) {
+        showGameEnd();
+      }
+    }
+
     function openHistoryModal() {
       const list = document.getElementById('historyList');
       if (gameHistory.length === 0) {
@@ -6739,21 +7258,7 @@
         list.querySelectorAll('.hist-item').forEach(item => {
           item.addEventListener('click', () => {
             const idx = +item.dataset.idx;
-            const h = gameHistory[idx];
-            if (!confirm(`「${h.roundLabel}」の直前まで巻き戻しますか？`)) return;
-            state.players = h.snapshot.players.map(p => ({ ...p }));
-            state.honba   = h.snapshot.honba;
-            state.kyotaku = h.snapshot.kyotaku;
-            state.roundWind = h.snapshot.roundWind;
-            state.roundNum  = h.snapshot.roundNum;
-            state.inEnchosen = h.snapshot.inEnchosen ?? false;
-            gameHistory = gameHistory.slice(0, idx);
-            tableRoundLog = tableRoundLog.slice(0, idx);
-            tableGameEnded = false;
-            updateHistBadge();
-            document.getElementById('historyModal').style.display = 'none';
-            setBackFabVisible(true);
-            render();
+            openHistDetailModal(idx);
           });
         });
       }
@@ -6765,6 +7270,61 @@
     document.getElementById('historyClose').addEventListener('click', () => {
       document.getElementById('historyModal').style.display = 'none';
       setBackFabVisible(true);
+    });
+
+    document.getElementById('hdmEditBtn').addEventListener('click', () => {
+      if (activeHistIdx >= 0) startRoundEdit(activeHistIdx);
+    });
+
+    document.getElementById('hdmRewindBtn').addEventListener('click', () => {
+      if (activeHistIdx < 0 || !gameHistory[activeHistIdx]) return;
+      const h = gameHistory[activeHistIdx];
+      const discardedRounds = gameHistory.length - activeHistIdx;
+      if (!confirm(`「${h.roundLabel}」の直前まで巻き戻しますか？\n（この局を含む以降 ${discardedRounds} 局分の結果は破棄されます）`)) return;
+
+      const pLog = tableRoundLog[activeHistIdx];
+      const startScores = [0, 1, 2, 3].map(i => {
+        if (activeHistIdx === 0) {
+          return (pLog?.scoresBefore ? pLog.scoresBefore[i] + (pLog.riichiAtStart?.[i] ? 1000 : 0) : h.snapshot.players[i].score + (h.snapshot.players[i].riichi ? 1000 : 0));
+        }
+        const prev = tableRoundLog[activeHistIdx - 1];
+        if (prev?.scoresBefore && prev?.deltas) {
+          return prev.scoresBefore[i] + prev.deltas[i];
+        }
+        return h.snapshot.players[i].score + (h.snapshot.players[i].riichi ? 1000 : 0);
+      });
+
+      const riichiCountInRound = (pLog?.riichiAtStart ? pLog.riichiAtStart.filter(Boolean).length : h.snapshot.players.filter(p => p.riichi).length);
+      const carryKyotaku = Math.max(0, (h.snapshot.kyotaku || 0) - riichiCountInRound);
+
+      state.players = h.snapshot.players.map((p, i) => ({
+        ...p,
+        score: startScores[i],
+        riichi: false,
+      }));
+      state.honba   = h.snapshot.honba;
+      state.kyotaku = carryKyotaku;
+      state.roundWind = h.snapshot.roundWind;
+      state.roundNum  = h.snapshot.roundNum;
+      state.inEnchosen = h.snapshot.inEnchosen ?? false;
+      gameHistory = gameHistory.slice(0, activeHistIdx);
+      tableRoundLog = tableRoundLog.slice(0, activeHistIdx);
+      tableGameEnded = false;
+      updateHistBadge();
+      document.getElementById('histDetailModal').style.display = 'none';
+      document.getElementById('historyModal').style.display = 'none';
+      setBackFabVisible(true);
+      render();
+    });
+
+    document.getElementById('hdmCloseBtn').addEventListener('click', () => {
+      document.getElementById('histDetailModal').style.display = 'none';
+      setBackFabVisible(true);
+    });
+
+    document.getElementById('rebCancelBtn')?.addEventListener('click', cancelRoundEdit);
+    document.getElementById('agariSelConfirm')?.addEventListener('click', () => {
+      tryCalcAgari();
     });
 
     // ── Dice roll ────────────────────────────────
@@ -7119,6 +7679,11 @@
         `<span style="font-size:11px;opacity:0.45;margin-right:6px">${mwWinnerStep+1} / ${total}</span><span style="color:#fbbf24">${p.wind}</span>　${p.name}`;
       mwHanIdx = mwWinnerData[mwWinnerStep].hanIdx;
       mwFu     = mwWinnerData[mwWinnerStep].fu;
+      if (editingRoundIndex !== null && mwHanIdx < 0 && mwWinnerStep === 0) {
+        const parsed = parseHanFuFromRound(editingRoundIndex);
+        mwHanIdx = parsed.hanIdx;
+        mwFu = parsed.fu;
+      }
       document.querySelectorAll('#mwHanTree .han-row').forEach(r => r.classList.remove('sel','open'));
       document.querySelectorAll('#mwHanTree .fu-children').forEach(fc => fc.classList.remove('open'));
       document.querySelectorAll('#mwHanTree .fu-row').forEach(fr => fr.classList.remove('sel'));
@@ -7168,6 +7733,18 @@
           deltas: mwDeltas,
           riichiAtStart: state.players.map(p => p.riichi),
         });
+      }
+      if (editingRoundIndex !== null) {
+        document.getElementById('multiWinModal').style.display = 'none';
+        setBackFabVisible(true);
+        const endScores = state.players.map((p, i) => p.score + mwDeltas[i]);
+        const label = `和了: ${histLabels.join('・')} ← ${state.players[mwLoser].wind}`;
+        finishRoundEdit(endScores, label, 'agari', {
+          winnerIdxs: mwSortedWinners.slice(),
+          loserIdx: mwLoser,
+          winType: 'ron',
+        });
+        return;
       }
       pushHistory(`和了: ${histLabels.join('・')} ← ${state.players[mwLoser].wind}`);
       mwSortedWinners.forEach((idx, wi) => {
@@ -7230,6 +7807,24 @@
         document.getElementById(`mwl-${i}`).classList.remove('sel');
         document.getElementById(`mwl-${i}`).disabled = false;
         document.getElementById(`mwl-${i}`).style.opacity = '';
+      }
+      if (editingRoundIndex !== null) {
+        const pLog = tableRoundLog[editingRoundIndex];
+        if (pLog) {
+          if (Array.isArray(pLog.winnerIdxs)) {
+            pLog.winnerIdxs.forEach(w => {
+              mwWinners.add(w);
+              document.getElementById(`mww-${w}`)?.classList.add('sel');
+            });
+          } else if (pLog.winnerIdx >= 0) {
+            mwWinners.add(pLog.winnerIdx);
+            document.getElementById(`mww-${pLog.winnerIdx}`)?.classList.add('sel');
+          }
+          if (pLog.loserIdx >= 0) {
+            mwLoser = pLog.loserIdx;
+            document.getElementById(`mwl-${pLog.loserIdx}`)?.classList.add('sel');
+          }
+        }
       }
       document.getElementById('mwStep1').style.display = 'block';
       document.getElementById('mwStep2').style.display = 'none';
@@ -7622,9 +8217,25 @@
       let total = 0;
       for (let i = 0; i < 4; i++) total += parseInt(document.getElementById(`sei${i}`).value) || 0;
       if (total !== 1000) return;
+      const beforeScores = state.players.map(p => p.score);
+      const newScores = [];
+      for (let i = 0; i < 4; i++) newScores[i] = (parseInt(document.getElementById(`sei${i}`).value) || 0) * 100;
+      if (editingRoundIndex !== null) {
+        document.getElementById('scoreEditModal').style.display = 'none';
+        setBackFabVisible(true);
+        finishRoundEdit(newScores, '点数修正', 'scoreEdit', {});
+        return;
+      }
+      tableRoundLog.push({
+        type: 'scoreEdit',
+        roundLabel: `${ROUND_WINDS[state.roundWind]}${state.roundNum}局 ${state.honba}本場`,
+        scoresBefore: beforeScores,
+        deltas: newScores.map((s, i) => s - beforeScores[i]),
+        riichiAtStart: state.players.map(p => p.riichi),
+      });
       pushHistory('点数修正');
       for (let i = 0; i < 4; i++) {
-        state.players[i].score = (parseInt(document.getElementById(`sei${i}`).value) || 0) * 100;
+        state.players[i].score = newScores[i];
       }
       state.roundWind = seRoundWind;
       state.roundNum  = seRoundNum + 1;
