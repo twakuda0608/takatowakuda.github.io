@@ -1327,7 +1327,7 @@
     .rec-match-arrow { color:rgba(255,255,255,0.25); font-size:14px; flex-shrink:0; }
     .rec-empty { color:rgba(255,255,255,0.28); font-size:13px; text-align:center; padding:60px 0; letter-spacing:1px; }
     /* Detail overlay */
-    #matchDetailOverlay { position:fixed; inset:0; background:#0b2e14; z-index:700; flex-direction:column; overflow:hidden; }
+    #matchDetailOverlay { position:fixed; inset:0; background:#0b2e14; z-index:1100; flex-direction:column; overflow:hidden; }
     .detail-header { display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.1); flex-shrink:0; background:rgba(0,0,0,0.25); }
     .detail-back-btn { background:none; border:1px solid rgba(255,255,255,0.22); border-radius:6px; color:rgba(255,255,255,0.65); font-size:12px; font-weight:700; padding:6px 12px; cursor:pointer; font-family:inherit; }
     .detail-title { font-size:14px; font-weight:800; color:rgba(255,255,255,0.9); letter-spacing:1px; }
@@ -2781,15 +2781,9 @@
   </style>
 </head>
 <body>
-<script>
-  const bootParams = new URLSearchParams(location.search);
-  if (!bootParams.get('embedded') && bootParams.get('view') !== 'personal') {
-    window.location.replace('/mahjong/');
-  }
-</script>
-<!-- DEV BANNER — remove this element and the matching style block in <head> when ready -->
-<div id="dev-banner">🚧 開発中 — 一部の機能は正常に機能しない場合があります。</div>
-<!-- END DEV BANNER -->
+  <button class="back-fab" onclick="location.href='/mahjong/'" aria-label="麻雀ツールに戻る">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
 
   <!-- ── Start Screen ───────────────────────────── -->
   <div id="startScreen">
@@ -2863,7 +2857,7 @@
         </div>
 
         <button class="start-game-btn" id="startGameBtn">対 局 開 始</button>
-        <button id="returnToSeisanBtn" style="display:none;width:100%;margin-top:10px;padding:12px;background:none;border:1px solid rgba(255,255,255,0.18);border-radius:14px;color:rgba(255,255,255,0.45);font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;font-family:inherit;">← 精 算 に 戻 る</button>
+        <a href="/mahjong/" id="returnToSeisanBtn" style="display:block;text-decoration:none;text-align:center;width:100%;box-sizing:border-box;margin-top:12px;padding:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.18);border-radius:14px;color:rgba(255,255,255,0.7);font-size:13px;font-weight:700;letter-spacing:1.5px;font-family:inherit;">精算・戦績ツール</a>
       </div>
 
       <!-- 設定タブ -->
@@ -2934,6 +2928,7 @@
             <span class="rec-username" id="rec-username"></span>
             <button class="rec-logout-btn" id="rec-logout-btn">ログアウト</button>
           </div>
+          <a href="/mahjong/#t3" style="display:block;margin:10px 0 14px;text-align:center;padding:9px 12px;background:rgba(14,165,233,0.12);border:1px solid rgba(14,165,233,0.35);border-radius:10px;color:#38bdf8;font-size:12px;font-weight:700;text-decoration:none">精算・画像保存は「麻雀ツール」へ ↗</a>
           <div id="rec-sessions-list"></div>
         </div>
       </div>
@@ -3338,7 +3333,7 @@
       <div id="gameEndScores" class="ag-result"></div>
       <div class="ag-actions" style="margin-top:12px">
         <button class="ag-cancel" id="gameEndNewGame">テーブルに戻る</button>
-        <button class="ag-apply" id="gameEndRecord" style="background:rgba(14,165,233,0.85)">スコアを記録する</button>
+        <button class="ag-apply" id="gameEndRecord" style="background:rgba(14,165,233,0.85)">精算・戦績保存</button>
       </div>
     </div>
   </div>
@@ -5966,6 +5961,7 @@
       gameRecorded = false;
       tableGameEnded = false;
       document.getElementById('startScreen').style.display = 'none';
+      setBackFabVisible(false);
       render();
     });
 
@@ -6387,7 +6383,11 @@
 
     function setBackFabVisible(visible) {
       const fab = document.querySelector('.back-fab');
-      if (fab) fab.style.display = visible ? '' : 'none';
+      if (!fab) return;
+      // 試合中（セットアップ画面が非表示）は戻るボタンを常に非表示にする
+      const startScreen = document.getElementById('startScreen');
+      const inGame = startScreen && startScreen.style.display === 'none';
+      fab.style.display = (visible && !inGame) ? '' : 'none';
     }
 
     function openAgariModal(playerIdx) {
@@ -7550,6 +7550,7 @@
       playerWinds = ['東', '南', '西', '北'];
       renderStartWindBtns();
       document.getElementById('startScreen').style.display = '';
+      setBackFabVisible(true);
     });
 
     document.getElementById('gameEndRecord').addEventListener('click', () => {
@@ -7559,42 +7560,16 @@
         riichiCounts: riichiCounts.slice(),
         kyotakuExcluded: endKyotakuExcluded,
       };
-      if (isEmbedded) {
-        const sorted = state.players.slice().sort((a, b) => b.score - a.score);
-        window.parent.postMessage({
-          type: 'game_end',
-          players: sorted.map(p => ({ name: p.name, score: p.score })),
-          tableGame: tableGameData,
-          kyotaku: endKyotakuExcluded,
-          settingKyotakuEnd: settingKyotakuEnd,
-        }, '*');
-        gameRecorded = true;
-        document.getElementById('gameEndModal').style.display = 'none';
-        clearSavedGame();
-        state = freshState();
-        gameHistory = [];
-        tableRoundLog = [];
-        riichiCounts = [0, 0, 0, 0];
-        tableGameEnded = false;
-        endKyotakuAwarded = 0;
-        endKyotakuRecipient = -1;
-        endKyotakuExcluded = 0;
-        updateHistBadge();
-        playerWinds = ['東', '南', '西', '北'];
-        renderStartWindBtns();
-        document.getElementById('startScreen').style.display = '';
-      } else {
-        const importData = {
-          players: state.players.map(p => ({ name: p.name, score: p.score })),
-          timestamp: new Date().toISOString(),
-          tableGame: tableGameData,
-          kyotaku: endKyotakuExcluded,
-          settingKyotakuEnd: settingKyotakuEnd,
-        };
-        localStorage.setItem('mahjong_table_import', JSON.stringify(importData));
-        clearSavedGame();
-        window.location.href = '/mahjong/';
-      }
+      const importData = {
+        players: state.players.map(p => ({ name: p.name, score: p.score })),
+        timestamp: new Date().toISOString(),
+        tableGame: tableGameData,
+        kyotaku: endKyotakuExcluded,
+        settingKyotakuEnd: settingKyotakuEnd,
+      };
+      localStorage.setItem('mahjong_table_import', JSON.stringify(importData));
+      clearSavedGame();
+      window.location.href = '/mahjong/';
     });
 
     // ── 終局選択 ──────────────────────────────────
@@ -8378,27 +8353,17 @@
 
     startPersonalSubscription();
 
-    // ── Embedded mode: postMessage bridge ─────────────────────
-    if (isEmbedded) {
-      document.getElementById('returnToSeisanBtn').style.display = '';
-      document.getElementById('returnToSeisanBtn').addEventListener('click', () => {
-        window.parent.postMessage({ type: 'return_to_seisan' }, '*');
-      });
-
-      window.addEventListener('message', (e) => {
-        if (!e.data || typeof e.data !== 'object') return;
-        if (e.data.type !== 'init_players' && e.data.type !== 'update_players') return;
-        const names = e.data.names;
-        if (!Array.isArray(names) || names.length !== 4) return;
-        const ss = document.getElementById('startScreen');
-        if (!ss || ss.style.display === 'none') return;
-        for (let i = 0; i < 4; i++) {
-          const inp = document.getElementById(`sn${i}`);
-          if (inp && names[i]) inp.value = names[i];
+    // Standalone mode: sync shared player names from localStorage if available
+    try {
+      const historyRaw = localStorage.getItem('mahjong_playerHistory');
+      if (historyRaw) {
+        const history = JSON.parse(historyRaw);
+        if (Array.isArray(history) && history.length > 0) {
+          const p1Inp = document.getElementById('sn0');
+          if (p1Inp && !p1Inp.value) p1Inp.value = history[0];
         }
-      });
-      window.parent.postMessage({ type: 'table_ready' }, '*');
-    }
+      }
+    } catch {}
   </script>
 
 </body>

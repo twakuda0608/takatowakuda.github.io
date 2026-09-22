@@ -138,8 +138,8 @@ input[readonly]{
   .wrap { padding: 8px 4px 0; }
   .page-card { padding: 10px 4px; }
   .session-card { padding: 8px 2px; }
-  .tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
-  .tabbtn { font-size: 9px; padding: 7px 2px; white-space: nowrap; text-align: center; box-sizing: border-box; width: 100%; }
+  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .tabbtn { font-size: 11px; padding: 8px 3px; white-space: nowrap; text-align: center; box-sizing: border-box; width: 100%; }
   .score-row .score-num { width: 70px; }
   .sumline { font-size: 13px; }
   .session-players-row,
@@ -887,28 +887,26 @@ input[type="checkbox"]{ width:auto; }
   .history-grid { grid-template-columns: 1fr; }
 }
 
-/* =========================
-   テーブルタブ — full-screen overlay
-========================= */
-#t0.tab.active {
-  position: fixed;
-  inset: 0;
-  z-index: 1001;
-  display: flex;
-  flex-direction: column;
+/* Header link to standalone mahjong-table */
+.header-table-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 11px;
+  background: #e0f2fe;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-#t0 iframe {
-  flex: 1;
-  width: 100%;
-  border: none;
-  display: block;
-  min-height: 0;
-}
-body.table-tab-active {
-  overflow: hidden;
-}
-body.table-tab-active .back-fab {
-  display: none;
+.header-table-link:hover {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
 }
 
 /* =========================
