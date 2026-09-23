@@ -136,6 +136,7 @@
         </div>
 
         <div class="card-actions">
+          <button type="button" class="secondary-btn" id="card-undo-btn" title="直前のスワイプを取り消す (Z)" disabled>取り消し</button>
           <button type="button" class="secondary-btn" id="card-edit-btn">カード編集</button>
           <button type="button" class="secondary-btn" id="shuffle-btn">シャッフル</button>
           <button type="button" class="secondary-btn" id="reset-known-btn">暗記リセット</button>
@@ -231,8 +232,6 @@
             <div class="drill-progress-fill" id="drill-progress-fill" style="width: 0%;"></div>
           </div>
 
-          <div class="drill-message-banner" id="drill-round-notice" hidden></div>
-
           <div class="flashcard drill-card" id="drill-flashcard" role="button" tabindex="0" aria-live="polite">
             <span class="swipe-hint swipe-hint-left" id="drill-swipe-hint-left" aria-hidden="true">✗ 未暗記</span>
             <span class="swipe-hint swipe-hint-right" id="drill-swipe-hint-right" aria-hidden="true">✓ 暗記</span>
@@ -259,6 +258,7 @@
           </div>
 
           <div class="drill-bottom-bar">
+            <button type="button" class="secondary-btn" id="drill-undo-btn" title="直前の回答を取り消す (Z / Backspace)" disabled>取り消し</button>
             <button type="button" class="secondary-btn" id="drill-edit-btn">カード編集</button>
             <button type="button" class="secondary-btn" id="drill-pause-btn">中断</button>
           </div>
@@ -334,7 +334,7 @@
 
       <section class="mode-panel" id="list-panel">
         <div class="list-tools">
-          <button type="button" class="primary-btn" id="edit-add-btn">編集・追加</button>
+          <button type="button" class="primary-btn" id="edit-add-btn">追加</button>
           <div class="export-tools">
             <select id="export-scope" class="export-scope" aria-label="書き出し対象">
               <option value="deck">このカード集</option>
@@ -367,12 +367,18 @@
               </div>
               <form class="add-form inline-add-form" id="add-form">
                 <label class="field">
-                  <span>表</span>
-                  <textarea id="front-input" rows="2" required placeholder="例: apple&#10;（改行も可能）"></textarea>
+                  <div class="field-header">
+                    <span>表</span>
+                    <button type="button" class="text-format-btn" data-target="front-input" title="選択範囲をハイライト (Ctrl+H)">ハイライト</button>
+                  </div>
+                  <textarea id="front-input" rows="2" required placeholder="例: apple または ==apple==&#10;（改行も可能）"></textarea>
                 </label>
                 <label class="field">
-                  <span>裏</span>
-                  <textarea id="back-input" rows="2" required placeholder="例: りんご&#10;（改行も可能）"></textarea>
+                  <div class="field-header">
+                    <span>裏</span>
+                    <button type="button" class="text-format-btn" data-target="back-input" title="選択範囲をハイライト (Ctrl+H)">ハイライト</button>
+                  </div>
+                  <textarea id="back-input" rows="2" required placeholder="例: りんご または ==りんご==&#10;（改行も可能）"></textarea>
                 </label>
                 <button type="submit" class="primary-btn">追加</button>
               </form>
@@ -449,11 +455,17 @@
       </div>
       <form id="card-edit-form" class="modal-form">
         <label class="field">
-          <span>表</span>
+          <div class="field-header">
+            <span>表</span>
+            <button type="button" class="text-format-btn" data-target="edit-modal-front" title="選択範囲をハイライト (Ctrl+H)">ハイライト</button>
+          </div>
           <textarea id="edit-modal-front" rows="3" required placeholder="表のテキスト"></textarea>
         </label>
         <label class="field">
-          <span>裏</span>
+          <div class="field-header">
+            <span>裏</span>
+            <button type="button" class="text-format-btn" data-target="edit-modal-back" title="選択範囲をハイライト (Ctrl+H)">ハイライト</button>
+          </div>
           <textarea id="edit-modal-back" rows="3" required placeholder="裏のテキスト"></textarea>
         </label>
         <div class="modal-actions">
@@ -467,6 +479,13 @@
         </div>
       </form>
     </div>
+  </div>
+
+  <div id="selection-highlight-popover" class="selection-popover" hidden>
+    <button type="button" id="popover-highlight-btn" class="popover-btn">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 11-6 6v3h3l6-6"/><path d="m22 7-3-3a2.828 2.828 0 0 0-4 0l-9 9 7 7 9-9a2.828 2.828 0 0 0 0-4z"/></svg>
+      ハイライト
+    </button>
   </div>
 
   <div id="undo-toast" class="undo-toast" hidden>
