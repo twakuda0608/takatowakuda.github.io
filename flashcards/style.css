@@ -512,7 +512,7 @@ h1 {
   position: relative;
   overflow: hidden;
   width: 100%;
-  min-height: 310px;
+  height: 330px;
   border: 1px solid #cfd9e8;
   border-radius: 8px;
   background:
@@ -567,6 +567,33 @@ h1 {
   justify-content: center;
   gap: 8px;
   position: relative;
+  min-height: 28px;
+}
+
+.card-quick-edit-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--fc-line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--fc-soft);
+  cursor: pointer;
+  padding: 0;
+  transition: all .15s ease;
+  z-index: 5;
+}
+
+.card-quick-edit-btn:hover {
+  border-color: var(--fc-brand);
+  color: var(--fc-brand);
+  background: var(--fc-brand-soft);
 }
 
 .card-known-tag {
@@ -664,12 +691,57 @@ select:focus {
 
 .card-main {
   align-self: center;
+  display: block;
+  text-align: center;
+  white-space: pre-wrap;
+  min-height: 0;
+  max-height: 100%;
+  width: 100%;
+  overflow-y: auto;
   color: var(--fc-ink);
-  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-size: clamp(2.2rem, 5.5vw, 3.2rem);
   font-weight: 900;
   letter-spacing: 0;
   line-height: 1.25;
   overflow-wrap: anywhere;
+  padding: 6px 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(21, 32, 51, .15) transparent;
+}
+
+.card-main.align-left {
+  text-align: left;
+}
+
+.card-main::-webkit-scrollbar {
+  width: 4px;
+}
+
+.card-main::-webkit-scrollbar-thumb {
+  background: rgba(21, 32, 51, .15);
+  border-radius: 4px;
+}
+
+.card-main.text-short {
+  font-size: clamp(2.2rem, 5.5vw, 3.2rem);
+  line-height: 1.25;
+}
+
+.card-main.text-mid {
+  font-size: clamp(1.6rem, 3.8vw, 2.2rem);
+  line-height: 1.3;
+}
+
+.card-main.text-long {
+  font-size: clamp(1.25rem, 2.8vw, 1.6rem);
+  line-height: 1.4;
+  font-weight: 800;
+}
+
+.card-main.text-xlarge {
+  font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+  line-height: 1.45;
+  font-weight: 700;
 }
 
 .card-sub {
@@ -1085,7 +1157,8 @@ textarea {
   border-top: 1px solid var(--fc-line);
 }
 
-.inline-edit-form input {
+.inline-edit-form input,
+.inline-edit-form textarea {
   min-width: 0;
   border: 1.5px solid var(--fc-line);
   border-radius: 8px;
@@ -1094,6 +1167,16 @@ textarea {
   font-size: .88rem;
   font-weight: 700;
   padding: 9px 10px;
+}
+
+.inline-edit-form textarea {
+  min-height: 52px;
+  resize: vertical;
+}
+
+.inline-add-form textarea {
+  min-height: 52px;
+  resize: vertical;
 }
 
 .history-line {
@@ -1114,6 +1197,7 @@ textarea {
 .list-word {
   min-width: 0;
   overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .list-front {
@@ -1427,11 +1511,15 @@ textarea {
 
 .drill-focus-front {
   font-weight: 800;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .drill-focus-back {
   color: var(--fc-soft);
   font-weight: 700;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .drill-focus-stat {
@@ -1583,7 +1671,9 @@ textarea {
 
 .drill-bottom-bar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
   margin-top: 14px;
 }
 
@@ -1792,8 +1882,8 @@ textarea {
   }
 
   .flashcard {
-    min-height: 250px;
-    padding: 18px;
+    height: 270px;
+    padding: 16px;
   }
 
   .card-actions,
@@ -1823,7 +1913,7 @@ textarea {
     right: 12px;
     bottom: 12px;
     z-index: 80;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
     padding: 10px;
     border: 1px solid var(--fc-line);
@@ -1838,8 +1928,9 @@ textarea {
 
   #cards-panel.active .card-actions button {
     min-width: 0;
-    padding-left: 8px;
-    padding-right: 8px;
+    padding-left: 6px;
+    padding-right: 6px;
+    font-size: .84rem;
   }
 
   .export-tools,
@@ -1891,4 +1982,102 @@ textarea {
   .resume-actions {
     flex-direction: column;
   }
+}
+
+/* Modal Styles */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, .55);
+  backdrop-filter: blur(4px);
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: modalFadeIn .18s ease;
+}
+
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.modal-card {
+  width: min(500px, 100%);
+  background: #fff;
+  border: 1px solid var(--fc-line);
+  border-radius: 12px;
+  box-shadow: 0 20px 48px rgba(17, 24, 39, .22);
+  padding: 24px;
+  display: grid;
+  gap: 16px;
+  animation: modalCardPop .2s ease;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h2 {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--fc-ink);
+  margin: 0;
+}
+
+.modal-close-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--fc-line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--fc-soft);
+  cursor: pointer;
+  font-size: 1.3rem;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+
+.modal-close-btn:hover {
+  border-color: var(--fc-brand);
+  color: var(--fc-brand);
+}
+
+.modal-form {
+  display: grid;
+  gap: 14px;
+}
+
+.modal-form textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.modal-action-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalCardPop {
+  from { opacity: 0; transform: scale(.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }

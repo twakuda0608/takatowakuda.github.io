@@ -116,16 +116,19 @@
           </button>
         </div>
 
-        <button type="button" class="flashcard" id="flashcard" aria-live="polite">
+        <div class="flashcard" id="flashcard" role="button" tabindex="0" aria-live="polite">
           <span class="swipe-hint swipe-hint-left" id="swipe-hint-left" aria-hidden="true">✗ 未暗記</span>
           <span class="swipe-hint swipe-hint-right" id="swipe-hint-right" aria-hidden="true">✓ 暗記</span>
           <div class="card-meta-row">
             <span class="card-side" id="card-side">表</span>
             <span class="card-known-tag" id="card-known-tag" hidden>暗記済</span>
+            <button type="button" class="card-quick-edit-btn" id="card-quick-edit-btn" title="カード編集" aria-label="カード編集">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </button>
           </div>
           <span class="card-main" id="card-main">カード未追加</span>
           <span class="card-sub" id="card-sub">クリックで裏面</span>
-        </button>
+        </div>
 
         <div class="swipe-guide" aria-hidden="true">
           <span>← 左: 未暗記</span>
@@ -133,6 +136,7 @@
         </div>
 
         <div class="card-actions">
+          <button type="button" class="secondary-btn" id="card-edit-btn">カード編集</button>
           <button type="button" class="secondary-btn" id="shuffle-btn">シャッフル</button>
           <button type="button" class="secondary-btn" id="reset-known-btn">暗記リセット</button>
         </div>
@@ -229,16 +233,19 @@
 
           <div class="drill-message-banner" id="drill-round-notice" hidden></div>
 
-          <button type="button" class="flashcard drill-card" id="drill-flashcard" aria-live="polite">
+          <div class="flashcard drill-card" id="drill-flashcard" role="button" tabindex="0" aria-live="polite">
             <span class="swipe-hint swipe-hint-left" id="drill-swipe-hint-left" aria-hidden="true">✗ 未暗記</span>
             <span class="swipe-hint swipe-hint-right" id="drill-swipe-hint-right" aria-hidden="true">✓ 暗記</span>
             <div class="card-meta-row">
               <span class="card-side" id="drill-card-side">表</span>
               <span class="card-rate-tag" id="drill-card-rate-tag">暗記率 0%</span>
+              <button type="button" class="card-quick-edit-btn" id="drill-card-quick-edit-btn" title="カード編集" aria-label="カード編集">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              </button>
             </div>
             <span class="card-main" id="drill-card-main">単語</span>
             <span class="card-sub" id="drill-card-sub">タップで裏面</span>
-          </button>
+          </div>
 
           <div class="swipe-guide" aria-hidden="true">
             <span>← 左: 未暗記</span>
@@ -252,6 +259,7 @@
           </div>
 
           <div class="drill-bottom-bar">
+            <button type="button" class="secondary-btn" id="drill-edit-btn">カード編集</button>
             <button type="button" class="secondary-btn" id="drill-pause-btn">中断</button>
           </div>
         </div>
@@ -360,11 +368,11 @@
               <form class="add-form inline-add-form" id="add-form">
                 <label class="field">
                   <span>表</span>
-                  <input type="text" id="front-input" required placeholder="例: apple">
+                  <textarea id="front-input" rows="2" required placeholder="例: apple&#10;（改行も可能）"></textarea>
                 </label>
                 <label class="field">
                   <span>裏</span>
-                  <input type="text" id="back-input" required placeholder="例: りんご">
+                  <textarea id="back-input" rows="2" required placeholder="例: りんご&#10;（改行も可能）"></textarea>
                 </label>
                 <button type="submit" class="primary-btn">追加</button>
               </form>
@@ -432,6 +440,32 @@
       </section>
     </section>
   </main>
+
+  <div id="card-edit-modal" class="modal-backdrop" hidden>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>カード編集</h2>
+        <button type="button" class="modal-close-btn" id="card-edit-close-btn" aria-label="閉じる">&times;</button>
+      </div>
+      <form id="card-edit-form" class="modal-form">
+        <label class="field">
+          <span>表</span>
+          <textarea id="edit-modal-front" rows="3" required placeholder="表のテキスト"></textarea>
+        </label>
+        <label class="field">
+          <span>裏</span>
+          <textarea id="edit-modal-back" rows="3" required placeholder="裏のテキスト"></textarea>
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="danger-btn" id="card-edit-delete-btn">削除</button>
+          <div class="modal-action-right">
+            <button type="button" class="secondary-btn" id="card-edit-cancel-btn">キャンセル</button>
+            <button type="submit" class="primary-btn" id="card-edit-save-btn">保存</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <div id="undo-toast" class="undo-toast" hidden>
     <span id="undo-message"></span>
