@@ -111,6 +111,7 @@ const els = {
   cardSide: document.getElementById("card-side"),
   cardMain: document.getElementById("card-main"),
   cardSub: document.getElementById("card-sub"),
+  cardUndoBtn: document.getElementById("card-undo-btn"),
   cardEditBtn: document.getElementById("card-edit-btn"),
   shuffleBtn: document.getElementById("shuffle-btn"),
   resetKnownBtn: document.getElementById("reset-known-btn"),
@@ -143,6 +144,8 @@ const els = {
   undoToast: document.getElementById("undo-toast"),
   undoMessage: document.getElementById("undo-message"),
   undoBtn: document.getElementById("undo-btn"),
+  selectionHighlightPopover: document.getElementById("selection-highlight-popover"),
+  popoverHighlightBtn: document.getElementById("popover-highlight-btn"),
 
   // Drill Mode Elements
   drillStartView: document.getElementById("drill-start-view"),
@@ -168,7 +171,6 @@ const els = {
   drillProgressText: document.getElementById("drill-progress-text"),
   drillDeckProgressText: document.getElementById("drill-deck-progress-text"),
   drillProgressFill: document.getElementById("drill-progress-fill"),
-  drillRoundNotice: document.getElementById("drill-round-notice"),
   drillFlashcard: document.getElementById("drill-flashcard"),
   drillSwipeHintLeft: document.getElementById("drill-swipe-hint-left"),
   drillSwipeHintRight: document.getElementById("drill-swipe-hint-right"),
@@ -180,6 +182,7 @@ const els = {
   drillFailBtn: document.getElementById("drill-fail-btn"),
   drillFlipBtn: document.getElementById("drill-flip-btn"),
   drillPassBtn: document.getElementById("drill-pass-btn"),
+  drillUndoBtn: document.getElementById("drill-undo-btn"),
   drillEditBtn: document.getElementById("drill-edit-btn"),
   drillPauseBtn: document.getElementById("drill-pause-btn"),
   drillSetResultDesc: document.getElementById("drill-set-result-desc"),
@@ -217,7 +220,8 @@ document.querySelectorAll(".mode-tab").forEach((tab) => {
 // Regular Flashcard Events
 els.flashcard?.addEventListener("click", (event) => {
   if (!cards.length) return;
-  if (event.target.closest("#card-quick-edit-btn")) return;
+  if (event.target.closest("#card-quick-edit-btn") || event.target.closest("#selection-highlight-popover")) return;
+  if (window.getSelection() && window.getSelection().toString().trim().length > 0) return;
   if (els.flashcard.dataset.dragged === "true") {
     els.flashcard.dataset.dragged = "false";
     return;
@@ -252,6 +256,7 @@ els.studyOrderSelect?.addEventListener("change", () => {
 });
 els.shuffleBtn?.addEventListener("click", shuffleCards);
 els.resetKnownBtn?.addEventListener("click", resetKnown);
+els.cardUndoBtn?.addEventListener("click", undoCardSwipe);
 els.cardEditBtn?.addEventListener("click", openCardEditModal);
 els.cardQuickEditBtn?.addEventListener("pointerdown", (event) => event.stopPropagation());
 els.cardQuickEditBtn?.addEventListener("pointerup", (event) => event.stopPropagation());
@@ -323,9 +328,71 @@ els.importFile?.addEventListener("change", importCards);
 document.addEventListener("keydown", handleKeyboard);
 els.undoBtn?.addEventListener("click", runUndo);
 window.addEventListener("offline", () => setSyncStatus("reconnect"));
-window.addEventListener("online", () => setSyncStatus("saved"));
+els.popoverHighlightBtn?.addEventListener("click", applyHighlightToSelectedCardText);
+
+let lastFocusedTextarea = null;
+
+document.addEventListener("focusin", (event) => {
+  if (event.target && event.target.tagName === "TEXTAREA") {
+    lastFocusedTextarea = event.target;
+  }
+});
+
+document.addEventListener("click", (event) => {
+  const formatBtn = event.target.closest(".text-format-btn");
+  if (formatBtn) {
+    event.preventDefault();
+    const container = formatBtn.closest(".inline-edit-form") || formatBtn.closest(".modal-card") || formatBtn.closest(".add-box") || formatBtn.closest("form") || document;
+    const textareas = Array.from(container.querySelectorAll("textarea"));
+
+    // 1. テキストが選択（selectionStart !== selectionEnd）されている textarea を最優先
+    let targetTextarea = textareas.find((ta) => {
+      try {
+        return ta.selectionStart !== ta.selectionEnd;
+      } catch {
+        return false;
+      }
+    });
+
+    // 2. 選択状態の textarea がない場合
+    if (!targetTextarea) {
+      const targetId = formatBtn.dataset.target;
+      if (targetId) {
+        targetTextarea = document.getElementById(targetId);
+      } else {
+        const field = formatBtn.closest(".field");
+        targetTextarea = field?.querySelector("textarea") || null;
+      }
+
+      // 3. フォールバック: 直前のフォーカス textarea またはコンテナ内の最初の textarea
+      if (!targetTextarea) {
+        if (lastFocusedTextarea && textareas.includes(lastFocusedTextarea)) {
+          targetTextarea = lastFocusedTextarea;
+        } else {
+          targetTextarea = textareas[0] || null;
+        }
+      }
+    }
+
+    if (targetTextarea) {
+      toggleHighlightInTextarea(targetTextarea);
+    }
+  }
+});
+
+document.addEventListener("selectionchange", handleSelectionChange);
+document.addEventListener("pointerup", handleSelectionChange);
+
 document.addEventListener("pointerdown", (event) => {
+  const formatBtn = event.target.closest(".text-format-btn");
+  if (formatBtn) {
+    event.preventDefault();
+    return;
+  }
   const target = event.target;
+  if (!target.closest("#selection-highlight-popover")) {
+    hideSelectionPopover();
+  }
   if (target.closest(".inline-edit-form") || target.closest("button[data-action='edit']")) {
     return;
   }
@@ -338,6 +405,7 @@ els.drillResumeBtn?.addEventListener("click", () => startDrillSession(true));
 els.drillRestartBtn?.addEventListener("click", () => startDrillSession(false));
 els.drillPassBtn?.addEventListener("click", () => handleDrillAnswer(true));
 els.drillFailBtn?.addEventListener("click", () => handleDrillAnswer(false));
+els.drillUndoBtn?.addEventListener("click", undoDrillAction);
 els.drillFlipBtn?.addEventListener("click", flipDrillCard);
 els.drillPauseBtn?.addEventListener("click", pauseDrillSession);
 els.drillNextSetBtn?.addEventListener("click", proceedToNextDrillSet);
@@ -354,7 +422,8 @@ els.drillCardQuickEditBtn?.addEventListener("click", (event) => {
 });
 
 els.drillFlashcard?.addEventListener("click", (event) => {
-  if (event.target.closest("#drill-card-quick-edit-btn")) return;
+  if (event.target.closest("#drill-card-quick-edit-btn") || event.target.closest("#selection-highlight-popover")) return;
+  if (window.getSelection() && window.getSelection().toString().trim().length > 0) return;
   if (els.drillFlashcard.dataset.dragged === "true") {
     els.drillFlashcard.dataset.dragged = "false";
     return;
@@ -496,6 +565,7 @@ async function switchDeck(deckId) {
 }
 
 function showDeckList() {
+  closeEditAddPanel();
   currentView = "decks";
   render();
 }
@@ -694,6 +764,9 @@ function cardToDoc(card) {
 
 function setMode(nextMode) {
   closeAllInlineEdits();
+  if (nextMode !== "list") {
+    closeEditAddPanel();
+  }
   mode = nextMode;
   document.querySelectorAll(".mode-tab").forEach((tab) => {
     tab.classList.toggle("active", tab.dataset.mode === mode);
@@ -799,11 +872,11 @@ function countDeckDuplicates(deckId) {
 
 function updateCardTextSize(element, text) {
   if (!element) return;
-  const str = text || "";
-  const len = str.length;
+  const raw = stripHighlightSyntax(text || "");
+  const len = raw.length;
   element.classList.remove("text-short", "text-mid", "text-long", "text-xlarge", "align-left");
 
-  const hasNewline = str.includes("\n");
+  const hasNewline = raw.includes("\n");
   const isMultiLine = hasNewline || len > 22;
 
   if (isMultiLine) {
@@ -828,6 +901,9 @@ function renderCard() {
   els.nextCard.disabled = cards.length <= 1;
   els.shuffleBtn.disabled = cards.length <= 1;
   els.resetKnownBtn.disabled = !cards.some((item) => item.known);
+  if (els.cardUndoBtn) {
+    els.cardUndoBtn.disabled = cardSwipeHistory.length === 0;
+  }
   els.cardEditBtn.disabled = !hasCards;
   if (els.cardQuickEditBtn) {
     els.cardQuickEditBtn.style.display = hasCards ? "inline-flex" : "none";
@@ -850,7 +926,7 @@ function renderCard() {
   const answerText = studyDirection === "front" ? card.back : card.front;
   const mainText = showingBack ? answerText : promptText;
   els.cardSide.textContent = showingBack ? answerSide : promptSide;
-  els.cardMain.textContent = mainText;
+  els.cardMain.innerHTML = formatCardText(mainText);
   updateCardTextSize(els.cardMain, mainText);
   els.cardSub.textContent = showingBack ? `${promptSide}へ` : `${answerSide}へ`;
   if (els.cardKnownTag) {
@@ -1038,7 +1114,6 @@ function renderList() {
   }
 
   const duplicateMap = getDuplicateMap();
-  const editing = !els.editAddPanel.hidden;
   els.cardList.innerHTML = listCards.map((card, index) => {
     let rateBadge = "";
     if (card.drillAttempts && card.drillAttempts > 0) {
@@ -1059,26 +1134,39 @@ function renderList() {
       : "未回答";
 
     return `
-      <div class="list-item${duplicateMap.has(normalizeFront(card.front)) ? " duplicate-item" : ""}${editing ? " reorder-enabled" : ""}"
+      <div class="list-item reorder-enabled${duplicateMap.has(normalizeFront(card.front)) ? " duplicate-item" : ""}"
         data-id="${card.id}">
-        ${editing ? '<span class="drag-handle" draggable="true" title="ドラッグして並び替え" aria-label="並び替え">&#8801;</span>' : ''}
-        <div class="list-word list-front">
-          ${escapeHtml(card.front)}
+        <span class="drag-handle" draggable="true" title="ドラッグして並び替え" aria-label="並び替え">&#8801;</span>
+        <div class="list-view-content list-word list-front">
+          ${formatCardText(card.front)}
           ${duplicateMap.has(normalizeFront(card.front)) ? '<span class="duplicate-badge">重複</span>' : ''}
           ${rateBadge}
         </div>
-        <div class="list-word list-back">${escapeHtml(card.back)}</div>
-        <div class="mini-actions">
-          ${editing ? `<button type="button" class="mini-btn" data-action="edit" data-index="${index}">編集</button>` : ""}
+        <div class="list-view-content list-word list-back">${formatCardText(card.back)}</div>
+        <div class="list-view-content mini-actions">
+          <button type="button" class="mini-btn" data-action="edit" data-index="${index}">編集</button>
           <button type="button" class="mini-btn delete" data-action="delete" data-index="${index}">削除</button>
         </div>
-        ${editing ? `
-          <form class="inline-edit-form" data-id="${card.id}">
+        <form class="inline-edit-form" data-id="${card.id}">
+          <label class="field inline-field">
+            <div class="field-header">
+              <span>表</span>
+              <button type="button" class="text-format-btn" title="選択範囲をハイライト (Ctrl+H)">ハイライト</button>
+            </div>
             <textarea name="front" rows="2" placeholder="表">${escapeHtml(card.front)}</textarea>
+          </label>
+          <label class="field inline-field">
+            <div class="field-header">
+              <span>裏</span>
+              <button type="button" class="text-format-btn" title="選択範囲をハイライト (Ctrl+H)">ハイライト</button>
+            </div>
             <textarea name="back" rows="2" placeholder="裏">${escapeHtml(card.back)}</textarea>
-            <button type="submit" class="primary-btn">更新</button>
-          </form>
-        ` : ""}
+          </label>
+          <div class="inline-edit-actions">
+            <button type="submit" class="mini-btn primary-btn inline-save-btn" data-action="save">保存</button>
+            <button type="button" class="mini-btn cancel-btn inline-cancel-btn" data-action="cancel" data-index="${index}">中止</button>
+          </div>
+        </form>
         <div class="history-line">
           <span>暗記率: ${rateText}</span>
           <span>学習 ${card.viewCount || 0}回</span>
@@ -1112,6 +1200,18 @@ function renderList() {
       return;
     }
 
+    if (action === "cancel") {
+      const row = button.closest(".list-item");
+      if (row) {
+        row.classList.remove("editing-inline");
+        const frontTa = row.querySelector("textarea[name='front']");
+        const backTa = row.querySelector("textarea[name='back']");
+        if (frontTa && card) frontTa.value = card.front;
+        if (backTa && card) backTa.value = card.back;
+      }
+      return;
+    }
+
     if (action === "delete") {
       const miniActions = button.closest(".mini-actions");
       if (miniActions) {
@@ -1127,7 +1227,7 @@ function renderList() {
       const miniActions = button.closest(".mini-actions");
       if (miniActions) {
         miniActions.innerHTML = `
-          ${editing ? `<button type="button" class="mini-btn" data-action="edit" data-index="${index}">編集</button>` : ""}
+          <button type="button" class="mini-btn" data-action="edit" data-index="${index}">編集</button>
           <button type="button" class="mini-btn delete" data-action="delete" data-index="${index}">削除</button>
         `;
       }
@@ -1148,14 +1248,14 @@ function renderList() {
       const front = form.elements.front.value.trim();
       const back = form.elements.back.value.trim();
       if (!front || !back) return;
-      const btn = form.querySelector("button");
-      btn.disabled = true;
+      const btn = form.querySelector(".inline-save-btn") || form.querySelector("button[type='submit']");
+      if (btn) btn.disabled = true;
       const row = form.closest(".list-item");
       try {
         await saveWithStatus(() => updateDoc(cardDoc(form.dataset.id), { front, back, updatedAt: serverTimestamp() }));
         row?.classList.remove("editing-inline");
       } finally {
-        btn.disabled = false;
+        if (btn) btn.disabled = false;
       }
     });
   });
@@ -1165,6 +1265,11 @@ function renderList() {
       if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
         event.preventDefault();
         textarea.closest("form")?.requestSubmit();
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        const row = textarea.closest(".list-item");
+        row?.classList.remove("editing-inline");
       }
     });
   });
@@ -1293,7 +1398,8 @@ function getOrderedDeckCards() {
 }
 
 function normalizeFront(value) {
-  return value.trim().toLowerCase().replace(/\s+/g, " ");
+  const stripped = stripHighlightSyntax(value || "");
+  return stripped.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 function moveCard(step, direction = step > 0 ? "left" : "right") {
@@ -1365,9 +1471,22 @@ function cancelFlick() {
   els.flashcard.style.transform = "";
 }
 
+let cardSwipeHistory = [];
+
 async function swipeMarkCard(isKnown) {
   const card = cards[currentIndex];
   if (!card) return;
+
+  cardSwipeHistory.push({
+    cardId: card.id,
+    prevIndex: currentIndex,
+    prevCardState: {
+      known: card.known || false,
+      knownCount: card.knownCount || 0,
+      lastKnownAt: card.lastKnownAt || null,
+      lastStudiedAt: card.lastStudiedAt || null,
+    },
+  });
 
   animateCardAction(isKnown ? "known" : "unknown");
 
@@ -1395,7 +1514,39 @@ async function swipeMarkCard(isKnown) {
   await saveWithStatus(() => updateDoc(cardDoc(card.id), data), { silent: true });
 }
 
+async function undoCardSwipe() {
+  if (!cardSwipeHistory.length) return;
+  const last = cardSwipeHistory.pop();
+  const { cardId, prevIndex, prevCardState } = last;
+  const card = cards.find((c) => c.id === cardId) || allCards.find((c) => c.id === cardId);
+  if (card) {
+    card.known = prevCardState.known;
+    card.knownCount = prevCardState.knownCount;
+    card.lastKnownAt = prevCardState.lastKnownAt;
+    card.lastStudiedAt = prevCardState.lastStudiedAt;
+
+    saveWithStatus(() => updateDoc(cardDoc(card.id), {
+      known: card.known,
+      knownCount: card.knownCount,
+      lastStudiedAt: card.lastStudiedAt,
+      updatedAt: serverTimestamp(),
+    }), { silent: true }).catch(() => {});
+  }
+  currentIndex = prevIndex;
+  showingBack = false;
+  render();
+}
+
 function handleKeyboard(event) {
+  if ((event.ctrlKey || event.metaKey) && (event.key === "h" || event.key === "H")) {
+    const active = document.activeElement;
+    if (active && active.tagName === "TEXTAREA") {
+      event.preventDefault();
+      toggleHighlightInTextarea(active);
+      return;
+    }
+  }
+
   if (els.cardEditModal && !els.cardEditModal.hidden) {
     if (event.key === "Escape") {
       event.preventDefault();
@@ -1418,6 +1569,9 @@ function handleKeyboard(event) {
     } else if (event.key === " ") {
       event.preventDefault();
       if (cards.length) flipCard();
+    } else if (event.key === "z" || event.key === "Z" || ((event.ctrlKey || event.metaKey) && (event.key === "z" || event.key === "Z"))) {
+      event.preventDefault();
+      undoCardSwipe();
     } else if (event.key === "e" || event.key === "E") {
       event.preventDefault();
       if (cards.length) openCardEditModal();
@@ -1432,6 +1586,9 @@ function handleKeyboard(event) {
     } else if (event.key === " ") {
       event.preventDefault();
       flipDrillCard();
+    } else if (event.key === "z" || event.key === "Z" || event.key === "Backspace" || ((event.ctrlKey || event.metaKey) && (event.key === "z" || event.key === "Z"))) {
+      event.preventDefault();
+      undoDrillAction();
     } else if (event.key === "e" || event.key === "E") {
       event.preventDefault();
       openCardEditModal();
@@ -1478,11 +1635,20 @@ function shuffleArray(arr) {
   return copy;
 }
 
+function closeEditAddPanel() {
+  if (els.editAddPanel && !els.editAddPanel.hidden) {
+    els.editAddPanel.hidden = true;
+    if (els.editAddBtn) {
+      els.editAddBtn.textContent = "追加";
+    }
+    closeAllInlineEdits();
+  }
+}
+
 function toggleEditAddPanel() {
   const nextOpen = els.editAddPanel.hidden;
   els.editAddPanel.hidden = !nextOpen;
-  els.editAddBtn.textContent = nextOpen ? "編集終了" : "編集・追加";
-  renderList();
+  els.editAddBtn.textContent = nextOpen ? "閉じる" : "追加";
   if (nextOpen) {
     renderImportPreview();
     els.frontInput.focus();
@@ -1588,8 +1754,8 @@ function renderImportPreview() {
   els.bulkPreview.className = "bulk-preview-list";
   els.bulkPreview.innerHTML = previewCards.slice(0, 6).map((card) => `
     <div class="bulk-preview-row">
-      <span>${escapeHtml(card.front)}</span>
-      <span>${escapeHtml(card.back)}</span>
+      <span>${formatCardText(card.front)}</span>
+      <span>${formatCardText(card.back)}</span>
     </div>
   `).join("") + (previewCards.length > 6 ? `<div class="bulk-preview-more">ほか ${previewCards.length - 6}枚</div>` : "");
 }
@@ -1814,6 +1980,174 @@ function clampIndex(index) {
   return Math.max(0, Math.min(index, cards.length - 1));
 }
 
+function stripHighlightSyntax(value) {
+  if (!value) return "";
+  return String(value)
+    .replace(/==([\s\S]*?)==/g, "$1")
+    .replace(/<\/?mark[^>]*>/gi, "");
+}
+
+function formatCardText(value) {
+  if (!value) return "";
+  let escaped = escapeHtml(String(value));
+  escaped = escaped.replace(/==([\s\S]+?)==/g, '<mark class="card-highlight">$1</mark>');
+  escaped = escaped.replace(/&lt;mark&gt;([\s\S]+?)&lt;\/mark&gt;/gi, '<mark class="card-highlight">$1</mark>');
+  return escaped;
+}
+
+function toggleHighlightInTextarea(textarea) {
+  if (!textarea) return;
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const val = textarea.value;
+
+  if (start === end) {
+    const placeholder = "ハイライト";
+    const insertText = `==${placeholder}==`;
+    textarea.value = val.slice(0, start) + insertText + val.slice(end);
+    textarea.selectionStart = start + 2;
+    textarea.selectionEnd = start + 2 + placeholder.length;
+    textarea.focus();
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    autoResizeTextarea(textarea);
+    return;
+  }
+
+  const selectedText = val.slice(start, end);
+  const before = val.slice(Math.max(0, start - 2), start);
+  const after = val.slice(end, end + 2);
+
+  if (before === "==" && after === "==") {
+    textarea.value = val.slice(0, start - 2) + selectedText + val.slice(end + 2);
+    textarea.selectionStart = start - 2;
+    textarea.selectionEnd = end - 2;
+  } else if (selectedText.startsWith("==") && selectedText.endsWith("==") && selectedText.length >= 4) {
+    const inner = selectedText.slice(2, -2);
+    textarea.value = val.slice(0, start) + inner + val.slice(end);
+    textarea.selectionStart = start;
+    textarea.selectionEnd = start + inner.length;
+  } else {
+    const wrapped = `==${selectedText}==`;
+    textarea.value = val.slice(0, start) + wrapped + val.slice(end);
+    textarea.selectionStart = start;
+    textarea.selectionEnd = start + wrapped.length;
+  }
+
+  textarea.focus();
+  textarea.dispatchEvent(new Event("input", { bubbles: true }));
+  autoResizeTextarea(textarea);
+}
+
+let selectedTargetInfo = null;
+
+function handleSelectionChange() {
+  const selection = window.getSelection();
+  if (!selection || selection.isCollapsed || !selection.toString().trim()) {
+    return;
+  }
+
+  const selectedText = selection.toString().trim();
+  if (!selectedText) {
+    hideSelectionPopover();
+    return;
+  }
+
+  let anchor = selection.anchorNode;
+  let focus = selection.focusNode;
+  if (anchor && anchor.nodeType === 3) anchor = anchor.parentNode;
+  if (focus && focus.nodeType === 3) focus = focus.parentNode;
+
+  const isMain = els.cardMain && (els.cardMain.contains(anchor) || els.cardMain.contains(focus));
+  const isDrill = els.drillCardMain && (els.drillCardMain.contains(anchor) || els.drillCardMain.contains(focus));
+
+  if (!isMain && !isDrill) {
+    return;
+  }
+
+  const activeCard = getCurrentActiveCard();
+  if (!activeCard) {
+    hideSelectionPopover();
+    return;
+  }
+
+  const isBack = isCurrentActiveCardBack();
+  let currentSideKey = "front";
+  if (mode === "drill") {
+    currentSideKey = drillState.direction === "front" ? (isBack ? "back" : "front") : (isBack ? "front" : "back");
+  } else {
+    currentSideKey = studyDirection === "front" ? (isBack ? "back" : "front") : (isBack ? "front" : "back");
+  }
+
+  selectedTargetInfo = {
+    cardId: activeCard.id,
+    side: currentSideKey,
+    selectedText,
+  };
+
+  try {
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    if (rect.width > 0 || rect.height > 0) {
+      showSelectionPopover(rect.left + rect.width / 2, rect.top + window.scrollY);
+    }
+  } catch {
+    hideSelectionPopover();
+  }
+}
+
+function showSelectionPopover(x, y) {
+  if (!els.selectionHighlightPopover) return;
+  els.selectionHighlightPopover.hidden = false;
+  els.selectionHighlightPopover.style.left = `${Math.round(x)}px`;
+  els.selectionHighlightPopover.style.top = `${Math.round(y)}px`;
+}
+
+function hideSelectionPopover() {
+  if (els.selectionHighlightPopover) {
+    els.selectionHighlightPopover.hidden = true;
+  }
+  selectedTargetInfo = null;
+}
+
+async function applyHighlightToSelectedCardText() {
+  if (!selectedTargetInfo) return;
+  const { cardId, side, selectedText } = selectedTargetInfo;
+  const card = allCards.find((c) => c.id === cardId);
+  if (!card) return;
+
+  let content = card[side] || "";
+  if (!content) return;
+
+  if (content.includes(`==${selectedText}==`)) {
+    content = content.replace(`==${selectedText}==`, selectedText);
+  } else if (content.includes(selectedText)) {
+    content = content.replace(selectedText, `==${selectedText}==`);
+  } else {
+    const cleanSel = selectedText.replace(/==/g, "");
+    if (content.includes(`==${cleanSel}==`)) {
+      content = content.replace(`==${cleanSel}==`, cleanSel);
+    } else if (content.includes(cleanSel)) {
+      content = content.replace(cleanSel, `==${cleanSel}==`);
+    }
+  }
+
+  card[side] = content;
+  hideSelectionPopover();
+  window.getSelection()?.removeAllRanges();
+
+  if (mode === "drill" && drillState.view === "play") {
+    renderDrillPlay();
+  } else {
+    renderCard();
+  }
+  renderList();
+
+  await saveWithStatus(() => updateDoc(cardDoc(card.id), {
+    [side]: content,
+    updatedAt: serverTimestamp(),
+  }), { silent: true });
+}
+
 function escapeHtml(value) {
   return value.replace(/[&<>"']/g, (char) => ({
     "&": "&amp;",
@@ -1871,6 +2205,7 @@ function saveDrillSession() {
 }
 
 function clearDrillSession(deckId = drillState.deckId) {
+  drillHistory = [];
   try {
     localStorage.removeItem(`${DRILL_STORAGE_KEY}_${deckId}`);
   } catch {
@@ -1968,8 +2303,8 @@ function renderDrillStart(deckCards) {
     }
     return `
       <div class="drill-focus-item">
-        <span class="drill-focus-front">${escapeHtml(card.front)}</span>
-        <span class="drill-focus-back">${escapeHtml(card.back)}</span>
+        <span class="drill-focus-front">${formatCardText(card.front)}</span>
+        <span class="drill-focus-back">${formatCardText(card.back)}</span>
         <span class="drill-focus-stat ${badgeClass}">${statText}</span>
       </div>
     `;
@@ -1977,6 +2312,7 @@ function renderDrillStart(deckCards) {
 }
 
 function startDrillSession(resume = false) {
+  drillHistory = [];
   const deckCards = getOrderedDeckCards();
   if (!deckCards.length) {
     alert("カード集にカードがありません");
@@ -2034,6 +2370,7 @@ function startDrillSession(resume = false) {
 }
 
 function initNextDrillSet() {
+  drillHistory = [];
   const setSize = drillState.setSize || 10;
   const needed = setSize - drillState.carryOverCards.length;
   const newBatch = drillState.pool.splice(0, Math.max(0, needed));
@@ -2050,6 +2387,8 @@ function initNextDrillSet() {
   saveDrillSession();
   renderDrill();
 }
+
+let drillHistory = [];
 
 function renderDrillPlay() {
   const cardId = drillState.roundCards[drillState.roundIndex];
@@ -2081,18 +2420,6 @@ function renderDrillPlay() {
   const percent = totalDeckCards > 0 ? Math.round((completedCount / totalDeckCards) * 100) : 0;
   els.drillProgressFill.style.width = `${percent}%`;
 
-  // Banner Notice for Round 2+
-  if (drillState.roundNumber > 1) {
-    els.drillRoundNotice.hidden = false;
-    if (drillState.isReviewInterleaved) {
-      els.drillRoundNotice.textContent = `💡 残り1枚の定着確認のため、復習カードと一緒に再出題しています`;
-    } else {
-      els.drillRoundNotice.textContent = `🔄 ${drillState.roundNumber}周目: 覚えられなかった ${drillState.roundCards.length}枚 を再挑戦`;
-    }
-  } else {
-    els.drillRoundNotice.hidden = true;
-  }
-
   // Card Content
   const promptSide = drillState.direction === "front" ? "表" : "裏";
   const answerSide = drillState.direction === "front" ? "裏" : "表";
@@ -2101,12 +2428,13 @@ function renderDrillPlay() {
   const mainText = drillState.showingBack ? answerText : promptText;
 
   if (els.drillEditBtn) els.drillEditBtn.disabled = !card;
+  if (els.drillUndoBtn) els.drillUndoBtn.disabled = drillHistory.length === 0;
   if (els.drillCardQuickEditBtn) {
     els.drillCardQuickEditBtn.style.display = card ? "inline-flex" : "none";
   }
 
   els.drillCardSide.textContent = drillState.showingBack ? answerSide : promptSide;
-  els.drillCardMain.textContent = mainText;
+  els.drillCardMain.innerHTML = formatCardText(mainText);
   updateCardTextSize(els.drillCardMain, mainText);
   els.drillCardSub.textContent = drillState.showingBack ? `${promptSide}へ` : `タップまたはSpaceで${answerSide}へ`;
 
@@ -2150,6 +2478,28 @@ function flipDrillCard() {
 async function handleDrillAnswer(isKnown) {
   const cardId = drillState.roundCards[drillState.roundIndex];
   const card = allCards.find((c) => c.id === cardId);
+
+  if (card) {
+    drillHistory.push({
+      cardId: card.id,
+      isKnown: isKnown,
+      prevCardState: {
+        drillAttempts: card.drillAttempts || 0,
+        drillSuccesses: card.drillSuccesses || 0,
+        known: card.known || false,
+        knownCount: card.knownCount || 0,
+        lastKnownAt: card.lastKnownAt || null,
+        lastStudiedAt: card.lastStudiedAt || null,
+      },
+      prevDrillState: {
+        roundIndex: drillState.roundIndex,
+        roundNumber: drillState.roundNumber,
+        showingBack: drillState.showingBack,
+        roundUnlearned: [...drillState.roundUnlearned],
+        sessionStats: { ...drillState.sessionStats },
+      },
+    });
+  }
 
   animateDrillCardAction(isKnown ? "known" : "unknown");
 
@@ -2202,6 +2552,40 @@ async function handleDrillAnswer(isKnown) {
       processDrillRoundCompletion();
     }
   }, 200);
+}
+
+async function undoDrillAction() {
+  if (!drillHistory.length) return;
+  const lastAction = drillHistory.pop();
+  const { cardId, prevCardState, prevDrillState } = lastAction;
+
+  const card = allCards.find((c) => c.id === cardId);
+  if (card) {
+    card.drillAttempts = prevCardState.drillAttempts;
+    card.drillSuccesses = prevCardState.drillSuccesses;
+    card.known = prevCardState.known;
+    card.knownCount = prevCardState.knownCount;
+    card.lastKnownAt = prevCardState.lastKnownAt;
+    card.lastStudiedAt = prevCardState.lastStudiedAt;
+
+    saveWithStatus(() => updateDoc(cardDoc(card.id), {
+      drillAttempts: card.drillAttempts,
+      drillSuccesses: card.drillSuccesses,
+      known: card.known,
+      knownCount: card.knownCount,
+      lastStudiedAt: card.lastStudiedAt,
+      updatedAt: serverTimestamp(),
+    }), { silent: true }).catch(() => {});
+  }
+
+  drillState.roundIndex = prevDrillState.roundIndex;
+  drillState.roundNumber = prevDrillState.roundNumber;
+  drillState.showingBack = false;
+  drillState.roundUnlearned = prevDrillState.roundUnlearned;
+  drillState.sessionStats = prevDrillState.sessionStats;
+
+  renderDrillPlay();
+  saveDrillSession();
 }
 
 function processDrillRoundCompletion() {
@@ -2340,7 +2724,7 @@ function renderDrillComplete() {
       const rate = Math.round((c.drillSuccesses / c.drillAttempts) * 100);
       return `
         <div class="drill-weak-item">
-          <span>${escapeHtml(c.front)}: ${escapeHtml(c.back)}</span>
+          <span>${formatCardText(c.front)}: ${formatCardText(c.back)}</span>
           <span class="rate-badge rate-low">暗記率 ${rate}%</span>
         </div>
       `;
