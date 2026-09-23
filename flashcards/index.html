@@ -83,6 +83,7 @@
 
       <div class="mode-tabs" role="tablist" aria-label="表示切替">
         <button type="button" class="mode-tab active" data-mode="cards">カード</button>
+        <button type="button" class="mode-tab" data-mode="drill">暗記</button>
         <button type="button" class="mode-tab" data-mode="list">一覧</button>
       </div>
 
@@ -100,6 +101,7 @@
             <select id="study-order-select">
               <option value="normal">記録順</option>
               <option value="weak">苦手優先</option>
+              <option value="rate-asc">暗記率昇順</option>
             </select>
           </label>
         </div>
@@ -133,6 +135,192 @@
         <div class="card-actions">
           <button type="button" class="secondary-btn" id="shuffle-btn">シャッフル</button>
           <button type="button" class="secondary-btn" id="reset-known-btn">暗記リセット</button>
+        </div>
+      </section>
+
+      <section class="mode-panel" id="drill-panel">
+        <!-- 1. Start / Overview View -->
+        <div id="drill-start-view" class="drill-subview">
+          <div class="drill-overview-card">
+            <div class="drill-overview-head">
+              <h2>暗記モード</h2>
+              <p class="drill-overview-desc">10問ずつランダムに出題し、覚えられない単語を周回して確実に定着させます。</p>
+            </div>
+
+            <div class="drill-stat-grid">
+              <div class="drill-stat-card">
+                <span class="drill-stat-label">全体暗記率</span>
+                <span class="drill-stat-value" id="drill-deck-rate">0%</span>
+              </div>
+              <div class="drill-stat-card">
+                <span class="drill-stat-label">カード総数</span>
+                <span class="drill-stat-value" id="drill-deck-count">0枚</span>
+              </div>
+            </div>
+
+            <div class="drill-category-pills">
+              <span class="category-pill pill-mastered">定着: <strong id="drill-cat-mastered">0</strong></span>
+              <span class="category-pill pill-learning">通常: <strong id="drill-cat-learning">0</strong></span>
+              <span class="category-pill pill-weak">苦手: <strong id="drill-cat-weak">0</strong></span>
+              <span class="category-pill pill-unseen">未学習: <strong id="drill-cat-unseen">0</strong></span>
+            </div>
+
+            <div class="drill-settings-row">
+              <label>
+                <span>学習方向</span>
+                <select id="drill-direction-select">
+                  <option value="front">表から裏</option>
+                  <option value="back">裏から表</option>
+                </select>
+              </label>
+              <label>
+                <span>1セットの枚数</span>
+                <select id="drill-set-size-select">
+                  <option value="10" selected>10枚</option>
+                  <option value="5">5枚</option>
+                  <option value="15">15枚</option>
+                  <option value="20">20枚</option>
+                </select>
+              </label>
+            </div>
+
+            <div id="drill-resume-box" class="drill-resume-box" hidden>
+              <div class="resume-info">
+                <strong>前回の暗記を中断中</strong>
+                <span id="drill-resume-text">残り 0 / 0 枚</span>
+              </div>
+              <div class="resume-actions">
+                <button type="button" class="primary-btn" id="drill-resume-btn">再開</button>
+                <button type="button" class="secondary-btn" id="drill-restart-btn">最初から開始</button>
+              </div>
+            </div>
+
+            <div id="drill-start-box">
+              <button type="button" class="primary-btn drill-main-btn" id="drill-start-btn">暗記開始</button>
+            </div>
+          </div>
+
+          <!-- Weak cards / Overview List -->
+          <div class="drill-focus-section" id="drill-focus-section">
+            <div class="section-header compact">
+              <h3 class="section-title">暗記状況・苦手カード</h3>
+              <span class="settings-note">暗記率順</span>
+            </div>
+            <div id="drill-focus-list" class="drill-focus-list"></div>
+          </div>
+        </div>
+
+        <!-- 2. Play View -->
+        <div id="drill-play-view" class="drill-subview" hidden>
+          <div class="drill-header">
+            <div class="drill-meta-tags">
+              <span class="drill-badge set-badge" id="drill-set-badge">セット 1/1</span>
+              <span class="drill-badge round-badge" id="drill-round-badge">1周目</span>
+            </div>
+            <div class="drill-progress-info">
+              <span id="drill-progress-text">1 / 10枚</span>
+              <span class="drill-deck-progress-text" id="drill-deck-progress-text">全体 0 / 0枚</span>
+            </div>
+          </div>
+
+          <div class="drill-progress-track">
+            <div class="drill-progress-fill" id="drill-progress-fill" style="width: 0%;"></div>
+          </div>
+
+          <div class="drill-message-banner" id="drill-round-notice" hidden></div>
+
+          <button type="button" class="flashcard drill-card" id="drill-flashcard" aria-live="polite">
+            <span class="swipe-hint swipe-hint-left" id="drill-swipe-hint-left" aria-hidden="true">✗ 未暗記</span>
+            <span class="swipe-hint swipe-hint-right" id="drill-swipe-hint-right" aria-hidden="true">✓ 暗記</span>
+            <div class="card-meta-row">
+              <span class="card-side" id="drill-card-side">表</span>
+              <span class="card-rate-tag" id="drill-card-rate-tag">暗記率 0%</span>
+            </div>
+            <span class="card-main" id="drill-card-main">単語</span>
+            <span class="card-sub" id="drill-card-sub">タップで裏面</span>
+          </button>
+
+          <div class="swipe-guide" aria-hidden="true">
+            <span>← 左: 未暗記</span>
+            <span>右: 暗記 →</span>
+          </div>
+
+          <div class="drill-action-row">
+            <button type="button" class="drill-action-btn drill-btn-fail" id="drill-fail-btn">未暗記</button>
+            <button type="button" class="drill-action-btn drill-btn-flip" id="drill-flip-btn">反転</button>
+            <button type="button" class="drill-action-btn drill-btn-pass" id="drill-pass-btn">暗記</button>
+          </div>
+
+          <div class="drill-bottom-bar">
+            <button type="button" class="secondary-btn" id="drill-pause-btn">中断</button>
+          </div>
+        </div>
+
+        <!-- 3. Set Result View -->
+        <div id="drill-set-result-view" class="drill-subview" hidden>
+          <div class="drill-result-card">
+            <div class="drill-result-icon" aria-hidden="true">✓</div>
+            <h2>セット完了！</h2>
+            <p id="drill-set-result-desc">このセットのカードを暗記しました。</p>
+
+            <div id="drill-carry-over-alert" class="drill-carry-alert" hidden>
+              <span class="alert-icon">💡</span>
+              <div class="alert-content">
+                <strong>未暗記カードの持ち越し</strong>
+                <p id="drill-carry-over-msg">残り1枚のカードは連続出題を防ぐため、次のセットに持ち越しました。</p>
+              </div>
+            </div>
+
+            <div class="drill-result-stats">
+              <div class="drill-result-stat-row">
+                <span>このセットで暗記</span>
+                <strong id="drill-set-learned-count">0枚</strong>
+              </div>
+              <div class="drill-result-stat-row">
+                <span>全体進捗</span>
+                <strong id="drill-set-overall-progress">0 / 0枚 (0%)</strong>
+              </div>
+              <div class="drill-result-stat-row">
+                <span>全体残り</span>
+                <strong id="drill-set-remaining-count">0枚</strong>
+              </div>
+            </div>
+
+            <div class="drill-result-actions">
+              <button type="button" class="primary-btn drill-main-btn" id="drill-next-set-btn">次のセット</button>
+              <button type="button" class="secondary-btn" id="drill-save-pause-btn">中断保存</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Deck Complete View -->
+        <div id="drill-complete-view" class="drill-subview" hidden>
+          <div class="drill-result-card complete-card">
+            <div class="drill-result-icon complete-icon" aria-hidden="true">🎉</div>
+            <h2>全問暗記完了！</h2>
+            <p>カード集のすべての単語を習得しました！</p>
+
+            <div class="drill-complete-stats">
+              <div class="drill-stat-card">
+                <span class="drill-stat-label">総カード数</span>
+                <span class="drill-stat-value" id="drill-complete-total">0枚</span>
+              </div>
+              <div class="drill-stat-card">
+                <span class="drill-stat-label">初見暗記率</span>
+                <span class="drill-stat-value" id="drill-complete-first-rate">0%</span>
+              </div>
+            </div>
+
+            <div class="drill-weak-summary" id="drill-complete-weak-box" hidden>
+              <div class="weak-summary-title">要復習カード（暗記率が低い単語）</div>
+              <div id="drill-complete-weak-list" class="drill-weak-list"></div>
+            </div>
+
+            <div class="drill-result-actions">
+              <button type="button" class="primary-btn drill-main-btn" id="drill-restart-all-btn">再暗記</button>
+              <button type="button" class="secondary-btn" id="drill-back-decks-btn">カード集一覧</button>
+            </div>
+          </div>
         </div>
       </section>
 

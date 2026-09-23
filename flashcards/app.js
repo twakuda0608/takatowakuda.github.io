@@ -21,6 +21,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 const STORAGE_KEY = "takato-flashcards-v1";
+const DRILL_STORAGE_KEY = "takato-flashcards-drill-v1";
 const DEFAULT_DECK_ID = "default";
 
 let cards = [];
@@ -44,6 +45,36 @@ let flipTimer = null;
 let dragCardId = null;
 let currentUndo = null;
 let undoTimer = null;
+
+// Drill (暗記モード) State
+let drillState = {
+  view: "start", // "start" | "play" | "set-result" | "complete"
+  deckId: DEFAULT_DECK_ID,
+  direction: "front",
+  setSize: 10,
+  pool: [],
+  currentSet: [],
+  roundCards: [],
+  roundIndex: 0,
+  roundNumber: 1,
+  roundUnlearned: [],
+  carryOverCards: [],
+  completedCardIds: [],
+  lastCarriedOverName: null,
+  isReviewInterleaved: false,
+  sessionStats: {
+    totalAnswered: 0,
+    firstTrySuccesses: 0,
+    totalSuccesses: 0,
+    totalFails: 0,
+  },
+  showingBack: false,
+};
+
+let drillPointerStartX = 0;
+let drillPointerStartY = 0;
+let drillPointerTracking = false;
+let drillFlipTimer = null;
 
 const els = {
   loginScreen: document.getElementById("login-screen"),
@@ -102,24 +133,77 @@ const els = {
   undoToast: document.getElementById("undo-toast"),
   undoMessage: document.getElementById("undo-message"),
   undoBtn: document.getElementById("undo-btn"),
+
+  // Drill Mode Elements
+  drillStartView: document.getElementById("drill-start-view"),
+  drillPlayView: document.getElementById("drill-play-view"),
+  drillSetResultView: document.getElementById("drill-set-result-view"),
+  drillCompleteView: document.getElementById("drill-complete-view"),
+  drillDeckRate: document.getElementById("drill-deck-rate"),
+  drillDeckCount: document.getElementById("drill-deck-count"),
+  drillCatMastered: document.getElementById("drill-cat-mastered"),
+  drillCatLearning: document.getElementById("drill-cat-learning"),
+  drillCatWeak: document.getElementById("drill-cat-weak"),
+  drillCatUnseen: document.getElementById("drill-cat-unseen"),
+  drillDirectionSelect: document.getElementById("drill-direction-select"),
+  drillSetSizeSelect: document.getElementById("drill-set-size-select"),
+  drillResumeBox: document.getElementById("drill-resume-box"),
+  drillResumeText: document.getElementById("drill-resume-text"),
+  drillResumeBtn: document.getElementById("drill-resume-btn"),
+  drillRestartBtn: document.getElementById("drill-restart-btn"),
+  drillStartBtn: document.getElementById("drill-start-btn"),
+  drillFocusList: document.getElementById("drill-focus-list"),
+  drillSetBadge: document.getElementById("drill-set-badge"),
+  drillRoundBadge: document.getElementById("drill-round-badge"),
+  drillProgressText: document.getElementById("drill-progress-text"),
+  drillDeckProgressText: document.getElementById("drill-deck-progress-text"),
+  drillProgressFill: document.getElementById("drill-progress-fill"),
+  drillRoundNotice: document.getElementById("drill-round-notice"),
+  drillFlashcard: document.getElementById("drill-flashcard"),
+  drillSwipeHintLeft: document.getElementById("drill-swipe-hint-left"),
+  drillSwipeHintRight: document.getElementById("drill-swipe-hint-right"),
+  drillCardSide: document.getElementById("drill-card-side"),
+  drillCardRateTag: document.getElementById("drill-card-rate-tag"),
+  drillCardMain: document.getElementById("drill-card-main"),
+  drillCardSub: document.getElementById("drill-card-sub"),
+  drillFailBtn: document.getElementById("drill-fail-btn"),
+  drillFlipBtn: document.getElementById("drill-flip-btn"),
+  drillPassBtn: document.getElementById("drill-pass-btn"),
+  drillPauseBtn: document.getElementById("drill-pause-btn"),
+  drillSetResultDesc: document.getElementById("drill-set-result-desc"),
+  drillCarryOverAlert: document.getElementById("drill-carry-over-alert"),
+  drillCarryOverMsg: document.getElementById("drill-carry-over-msg"),
+  drillSetLearnedCount: document.getElementById("drill-set-learned-count"),
+  drillSetOverallProgress: document.getElementById("drill-set-overall-progress"),
+  drillSetRemainingCount: document.getElementById("drill-set-remaining-count"),
+  drillNextSetBtn: document.getElementById("drill-next-set-btn"),
+  drillSavePauseBtn: document.getElementById("drill-save-pause-btn"),
+  drillCompleteTotal: document.getElementById("drill-complete-total"),
+  drillCompleteFirstRate: document.getElementById("drill-complete-first-rate"),
+  drillCompleteWeakBox: document.getElementById("drill-complete-weak-box"),
+  drillCompleteWeakList: document.getElementById("drill-complete-weak-list"),
+  drillRestartAllBtn: document.getElementById("drill-restart-all-btn"),
+  drillBackDecksBtn: document.getElementById("drill-back-decks-btn"),
 };
 
-els.loginBtn.addEventListener("click", () => {
+// Event Listeners
+els.loginBtn?.addEventListener("click", () => {
   signInWithPopup(auth, provider).catch((err) => {
     if (err.code !== "auth/popup-closed-by-user") alert("ログインに失敗しました");
   });
 });
-els.logoutBtn.addEventListener("click", () => signOut(auth));
-els.backToDecksBtn.addEventListener("click", showDeckList);
-els.deckForm.addEventListener("submit", createDeck);
-els.deckRenameForm.addEventListener("submit", renameDeck);
-els.deleteDeckBtn.addEventListener("click", deleteCurrentDeck);
+els.logoutBtn?.addEventListener("click", () => signOut(auth));
+els.backToDecksBtn?.addEventListener("click", showDeckList);
+els.deckForm?.addEventListener("submit", createDeck);
+els.deckRenameForm?.addEventListener("submit", renameDeck);
+els.deleteDeckBtn?.addEventListener("click", deleteCurrentDeck);
 
 document.querySelectorAll(".mode-tab").forEach((tab) => {
   tab.addEventListener("click", () => setMode(tab.dataset.mode));
 });
 
-els.flashcard.addEventListener("click", () => {
+// Regular Flashcard Events
+els.flashcard?.addEventListener("click", () => {
   if (!cards.length) return;
   if (els.flashcard.dataset.dragged === "true") {
     els.flashcard.dataset.dragged = "false";
@@ -127,45 +211,70 @@ els.flashcard.addEventListener("click", () => {
   }
   flipCard();
 });
-els.flashcard.addEventListener("pointerdown", startFlick);
-els.flashcard.addEventListener("pointermove", moveFlick);
-els.flashcard.addEventListener("pointerup", endFlick);
-els.flashcard.addEventListener("pointercancel", cancelFlick);
+els.flashcard?.addEventListener("pointerdown", startFlick);
+els.flashcard?.addEventListener("pointermove", moveFlick);
+els.flashcard?.addEventListener("pointerup", endFlick);
+els.flashcard?.addEventListener("pointercancel", cancelFlick);
 
-els.prevCard.addEventListener("click", () => moveCard(-1, "right"));
-els.nextCard.addEventListener("click", () => moveCard(1, "left"));
-els.directionSelect.addEventListener("change", () => {
+els.prevCard?.addEventListener("click", () => moveCard(-1, "right"));
+els.nextCard?.addEventListener("click", () => moveCard(1, "left"));
+els.directionSelect?.addEventListener("change", () => {
   studyDirection = els.directionSelect.value;
   showingBack = false;
   renderCard();
 });
-els.studyOrderSelect.addEventListener("change", () => {
+els.studyOrderSelect?.addEventListener("change", () => {
   studyOrderMode = els.studyOrderSelect.value;
   studyOrder = [];
   currentIndex = 0;
   showingBack = false;
   render();
 });
-els.shuffleBtn.addEventListener("click", shuffleCards);
-els.resetKnownBtn.addEventListener("click", resetKnown);
-els.addForm.addEventListener("submit", addCard);
-els.bulkAddBtn.addEventListener("click", addBulkCards);
-els.bulkInput.addEventListener("input", renderImportPreview);
-els.termCustomInput.addEventListener("input", renderImportPreview);
-els.cardCustomInput.addEventListener("input", renderImportPreview);
-els.duplicateSkipCheckbox.addEventListener("change", renderImportPreview);
-els.termCustomInput.addEventListener("focus", () => selectCustomSeparator("term-separator"));
-els.cardCustomInput.addEventListener("focus", () => selectCustomSeparator("card-separator"));
+els.shuffleBtn?.addEventListener("click", shuffleCards);
+els.resetKnownBtn?.addEventListener("click", resetKnown);
+els.addForm?.addEventListener("submit", addCard);
+els.bulkAddBtn?.addEventListener("click", addBulkCards);
+els.bulkInput?.addEventListener("input", renderImportPreview);
+els.termCustomInput?.addEventListener("input", renderImportPreview);
+els.cardCustomInput?.addEventListener("input", renderImportPreview);
+els.duplicateSkipCheckbox?.addEventListener("change", renderImportPreview);
+els.termCustomInput?.addEventListener("focus", () => selectCustomSeparator("term-separator"));
+els.cardCustomInput?.addEventListener("focus", () => selectCustomSeparator("card-separator"));
 document.querySelectorAll("input[name='term-separator'], input[name='card-separator']").forEach((input) => {
   input.addEventListener("change", renderImportPreview);
 });
-els.editAddBtn.addEventListener("click", toggleEditAddPanel);
-els.exportBtn.addEventListener("click", exportCards);
-els.importFile.addEventListener("change", importCards);
+els.editAddBtn?.addEventListener("click", toggleEditAddPanel);
+els.exportBtn?.addEventListener("click", exportCards);
+els.importFile?.addEventListener("change", importCards);
 document.addEventListener("keydown", handleKeyboard);
-els.undoBtn.addEventListener("click", runUndo);
+els.undoBtn?.addEventListener("click", runUndo);
 window.addEventListener("offline", () => setSyncStatus("reconnect"));
 window.addEventListener("online", () => setSyncStatus("saved"));
+
+// Drill Mode Events
+els.drillStartBtn?.addEventListener("click", () => startDrillSession(false));
+els.drillResumeBtn?.addEventListener("click", () => startDrillSession(true));
+els.drillRestartBtn?.addEventListener("click", () => startDrillSession(false));
+els.drillPassBtn?.addEventListener("click", () => handleDrillAnswer(true));
+els.drillFailBtn?.addEventListener("click", () => handleDrillAnswer(false));
+els.drillFlipBtn?.addEventListener("click", flipDrillCard);
+els.drillPauseBtn?.addEventListener("click", pauseDrillSession);
+els.drillNextSetBtn?.addEventListener("click", proceedToNextDrillSet);
+els.drillSavePauseBtn?.addEventListener("click", pauseDrillSession);
+els.drillRestartAllBtn?.addEventListener("click", () => startDrillSession(false));
+els.drillBackDecksBtn?.addEventListener("click", showDeckList);
+
+els.drillFlashcard?.addEventListener("click", () => {
+  if (els.drillFlashcard.dataset.dragged === "true") {
+    els.drillFlashcard.dataset.dragged = "false";
+    return;
+  }
+  flipDrillCard();
+});
+els.drillFlashcard?.addEventListener("pointerdown", startDrillFlick);
+els.drillFlashcard?.addEventListener("pointermove", moveDrillFlick);
+els.drillFlashcard?.addEventListener("pointerup", endDrillFlick);
+els.drillFlashcard?.addEventListener("pointercancel", cancelDrillFlick);
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
@@ -176,12 +285,12 @@ onAuthStateChanged(auth, async (user) => {
     await migrateLocalCards(user.uid);
     startListening(user.uid);
   } else {
-  cards = [];
-  allCards = [];
-  decks = [];
-  currentDeckId = DEFAULT_DECK_ID;
-  currentView = "decks";
-  studyOrder = [];
+    cards = [];
+    allCards = [];
+    decks = [];
+    currentDeckId = DEFAULT_DECK_ID;
+    currentView = "decks";
+    studyOrder = [];
     showLogin();
     render();
   }
@@ -228,6 +337,8 @@ function startListening(uid) {
         viewCount: Number(data.viewCount || 0),
         flipCount: Number(data.flipCount || 0),
         knownCount: Number(data.knownCount || 0),
+        drillAttempts: Number(data.drillAttempts || 0),
+        drillSuccesses: Number(data.drillSuccesses || 0),
         lastStudiedAt: readMillis(data.lastStudiedAt),
         lastKnownAt: readMillis(data.lastKnownAt),
       };
@@ -282,6 +393,7 @@ async function switchDeck(deckId) {
   currentIndex = 0;
   showingBack = false;
   studyOrder = [];
+  drillState.view = "start";
   render();
   await saveDeckSettings();
 }
@@ -336,6 +448,7 @@ async function deleteCurrentDeck() {
     currentView = "decks";
     currentIndex = 0;
     studyOrder = [];
+    clearDrillSession(deletedDeck.id);
     await saveDeckSettings();
     await saveWithStatus(() => batch.commit());
     showUndo("カード集を削除", async () => {
@@ -371,6 +484,8 @@ async function migrateLocalCards(uid) {
       known: Boolean(card.known),
       deckId: currentDeckId,
       order: baseOrder + index,
+      drillAttempts: 0,
+      drillSuccesses: 0,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
@@ -472,6 +587,8 @@ function cardToDoc(card) {
     viewCount: card.viewCount || 0,
     flipCount: card.flipCount || 0,
     knownCount: card.knownCount || 0,
+    drillAttempts: card.drillAttempts || 0,
+    drillSuccesses: card.drillSuccesses || 0,
     lastStudiedAt: card.lastStudiedAt || null,
     lastKnownAt: card.lastKnownAt || null,
     updatedAt: serverTimestamp(),
@@ -486,6 +603,9 @@ function setMode(nextMode) {
   document.querySelectorAll(".mode-panel").forEach((panel) => {
     panel.classList.toggle("active", panel.id === `${mode}-panel`);
   });
+  if (mode === "drill") {
+    renderDrill();
+  }
 }
 
 function render() {
@@ -502,14 +622,24 @@ function render() {
   renderCard();
   renderDuplicateWarning();
   renderList();
+  if (mode === "drill") {
+    renderDrill();
+  }
 }
 
 function getStudyCards() {
   const deckCards = allCards.filter((card) => card.deckId === currentDeckId);
-  if (studyOrderMode === "weak" && studyOrder.length === 0) {
+  if (studyOrderMode === "weak") {
     return [...deckCards].sort((a, b) => {
       if (a.known !== b.known) return a.known ? 1 : -1;
       return (b.viewCount || 0) - (a.viewCount || 0);
+    });
+  }
+  if (studyOrderMode === "rate-asc") {
+    return [...deckCards].sort((a, b) => {
+      const rateA = a.drillAttempts ? (a.drillSuccesses / a.drillAttempts) : -1;
+      const rateB = b.drillAttempts ? (b.drillSuccesses / b.drillAttempts) : -1;
+      return rateA - rateB;
     });
   }
   const ids = new Set(deckCards.map((card) => card.id));
@@ -641,34 +771,56 @@ function renderList() {
 
   const duplicateMap = getDuplicateMap();
   const editing = !els.editAddPanel.hidden;
-  els.cardList.innerHTML = listCards.map((card, index) => `
-    <div class="list-item${duplicateMap.has(normalizeFront(card.front)) ? " duplicate-item" : ""}${editing ? " reorder-enabled" : ""}"
-      data-id="${card.id}" draggable="${editing ? "true" : "false"}">
-      ${editing ? '<span class="drag-handle" aria-hidden="true">=</span>' : ''}
-      <div class="list-word list-front">
-        ${escapeHtml(card.front)}
-        ${duplicateMap.has(normalizeFront(card.front)) ? '<span class="duplicate-badge">重複</span>' : ''}
+  els.cardList.innerHTML = listCards.map((card, index) => {
+    let rateBadge = "";
+    if (card.drillAttempts && card.drillAttempts > 0) {
+      const rate = Math.round((card.drillSuccesses / card.drillAttempts) * 100);
+      if (rate >= 80) {
+        rateBadge = `<span class="rate-badge rate-high">暗記率 ${rate}%</span>`;
+      } else if (rate >= 50) {
+        rateBadge = `<span class="rate-badge rate-mid">暗記率 ${rate}%</span>`;
+      } else {
+        rateBadge = `<span class="rate-badge rate-low">暗記率 ${rate}% (苦手)</span>`;
+      }
+    } else {
+      rateBadge = `<span class="rate-badge rate-none">未学習</span>`;
+    }
+
+    const rateText = card.drillAttempts
+      ? `${Math.round((card.drillSuccesses / card.drillAttempts) * 100)}% (${card.drillSuccesses}/${card.drillAttempts}回)`
+      : "未回答";
+
+    return `
+      <div class="list-item${duplicateMap.has(normalizeFront(card.front)) ? " duplicate-item" : ""}${editing ? " reorder-enabled" : ""}"
+        data-id="${card.id}" draggable="${editing ? "true" : "false"}">
+        ${editing ? '<span class="drag-handle" aria-hidden="true">=</span>' : ''}
+        <div class="list-word list-front">
+          ${escapeHtml(card.front)}
+          ${duplicateMap.has(normalizeFront(card.front)) ? '<span class="duplicate-badge">重複</span>' : ''}
+          ${rateBadge}
+        </div>
+        <div class="list-word list-back">${escapeHtml(card.back)}</div>
+        <div class="mini-actions">
+          ${editing ? `<button type="button" class="mini-btn" data-action="edit" data-index="${index}">編集</button>` : ""}
+          <button type="button" class="mini-btn" data-action="known" data-index="${index}">${card.known ? "未暗記" : "暗記"}</button>
+          <button type="button" class="mini-btn delete" data-action="delete" data-index="${index}">削除</button>
+        </div>
+        ${editing ? `
+          <form class="inline-edit-form" data-id="${card.id}">
+            <input type="text" name="front" value="${escapeAttr(card.front)}" placeholder="表">
+            <input type="text" name="back" value="${escapeAttr(card.back)}" placeholder="裏">
+            <button type="submit" class="primary-btn">更新</button>
+          </form>
+        ` : ""}
+        <div class="history-line">
+          <span>暗記率: ${rateText}</span>
+          <span>学習 ${card.viewCount || 0}回</span>
+          <span>反転 ${card.flipCount || 0}回</span>
+          ${card.lastStudiedAt ? `<span>最終 ${formatShortDate(card.lastStudiedAt)}</span>` : ""}
+        </div>
       </div>
-      <div class="list-word list-back">${escapeHtml(card.back)}</div>
-      <div class="mini-actions">
-        ${editing ? `<button type="button" class="mini-btn" data-action="edit" data-index="${index}">編集</button>` : ""}
-        <button type="button" class="mini-btn" data-action="known" data-index="${index}">${card.known ? "未暗記" : "暗記"}</button>
-        <button type="button" class="mini-btn delete" data-action="delete" data-index="${index}">削除</button>
-      </div>
-      ${editing ? `
-        <form class="inline-edit-form" data-id="${card.id}">
-          <input type="text" name="front" value="${escapeAttr(card.front)}" placeholder="表">
-          <input type="text" name="back" value="${escapeAttr(card.back)}" placeholder="裏">
-          <button type="submit" class="primary-btn">更新</button>
-        </form>
-      ` : ""}
-      <div class="history-line">
-        <span>学習 ${card.viewCount || 0}回</span>
-        <span>反転 ${card.flipCount || 0}回</span>
-        ${card.lastStudiedAt ? `<span>最終 ${formatShortDate(card.lastStudiedAt)}</span>` : ""}
-      </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 
   els.cardList.querySelectorAll("button").forEach((button) => {
     button.addEventListener("click", async () => {
@@ -915,17 +1067,33 @@ async function swipeMarkCard(isKnown) {
 function handleKeyboard(event) {
   const active = document.activeElement;
   const typing = active && ["INPUT", "TEXTAREA", "SELECT"].includes(active.tagName);
-  if (typing || currentView !== "study" || mode !== "cards") return;
+  if (typing || currentView !== "study") return;
 
-  if (event.key === "ArrowLeft") {
-    event.preventDefault();
-    swipeMarkCard(false);
-  } else if (event.key === "ArrowRight") {
-    event.preventDefault();
-    swipeMarkCard(true);
-  } else if (event.key === " ") {
-    event.preventDefault();
-    if (cards.length) flipCard();
+  if (mode === "cards") {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      swipeMarkCard(false);
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      swipeMarkCard(true);
+    } else if (event.key === " ") {
+      event.preventDefault();
+      if (cards.length) flipCard();
+    }
+  } else if (mode === "drill" && drillState.view === "play") {
+    if (event.key === "ArrowLeft" || event.key === "a" || event.key === "A") {
+      event.preventDefault();
+      handleDrillAnswer(false);
+    } else if (event.key === "ArrowRight" || event.key === "d" || event.key === "D") {
+      event.preventDefault();
+      handleDrillAnswer(true);
+    } else if (event.key === " ") {
+      event.preventDefault();
+      flipDrillCard();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      pauseDrillSession();
+    }
   }
 }
 
@@ -950,13 +1118,19 @@ function animateCard(direction) {
 
 function shuffleCards() {
   studyOrder = cards.map((card) => card.id);
-  for (let i = studyOrder.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [studyOrder[i], studyOrder[j]] = [studyOrder[j], studyOrder[i]];
-  }
+  studyOrder = shuffleArray(studyOrder);
   currentIndex = 0;
   showingBack = false;
   render();
+}
+
+function shuffleArray(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
 }
 
 function toggleEditAddPanel() {
@@ -968,21 +1142,6 @@ function toggleEditAddPanel() {
     renderImportPreview();
     els.frontInput.focus();
   }
-}
-
-async function toggleKnown() {
-  const card = cards[currentIndex];
-  if (!card) return;
-  els.knownBtn.disabled = true;
-  const nextKnown = !card.known;
-  const data = {
-    known: nextKnown,
-    knownCount: nextKnown ? (card.knownCount || 0) + 1 : (card.knownCount || 0),
-    lastStudiedAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  };
-  if (nextKnown) data.lastKnownAt = serverTimestamp();
-  await saveWithStatus(() => updateDoc(cardDoc(card.id), data), { silent: true });
 }
 
 async function resetKnown() {
@@ -1008,6 +1167,8 @@ async function addCard(event) {
       known: false,
       deckId: currentDeckId,
       order: Date.now(),
+      drillAttempts: 0,
+      drillSuccesses: 0,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     }));
@@ -1036,6 +1197,8 @@ async function addBulkCards() {
         ...card,
         deckId: currentDeckId,
         order: baseOrder + index,
+        drillAttempts: 0,
+        drillSuccesses: 0,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -1190,7 +1353,7 @@ function rowToCard(row) {
   const back = rest.join(",").trim();
   if (!front?.trim() || !back) return null;
   if (front.trim().toLowerCase() === "front" && back.toLowerCase() === "back") return null;
-  return { front: front.trim(), back, known: false };
+  return { front: front.trim(), back, known: false, drillAttempts: 0, drillSuccesses: 0 };
 }
 
 function exportCards() {
@@ -1198,9 +1361,13 @@ function exportCards() {
   const exportData = scope === "all"
     ? {
         decks,
-        cards: allCards.map(({ front, back, known, deckId, order }) => ({ front, back, known, deckId, order })),
+        cards: allCards.map(({ front, back, known, deckId, order, drillAttempts, drillSuccesses }) => ({
+          front, back, known, deckId, order, drillAttempts: drillAttempts || 0, drillSuccesses: drillSuccesses || 0
+        })),
       }
-    : getOrderedDeckCards().map(({ front, back, known }) => ({ front, back, known }));
+    : getOrderedDeckCards().map(({ front, back, known, drillAttempts, drillSuccesses }) => ({
+        front, back, known, drillAttempts: drillAttempts || 0, drillSuccesses: drillSuccesses || 0
+      }));
   const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -1230,6 +1397,8 @@ function importCards(event) {
           ...card,
           deckId: currentDeckId,
           order: baseOrder + index,
+          drillAttempts: card.drillAttempts || 0,
+          drillSuccesses: card.drillSuccesses || 0,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
@@ -1259,6 +1428,8 @@ function parseImportedCards(text) {
           front: String(card.front).trim(),
           back: String(card.back).trim(),
           known: Boolean(card.known),
+          drillAttempts: Number(card.drillAttempts || 0),
+          drillSuccesses: Number(card.drillSuccesses || 0),
         }))
         .filter((card) => card.front && card.back));
     }
@@ -1269,6 +1440,8 @@ function parseImportedCards(text) {
           front: String(card.front).trim(),
           back: String(card.back).trim(),
           known: Boolean(card.known),
+          drillAttempts: Number(card.drillAttempts || 0),
+          drillSuccesses: Number(card.drillSuccesses || 0),
         }))
         .filter((card) => card.front && card.back));
     }
@@ -1312,4 +1485,582 @@ function formatShortDate(ms) {
   const date = new Date(ms);
   if (Number.isNaN(date.getTime())) return "";
   return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
+// ==========================================
+// DRILL MODE (暗記モード) IMPLEMENTATION
+// ==========================================
+
+function getSavedDrillSession(deckId = currentDeckId) {
+  try {
+    const raw = localStorage.getItem(`${DRILL_STORAGE_KEY}_${deckId}`);
+    if (!raw) return null;
+    const session = JSON.parse(raw);
+    if (!session || !Array.isArray(session.currentSet)) return null;
+
+    // Validate if saved cards still exist in deck
+    const deckCardIds = new Set(getOrderedDeckCards().map((c) => c.id));
+    session.pool = (session.pool || []).filter((id) => deckCardIds.has(id));
+    session.currentSet = (session.currentSet || []).filter((id) => deckCardIds.has(id));
+    session.roundCards = (session.roundCards || []).filter((id) => deckCardIds.has(id));
+    session.carryOverCards = (session.carryOverCards || []).filter((id) => deckCardIds.has(id));
+    session.completedCardIds = (session.completedCardIds || []).filter((id) => deckCardIds.has(id));
+
+    if (session.currentSet.length === 0 && session.pool.length === 0 && session.carryOverCards.length === 0) {
+      return null;
+    }
+    return session;
+  } catch {
+    return null;
+  }
+}
+
+function saveDrillSession() {
+  try {
+    localStorage.setItem(`${DRILL_STORAGE_KEY}_${drillState.deckId}`, JSON.stringify(drillState));
+  } catch {
+    // ignore quota errors
+  }
+}
+
+function clearDrillSession(deckId = drillState.deckId) {
+  try {
+    localStorage.removeItem(`${DRILL_STORAGE_KEY}_${deckId}`);
+  } catch {
+    // ignore
+  }
+}
+
+function renderDrill() {
+  const deckCards = getOrderedDeckCards();
+
+  // Hide all drill subviews first
+  els.drillStartView.hidden = true;
+  els.drillPlayView.hidden = true;
+  els.drillSetResultView.hidden = true;
+  els.drillCompleteView.hidden = true;
+
+  if (drillState.view === "play") {
+    renderDrillPlay();
+    els.drillPlayView.hidden = false;
+  } else if (drillState.view === "set-result") {
+    renderDrillSetResult();
+    els.drillSetResultView.hidden = false;
+  } else if (drillState.view === "complete") {
+    renderDrillComplete();
+    els.drillCompleteView.hidden = false;
+  } else {
+    // Start view
+    renderDrillStart(deckCards);
+    els.drillStartView.hidden = false;
+  }
+}
+
+function renderDrillStart(deckCards) {
+  const total = deckCards.length;
+  let masteredCount = 0;
+  let learningCount = 0;
+  let weakCount = 0;
+  let unseenCount = 0;
+  let totalAttempts = 0;
+  let totalSuccesses = 0;
+
+  deckCards.forEach((card) => {
+    if (!card.drillAttempts || card.drillAttempts === 0) {
+      unseenCount++;
+    } else {
+      totalAttempts += card.drillAttempts;
+      totalSuccesses += (card.drillSuccesses || 0);
+      const rate = (card.drillSuccesses || 0) / card.drillAttempts;
+      if (rate >= 0.8) masteredCount++;
+      else if (rate >= 0.5) learningCount++;
+      else weakCount++;
+    }
+  });
+
+  const overallRate = totalAttempts > 0 ? Math.round((totalSuccesses / totalAttempts) * 100) : 0;
+  els.drillDeckRate.textContent = `${overallRate}%`;
+  els.drillDeckCount.textContent = `${total}枚`;
+  els.drillCatMastered.textContent = masteredCount;
+  els.drillCatLearning.textContent = learningCount;
+  els.drillCatWeak.textContent = weakCount;
+  els.drillCatUnseen.textContent = unseenCount;
+
+  // Check saved session
+  const saved = getSavedDrillSession(currentDeckId);
+  if (saved && saved.view !== "complete") {
+    els.drillResumeBox.hidden = false;
+    const completed = saved.completedCardIds?.length || 0;
+    els.drillResumeText.textContent = `習得済: ${completed} / ${total}枚 (残り ${Math.max(0, total - completed)}枚)`;
+  } else {
+    els.drillResumeBox.hidden = true;
+  }
+
+  // Render weak cards focus ranking
+  const sorted = [...deckCards].sort((a, b) => {
+    const rateA = a.drillAttempts ? (a.drillSuccesses / a.drillAttempts) : -1;
+    const rateB = b.drillAttempts ? (b.drillSuccesses / b.drillAttempts) : -1;
+    if (rateA !== rateB) return rateA - rateB;
+    return (b.drillAttempts || 0) - (a.drillAttempts || 0);
+  });
+
+  if (!sorted.length) {
+    els.drillFocusList.innerHTML = `<div class="empty-message">カードがありません</div>`;
+    return;
+  }
+
+  els.drillFocusList.innerHTML = sorted.slice(0, 8).map((card) => {
+    let statText = "未学習";
+    let badgeClass = "rate-none";
+    if (card.drillAttempts && card.drillAttempts > 0) {
+      const rate = Math.round((card.drillSuccesses / card.drillAttempts) * 100);
+      statText = `暗記率 ${rate}% (${card.drillSuccesses}/${card.drillAttempts})`;
+      if (rate >= 80) badgeClass = "rate-high";
+      else if (rate >= 50) badgeClass = "rate-mid";
+      else badgeClass = "rate-low";
+    }
+    return `
+      <div class="drill-focus-item">
+        <span class="drill-focus-front">${escapeHtml(card.front)}</span>
+        <span class="drill-focus-back">${escapeHtml(card.back)}</span>
+        <span class="drill-focus-stat ${badgeClass}">${statText}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+function startDrillSession(resume = false) {
+  const deckCards = getOrderedDeckCards();
+  if (!deckCards.length) {
+    alert("カード集にカードがありません");
+    return;
+  }
+
+  if (resume) {
+    const saved = getSavedDrillSession(currentDeckId);
+    if (saved) {
+      drillState = {
+        ...saved,
+        deckId: currentDeckId,
+        view: "play",
+        showingBack: false,
+      };
+      if (drillState.roundIndex >= drillState.roundCards.length) {
+        drillState.roundIndex = 0;
+      }
+      saveDrillSession();
+      renderDrill();
+      return;
+    }
+  }
+
+  // Start fresh drill session
+  const setSize = parseInt(els.drillSetSizeSelect.value, 10) || 10;
+  const direction = els.drillDirectionSelect.value || "front";
+  const allShuffledIds = shuffleArray(deckCards.map((c) => c.id));
+
+  drillState = {
+    view: "play",
+    deckId: currentDeckId,
+    direction,
+    setSize,
+    pool: allShuffledIds,
+    currentSet: [],
+    roundCards: [],
+    roundIndex: 0,
+    roundNumber: 1,
+    roundUnlearned: [],
+    carryOverCards: [],
+    completedCardIds: [],
+    lastCarriedOverName: null,
+    isReviewInterleaved: false,
+    sessionStats: {
+      totalAnswered: 0,
+      firstTrySuccesses: 0,
+      totalSuccesses: 0,
+      totalFails: 0,
+    },
+    showingBack: false,
+  };
+
+  initNextDrillSet();
+}
+
+function initNextDrillSet() {
+  const setSize = drillState.setSize || 10;
+  const needed = setSize - drillState.carryOverCards.length;
+  const newBatch = drillState.pool.splice(0, Math.max(0, needed));
+  drillState.currentSet = shuffleArray([...drillState.carryOverCards, ...newBatch]);
+  drillState.carryOverCards = [];
+  drillState.roundCards = [...drillState.currentSet];
+  drillState.roundIndex = 0;
+  drillState.roundNumber = 1;
+  drillState.roundUnlearned = [];
+  drillState.showingBack = false;
+  drillState.isReviewInterleaved = false;
+  drillState.view = "play";
+
+  saveDrillSession();
+  renderDrill();
+}
+
+function renderDrillPlay() {
+  const cardId = drillState.roundCards[drillState.roundIndex];
+  const card = allCards.find((c) => c.id === cardId);
+  const totalDeckCards = getOrderedDeckCards().length;
+  const completedCount = drillState.completedCardIds.length;
+
+  resetDrillSwipeHints();
+
+  if (!card) {
+    processDrillRoundCompletion();
+    return;
+  }
+
+  // Meta Badges
+  const roundText = `${drillState.roundNumber}周目`;
+  els.drillRoundBadge.textContent = roundText;
+  els.drillRoundBadge.classList.toggle("retry-round", drillState.roundNumber > 1);
+
+  const setTotal = Math.ceil(totalDeckCards / (drillState.setSize || 10));
+  const currentSetNum = Math.min(setTotal, Math.floor(completedCount / (drillState.setSize || 10)) + 1);
+  els.drillSetBadge.textContent = `セット ${currentSetNum} / ${setTotal}`;
+
+  // Progress Text
+  els.drillProgressText.textContent = `${drillState.roundIndex + 1} / ${drillState.roundCards.length}枚`;
+  els.drillDeckProgressText.textContent = `全体 ${completedCount} / ${totalDeckCards}枚 習得`;
+
+  // Progress Track Fill
+  const percent = totalDeckCards > 0 ? Math.round((completedCount / totalDeckCards) * 100) : 0;
+  els.drillProgressFill.style.width = `${percent}%`;
+
+  // Banner Notice for Round 2+
+  if (drillState.roundNumber > 1) {
+    els.drillRoundNotice.hidden = false;
+    if (drillState.isReviewInterleaved) {
+      els.drillRoundNotice.textContent = `💡 残り1枚の定着確認のため、復習カードと一緒に再出題しています`;
+    } else {
+      els.drillRoundNotice.textContent = `🔄 ${drillState.roundNumber}周目: 覚えられなかった ${drillState.roundCards.length}枚 を再挑戦`;
+    }
+  } else {
+    els.drillRoundNotice.hidden = true;
+  }
+
+  // Card Content
+  const promptSide = drillState.direction === "front" ? "表" : "裏";
+  const answerSide = drillState.direction === "front" ? "裏" : "表";
+  const promptText = drillState.direction === "front" ? card.front : card.back;
+  const answerText = drillState.direction === "front" ? card.back : card.front;
+
+  els.drillCardSide.textContent = drillState.showingBack ? answerSide : promptSide;
+  els.drillCardMain.textContent = drillState.showingBack ? answerText : promptText;
+  els.drillCardSub.textContent = drillState.showingBack ? `${promptSide}へ` : `タップまたはSpaceで${answerSide}へ`;
+
+  // Rate Tag on Card
+  if (card.drillAttempts && card.drillAttempts > 0) {
+    const rate = Math.round((card.drillSuccesses / card.drillAttempts) * 100);
+    els.drillCardRateTag.textContent = `暗記率: ${rate}% (${card.drillSuccesses}/${card.drillAttempts})`;
+    els.drillCardRateTag.className = "card-rate-tag";
+    if (rate >= 80) els.drillCardRateTag.classList.add("rate-high");
+    else if (rate >= 50) els.drillCardRateTag.classList.add("rate-mid");
+    else els.drillCardRateTag.classList.add("rate-low");
+  } else {
+    els.drillCardRateTag.textContent = "未出題";
+    els.drillCardRateTag.className = "card-rate-tag";
+  }
+}
+
+function flipDrillCard() {
+  const cardId = drillState.roundCards[drillState.roundIndex];
+  const card = allCards.find((c) => c.id === cardId);
+  if (card) {
+    updateDoc(cardDoc(card.id), {
+      flipCount: (card.flipCount || 0) + 1,
+      lastStudiedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }).catch(() => {});
+  }
+  window.clearTimeout(drillFlipTimer);
+  els.drillFlashcard.classList.remove("is-flipping");
+  void els.drillFlashcard.offsetWidth;
+  els.drillFlashcard.classList.add("is-flipping");
+  drillFlipTimer = window.setTimeout(() => {
+    drillState.showingBack = !drillState.showingBack;
+    renderDrillPlay();
+  }, 150);
+  window.setTimeout(() => {
+    els.drillFlashcard.classList.remove("is-flipping");
+  }, 320);
+}
+
+async function handleDrillAnswer(isKnown) {
+  const cardId = drillState.roundCards[drillState.roundIndex];
+  const card = allCards.find((c) => c.id === cardId);
+
+  animateDrillCardAction(isKnown ? "known" : "unknown");
+
+  if (card) {
+    const attempts = (card.drillAttempts || 0) + 1;
+    const successes = isKnown ? (card.drillSuccesses || 0) + 1 : (card.drillSuccesses || 0);
+    card.drillAttempts = attempts;
+    card.drillSuccesses = successes;
+
+    const data = {
+      drillAttempts: attempts,
+      drillSuccesses: successes,
+      lastStudiedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    if (isKnown) {
+      card.known = true;
+      card.knownCount = (card.knownCount || 0) + 1;
+      card.lastKnownAt = Date.now();
+      data.known = true;
+      data.knownCount = card.knownCount;
+      data.lastKnownAt = serverTimestamp();
+    }
+    saveWithStatus(() => updateDoc(cardDoc(card.id), data), { silent: true }).catch(() => {});
+  }
+
+  // Update session stats
+  drillState.sessionStats.totalAnswered++;
+  if (isKnown) {
+    drillState.sessionStats.totalSuccesses++;
+    if (drillState.roundNumber === 1) {
+      drillState.sessionStats.firstTrySuccesses++;
+    }
+  } else {
+    drillState.sessionStats.totalFails++;
+    drillState.roundUnlearned.push(cardId);
+  }
+
+  window.setTimeout(() => {
+    els.drillFlashcard.classList.remove("flick-known", "flick-unknown");
+    els.drillFlashcard.style.transform = "";
+
+    drillState.roundIndex++;
+    drillState.showingBack = false;
+
+    if (drillState.roundIndex < drillState.roundCards.length) {
+      renderDrillPlay();
+      saveDrillSession();
+    } else {
+      processDrillRoundCompletion();
+    }
+  }, 200);
+}
+
+function processDrillRoundCompletion() {
+  // Case 1: All cards in the round were marked known
+  if (drillState.roundUnlearned.length === 0) {
+    // Add all cards from currentSet to completedCardIds
+    drillState.currentSet.forEach((id) => {
+      if (!drillState.completedCardIds.includes(id)) {
+        drillState.completedCardIds.push(id);
+      }
+    });
+
+    // Check if entire deck is complete
+    if (drillState.pool.length === 0 && drillState.carryOverCards.length === 0) {
+      clearDrillSession();
+      drillState.view = "complete";
+      renderDrill();
+      return;
+    }
+
+    drillState.lastCarriedOverName = null;
+    drillState.view = "set-result";
+    saveDrillSession();
+    renderDrill();
+    return;
+  }
+
+  // Case 2: Exactly 1 card left unlearned
+  // User Rule: "最後の暗記済み9，未暗記1になったら，そのカードは連続して現れるので，次の10個セットに持ち越し．"
+  if (drillState.roundUnlearned.length === 1) {
+    const unlearnedId = drillState.roundUnlearned[0];
+    const unlearnedCard = allCards.find((c) => c.id === unlearnedId);
+
+    // If there are more cards in the pool, carry over to next set!
+    if (drillState.pool.length > 0) {
+      drillState.carryOverCards = [unlearnedId];
+      drillState.lastCarriedOverName = unlearnedCard ? unlearnedCard.front : "単語";
+
+      // Mark other mastered cards in this set as completed
+      drillState.currentSet.forEach((id) => {
+        if (id !== unlearnedId && !drillState.completedCardIds.includes(id)) {
+          drillState.completedCardIds.push(id);
+        }
+      });
+
+      drillState.view = "set-result";
+      saveDrillSession();
+      renderDrill();
+      return;
+    }
+
+    // Pool is empty: interleave review cards if possible
+    if (drillState.completedCardIds.length >= 2) {
+      const reviewSample = shuffleArray([...drillState.completedCardIds]).slice(0, 2);
+      drillState.roundCards = shuffleArray([unlearnedId, ...reviewSample]);
+      drillState.roundIndex = 0;
+      drillState.roundNumber++;
+      drillState.roundUnlearned = [];
+      drillState.isReviewInterleaved = true;
+      saveDrillSession();
+      renderDrill();
+      return;
+    }
+
+    // Single card retry
+    drillState.roundCards = [...drillState.roundUnlearned];
+    drillState.roundIndex = 0;
+    drillState.roundNumber++;
+    drillState.roundUnlearned = [];
+    drillState.isReviewInterleaved = false;
+    saveDrillSession();
+    renderDrill();
+    return;
+  }
+
+  // Case 3: More than 1 card unlearned
+  drillState.roundCards = shuffleArray([...drillState.roundUnlearned]);
+  drillState.roundIndex = 0;
+  drillState.roundNumber++;
+  drillState.roundUnlearned = [];
+  drillState.isReviewInterleaved = false;
+  saveDrillSession();
+  renderDrill();
+}
+
+function renderDrillSetResult() {
+  const totalDeckCards = getOrderedDeckCards().length;
+  const completedCount = drillState.completedCardIds.length;
+  const remaining = Math.max(0, totalDeckCards - completedCount);
+  const percent = totalDeckCards > 0 ? Math.round((completedCount / totalDeckCards) * 100) : 0;
+
+  // Carried over notice
+  if (drillState.lastCarriedOverName) {
+    els.drillCarryOverAlert.hidden = false;
+    els.drillCarryOverMsg.textContent = `「${drillState.lastCarriedOverName}」は連続出題を防ぐため、次のセットに持ち越しました。`;
+    els.drillSetResultDesc.textContent = "セット内の他のカードをすべて暗記しました！";
+  } else {
+    els.drillCarryOverAlert.hidden = true;
+    els.drillSetResultDesc.textContent = "このセットのすべてのカードを暗記しました！";
+  }
+
+  const setSize = drillState.setSize || 10;
+  const learnedInSet = drillState.lastCarriedOverName ? setSize - 1 : setSize;
+  els.drillSetLearnedCount.textContent = `${Math.max(1, learnedInSet)}枚`;
+  els.drillSetOverallProgress.textContent = `${completedCount} / ${totalDeckCards}枚 (${percent}%)`;
+  els.drillSetRemainingCount.textContent = `${remaining}枚`;
+}
+
+function proceedToNextDrillSet() {
+  initNextDrillSet();
+}
+
+function pauseDrillSession() {
+  saveDrillSession();
+  drillState.view = "start";
+  renderDrill();
+}
+
+function renderDrillComplete() {
+  const totalDeckCards = getOrderedDeckCards().length;
+  const totalAnswered = drillState.sessionStats.totalAnswered || 1;
+  const firstRate = Math.round(((drillState.sessionStats.firstTrySuccesses || 0) / Math.max(1, totalDeckCards)) * 100);
+
+  els.drillCompleteTotal.textContent = `${totalDeckCards}枚`;
+  els.drillCompleteFirstRate.textContent = `${firstRate}%`;
+
+  // Find lowest rate cards in this deck
+  const weakCards = getOrderedDeckCards()
+    .filter((c) => c.drillAttempts && (c.drillSuccesses / c.drillAttempts) < 0.75)
+    .sort((a, b) => (a.drillSuccesses / a.drillAttempts) - (b.drillSuccesses / b.drillAttempts))
+    .slice(0, 5);
+
+  if (weakCards.length) {
+    els.drillCompleteWeakBox.hidden = false;
+    els.drillCompleteWeakList.innerHTML = weakCards.map((c) => {
+      const rate = Math.round((c.drillSuccesses / c.drillAttempts) * 100);
+      return `
+        <div class="drill-weak-item">
+          <span>${escapeHtml(c.front)}: ${escapeHtml(c.back)}</span>
+          <span class="rate-badge rate-low">暗記率 ${rate}%</span>
+        </div>
+      `;
+    }).join("");
+  } else {
+    els.drillCompleteWeakBox.hidden = true;
+  }
+}
+
+function animateDrillCardAction(type) {
+  els.drillFlashcard.classList.remove("flick-known", "flick-unknown", "flick-left", "flick-right");
+  void els.drillFlashcard.offsetWidth;
+  if (type === "known") {
+    els.drillFlashcard.classList.add("flick-known");
+  } else if (type === "unknown") {
+    els.drillFlashcard.classList.add("flick-unknown");
+  }
+}
+
+function resetDrillSwipeHints() {
+  if (els.drillSwipeHintLeft) els.drillSwipeHintLeft.style.opacity = "0";
+  if (els.drillSwipeHintRight) els.drillSwipeHintRight.style.opacity = "0";
+}
+
+function startDrillFlick(event) {
+  drillPointerTracking = true;
+  drillPointerStartX = event.clientX;
+  drillPointerStartY = event.clientY;
+  els.drillFlashcard.dataset.dragged = "false";
+  els.drillFlashcard.setPointerCapture?.(event.pointerId);
+}
+
+function moveDrillFlick(event) {
+  if (!drillPointerTracking) return;
+  const dx = event.clientX - drillPointerStartX;
+  const dy = event.clientY - drillPointerStartY;
+  if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return;
+  event.preventDefault();
+  els.drillFlashcard.dataset.dragged = "true";
+  const limited = Math.max(-140, Math.min(140, dx));
+  els.drillFlashcard.style.transform = `translateX(${limited}px) rotate(${limited / 14}deg)`;
+
+  if (dx > 0) {
+    const opacity = Math.min(1, Math.max(0, (dx - 10) / 60));
+    if (els.drillSwipeHintRight) els.drillSwipeHintRight.style.opacity = String(opacity);
+    if (els.drillSwipeHintLeft) els.drillSwipeHintLeft.style.opacity = "0";
+  } else {
+    const opacity = Math.min(1, Math.max(0, (-dx - 10) / 60));
+    if (els.drillSwipeHintLeft) els.drillSwipeHintLeft.style.opacity = String(opacity);
+    if (els.drillSwipeHintRight) els.drillSwipeHintRight.style.opacity = "0";
+  }
+}
+
+function endDrillFlick(event) {
+  if (!drillPointerTracking) return;
+  const dx = event.clientX - drillPointerStartX;
+  const dy = event.clientY - drillPointerStartY;
+  drillPointerTracking = false;
+  resetDrillSwipeHints();
+
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.1) {
+    els.drillFlashcard.style.transform = "";
+    if (dx > 0) {
+      handleDrillAnswer(true);
+    } else {
+      handleDrillAnswer(false);
+    }
+  } else {
+    els.drillFlashcard.style.transform = "";
+  }
+}
+
+function cancelDrillFlick() {
+  drillPointerTracking = false;
+  resetDrillSwipeHints();
+  els.drillFlashcard.style.transform = "";
 }
