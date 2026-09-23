@@ -1123,7 +1123,6 @@ textarea {
 
 .list-item.reorder-enabled {
   grid-template-columns: auto 1fr 1fr auto;
-  cursor: grab;
 }
 
 .list-item.dragging {
@@ -1141,11 +1140,24 @@ textarea {
 .drag-handle {
   color: #94a3b8;
   cursor: grab;
-  font-size: 1.1rem;
+  cursor: -webkit-grab;
+  font-size: 1.25rem;
   font-weight: 900;
   line-height: 1;
-  padding: 0 2px;
+  padding: 4px 6px;
   user-select: none;
+  border-radius: 4px;
+  transition: color .15s, background-color .15s;
+}
+
+.drag-handle:hover {
+  color: var(--fc-brand);
+  background: var(--fc-brand-soft, #eff6ff);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+  cursor: -webkit-grabbing;
 }
 
 .inline-edit-form {
@@ -1172,11 +1184,15 @@ textarea {
 .inline-edit-form textarea {
   min-height: 52px;
   resize: vertical;
+  line-height: 1.45;
+  box-sizing: border-box;
 }
 
 .inline-add-form textarea {
   min-height: 52px;
   resize: vertical;
+  line-height: 1.45;
+  box-sizing: border-box;
 }
 
 .history-line {
@@ -1279,6 +1295,30 @@ textarea {
   background: #fff1f0;
   border-color: #ffd2ce;
   color: var(--fc-warn);
+}
+
+.mini-btn.confirm-delete {
+  background: var(--fc-warn);
+  border-color: var(--fc-warn);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.mini-btn.confirm-delete:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.mini-btn.cancel-delete {
+  background: #fff;
+  border-color: var(--fc-line);
+  color: var(--fc-soft);
+  white-space: nowrap;
+}
+
+.mini-btn.cancel-delete:hover {
+  border-color: #94a3b8;
+  color: var(--fc-ink);
 }
 
 .section-header {
@@ -2004,6 +2044,8 @@ textarea {
 
 .modal-card {
   width: min(500px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
   background: #fff;
   border: 1px solid var(--fc-line);
   border-radius: 12px;
@@ -2054,6 +2096,8 @@ textarea {
 .modal-form textarea {
   min-height: 80px;
   resize: vertical;
+  line-height: 1.45;
+  box-sizing: border-box;
 }
 
 .modal-actions {
@@ -2063,6 +2107,12 @@ textarea {
   gap: 10px;
   margin-top: 6px;
   flex-wrap: wrap;
+}
+
+.modal-delete-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .modal-action-right {

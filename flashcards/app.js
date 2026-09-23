@@ -265,8 +265,31 @@ els.cardEditModal?.addEventListener("click", (event) => {
   if (event.target === els.cardEditModal) closeCardEditModal();
 });
 els.cardEditForm?.addEventListener("submit", saveCardEdit);
-els.cardEditDeleteBtn?.addEventListener("click", deleteCardFromModal);
+document.getElementById("card-edit-delete-group")?.addEventListener("click", (event) => {
+  const btn = event.target.closest("button");
+  if (!btn) return;
+  if (btn.id === "card-edit-delete-btn") {
+    const group = document.getElementById("card-edit-delete-group");
+    if (group) {
+      group.innerHTML = `
+        <button type="button" class="danger-btn" id="card-edit-confirm-delete-btn">本当に削除</button>
+        <button type="button" class="secondary-btn" id="card-edit-cancel-delete-btn">中止</button>
+      `;
+    }
+    return;
+  }
+  if (btn.id === "card-edit-cancel-delete-btn") {
+    resetModalDeleteButton();
+    return;
+  }
+  if (btn.id === "card-edit-confirm-delete-btn") {
+    btn.disabled = true;
+    deleteCardFromModal();
+    return;
+  }
+});
 [els.editModalFront, els.editModalBack].forEach((textarea) => {
+  textarea?.addEventListener("input", () => autoResizeTextarea(textarea));
   textarea?.addEventListener("keydown", (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
       event.preventDefault();
@@ -276,6 +299,7 @@ els.cardEditDeleteBtn?.addEventListener("click", deleteCardFromModal);
 });
 els.addForm?.addEventListener("submit", addCard);
 [els.frontInput, els.backInput].forEach((textarea) => {
+  textarea?.addEventListener("input", () => autoResizeTextarea(textarea));
   textarea?.addEventListener("keydown", (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
       event.preventDefault();
@@ -300,6 +324,13 @@ document.addEventListener("keydown", handleKeyboard);
 els.undoBtn?.addEventListener("click", runUndo);
 window.addEventListener("offline", () => setSyncStatus("reconnect"));
 window.addEventListener("online", () => setSyncStatus("saved"));
+document.addEventListener("pointerdown", (event) => {
+  const target = event.target;
+  if (target.closest(".inline-edit-form") || target.closest("button[data-action='edit']")) {
+    return;
+  }
+  closeAllInlineEdits();
+});
 
 // Drill Mode Events
 els.drillStartBtn?.addEventListener("click", () => startDrillSession(false));
@@ -662,6 +693,7 @@ function cardToDoc(card) {
 }
 
 function setMode(nextMode) {
+  closeAllInlineEdits();
   mode = nextMode;
   document.querySelectorAll(".mode-tab").forEach((tab) => {
     tab.classList.toggle("active", tab.dataset.mode === mode);
@@ -847,13 +879,41 @@ function isCurrentActiveCardBack() {
   return Boolean(showingBack);
 }
 
+function autoResizeTextarea(textarea) {
+  if (!textarea) return;
+  textarea.style.height = "auto";
+  const offset = textarea.offsetHeight - textarea.clientHeight;
+  const newHeight = textarea.scrollHeight + offset;
+  if (newHeight > 0) {
+    textarea.style.height = `${newHeight}px`;
+  }
+}
+
+function resetModalDeleteButton() {
+  const group = document.getElementById("card-edit-delete-group");
+  if (group) {
+    group.innerHTML = `<button type="button" class="danger-btn" id="card-edit-delete-btn">削除</button>`;
+  }
+}
+
+function closeAllInlineEdits(exceptRow = null) {
+  document.querySelectorAll(".list-item.editing-inline").forEach((row) => {
+    if (row !== exceptRow) {
+      row.classList.remove("editing-inline");
+    }
+  });
+}
+
 function openCardEditModal() {
   const card = getCurrentActiveCard();
   if (!card) return;
   currentEditingCardId = card.id;
   els.editModalFront.value = card.front;
   els.editModalBack.value = card.back;
+  resetModalDeleteButton();
   els.cardEditModal.hidden = false;
+  autoResizeTextarea(els.editModalFront);
+  autoResizeTextarea(els.editModalBack);
   if (isCurrentActiveCardBack()) {
     els.editModalBack.focus();
     els.editModalBack.setSelectionRange(card.back.length, card.back.length);
@@ -865,6 +925,7 @@ function openCardEditModal() {
 
 function closeCardEditModal() {
   currentEditingCardId = null;
+  resetModalDeleteButton();
   if (els.cardEditModal) {
     els.cardEditModal.hidden = true;
   }
@@ -909,8 +970,6 @@ async function saveCardEdit(event) {
 async function deleteCardFromModal() {
   const card = (currentEditingCardId && allCards.find((c) => c.id === currentEditingCardId)) || getCurrentActiveCard();
   if (!card) return;
-
-  if (!confirm("このカードを削除しますか？")) return;
 
   const deletedId = card.id;
   closeCardEditModal();
@@ -1001,8 +1060,8 @@ function renderList() {
 
     return `
       <div class="list-item${duplicateMap.has(normalizeFront(card.front)) ? " duplicate-item" : ""}${editing ? " reorder-enabled" : ""}"
-        data-id="${card.id}" draggable="${editing ? "true" : "false"}">
-        ${editing ? '<span class="drag-handle" aria-hidden="true">=</span>' : ''}
+        data-id="${card.id}">
+        ${editing ? '<span class="drag-handle" draggable="true" title="ドラッグして並び替え" aria-label="並び替え">&#8801;</span>' : ''}
         <div class="list-word list-front">
           ${escapeHtml(card.front)}
           ${duplicateMap.has(normalizeFront(card.front)) ? '<span class="duplicate-badge">重複</span>' : ''}
@@ -1011,7 +1070,6 @@ function renderList() {
         <div class="list-word list-back">${escapeHtml(card.back)}</div>
         <div class="mini-actions">
           ${editing ? `<button type="button" class="mini-btn" data-action="edit" data-index="${index}">編集</button>` : ""}
-          <button type="button" class="mini-btn" data-action="known" data-index="${index}">${card.known ? "未暗記" : "暗記"}</button>
           <button type="button" class="mini-btn delete" data-action="delete" data-index="${index}">削除</button>
         </div>
         ${editing ? `
@@ -1031,24 +1089,59 @@ function renderList() {
     `;
   }).join("");
 
-  els.cardList.querySelectorAll("button").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const card = listCards[Number(button.dataset.index)];
+  els.cardList.onclick = async (event) => {
+    const button = event.target.closest("button");
+    if (!button || !els.cardList.contains(button)) return;
+    const action = button.dataset.action;
+    if (!action) return;
+    const index = Number(button.dataset.index);
+    const card = listCards[index];
+
+    if (action === "edit") {
+      const row = button.closest(".list-item");
+      if (row) {
+        closeAllInlineEdits(row);
+        const isOpening = row.classList.toggle("editing-inline");
+        if (isOpening) {
+          row.querySelectorAll(".inline-edit-form textarea").forEach((ta) => {
+            autoResizeTextarea(ta);
+          });
+          row.querySelector(".inline-edit-form textarea")?.focus();
+        }
+      }
+      return;
+    }
+
+    if (action === "delete") {
+      const miniActions = button.closest(".mini-actions");
+      if (miniActions) {
+        miniActions.innerHTML = `
+          <button type="button" class="mini-btn confirm-delete" data-action="confirm-delete" data-index="${index}">本当に削除</button>
+          <button type="button" class="mini-btn cancel-delete" data-action="cancel-delete" data-index="${index}">中止</button>
+        `;
+      }
+      return;
+    }
+
+    if (action === "cancel-delete") {
+      const miniActions = button.closest(".mini-actions");
+      if (miniActions) {
+        miniActions.innerHTML = `
+          ${editing ? `<button type="button" class="mini-btn" data-action="edit" data-index="${index}">編集</button>` : ""}
+          <button type="button" class="mini-btn delete" data-action="delete" data-index="${index}">削除</button>
+        `;
+      }
+      return;
+    }
+
+    if (action === "confirm-delete") {
       if (!card) return;
-      if (button.dataset.action === "edit") {
-        const row = button.closest(".list-item");
-        row?.classList.toggle("editing-inline");
-        return;
-      }
       button.disabled = true;
-      if (button.dataset.action === "delete") {
-        await saveWithStatus(() => deleteDoc(cardDoc(card.id)));
-        showUndo("カードを削除", () => setDoc(cardDoc(card.id), cardToDoc(card)));
-      } else {
-        await saveWithStatus(() => updateDoc(cardDoc(card.id), { known: !card.known, updatedAt: serverTimestamp() }), { silent: true });
-      }
-    });
-  });
+      await saveWithStatus(() => deleteDoc(cardDoc(card.id)));
+      showUndo("カードを削除", () => setDoc(cardDoc(card.id), cardToDoc(card)));
+      return;
+    }
+  };
   els.cardList.querySelectorAll(".inline-edit-form").forEach((form) => {
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -1057,10 +1150,21 @@ function renderList() {
       if (!front || !back) return;
       const btn = form.querySelector("button");
       btn.disabled = true;
+      const row = form.closest(".list-item");
       try {
         await saveWithStatus(() => updateDoc(cardDoc(form.dataset.id), { front, back, updatedAt: serverTimestamp() }));
+        row?.classList.remove("editing-inline");
       } finally {
         btn.disabled = false;
+      }
+    });
+  });
+  els.cardList.querySelectorAll(".inline-edit-form textarea").forEach((textarea) => {
+    textarea.addEventListener("input", () => autoResizeTextarea(textarea));
+    textarea.addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        event.preventDefault();
+        textarea.closest("form")?.requestSubmit();
       }
     });
   });
@@ -1068,49 +1172,66 @@ function renderList() {
 }
 
 function setupListDrag() {
-  els.cardList.querySelectorAll(".list-item[draggable='true']").forEach((item) => {
-    item.addEventListener("dragstart", (event) => {
+  els.cardList.querySelectorAll(".drag-handle[draggable='true']").forEach((handle) => {
+    handle.addEventListener("dragstart", (event) => {
+      const item = handle.closest(".list-item");
+      if (!item) return;
       dragCardId = item.dataset.id;
       item.classList.add("dragging");
       event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData("text/plain", dragCardId);
+      if (event.dataTransfer.setDragImage) {
+        event.dataTransfer.setDragImage(item, 20, 20);
+      }
     });
 
-    item.addEventListener("dragover", (event) => {
-      event.preventDefault();
-      if (!dragCardId || item.dataset.id === dragCardId) return;
-      clearDragTargets();
-      const rect = item.getBoundingClientRect();
-      const before = event.clientY < rect.top + rect.height / 2;
-      item.classList.add(before ? "drag-over-before" : "drag-over-after");
-      item.dataset.dropPosition = before ? "before" : "after";
-    });
-
-    item.addEventListener("dragleave", () => {
-      item.classList.remove("drag-over-before", "drag-over-after");
-    });
-
-    item.addEventListener("drop", async (event) => {
-      event.preventDefault();
-      const targetId = item.dataset.id;
-      const position = item.dataset.dropPosition || "before";
-      clearDragTargets();
-      if (!dragCardId || dragCardId === targetId) return;
-      await reorderCards(dragCardId, targetId, position);
-      dragCardId = null;
-    });
-
-    item.addEventListener("dragend", () => {
+    handle.addEventListener("dragend", () => {
       dragCardId = null;
       clearDragTargets();
     });
   });
+
+  els.cardList.querySelectorAll(".list-item").forEach((item) => {
+    item.addEventListener("dragover", (event) => {
+      if (!dragCardId || item.dataset.id === dragCardId) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      clearDragTargets(item);
+      const rect = item.getBoundingClientRect();
+      const before = event.clientY < rect.top + rect.height / 2;
+      item.classList.remove(before ? "drag-over-after" : "drag-over-before");
+      item.classList.add(before ? "drag-over-before" : "drag-over-after");
+      item.dataset.dropPosition = before ? "before" : "after";
+    });
+
+    item.addEventListener("dragleave", (event) => {
+      if (!item.contains(event.relatedTarget)) {
+        item.classList.remove("drag-over-before", "drag-over-after");
+        delete item.dataset.dropPosition;
+      }
+    });
+
+    item.addEventListener("drop", async (event) => {
+      if (!dragCardId || dragCardId === item.dataset.id) return;
+      event.preventDefault();
+      const targetId = item.dataset.id;
+      const position = item.dataset.dropPosition || "before";
+      clearDragTargets();
+      await reorderCards(dragCardId, targetId, position);
+      dragCardId = null;
+    });
+  });
 }
 
-function clearDragTargets() {
+function clearDragTargets(exceptItem = null) {
   els.cardList.querySelectorAll(".dragging, .drag-over-before, .drag-over-after").forEach((item) => {
-    item.classList.remove("dragging", "drag-over-before", "drag-over-after");
-    delete item.dataset.dropPosition;
+    if (item !== exceptItem) {
+      item.classList.remove("drag-over-before", "drag-over-after");
+      delete item.dataset.dropPosition;
+    }
+    if (!dragCardId && item !== exceptItem) {
+      item.classList.remove("dragging");
+    }
   });
 }
 
@@ -1397,6 +1518,8 @@ async function addCard(event) {
       updatedAt: serverTimestamp(),
     }));
     els.addForm.reset();
+    els.frontInput.style.height = "";
+    els.backInput.style.height = "";
     els.frontInput.focus();
   } catch {
     alert("追加に失敗しました");
