@@ -49,21 +49,49 @@
       touch-action: manipulation;
     }
 
-    /* Square table: side = viewport width; fixed left/right guarantees edge-to-edge on Safari iOS */
+    :root {
+      --tbl-size: min(100vw, calc(100vh - 100px), 700px);
+      --pz-size: clamp(96px, calc(var(--tbl-size) * 0.28), 195px);
+      --pcard-w: clamp(220px, calc(var(--tbl-size) * 0.40), 290px);
+      --center-size: calc(var(--tbl-size) - (var(--pz-size) * 2));
+      --s: clamp(0.35, min(calc(var(--center-size) / var(--pcard-w)), calc(var(--pz-size) / 126px)), 1);
+      --stick-len: clamp(66px, calc(var(--center-size) * 0.40), 125px);
+      --stick-thick: clamp(14px, calc(var(--center-size) * 0.065), 22px);
+      --stick-dot: clamp(8px, calc(var(--stick-thick) * 0.52), 12px);
+    }
+    @media (max-aspect-ratio: 1/1) {
+      :root {
+        --tbl-size: min(100vw, calc(100vh - 100px));
+        --pz-size: clamp(96px, calc(var(--tbl-size) * 0.285), 180px);
+        --pcard-w: clamp(220px, calc(var(--tbl-size) * 0.40), 280px);
+      }
+    }
+
+    /* Square table: side = viewport width on mobile portrait; bounded square on landscape / PC */
     .table {
       position: fixed;
-      left: 0;
-      right: 0;
+      left: 50%;
       top: 50%;
-      transform: translateY(-50%);
+      transform: translate(-50%, -50%);
       display: grid;
-      grid-template-columns: 110px 1fr 110px;
-      grid-template-rows: 110px 1fr 110px;
-      width: 100%;
-      height: 100vw;
+      grid-template-columns: var(--pz-size) 1fr var(--pz-size);
+      grid-template-rows: var(--pz-size) 1fr var(--pz-size);
+      width: var(--tbl-size);
+      height: var(--tbl-size);
+      max-width: 100vw;
+      max-height: 100vh;
       background: #155a26;
       overflow: hidden;
-      --s: clamp(0.35, calc((100vw - 220px) / 250px), 1);
+    }
+
+    @media (min-aspect-ratio: 1/1), (min-width: 768px) {
+      body {
+        background: #0d3817;
+      }
+      .table {
+        border-radius: 16px;
+        box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      }
     }
 
     /* Player zones */
@@ -83,7 +111,8 @@
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 250px;
+      width: var(--pcard-w);
+      height: max(126px, calc(var(--pz-size) / var(--s)));
       background: rgba(0, 0, 0, 0.45);
       border-radius: 16px;
       border: 1px solid rgba(255, 255, 255, 0.13);
@@ -91,14 +120,10 @@
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
-      gap: 0;
-      padding: 10px 14px;
+      gap: 2px;
+      padding: 7px 10px;
+      box-sizing: border-box;
     }
-
-    /* All 4 cards share the same CSS dimensions (250px × 110px/--s).
-       After scale(--s): visual size = 250px·--s × 110px for every card.
-       Rotating ±90° swaps width/height, so left/right visually become 110px × 250px·--s — congruent and point-symmetric. */
-    .pcard { height: calc(110px / var(--s)); }
 
     .pz.top .pcard    { transform: translate(-50%, -50%) rotate(180deg) scale(var(--s)); }
     .pz.bottom .pcard { transform: translate(-50%, -50%) scale(var(--s)); }
@@ -331,11 +356,10 @@
     /* Riichi sticks — in center zone, straddling boundary with player zones */
     .front-stick {
       position: absolute;
-      width: 66px;
-      height: 15px;
-      background: #f5f5f0;
-      border-radius: 5px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.7);
+      background: linear-gradient(135deg, #ffffff 0%, #ece8e1 100%);
+      border: 1px solid rgba(0, 0, 0, 0.18);
+      border-radius: 6px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.8);
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.15s;
@@ -345,18 +369,43 @@
     .front-stick::after {
       content: '';
       position: absolute;
-      width: 9px;
-      height: 9px;
+      width: var(--stick-dot);
+      height: var(--stick-dot);
       background: #dc2626;
       border-radius: 50%;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+      box-shadow: 0 0 2px rgba(220, 38, 38, 0.5);
     }
-    #fs2 { top: 8px;    left: 50%; transform: translateX(-50%); }
-    #fs0 { bottom: 8px; left: 50%; transform: translateX(-50%); }
-    #fs1 { right: 8px;  top: 50%;  transform: translateY(-50%); width: 15px; height: 68px; }
-    #fs3 { left: 8px;   top: 50%;  transform: translateY(-50%); width: 15px; height: 68px; }
+    #fs2 {
+      top: clamp(6px, 3.5%, 12px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: var(--stick-len);
+      height: var(--stick-thick);
+    }
+    #fs0 {
+      bottom: clamp(6px, 3.5%, 12px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: var(--stick-len);
+      height: var(--stick-thick);
+    }
+    #fs1 {
+      right: clamp(6px, 3.5%, 12px);
+      top: 50%;
+      transform: translateY(-50%);
+      width: var(--stick-thick);
+      height: var(--stick-len);
+    }
+    #fs3 {
+      left: clamp(6px, 3.5%, 12px);
+      top: 50%;
+      transform: translateY(-50%);
+      width: var(--stick-thick);
+      height: var(--stick-len);
+    }
 
     /* 本場 counter — rectangle sitting on the diagonal */
     .tcw-honba {
@@ -463,7 +512,7 @@
     /* 局情報 — top of screen */
     .top-info {
       position: fixed;
-      top: 12px;
+      top: 10px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(255, 255, 255, 0.08);
@@ -472,7 +521,7 @@
       color: rgba(255, 255, 255, 0.9);
       font-size: 14px;
       font-weight: 700;
-      padding: 6px 16px;
+      padding: 5px 16px;
       letter-spacing: 1.5px;
       z-index: 10;
       white-space: nowrap;
@@ -482,7 +531,7 @@
     /* 対局終了ボタン — bottom left */
     .end-btn {
       position: fixed;
-      bottom: 24px;
+      bottom: 12px;
       left: 16px;
       background: rgba(185, 28, 28, 0.15);
       border: 1px solid rgba(239, 68, 68, 0.35);
@@ -490,7 +539,7 @@
       color: rgba(239, 68, 68, 0.75);
       font-size: 12px;
       font-weight: 700;
-      padding: 9px 16px;
+      padding: 8px 16px;
       cursor: pointer;
       letter-spacing: 1.5px;
       z-index: 10;
@@ -500,16 +549,16 @@
     /* 流局ボタン — bottom of screen */
     .ryuu-btn {
       position: fixed;
-      bottom: 24px;
+      bottom: 12px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(251, 191, 36, 0.1);
-      border: 1px solid rgba(251, 191, 36, 0.4);
+      background: rgba(251, 191, 36, 0.12);
+      border: 1.5px solid rgba(251, 191, 36, 0.45);
       border-radius: 8px;
-      color: rgba(251, 191, 36, 0.85);
+      color: #fbbf24;
       font-size: 13px;
       font-weight: 700;
-      padding: 10px 32px;
+      padding: 8px 30px;
       cursor: pointer;
       letter-spacing: 1.5px;
       z-index: 10;
@@ -853,6 +902,7 @@
       z-index: 500;
       display: flex;
       flex-direction: column;
+      align-items: center;
       overflow: hidden;
     }
     #startContent {
@@ -862,6 +912,9 @@
       display: flex;
       flex-direction: column;
       gap: 14px;
+      width: 100%;
+      max-width: 580px;
+      box-sizing: border-box;
       -webkit-overflow-scrolling: touch;
     }
     .start-title {
@@ -1100,13 +1153,16 @@
     .start-game-btn:disabled { background: #1e4d2b; color: rgba(255,255,255,0.35); cursor: default; }
     #startTabBar {
       display: flex;
+      justify-content: center;
       border-top: 1px solid rgba(255,255,255,0.08);
       background: rgba(0,0,0,0.45);
       flex-shrink: 0;
+      width: 100%;
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
     .start-tab-btn {
       flex: 1;
+      max-width: 190px;
       padding: 13px 8px 14px;
       background: none;
       border: none;
@@ -1194,7 +1250,7 @@
     /* ── 点数修正ボタン ─────────────────────────── */
     .score-edit-btn {
       position: fixed;
-      bottom: 24px;
+      bottom: 12px;
       right: 16px;
       background: rgba(255,255,255,0.10);
       border: 1px solid rgba(255,255,255,0.22);
@@ -1202,7 +1258,7 @@
       color: rgba(255,255,255,0.65);
       font-size: 12px;
       font-weight: 700;
-      padding: 9px 14px;
+      padding: 8px 14px;
       cursor: pointer;
       letter-spacing: 1px;
       z-index: 10;
@@ -1454,38 +1510,97 @@
       z-index: 30000;
     }
     .personal-shell {
+      --opp-w: min(46vw, 24vh, 210px);
+      --opp-h: min(20vw, 11vh, 92px);
       width: 100%;
       height: 100%;
-      display: grid;
-      grid-template-columns: 1fr 1.18fr 1fr;
-      grid-template-rows: minmax(86px, 0.9fr) max-content minmax(174px, 1.45fr);
-      gap: clamp(8px, 2vh, 16px);
-      min-width: 0;
-      min-height: 0;
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      box-sizing: border-box;
     }
-    .personal-center {
-      grid-column: 2;
-      grid-row: 2;
-      align-self: center;
-      justify-self: center;
-      text-align: center;
-      min-width: 0;
-      transform: translateY(clamp(8px, 2.2vh, 18px));
+    .personal-top-bar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: clamp(4px, 1vh, 10px) 0 clamp(2px, 0.6vh, 6px);
+      flex-shrink: 0;
     }
     .personal-board-info {
-      color: rgba(255,255,255,0.64);
-      font-size: clamp(24px, 6.4vh, 42px);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      margin: 0;
+    }
+    .personal-board-round {
+      color: #fff;
+      font-size: clamp(22px, 5.8vw, 32px);
       font-weight: 900;
-      line-height: 1.12;
-      letter-spacing: 0;
-      white-space: nowrap;
-      margin-bottom: clamp(6px, 1.4vh, 12px);
+      line-height: 1.15;
+      letter-spacing: 0.5px;
     }
     .personal-board-info-sub {
-      display: block;
-      color: rgba(255,255,255,0.46);
-      font-size: 0.62em;
-      margin-top: 2px;
+      color: #fbbf24;
+      font-size: clamp(14px, 3.8vw, 19px);
+      font-weight: 800;
+      line-height: 1.2;
+      margin: 0;
+    }
+    .personal-seat-change-top {
+      position: absolute;
+      top: clamp(4px, 1vh, 10px);
+      right: 4px;
+      z-index: 10;
+      background: rgba(255,255,255,0.09);
+      border: 1px solid rgba(255,255,255,0.22);
+      color: rgba(255,255,255,0.8);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .personal-seat-change-top:hover {
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+    }
+
+    /* P1-P4全体を上下中央に美しく配置するステージ */
+    .personal-main-stage {
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      gap: clamp(4px, 1vh, 12px);
+      margin: auto 0;
+    }
+
+    /* 卓エリア: 中心に正方形の空間、その周囲にP2-P4を配置 */
+    .personal-table-zone {
+      width: 100%;
+      max-width: 500px;
+      display: grid;
+      grid-template-columns: var(--opp-h) 1fr var(--opp-h);
+      grid-template-rows: var(--opp-h) var(--opp-w);
+      grid-template-areas:
+        ".      top    ."
+        "left   .      right";
+      align-items: center;
+      justify-items: center;
+      margin: 0;
+      position: relative;
+      flex-shrink: 0;
     }
     .personal-seat {
       display: flex;
@@ -1494,115 +1609,123 @@
       min-width: 0;
       min-height: 0;
     }
-    .personal-seat.top {
-      grid-column: 2;
-      grid-row: 1;
-      align-self: end;
-      padding-top: clamp(8px, 2vh, 18px);
-      transform: translateY(clamp(18px, 4.5vh, 36px));
-    }
-    .personal-seat.top .personal-score-card {
-      margin-top: clamp(18px, 4.2vh, 32px);
-    }
-    .personal-seat.left {
-      grid-column: 1;
-      grid-row: 2;
-      justify-self: end;
-    }
-    .personal-seat.right {
-      grid-column: 3;
-      grid-row: 2;
-      justify-self: start;
-    }
+    .personal-seat.top    { grid-area: top; align-self: end; justify-self: center; }
+    .personal-seat.left   { grid-area: left; align-self: center; justify-self: center; }
+    .personal-seat.right  { grid-area: right; align-self: center; justify-self: center; }
     .personal-seat.bottom {
-      grid-column: 2;
-      grid-row: 3;
-      align-self: end;
+      width: 100%;
+      max-width: 520px;
+      flex-shrink: 0;
+      display: flex;
+      justify-content: center;
     }
+
     .personal-score-card, .personal-seat-card {
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 8px;
-      background: rgba(0,0,0,0.24);
-      box-shadow: 0 18px 40px rgba(0,0,0,0.22);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      background: rgba(0,0,0,0.36);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
     }
     .personal-score-card {
-      width: min(48vw, 44vh, 330px);
-      padding: clamp(9px, 1.9vh, 16px) clamp(12px, 2.6vh, 20px);
-      display: grid;
-      gap: clamp(4px, 1vh, 8px);
+      width: var(--opp-w);
+      height: var(--opp-h);
+      padding: clamp(6px, 1.2vh, 10px) clamp(10px, 2vw, 16px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
       text-align: center;
       min-width: 0;
-      max-height: 100%;
       box-sizing: border-box;
-      overflow: hidden;
       position: relative;
     }
+    .personal-score-card.top   { transform: rotate(180deg); }
+    .personal-score-card.left  { transform: rotate(90deg); }
+    .personal-score-card.right { transform: rotate(-90deg); }
+
     .personal-score-card-inner {
-      display: contents;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      height: 100%;
     }
     .personal-score-card.is-me {
-      width: min(62vw, 58vh, 430px);
-      padding: clamp(10px, 2vh, 18px) clamp(16px, 3vh, 26px);
-      border-color: rgba(251,191,36,0.48);
-      background: rgba(0,0,0,0.34);
+      width: 100%;
+      height: auto;
+      max-width: 520px;
+      padding: clamp(12px, 2vh, 18px) clamp(16px, 3.5vw, 24px);
+      gap: clamp(8px, 1.4vh, 12px);
+      border: 1px solid rgba(251,191,36,0.48);
+      border-radius: 14px;
+      background: rgba(0,0,0,0.46);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+      transform: none;
     }
-    .personal-score-card.top { transform: rotate(180deg); }
-    .personal-score-card.left { transform: rotate(90deg); }
-    .personal-score-card.right { transform: rotate(-90deg); }
     .personal-name-line {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: clamp(7px, 1.5vh, 12px);
+      gap: 6px;
       min-width: 0;
-      padding-left: clamp(32px, 7.6vh, 50px);
-      padding-right: clamp(32px, 7.6vh, 50px);
+      width: 100%;
+      padding: 0 32px;
+      box-sizing: border-box;
+      position: relative;
     }
     .personal-wind {
       position: absolute;
-      top: clamp(6px, 1.5vh, 11px);
-      left: clamp(6px, 1.5vh, 11px);
-      width: clamp(30px, 7.2vh, 44px);
-      height: clamp(30px, 7.2vh, 44px);
-      border-radius: 7px;
+      top: 50%;
+      left: 0;
+      transform: translateY(-50%);
+      width: clamp(26px, 5.5vh, 36px);
+      height: clamp(26px, 5.5vh, 36px);
+      border-radius: 6px;
       display: grid;
       place-items: center;
       background: #fff;
       color: #f97316;
-      font-size: clamp(18px, 4.4vh, 27px);
+      font-size: clamp(15px, 3.4vh, 22px);
       font-weight: 900;
       flex-shrink: 0;
-      box-shadow: 0 5px 12px rgba(0,0,0,0.22);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.22);
     }
     .personal-wind.east {
       background: #f97316;
       color: #fff;
     }
     .personal-score-card.is-me .personal-wind {
-      width: clamp(38px, 9.5vh, 56px);
-      height: clamp(38px, 9.5vh, 56px);
-      font-size: clamp(23px, 5.8vh, 34px);
+      width: clamp(34px, 7vh, 46px);
+      height: clamp(34px, 7vh, 46px);
+      font-size: clamp(20px, 4.2vh, 28px);
     }
     .personal-name {
-      color: rgba(255,255,255,0.74);
-      font-size: clamp(14px, 3.3vh, 22px);
+      color: rgba(255,255,255,0.88);
+      font-size: clamp(14px, 3.2vh, 20px);
       font-weight: 800;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      max-width: 100%;
+    }
+    .personal-score-card.is-me .personal-name {
+      font-size: clamp(18px, 3.8vh, 24px);
+      color: rgba(255,255,255,0.96);
     }
     .personal-kicha-mark {
       position: absolute;
-      top: clamp(6px, 1.5vh, 11px);
-      right: clamp(6px, 1.5vh, 11px);
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
       background: #ea580c;
       border: 1.5px solid rgba(255, 255, 255, 0.35);
       border-radius: 4px;
       color: #fff;
-      font-size: clamp(10px, 2.4vh, 13px);
+      font-size: clamp(10px, 2.2vh, 13px);
       font-weight: 900;
-      width: clamp(26px, 6.4vh, 32px);
-      height: clamp(20px, 4.8vh, 24px);
+      width: clamp(24px, 4.8vh, 30px);
+      height: clamp(19px, 4vh, 24px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1610,51 +1733,48 @@
       box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
       letter-spacing: 0;
     }
-    .personal-score-card.is-me .personal-name { font-size: clamp(18px, 4vh, 26px); }
-    .personal-score {
-      max-width: 100%;
-      overflow: hidden;
-      font-size: clamp(28px, 10.5vh, 54px);
-      font-weight: 900;
-      line-height: 1;
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
-    }
-    .personal-score-card.is-me .personal-score {
-      cursor: pointer;
-      border-radius: 8px;
-      padding: 4px 8px;
-      flex: 0 0 auto;
-      overflow: visible;
-    }
-    .personal-score-card.is-me .personal-score:active {
-      background: rgba(251,191,36,0.12);
-    }
-    .personal-score.long-score { font-size: clamp(24px, 8.8vh, 46px); }
-    .personal-score.diff-pos { color: #60a5fa; }
-    .personal-score.diff-neg { color: #f87171; }
-    .personal-score-card.is-me .personal-score {
-      font-size: clamp(44px, 15vh, 78px);
-    }
-    .personal-score-card.is-me .personal-score.long-score {
-      font-size: clamp(38px, 12.5vh, 64px);
-    }
     .personal-score-line {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: clamp(9px, 2vh, 16px);
+      gap: clamp(8px, 1.8vh, 14px);
+      width: 100%;
       min-width: 0;
     }
+    .personal-score {
+      font-size: clamp(26px, 6.8vh, 44px);
+      font-weight: 900;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      color: #fff;
+    }
+    .personal-score.long-score { font-size: clamp(20px, 5.5vh, 36px); }
+    .personal-score.diff-pos { color: #60a5fa; }
+    .personal-score.diff-neg { color: #f87171; }
+    .personal-score-card.is-me .personal-score {
+      font-size: clamp(42px, 10vh, 68px);
+      cursor: pointer;
+      border-radius: 8px;
+      padding: 2px 8px;
+      flex: 0 0 auto;
+      overflow: visible;
+    }
+    .personal-score-card.is-me .personal-score.long-score {
+      font-size: clamp(34px, 8.5vh, 56px);
+    }
+    .personal-score-card.is-me .personal-score:active {
+      background: rgba(251,191,36,0.16);
+    }
     .personal-diff-btn {
-      width: clamp(38px, 9.5vh, 58px);
-      height: clamp(38px, 9.5vh, 58px);
+      width: clamp(36px, 7.5vh, 50px);
+      height: clamp(36px, 7.5vh, 50px);
       border: 1.5px solid rgba(255,255,255,0.24);
       border-radius: 8px;
       background: rgba(255,255,255,0.09);
-      color: rgba(255,255,255,0.62);
+      color: rgba(255,255,255,0.65);
       font-family: inherit;
-      font-size: clamp(16px, 3.8vh, 23px);
+      font-size: clamp(15px, 3.2vh, 21px);
       font-weight: 900;
       line-height: 1;
       padding: 0;
@@ -1666,18 +1786,18 @@
     .personal-diff-btn .plus,
     .personal-diff-btn .minus {
       position: absolute;
-      font-size: clamp(10px, 2.4vh, 14px);
+      font-size: clamp(9px, 2vh, 12px);
       line-height: 1;
     }
-    .personal-diff-btn .plus { top: 16%; left: 16%; }
-    .personal-diff-btn .minus { bottom: 16%; right: 16%; }
+    .personal-diff-btn .plus { top: 14%; left: 14%; }
+    .personal-diff-btn .minus { bottom: 14%; right: 14%; }
     .personal-diff-btn .slash {
-      font-size: clamp(15px, 3.8vh, 23px);
+      font-size: clamp(14px, 3.2vh, 20px);
       line-height: 1;
     }
     .personal-diff-btn.active {
-      background: rgba(255,255,255,0.22);
-      border-color: rgba(255,255,255,0.55);
+      background: rgba(255,255,255,0.24);
+      border-color: rgba(255,255,255,0.6);
       color: #fff;
     }
     .personal-meta {
@@ -1692,8 +1812,8 @@
       min-width: 0;
     }
     .personal-riichi-stick {
-      width: clamp(78px, 20vh, 120px);
-      height: clamp(12px, 2.8vh, 18px);
+      width: clamp(65px, 15vh, 100px);
+      height: clamp(8px, 1.8vh, 12px);
       border-radius: 999px;
       background: #f8fafc;
       border: 1px solid rgba(0,0,0,0.2);
@@ -1708,36 +1828,38 @@
       position: absolute;
       left: 50%;
       top: 50%;
-      width: clamp(10px, 2.2vh, 14px);
-      height: clamp(10px, 2.2vh, 14px);
+      width: clamp(8px, 1.5vh, 10px);
+      height: clamp(8px, 1.5vh, 10px);
       border-radius: 50%;
       background: #ef4444;
       transform: translate(-50%, -50%);
       box-shadow: 0 0 0 1px rgba(127,29,29,0.18);
     }
     .personal-score-card.is-me .personal-riichi-stick {
-      width: clamp(108px, 25vh, 150px);
-      height: clamp(14px, 3.2vh, 20px);
+      width: clamp(100px, 20vh, 150px);
+      height: clamp(12px, 2.4vh, 16px);
     }
     .personal-score-card.is-me .personal-riichi-stick::after {
-      width: clamp(12px, 2.6vh, 16px);
-      height: clamp(12px, 2.6vh, 16px);
+      width: clamp(10px, 2vh, 13px);
+      height: clamp(10px, 2vh, 13px);
     }
     .personal-command-row {
-      display: grid;
-      justify-content: stretch;
+      display: flex;
+      justify-content: center;
+      width: 100%;
       min-width: 0;
     }
     .personal-command-btn {
       width: 100%;
+      max-width: 320px;
       border: 1.5px solid rgba(255,255,255,0.22);
-      border-radius: 22px;
+      border-radius: 20px;
       background: rgba(255,255,255,0.09);
-      color: rgba(255,255,255,0.55);
+      color: rgba(255,255,255,0.65);
       font-family: inherit;
-      font-size: clamp(14px, 3.4vh, 20px);
+      font-size: clamp(14px, 2.8vh, 19px);
       font-weight: 700;
-      padding: clamp(8px, 1.8vh, 12px) clamp(14px, 3vh, 22px);
+      padding: clamp(8px, 1.6vh, 12px) 18px;
       cursor: pointer;
       min-width: 0;
       letter-spacing: 2px;
@@ -1747,7 +1869,7 @@
       background: #b91c1c;
       border-color: #f87171;
       color: #fff;
-      box-shadow: 0 0 18px rgba(239, 68, 68, 0.65);
+      box-shadow: 0 0 16px rgba(239, 68, 68, 0.6);
     }
     .personal-command-btn:disabled {
       opacity: 0.35;
@@ -1758,10 +1880,12 @@
       cursor: pointer;
     }
     .personal-score-line .goal-btn {
-      width: clamp(42px, 9.5vh, 58px);
-      height: clamp(34px, 7.8vh, 48px);
-      font-size: clamp(11px, 2.6vh, 15px);
+      width: clamp(40px, 8vh, 56px);
+      height: clamp(34px, 7vh, 46px);
+      font-size: clamp(12px, 2.4vh, 15px);
       border-radius: 8px;
+      flex-shrink: 0;
+    }
     }
     .personal-agari-modal {
       position: fixed;
@@ -2256,148 +2380,180 @@
     @media (orientation: portrait) {
       body.personal-view-active .portrait-hint { display: none; }
     }
-    @media (orientation: landscape) and (max-height: 430px) {
+    @media (orientation: landscape) and (max-height: 480px) {
       .personal-view {
-        padding-top: calc(max(14px, env(safe-area-inset-top)) + 8px);
-        padding-bottom: max(10px, env(safe-area-inset-bottom));
+        padding:
+          calc(max(4px, env(safe-area-inset-top)) + 2px)
+          max(8px, env(safe-area-inset-right))
+          calc(max(4px, env(safe-area-inset-bottom)) + 2px)
+          max(8px, env(safe-area-inset-left));
       }
       .personal-shell {
-        grid-template-rows: minmax(76px, 0.8fr) max-content minmax(174px, 1.45fr);
-        gap: 6px;
+        --opp-w: min(28vw, 36vh, 240px);
+        --opp-h: min(13vw, 15vh, 85px);
+        max-width: 800px;
       }
-      .personal-seat.top { padding-top: 8px; }
-      .personal-seat.top { transform: translateY(30px); }
-      .personal-seat.top .personal-score-card { margin-top: 20px; }
-      .personal-board-info {
-        font-size: 24px;
-        margin-bottom: 0;
+      .personal-top-bar {
+        padding: 2px 0 4px;
       }
-      .personal-board-info-sub { margin-top: 0; }
-      .personal-action {
-        font-size: 13px;
-        padding: 8px 14px;
-        margin-top: 4px;
+      .personal-board-round {
+        font-size: clamp(17px, 3.8vh, 23px);
       }
-      .personal-score-card {
-        width: min(44vw, 260px);
-        padding: 9px 12px;
-        gap: 4px;
+      .personal-board-info-sub {
+        font-size: clamp(11px, 2.4vh, 15px);
+        margin-top: 2px;
       }
-      .personal-score-card.is-me {
-        width: min(58vw, 380px);
-        padding: 8px 14px;
+      .personal-seat-change-top {
+        top: 2px;
+        right: 0;
+        font-size: 11px;
+        padding: 4px 10px;
+      }
+      .personal-table-zone {
+        max-width: 440px;
       }
       .personal-wind {
-        width: 32px;
-        height: 32px;
-        font-size: 19px;
-      }
-      .personal-score-card.is-me .personal-wind {
-        width: 40px;
-        height: 40px;
-        font-size: 24px;
-      }
-      .personal-name { font-size: 15px; }
-      .personal-score-card.is-me .personal-name { font-size: 20px; }
-      .personal-score { font-size: clamp(30px, 10.5vh, 42px); }
-      .personal-score.long-score { font-size: clamp(24px, 8.8vh, 36px); }
-      .personal-score-card.is-me .personal-score { font-size: clamp(40px, 12vh, 52px); padding-left: 4px; padding-right: 4px; }
-      .personal-score-card.is-me .personal-score.long-score { font-size: clamp(34px, 10.5vh, 46px); }
-      .personal-score-line { gap: 10px; }
-      .personal-diff-btn {
-        width: 42px;
-        height: 42px;
-        font-size: 18px;
-      }
-      .personal-riichi-stick {
-        width: 80px;
-        height: 12px;
-      }
-      .personal-riichi-stick::after {
-        width: 10px;
-        height: 10px;
-      }
-      .personal-score-card.is-me .personal-riichi-stick {
-        width: 112px;
-        height: 14px;
-      }
-      .personal-score-card.is-me .personal-riichi-stick::after {
-        width: 12px;
-        height: 12px;
-      }
-      .personal-command-btn {
+        width: 24px;
+        height: 24px;
         font-size: 14px;
-        padding: 7px 12px;
-      }
-      .personal-meta {
-        gap: 7px;
-        font-size: 10px;
-      }
-    }
-    @media (orientation: landscape) and (max-height: 380px) {
-      .personal-view {
-        padding-top: calc(max(12px, env(safe-area-inset-top)) + 6px);
-        padding-bottom: max(8px, env(safe-area-inset-bottom));
-      }
-      .personal-shell {
-        grid-template-rows: minmax(64px, 0.7fr) max-content minmax(150px, 1.35fr);
-        gap: 5px;
-      }
-      .personal-seat.top { padding-top: 6px; }
-      .personal-seat.top { transform: translateY(32px); }
-      .personal-seat.top .personal-score-card { margin-top: 22px; }
-      .personal-center { transform: translateY(14px); }
-      .personal-board-info { font-size: 20px; margin-bottom: 2px; }
-      .personal-action { font-size: 11px; padding: 6px 12px; }
-      .personal-score-card {
-        width: min(42vw, 235px);
-        padding: 8px 10px;
-      }
-      .personal-score-card.is-me {
-        width: min(56vw, 350px);
-        padding: 7px 12px;
-      }
-      .personal-wind {
-        width: 28px;
-        height: 28px;
-        font-size: 16px;
       }
       .personal-score-card.is-me .personal-wind {
-        width: 34px;
-        height: 34px;
-        font-size: 20px;
+        width: 30px;
+        height: 30px;
+        font-size: 17px;
       }
       .personal-name { font-size: 13px; }
-      .personal-score-card.is-me .personal-name { font-size: 17px; }
-      .personal-score { font-size: clamp(26px, 9.6vh, 36px); }
-      .personal-score.long-score { font-size: clamp(22px, 8vh, 31px); }
-      .personal-score-card.is-me .personal-score { font-size: clamp(34px, 11vh, 42px); padding-left: 3px; padding-right: 3px; }
-      .personal-score-card.is-me .personal-score.long-score { font-size: clamp(29px, 9.2vh, 36px); }
+      .personal-score-card.is-me .personal-name { font-size: 15px; }
+      .personal-score { font-size: clamp(22px, 7.5vh, 32px); }
+      .personal-score.long-score { font-size: clamp(18px, 6.2vh, 26px); }
+      .personal-score-card.is-me .personal-score { font-size: clamp(32px, 9.5vh, 44px); }
+      .personal-score-card.is-me .personal-score.long-score { font-size: clamp(26px, 8vh, 36px); }
       .personal-diff-btn {
-        width: 36px;
-        height: 36px;
+        width: 30px;
+        height: 30px;
+        font-size: 13px;
       }
       .personal-riichi-stick {
-        width: 72px;
-        height: 11px;
+        width: 55px;
+        height: 7px;
       }
       .personal-score-card.is-me .personal-riichi-stick {
-        width: 96px;
-        height: 13px;
+        width: 80px;
+        height: 9px;
       }
       .personal-command-btn {
-        font-size: 12px;
-        padding: 6px 10px;
+        font-size: 13px;
+        padding: 5px 14px;
+      }
+      .personal-score-line .goal-btn {
+        width: 36px;
+        height: 28px;
+        font-size: 11px;
       }
     }
     @media (orientation: portrait) {
       .personal-view {
         overflow: hidden;
         padding:
-          calc(max(12px, env(safe-area-inset-top)) + 8px)
+          calc(max(10px, env(safe-area-inset-top)) + 6px)
           max(10px, env(safe-area-inset-right))
-          calc(max(10px, env(safe-area-inset-bottom)) + 8px)
+          calc(max(10px, env(safe-area-inset-bottom)) + 6px)
           max(10px, env(safe-area-inset-left));
+      }
+      .personal-shell {
+        --opp-w: clamp(160px, 46vw, 220px);
+        --opp-h: clamp(74px, 10.5vh, 96px);
+        max-width: 480px;
+      }
+      .personal-top-bar {
+        padding: 4px 0 10px;
+      }
+      .personal-board-round {
+        font-size: clamp(22px, 6.5vw, 30px);
+      }
+      .personal-board-info-sub {
+        font-size: clamp(14px, 4.2vw, 18px);
+        margin-top: 3px;
+      }
+      .personal-seat-change-top {
+        top: 4px;
+        right: 0;
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+      .personal-table-zone {
+        max-width: 100%;
+      }
+      .personal-seat.top .personal-name-line,
+      .personal-seat.left .personal-name-line,
+      .personal-seat.right .personal-name-line {
+        padding: 0 24px;
+        gap: 4px;
+      }
+      .personal-seat.top .personal-wind,
+      .personal-seat.left .personal-wind,
+      .personal-seat.right .personal-wind {
+        width: clamp(22px, 6vw, 28px);
+        height: clamp(22px, 6vw, 28px);
+        font-size: clamp(13px, 3.6vw, 17px);
+        border-radius: 5px;
+      }
+      .personal-seat.top .personal-name,
+      .personal-seat.left .personal-name,
+      .personal-seat.right .personal-name {
+        font-size: clamp(12px, 3.4vw, 16px);
+      }
+      .personal-seat.top .personal-score,
+      .personal-seat.left .personal-score,
+      .personal-seat.right .personal-score {
+        font-size: clamp(22px, 6.2vw, 32px);
+      }
+      .personal-seat.top .personal-score.long-score,
+      .personal-seat.left .personal-score.long-score,
+      .personal-seat.right .personal-score.long-score {
+        font-size: clamp(18px, 5vw, 26px);
+      }
+      .personal-seat.top .personal-riichi-stick,
+      .personal-seat.left .personal-riichi-stick,
+      .personal-seat.right .personal-riichi-stick {
+        width: clamp(50px, 14vw, 75px);
+        height: 7px;
+      }
+      .personal-score-card.is-me {
+        padding: clamp(12px, 2vh, 18px) clamp(14px, 3.5vw, 22px);
+        gap: clamp(8px, 1.4vh, 12px);
+        border-radius: 12px;
+        max-width: 100%;
+        transform: none;
+      }
+      .personal-score-card.is-me .personal-name-line {
+        padding: 0 36px;
+      }
+      .personal-score-card.is-me .personal-wind {
+        width: clamp(30px, 8.5vw, 40px);
+        height: clamp(30px, 8.5vw, 40px);
+        font-size: clamp(17px, 4.8vw, 24px);
+      }
+      .personal-score-card.is-me .personal-name {
+        font-size: clamp(17px, 4.8vw, 22px);
+      }
+      .personal-score-card.is-me .personal-score {
+        font-size: clamp(40px, 11.5vw, 60px);
+      }
+      .personal-score-card.is-me .personal-score.long-score {
+        font-size: clamp(34px, 10vw, 50px);
+      }
+      .personal-score-card.is-me .personal-riichi-stick {
+        width: clamp(90px, 26vw, 140px);
+        height: clamp(10px, 2.5vw, 14px);
+      }
+      .personal-command-btn {
+        font-size: clamp(15px, 4.2vw, 19px);
+        padding: clamp(9px, 1.6vh, 13px) 20px;
+      }
+      .personal-seat-change-top {
+        top: calc(max(10px, env(safe-area-inset-top)) + 6px);
+        right: max(10px, env(safe-area-inset-right));
       }
       .personal-result-intro {
         align-content: center;
@@ -2436,220 +2592,13 @@
         font-size: clamp(30px, 10vw, 44px);
         line-height: 1.05;
       }
-      .personal-shell {
-        --personal-opponent-w: clamp(244px, 64vw, 260px);
-        --personal-opponent-h: clamp(98px, 12.4vh, 112px);
-        --personal-side-gap: clamp(2px, 0.8vw, 5px);
-        position: relative;
-        display: block;
-      }
-      .personal-center {
-        position: absolute;
-        left: 50%;
-        top: clamp(40px, 6.8vh, 66px);
-        transform: translate(-50%, -50%);
-        z-index: 2;
-        width: min(86vw, 360px);
-      }
-      .personal-board-info {
-        font-size: clamp(24px, 8.4vw, 38px);
-        line-height: 1.02;
-        white-space: normal;
-        margin-bottom: 4px;
-      }
-      .personal-board-info-sub {
-        font-size: clamp(18px, 6.2vw, 28px);
-        line-height: 1.05;
-        margin-top: 4px;
-      }
-      .personal-seat {
-        position: absolute;
-        display: flex;
-      }
-      .personal-seat.top {
-        top: clamp(128px, 17.5vh, 162px);
-        left: 50%;
-        width: var(--personal-opponent-w);
-        height: var(--personal-opponent-h);
-        padding-top: 0;
-        transform: translateX(-50%);
-      }
-      .personal-seat.top .personal-score-card {
-        margin-top: 0;
-      }
-      .personal-seat.left {
-        left: var(--personal-side-gap);
-        top: 46.5%;
-        width: var(--personal-opponent-h);
-        height: var(--personal-opponent-w);
-        transform: translateY(-50%);
-      }
-      .personal-seat.right {
-        right: var(--personal-side-gap);
-        top: 46.5%;
-        width: var(--personal-opponent-h);
-        height: var(--personal-opponent-w);
-        transform: translateY(-50%);
-      }
-      .personal-seat.bottom {
-        left: 50%;
-        bottom: clamp(62px, 8.5vh, 86px);
-        width: min(100%, 430px);
-        min-height: clamp(206px, 28vh, 256px);
-        transform: translateX(-50%);
-      }
-      .personal-score-card,
-      .personal-score-card.top,
-      .personal-score-card.left,
-      .personal-score-card.right {
-        width: var(--personal-opponent-w);
-        height: var(--personal-opponent-h);
-        max-width: none;
-      }
-      .personal-score-card.top,
-      .personal-score-card.left,
-      .personal-score-card.right {
-        transform: none;
-        transform-origin: center;
-        overflow: hidden;
-        padding: 0;
-      }
-      .personal-score-card.left,
-      .personal-score-card.right {
-        width: var(--personal-opponent-h);
-        height: var(--personal-opponent-w);
-      }
-      .personal-score-card.top .personal-score-card-inner,
-      .personal-score-card.left .personal-score-card-inner,
-      .personal-score-card.right .personal-score-card-inner {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        width: var(--personal-opponent-w);
-        height: var(--personal-opponent-h);
-        display: grid;
-        gap: clamp(3px, 0.65vh, 6px);
-        box-sizing: border-box;
-        padding: clamp(8px, 1.45vh, 12px) clamp(9px, 2.6vw, 14px);
-        text-align: center;
-        transform-origin: center;
-      }
-      .personal-score-card.top .personal-score-card-inner {
-        transform: translate(-50%, -50%) rotate(180deg);
-      }
-      .personal-score-card.left .personal-score-card-inner {
-        transform: translate(-50%, -50%) rotate(90deg);
-      }
-      .personal-score-card.right .personal-score-card-inner {
-        transform: translate(-50%, -50%) rotate(-90deg);
-      }
-      .personal-score-card {
-        min-height: 0;
-        padding: clamp(8px, 1.45vh, 12px) clamp(9px, 2.6vw, 14px);
-        gap: clamp(3px, 0.65vh, 6px);
-      }
-      .personal-score-card.top,
-      .personal-score-card.left,
-      .personal-score-card.right {
-        padding: 0;
-      }
-      .personal-score-card.is-me {
-        width: 100%;
-        height: auto;
-        min-height: 0;
-        padding: clamp(12px, 2vh, 18px) clamp(14px, 4vw, 22px);
-        transform: none;
-      }
-      .personal-name-line {
-        gap: 6px;
-        padding-left: clamp(31px, 8.6vw, 44px);
-        padding-right: clamp(20px, 5.8vw, 36px);
-      }
-      .personal-score-card.top .personal-name-line,
-      .personal-score-card.left .personal-name-line,
-      .personal-score-card.right .personal-name-line {
-        gap: 5px;
-        padding-left: clamp(34px, 8.4vw, 44px);
-        padding-right: clamp(34px, 8.4vw, 44px);
-        justify-content: center;
-      }
-      .personal-wind {
-        width: clamp(28px, 7.2vw, 36px);
-        height: clamp(28px, 7.2vw, 36px);
-        font-size: clamp(17px, 4.4vw, 22px);
-      }
-      .personal-score-card.is-me .personal-wind {
-        width: clamp(38px, 10vw, 54px);
-        height: clamp(38px, 10vw, 54px);
-        font-size: clamp(23px, 6.2vw, 32px);
-      }
-      .personal-name {
-        font-size: clamp(13px, 3.5vw, 17px);
-      }
-      .personal-score-card.is-me .personal-name {
-        font-size: clamp(18px, 4.5vw, 24px);
-      }
-      .personal-score {
-        font-size: clamp(30px, 8.2vw, 38px);
-      }
-      .personal-score.long-score {
-        font-size: clamp(26px, 7vw, 33px);
-      }
-      .personal-score-card.left .personal-score,
-      .personal-score-card.right .personal-score {
-        max-width: none;
-        overflow: visible;
-      }
-      .personal-score-card.top .personal-wind,
-      .personal-score-card.left .personal-wind,
-      .personal-score-card.right .personal-wind {
-        position: absolute;
-        top: 8px;
-        left: 8px;
-        width: 30px;
-        height: 30px;
-        font-size: 18px;
-      }
-      .personal-score-card.left .personal-name,
-      .personal-score-card.right .personal-name {
-        max-width: 54px;
-        font-size: 12px;
-      }
-      .personal-score-card.is-me .personal-score {
-        font-size: clamp(48px, 14.5vw, 78px);
-      }
-      .personal-score-card.is-me .personal-score.long-score {
-        font-size: clamp(40px, 12vw, 64px);
-      }
-      .personal-score-line {
-        gap: clamp(8px, 2.5vw, 14px);
-      }
-      .personal-diff-btn {
-        width: clamp(38px, 10vw, 54px);
-        height: clamp(38px, 10vw, 54px);
-        font-size: clamp(16px, 4.6vw, 22px);
-      }
-      .personal-command-btn {
-        font-size: clamp(16px, 4.2vw, 22px);
-        padding: clamp(9px, 1.6vh, 13px) 16px;
-      }
-      .personal-score-card.is-me .personal-riichi-stick {
-        width: min(42vw, 170px);
-        height: clamp(14px, 3.6vw, 18px);
-      }
-      .personal-seat-change-top {
-        top: calc(max(10px, env(safe-area-inset-top)) + 8px);
-        right: max(10px, env(safe-area-inset-right));
-        font-size: 13px;
-        padding: 8px 12px;
-      }
       .personal-seat-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        grid-auto-rows: minmax(132px, 1fr);
+        grid-auto-rows: minmax(120px, 1fr);
         align-content: center;
       }
       .personal-seat-card {
-        min-height: 132px;
+        min-height: 120px;
         padding: 14px;
       }
       .personal-seat-name {
@@ -2684,8 +2633,8 @@
         font-size: clamp(15px, 4.6vw, 22px);
       }
       .personal-result-graph {
-        height: clamp(220px, 48vh, 360px);
-        min-height: 220px;
+        height: clamp(200px, 45vh, 320px);
+        min-height: 200px;
       }
       .personal-graph-legend {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2699,91 +2648,14 @@
       }
       .personal-fx-layer {
         inset:
-          calc(max(12px, env(safe-area-inset-top)) + 8px)
+          calc(max(10px, env(safe-area-inset-top)) + 6px)
           max(10px, env(safe-area-inset-right))
-          calc(max(10px, env(safe-area-inset-bottom)) + 8px)
+          calc(max(10px, env(safe-area-inset-bottom)) + 6px)
           max(10px, env(safe-area-inset-left));
       }
       .personal-fx-delta {
         font-size: clamp(19px, 6vw, 30px);
         padding: 6px 10px;
-      }
-    }
-    @media (orientation: portrait) and (max-height: 720px) {
-      .personal-view {
-        padding:
-          calc(max(8px, env(safe-area-inset-top)) + 6px)
-          max(8px, env(safe-area-inset-right))
-          calc(max(6px, env(safe-area-inset-bottom)) + 6px)
-          max(8px, env(safe-area-inset-left));
-      }
-      .personal-shell {
-        --personal-opponent-w: clamp(220px, 58vw, 236px);
-        --personal-opponent-h: clamp(86px, 11.8vh, 96px);
-      }
-      .personal-center {
-        top: clamp(34px, 6.1vh, 48px);
-      }
-      .personal-board-info {
-        font-size: clamp(21px, 7vw, 30px);
-      }
-      .personal-board-info-sub {
-        font-size: clamp(16px, 5.4vw, 22px);
-        margin-top: 3px;
-      }
-      .personal-seat.top {
-        top: clamp(104px, 15.6vh, 122px);
-      }
-      .personal-seat.left,
-      .personal-seat.right {
-        top: 44.5%;
-      }
-      .personal-seat.bottom {
-        bottom: max(14px, env(safe-area-inset-bottom));
-        min-height: clamp(172px, 25.5vh, 188px);
-      }
-      .personal-score {
-        font-size: clamp(27px, 7.4vw, 34px);
-      }
-      .personal-score.long-score {
-        font-size: clamp(24px, 6.7vw, 30px);
-      }
-      .personal-score-card.is-me {
-        padding: clamp(9px, 1.6vh, 13px) clamp(12px, 3.5vw, 18px);
-      }
-      .personal-score-card.is-me .personal-score {
-        font-size: clamp(42px, 12vw, 58px);
-      }
-      .personal-score-card.is-me .personal-score.long-score {
-        font-size: clamp(36px, 10.5vw, 50px);
-      }
-      .personal-command-btn {
-        font-size: clamp(14px, 3.8vw, 18px);
-        padding: 8px 14px;
-      }
-      .personal-score-card.is-me .personal-wind {
-        width: 36px;
-        height: 36px;
-        font-size: 22px;
-      }
-      .personal-diff-btn {
-        width: 42px;
-        height: 42px;
-        font-size: 18px;
-      }
-      .personal-score-card.top .personal-wind,
-      .personal-score-card.left .personal-wind,
-      .personal-score-card.right .personal-wind {
-        width: 28px;
-        height: 28px;
-        font-size: 17px;
-      }
-      .personal-result-graph {
-        height: 220px;
-        min-height: 220px;
-      }
-      .personal-agari-card {
-        max-height: calc(100dvh - 18px);
       }
     }
   </style>
@@ -4639,8 +4511,8 @@
       const board = document.querySelector('.personal-board-info');
       if (board) {
         board.innerHTML = `
-          ${GT_NAMES[settingGameType]}　${ROUND_WINDS[state.roundWind]}${state.roundNum}局
-          <span class="personal-board-info-sub">${state.honba}本場　供託${state.kyotaku}本</span>`;
+          <div class="personal-board-round">${GT_NAMES[settingGameType]}　${ROUND_WINDS[state.roundWind]}${state.roundNum}局</div>
+          <div class="personal-board-info-sub">${state.honba}本場　供託${state.kyotaku}本</div>`;
       }
       state.players.forEach((p, idx) => {
         const card = document.querySelector(`.personal-score-card[data-player-idx="${idx}"]`);
@@ -5405,16 +5277,24 @@
             </div>
           </div>`;
       };
+      const opponents = seatPositions.filter(s => s.pos !== 'bottom');
+      const meSeat = seatPositions.find(s => s.pos === 'bottom');
+
       root.innerHTML = `
         <div class="personal-shell">
-          <button class="personal-action personal-seat-change-top" id="personalSeatChange">席変更</button>
-          <div class="personal-center">
+          <div class="personal-top-bar">
             <div class="personal-board-info">
-              ${GT_NAMES[settingGameType]}　${ROUND_WINDS[displayState.roundWind]}${displayState.roundNum}局
-              <span class="personal-board-info-sub">${displayState.honba}本場　供託${displayState.kyotaku}本</span>
+              <div class="personal-board-round">${GT_NAMES[settingGameType]}　${ROUND_WINDS[displayState.roundWind]}${displayState.roundNum}局</div>
+              <div class="personal-board-info-sub">${displayState.honba}本場　供託${displayState.kyotaku}本</div>
             </div>
+            <button class="personal-action personal-seat-change-top" id="personalSeatChange">席変更</button>
           </div>
-          ${seatPositions.map(cardHtml).join('')}
+          <div class="personal-main-stage">
+            <div class="personal-table-zone">
+              ${opponents.map(cardHtml).join('')}
+            </div>
+            ${meSeat ? cardHtml(meSeat) : ''}
+          </div>
           <div class="personal-fx-layer"></div>
           <div class="portrait-hint">横向きにしてください<br>この画面は横向き専用です</div>
         </div>
