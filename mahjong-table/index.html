@@ -1769,7 +1769,7 @@
       bottom: -28px;
     }
     .personal-score-card.is-me .personal-kicha-mark {
-      right: -36px;
+      right: clamp(-30px, calc(-1 * ((100vw - 100%) / 2 - 6px)), 8px);
       bottom: 50%;
       transform: translateY(50%);
     }
@@ -2421,94 +2421,166 @@
       line-height: 1.8;
       padding: 24px;
     }
-    @media (orientation: portrait) {
-      body.personal-view-active .portrait-hint { display: none; }
-    }
-    @media (orientation: landscape) and (max-height: 480px) {
+    body.personal-view-active .portrait-hint { display: none; }
+    @media (min-aspect-ratio: 70/100) {
       .personal-view {
+        overflow: hidden;
         padding:
-          calc(max(4px, env(safe-area-inset-top)) + 2px)
+          calc(max(2px, env(safe-area-inset-top)))
           max(8px, env(safe-area-inset-right))
-          calc(max(4px, env(safe-area-inset-bottom)) + 2px)
+          calc(max(2px, env(safe-area-inset-bottom)))
           max(8px, env(safe-area-inset-left));
       }
       .personal-shell {
-        --opp-w: min(24vw, 30vh, 180px);
-        --opp-h: min(10vw, 12vh, 60px);
-        --sq-size: min(24vw, 30vh, 130px);
-        max-width: 800px;
+        height: 100%;
+        width: 100%;
+        margin: 0 auto;
+        justify-content: space-between;
+        --opp-h: clamp(38px, 9.5vh, 58px);
+        --p1-h: clamp(98px, 23.5vh, 126px);
+        --sq-size: min(calc(100dvh - var(--opp-h) - var(--p1-h) - 48px), calc(100vw - 24px - (var(--opp-h) * 2)));
+        --opp-w: var(--sq-size);
+        max-width: calc(var(--sq-size) + (var(--opp-h) * 2) + 24px);
       }
       .personal-top-bar {
-        padding: 2px 0 4px;
+        padding: 2px 0 3px;
+        flex-shrink: 0;
       }
       .personal-board-round {
-        font-size: clamp(17px, 3.8vh, 23px);
+        font-size: clamp(15px, 3.8vh, 19px);
       }
       .personal-board-info-sub {
-        font-size: clamp(11px, 2.4vh, 15px);
-        margin-top: 2px;
+        font-size: clamp(10px, 2.2vh, 12px);
+        margin-top: 0;
       }
       .personal-seat-change-top {
         top: 2px;
         right: 0;
-        font-size: 11px;
-        padding: 4px 10px;
+        font-size: 10px;
+        padding: 3px 8px;
+      }
+      .personal-main-stage {
+        margin: auto 0;
+        justify-content: center;
+        flex: 1;
+        min-height: 0;
+        box-sizing: border-box;
       }
       .personal-table-zone {
-        max-width: 440px;
+        width: fit-content;
+        max-width: 100%;
+        grid-template-columns: var(--opp-h) var(--sq-size) var(--opp-h);
+        grid-template-rows: var(--opp-h) var(--sq-size) auto;
+        margin: 0 auto;
       }
-      .personal-wind {
-        width: 24px;
-        height: 24px;
-        font-size: 14px;
+      .personal-center-square {
+        width: var(--sq-size);
+        height: var(--sq-size);
+      }
+      .personal-seat.top    { align-self: center; justify-self: center; }
+      .personal-seat.left   { align-self: center; justify-self: center; }
+      .personal-seat.right  { align-self: center; justify-self: center; }
+      .personal-seat.bottom {
+        width: 100%;
+        max-width: 100%;
+        margin-top: 4px;
+        margin-bottom: 0;
+      }
+      .personal-seat.top .personal-score-card,
+      .personal-seat.left .personal-score-card,
+      .personal-seat.right .personal-score-card {
+        padding: 3px 5px;
+      }
+      .personal-seat.top .personal-score-card-inner,
+      .personal-seat.left .personal-score-card-inner,
+      .personal-seat.right .personal-score-card-inner {
+        justify-content: space-evenly;
+      }
+      .personal-seat.top .personal-name,
+      .personal-seat.left .personal-name,
+      .personal-seat.right .personal-name {
+        font-size: clamp(10px, 2.5vh, 12px);
+        line-height: 1;
+      }
+      .personal-seat.top .personal-score,
+      .personal-seat.left .personal-score,
+      .personal-seat.right .personal-score {
+        font-size: clamp(16px, 4.2vh, 21px);
+        line-height: 1;
+      }
+      .personal-seat.top .personal-wind,
+      .personal-seat.left .personal-wind,
+      .personal-seat.right .personal-wind {
+        left: 5px;
+        width: clamp(18px, 4.4vh, 22px);
+        height: clamp(18px, 4.4vh, 22px);
+        font-size: clamp(10px, 2.4vh, 13px);
+      }
+      .personal-seat.top .personal-riichi-stick,
+      .personal-seat.left .personal-riichi-stick,
+      .personal-seat.right .personal-riichi-stick {
+        width: 55px;
+        height: 6px;
+        min-height: 6px;
+        margin: 0 auto;
+      }
+      .personal-score-card.is-me {
+        padding: clamp(5px, 1.3vh, 9px) clamp(10px, 2vw, 16px);
+        gap: clamp(3px, 0.8vh, 6px);
+        margin-bottom: 0;
       }
       .personal-score-card.is-me .personal-wind {
-        width: 30px;
-        height: 30px;
-        font-size: 17px;
+        width: clamp(24px, 5.8vh, 30px);
+        height: clamp(24px, 5.8vh, 30px);
+        font-size: clamp(13px, 3.2vh, 16px);
       }
-      .personal-name { font-size: 13px; }
-      .personal-score-card.is-me .personal-name { font-size: 15px; }
-      .personal-score { font-size: clamp(22px, 7.5vh, 32px); }
-      .personal-score.long-score { font-size: clamp(18px, 6.2vh, 26px); }
-      .personal-score-card.is-me .personal-score { font-size: clamp(32px, 9.5vh, 44px); }
-      .personal-score-card.is-me .personal-score.long-score { font-size: clamp(26px, 8vh, 36px); }
-      .personal-diff-btn {
-        width: 30px;
-        height: 30px;
-        font-size: 13px;
+      .personal-score-card.is-me .personal-name {
+        font-size: clamp(12px, 3vh, 14px);
       }
-      .personal-riichi-stick {
-        width: clamp(75px, 18vw, 110px);
-        height: 10px;
+      .personal-score-card.is-me .personal-score {
+        font-size: clamp(26px, 7.2vh, 36px);
+        line-height: 1;
+      }
+      .personal-score-card.is-me .personal-score.long-score {
+        font-size: clamp(22px, 5.8vh, 30px);
       }
       .personal-score-card.is-me .personal-riichi-stick {
-        width: clamp(110px, 26vw, 160px);
-        height: 14px;
+        width: clamp(95px, 20vw, 135px);
+        height: clamp(8px, 1.8vh, 11px);
+        margin: 1px auto;
       }
       .personal-command-btn {
-        font-size: 13px;
-        padding: 5px 14px;
+        font-size: clamp(11px, 2.6vh, 13px);
+        padding: clamp(4px, 1vh, 6px) 14px;
       }
       .personal-score-line .goal-btn {
-        width: 36px;
-        height: 28px;
+        width: clamp(32px, 7vw, 36px);
+        height: clamp(22px, 5vh, 26px);
         font-size: 11px;
       }
+      .personal-diff-btn {
+        width: clamp(24px, 5vh, 28px);
+        height: clamp(24px, 5vh, 28px);
+        font-size: 12px;
+      }
     }
-    @media (orientation: portrait) {
+    @media not all and (min-aspect-ratio: 70/100) {
       .personal-view {
         overflow: hidden;
         padding:
           calc(max(6px, env(safe-area-inset-top)) + 2px)
-          max(4px, env(safe-area-inset-right))
+          max(6px, env(safe-area-inset-right))
           calc(max(6px, env(safe-area-inset-bottom)) + 2px)
-          max(4px, env(safe-area-inset-left));
+          max(6px, env(safe-area-inset-left));
       }
       .personal-shell {
-        --opp-h: clamp(66px, 8.6vh, 76px);
-        --sq-size: calc(100vw - 8px - (var(--opp-h) * 2));
-        --sq-size: calc(100cqw - (var(--opp-h) * 2));
+        container-type: inline-size;
+        --opp-h: clamp(40px, 8.6vh, 64px);
+        --sq-size: calc(100vw - 12px - (var(--opp-h) * 2));
+        --sq-size: min(
+          calc(100cqw - (var(--opp-h) * 2)),
+          calc(100dvh - var(--opp-h) - clamp(98px, 22vh, 126px) - 48px)
+        );
         --opp-w: var(--sq-size);
         max-width: 480px;
       }
@@ -2536,7 +2608,6 @@
         padding: 5px 10px;
       }
       .personal-table-zone {
-        container-type: inline-size;
         max-width: 100%;
         grid-template-columns: var(--opp-h) var(--sq-size) var(--opp-h);
         grid-template-rows: var(--opp-h) var(--sq-size) auto;
@@ -2651,6 +2722,11 @@
         right: 10px;
         bottom: -25px;
         transform: none;
+      }
+      .personal-score-card.is-me.kicha-touch-bottom .personal-kicha-mark {
+        right: clamp(-30px, calc(-1 * ((100vw - 100%) / 2 - 6px)), 8px);
+        bottom: 50%;
+        transform: translateY(50%);
       }
       .personal-score-card.left .personal-kicha-mark {
         top: -24px;
@@ -2767,6 +2843,13 @@
       .personal-fx-delta {
         font-size: clamp(19px, 6vw, 30px);
         padding: 6px 10px;
+      }
+    }
+    @media (min-aspect-ratio: 63/100) and (max-aspect-ratio: 699/1000) {
+      .personal-score-card.is-me .personal-kicha-mark {
+        right: clamp(-30px, calc(-1 * ((100vw - 100%) / 2 - 6px)), 8px);
+        bottom: 50%;
+        transform: translateY(50%);
       }
     }
   </style>
@@ -5282,8 +5365,31 @@
       }, 120);
     }
 
-    window.addEventListener('resize', redrawPersonalPointMoveOnResize);
-    window.addEventListener('orientationchange', redrawPersonalPointMoveOnResize);
+    let personalKichaObserver = null;
+    function updatePersonalKichaPlacement() {
+      if (!isPersonalView) return;
+      const meCard = document.querySelector('.personal-score-card.is-me');
+      if (!meCard) return;
+      const kicha = meCard.querySelector('.personal-kicha-mark');
+      if (!kicha) return;
+      const isWide = window.matchMedia('(min-aspect-ratio: 70/100)').matches;
+      if (isWide) {
+        meCard.classList.remove('kicha-touch-bottom');
+        return;
+      }
+      const rect = meCard.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      meCard.classList.toggle('kicha-touch-bottom', spaceBelow < 30);
+    }
+
+    window.addEventListener('resize', () => {
+      redrawPersonalPointMoveOnResize();
+      updatePersonalKichaPlacement();
+    });
+    window.addEventListener('orientationchange', () => {
+      redrawPersonalPointMoveOnResize();
+      updatePersonalKichaPlacement();
+    });
 
     function renderPersonalView() {
       if (!isPersonalView) return;
@@ -5480,6 +5586,13 @@
         const move = personalPendingMove;
         personalPendingMove = null;
         requestAnimationFrame(() => showPersonalPointMove(move.deltas, move.scoresBefore, move));
+      }
+      updatePersonalKichaPlacement();
+      if (!personalKichaObserver && window.ResizeObserver) {
+        personalKichaObserver = new ResizeObserver(() => {
+          updatePersonalKichaPlacement();
+        });
+        personalKichaObserver.observe(root);
       }
     }
 
