@@ -266,9 +266,6 @@ els.cardQuickEditBtn?.addEventListener("click", (event) => {
 });
 els.cardEditCloseBtn?.addEventListener("click", closeCardEditModal);
 els.cardEditCancelBtn?.addEventListener("click", closeCardEditModal);
-els.cardEditModal?.addEventListener("click", (event) => {
-  if (event.target === els.cardEditModal) closeCardEditModal();
-});
 els.cardEditForm?.addEventListener("submit", saveCardEdit);
 document.getElementById("card-edit-delete-group")?.addEventListener("click", (event) => {
   const btn = event.target.closest("button");
@@ -1983,14 +1980,14 @@ function clampIndex(index) {
 function stripHighlightSyntax(value) {
   if (!value) return "";
   return String(value)
-    .replace(/==([\s\S]*?)==/g, "$1")
+    .replace(/(?:==|＝＝)([\s\S]*?)(?:==|＝＝)/g, "$1")
     .replace(/<\/?mark[^>]*>/gi, "");
 }
 
 function formatCardText(value) {
   if (!value) return "";
   let escaped = escapeHtml(String(value));
-  escaped = escaped.replace(/==([\s\S]+?)==/g, '<mark class="card-highlight">$1</mark>');
+  escaped = escaped.replace(/(?:==|＝＝)([\s\S]+?)(?:==|＝＝)/g, '<mark class="card-highlight">$1</mark>');
   escaped = escaped.replace(/&lt;mark&gt;([\s\S]+?)&lt;\/mark&gt;/gi, '<mark class="card-highlight">$1</mark>');
   return escaped;
 }
@@ -2014,14 +2011,18 @@ function toggleHighlightInTextarea(textarea) {
   }
 
   const selectedText = val.slice(start, end);
-  const before = val.slice(Math.max(0, start - 2), start);
-  const after = val.slice(end, end + 2);
+  const before2 = val.slice(Math.max(0, start - 2), start);
+  const after2 = val.slice(end, end + 2);
 
-  if (before === "==" && after === "==") {
+  if ((before2 === "==" || before2 === "＝＝") && (after2 === "==" || after2 === "＝＝")) {
     textarea.value = val.slice(0, start - 2) + selectedText + val.slice(end + 2);
     textarea.selectionStart = start - 2;
     textarea.selectionEnd = end - 2;
-  } else if (selectedText.startsWith("==") && selectedText.endsWith("==") && selectedText.length >= 4) {
+  } else if (
+    (selectedText.startsWith("==") || selectedText.startsWith("＝＝")) &&
+    (selectedText.endsWith("==") || selectedText.endsWith("＝＝")) &&
+    selectedText.length >= 4
+  ) {
     const inner = selectedText.slice(2, -2);
     textarea.value = val.slice(0, start) + inner + val.slice(end);
     textarea.selectionStart = start;
@@ -2120,12 +2121,16 @@ async function applyHighlightToSelectedCardText() {
 
   if (content.includes(`==${selectedText}==`)) {
     content = content.replace(`==${selectedText}==`, selectedText);
+  } else if (content.includes(`＝＝${selectedText}＝＝`)) {
+    content = content.replace(`＝＝${selectedText}＝＝`, selectedText);
   } else if (content.includes(selectedText)) {
     content = content.replace(selectedText, `==${selectedText}==`);
   } else {
-    const cleanSel = selectedText.replace(/==/g, "");
+    const cleanSel = selectedText.replace(/==|＝＝/g, "");
     if (content.includes(`==${cleanSel}==`)) {
       content = content.replace(`==${cleanSel}==`, cleanSel);
+    } else if (content.includes(`＝＝${cleanSel}＝＝`)) {
+      content = content.replace(`＝＝${cleanSel}＝＝`, cleanSel);
     } else if (content.includes(cleanSel)) {
       content = content.replace(cleanSel, `==${cleanSel}==`);
     }
@@ -2372,8 +2377,7 @@ function startDrillSession(resume = false) {
 function initNextDrillSet() {
   drillHistory = [];
   const setSize = drillState.setSize || 10;
-  const needed = setSize - drillState.carryOverCards.length;
-  const newBatch = drillState.pool.splice(0, Math.max(0, needed));
+  const newBatch = drillState.pool.splice(0, setSize);
   drillState.currentSet = shuffleArray([...drillState.carryOverCards, ...newBatch]);
   drillState.carryOverCards = [];
   drillState.roundCards = [...drillState.currentSet];
@@ -2614,13 +2618,12 @@ function processDrillRoundCompletion() {
   }
 
   // Case 2: Exactly 1 card left unlearned
-  // User Rule: "最後の暗記済み9，未暗記1になったら，そのカードは連続して現れるので，次の10個セットに持ち越し．"
   if (drillState.roundUnlearned.length === 1) {
     const unlearnedId = drillState.roundUnlearned[0];
     const unlearnedCard = allCards.find((c) => c.id === unlearnedId);
 
-    // If there are more cards in the pool, carry over to next set!
-    if (drillState.pool.length > 0) {
+    // If already tested alone in this round and still unknown, carry over to next set
+    if (drillState.roundCards.length === 1 && drillState.pool.length > 0) {
       drillState.carryOverCards = [unlearnedId];
       drillState.lastCarriedOverName = unlearnedCard ? unlearnedCard.front : "単語";
 
@@ -2637,8 +2640,8 @@ function processDrillRoundCompletion() {
       return;
     }
 
-    // Pool is empty: interleave review cards if possible
-    if (drillState.completedCardIds.length >= 2) {
+    // Pool is empty and tested alone: interleave review cards if possible
+    if (drillState.roundCards.length === 1 && drillState.pool.length === 0 && drillState.completedCardIds.length >= 2) {
       const reviewSample = shuffleArray([...drillState.completedCardIds]).slice(0, 2);
       drillState.roundCards = shuffleArray([unlearnedId, ...reviewSample]);
       drillState.roundIndex = 0;
@@ -2650,8 +2653,8 @@ function processDrillRoundCompletion() {
       return;
     }
 
-    // Single card retry
-    drillState.roundCards = [...drillState.roundUnlearned];
+    // First time down to 1 card (or retry): retry the single card in the next round
+    drillState.roundCards = [unlearnedId];
     drillState.roundIndex = 0;
     drillState.roundNumber++;
     drillState.roundUnlearned = [];
@@ -2680,14 +2683,14 @@ function renderDrillSetResult() {
   // Carried over notice
   if (drillState.lastCarriedOverName) {
     els.drillCarryOverAlert.hidden = false;
-    els.drillCarryOverMsg.textContent = `「${drillState.lastCarriedOverName}」は連続出題を防ぐため、次のセットに持ち越しました。`;
+    els.drillCarryOverMsg.textContent = `「${drillState.lastCarriedOverName}」は次のセットに追加（11枚セット）して出題します。`;
     els.drillSetResultDesc.textContent = "セット内の他のカードをすべて暗記しました！";
   } else {
     els.drillCarryOverAlert.hidden = true;
     els.drillSetResultDesc.textContent = "このセットのすべてのカードを暗記しました！";
   }
 
-  const setSize = drillState.setSize || 10;
+  const setSize = drillState.currentSet.length || drillState.setSize || 10;
   const learnedInSet = drillState.lastCarriedOverName ? setSize - 1 : setSize;
   els.drillSetLearnedCount.textContent = `${Math.max(1, learnedInSet)}枚`;
   els.drillSetOverallProgress.textContent = `${completedCount} / ${totalDeckCards}枚 (${percent}%)`;
