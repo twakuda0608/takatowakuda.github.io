@@ -1517,6 +1517,7 @@
     .personal-shell {
       --opp-w: min(46vw, 24vh, 210px);
       --opp-h: min(20vw, 11vh, 92px);
+      --sq-size: min(46vw, 24vh, 210px);
       width: 100%;
       height: 100%;
       max-width: 600px;
@@ -1591,21 +1592,31 @@
       margin: auto 0;
     }
 
-    /* 卓エリア: 中心に正方形の空間、その周囲にP2-P4を配置 */
+    /* 卓エリア: 中心に正方形の空間、その周囲にP1-P4を配置 */
     .personal-table-zone {
-      width: 100%;
-      max-width: 500px;
       display: grid;
-      grid-template-columns: var(--opp-h) 1fr var(--opp-h);
-      grid-template-rows: var(--opp-h) var(--opp-w);
+      grid-template-columns: var(--opp-h) var(--sq-size) var(--opp-h);
+      grid-template-rows: var(--opp-h) var(--sq-size) auto;
       grid-template-areas:
         ".      top    ."
-        "left   .      right";
+        "left   center right"
+        "bottom bottom bottom";
       align-items: center;
       justify-items: center;
-      margin: 0;
+      justify-content: center;
+      width: 100%;
+      max-width: 500px;
       position: relative;
       flex-shrink: 0;
+    }
+    .personal-center-square {
+      grid-area: center;
+      width: var(--sq-size);
+      height: var(--sq-size);
+      border: 1.5px solid rgba(255, 255, 255, 0.14);
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.18);
+      box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.3);
     }
     .personal-seat {
       display: flex;
@@ -1614,15 +1625,17 @@
       min-width: 0;
       min-height: 0;
     }
-    .personal-seat.top    { grid-area: top; align-self: end; justify-self: center; }
+    .personal-seat.top    { grid-area: top; align-self: center; justify-self: center; }
     .personal-seat.left   { grid-area: left; align-self: center; justify-self: center; }
     .personal-seat.right  { grid-area: right; align-self: center; justify-self: center; }
     .personal-seat.bottom {
+      grid-area: bottom;
       width: 100%;
       max-width: 520px;
       flex-shrink: 0;
       display: flex;
       justify-content: center;
+      margin-top: 6px;
     }
 
     .personal-score-card, .personal-seat-card {
@@ -2420,8 +2433,9 @@
           max(8px, env(safe-area-inset-left));
       }
       .personal-shell {
-        --opp-w: min(28vw, 36vh, 240px);
-        --opp-h: min(13vw, 15vh, 85px);
+        --opp-w: min(24vw, 30vh, 180px);
+        --opp-h: min(10vw, 12vh, 60px);
+        --sq-size: min(24vw, 30vh, 130px);
         max-width: 800px;
       }
       .personal-top-bar {
@@ -2486,23 +2500,23 @@
       .personal-view {
         overflow: hidden;
         padding:
-          calc(max(8px, env(safe-area-inset-top)) + 4px)
-          max(8px, env(safe-area-inset-right))
-          calc(max(8px, env(safe-area-inset-bottom)) + 4px)
-          max(8px, env(safe-area-inset-left));
+          calc(max(6px, env(safe-area-inset-top)) + 2px)
+          max(4px, env(safe-area-inset-right))
+          calc(max(6px, env(safe-area-inset-bottom)) + 2px)
+          max(4px, env(safe-area-inset-left));
       }
       .personal-shell {
-        --opp-w: clamp(125px, 34vw, 155px);
-        --opp-h: clamp(52px, 7vh, 68px);
-        max-width: 440px;
+        --opp-h: clamp(66px, 8.6vh, 76px);
+        --sq-size: calc(100vw - 8px - (var(--opp-h) * 2));
+        --sq-size: calc(100cqw - (var(--opp-h) * 2));
+        --opp-w: var(--sq-size);
+        max-width: 480px;
       }
       .personal-main-stage {
-        margin: 0 auto;
-        justify-content: space-between;
-        gap: clamp(4px, 1vh, 8px);
+        margin: auto 0;
+        justify-content: center;
         flex: 1;
         min-height: 0;
-        padding-bottom: 34px;
         box-sizing: border-box;
       }
       .personal-top-bar {
@@ -2522,47 +2536,79 @@
         padding: 5px 10px;
       }
       .personal-table-zone {
+        container-type: inline-size;
         max-width: 100%;
+        grid-template-columns: var(--opp-h) var(--sq-size) var(--opp-h);
+        grid-template-rows: var(--opp-h) var(--sq-size) auto;
+      }
+      .personal-center-square {
+        width: var(--sq-size);
+        height: var(--sq-size);
+      }
+      .personal-seat.top    { align-self: center; justify-self: center; }
+      .personal-seat.left   { align-self: center; justify-self: center; }
+      .personal-seat.right  { align-self: center; justify-self: center; }
+      .personal-seat.bottom {
+        width: 100%;
+        max-width: 100%;
+        margin-top: clamp(4px, 1vh, 8px);
+      }
+      .personal-seat.top .personal-score-card,
+      .personal-seat.left .personal-score-card,
+      .personal-seat.right .personal-score-card {
+        padding: 4px 6px;
+      }
+      .personal-seat.top .personal-score-card-inner,
+      .personal-seat.left .personal-score-card-inner,
+      .personal-seat.right .personal-score-card-inner {
+        justify-content: space-evenly;
       }
       .personal-seat.top .personal-name-line,
       .personal-seat.left .personal-name-line,
       .personal-seat.right .personal-name-line {
-        padding: 0 20px;
+        padding: 0 28px;
         gap: 3px;
       }
       .personal-seat.top .personal-wind,
       .personal-seat.left .personal-wind,
       .personal-seat.right .personal-wind {
-        width: clamp(20px, 5.5vw, 26px);
-        height: clamp(20px, 5.5vw, 26px);
-        font-size: clamp(12px, 3.2vw, 15px);
+        left: 6px;
+        width: clamp(22px, 5.8vw, 28px);
+        height: clamp(22px, 5.8vw, 28px);
+        font-size: clamp(13px, 3.4vw, 16px);
         border-radius: 50%;
       }
       .personal-seat.top .personal-name,
       .personal-seat.left .personal-name,
       .personal-seat.right .personal-name {
-        font-size: clamp(11px, 3.2vw, 14px);
+        font-size: clamp(11px, 3.2vw, 13px);
+        line-height: 1.1;
       }
       .personal-seat.top .personal-score,
       .personal-seat.left .personal-score,
       .personal-seat.right .personal-score {
-        font-size: clamp(20px, 5.5vw, 28px);
+        font-size: clamp(20px, 5.5vw, 25px);
+        line-height: 1.1;
       }
       .personal-seat.top .personal-score.long-score,
       .personal-seat.left .personal-score.long-score,
       .personal-seat.right .personal-score.long-score {
-        font-size: clamp(16px, 4.4vw, 22px);
+        font-size: clamp(16px, 4.2vw, 20px);
+        line-height: 1.1;
       }
       .personal-seat.top .personal-riichi-stick,
       .personal-seat.left .personal-riichi-stick,
       .personal-seat.right .personal-riichi-stick {
-        width: clamp(70px, 20vw, 100px);
-        height: clamp(8px, 1.3vh, 12px);
+        width: 65px;
+        height: 7px;
+        min-height: 7px;
+        margin: 0 auto;
       }
-      .personal-seat.bottom {
-        width: 100%;
-        display: flex;
-        justify-content: center;
+      .personal-seat.top .personal-riichi-stick::after,
+      .personal-seat.left .personal-riichi-stick::after,
+      .personal-seat.right .personal-riichi-stick::after {
+        width: 7px;
+        height: 7px;
       }
       .personal-score-card.is-me {
         padding: clamp(8px, 1.5vh, 14px) clamp(10px, 2.8vw, 16px);
@@ -5357,8 +5403,9 @@
           <div class="personal-main-stage">
             <div class="personal-table-zone">
               ${opponents.map(cardHtml).join('')}
+              <div class="personal-center-square"></div>
+              ${meSeat ? cardHtml(meSeat) : ''}
             </div>
-            ${meSeat ? cardHtml(meSeat) : ''}
           </div>
           <div class="personal-fx-layer"></div>
           <div class="portrait-hint">横向きにしてください<br>この画面は横向き専用です</div>
