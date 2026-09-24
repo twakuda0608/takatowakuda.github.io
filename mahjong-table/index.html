@@ -1538,26 +1538,34 @@
       flex-shrink: 0;
     }
     .personal-board-info {
-      text-align: center;
       display: flex;
       flex-direction: column;
-      align-items: center;
       gap: 3px;
       margin: 0;
+      padding: 6px 14px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.42);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
     }
     .personal-board-round {
       color: #fff;
-      font-size: clamp(22px, 5.8vw, 32px);
-      font-weight: 900;
-      line-height: 1.15;
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.2;
       letter-spacing: 0.5px;
+      white-space: nowrap;
     }
     .personal-board-info-sub {
       color: #fbbf24;
-      font-size: clamp(14px, 3.8vw, 19px);
-      font-weight: 800;
+      font-size: 14px;
+      font-weight: 700;
       line-height: 1.2;
+      white-space: nowrap;
       margin: 0;
+      letter-spacing: 0.3px;
     }
     .personal-seat-change-top {
       position: absolute;
@@ -2422,203 +2430,106 @@
       padding: 24px;
     }
     body.personal-view-active .portrait-hint { display: none; }
-    @media (min-aspect-ratio: 70/100) {
+    /* ── 縦画面 (Portrait: aspect-ratio < 1/1) ── */
+    @media not all and (min-aspect-ratio: 1/1) {
       .personal-view {
+        padding: calc(max(2px, env(safe-area-inset-top))) 0 calc(max(0px, env(safe-area-inset-bottom))) 0;
         overflow: hidden;
-        padding:
-          calc(max(2px, env(safe-area-inset-top)))
-          max(8px, env(safe-area-inset-right))
-          calc(max(2px, env(safe-area-inset-bottom)))
-          max(8px, env(safe-area-inset-left));
       }
       .personal-shell {
+        --sq-size: 50vw;
+        --opp-h: 25vw;
+        --opp-w: var(--sq-size);
+        width: 100vw;
+        max-width: 100vw;
         height: 100%;
-        width: 100%;
-        margin: 0 auto;
+        margin: 0;
         justify-content: space-between;
-        --opp-h: clamp(44px, 12vh, 68px);
-        --sq-size: min(50vw, 50dvh);
-        --p1-h: clamp(105px, calc(100dvh - var(--sq-size) - var(--opp-h) - 44px), 165px);
-        --opp-w: var(--sq-size);
-        max-width: calc(var(--sq-size) + (var(--opp-h) * 2) + 24px);
       }
       .personal-top-bar {
-        padding: 2px 0 3px;
-        flex-shrink: 0;
-      }
-      .personal-board-round {
-        font-size: clamp(15px, 3.8vh, 19px);
-      }
-      .personal-board-info-sub {
-        font-size: clamp(10px, 2.2vh, 12px);
-        margin-top: 0;
-      }
-      .personal-seat-change-top {
-        top: 2px;
-        right: 0;
-        font-size: 10px;
-        padding: 3px 8px;
-      }
-      .personal-main-stage {
-        margin: auto 0;
-        justify-content: center;
-        flex: 1;
-        min-height: 0;
-        box-sizing: border-box;
-      }
-      .personal-table-zone {
-        width: fit-content;
-        max-width: 100%;
-        grid-template-columns: var(--opp-h) var(--sq-size) var(--opp-h);
-        grid-template-rows: var(--opp-h) var(--sq-size) auto;
-        margin: 0 auto;
-      }
-      .personal-center-square {
-        width: var(--sq-size);
-        height: var(--sq-size);
-      }
-      .personal-seat.top    { align-self: center; justify-self: center; }
-      .personal-seat.left   { align-self: center; justify-self: center; }
-      .personal-seat.right  { align-self: center; justify-self: center; }
-      .personal-seat.bottom {
         width: 100%;
-        max-width: 100%;
-        margin-top: 4px;
-        margin-bottom: 0;
-      }
-      .personal-seat.top .personal-score-card,
-      .personal-seat.left .personal-score-card,
-      .personal-seat.right .personal-score-card {
-        padding: 3px 5px;
-      }
-      .personal-seat.top .personal-score-card-inner,
-      .personal-seat.left .personal-score-card-inner,
-      .personal-seat.right .personal-score-card-inner {
-        justify-content: space-evenly;
-      }
-      .personal-seat.top .personal-name,
-      .personal-seat.left .personal-name,
-      .personal-seat.right .personal-name {
-        font-size: clamp(11px, 2.6vh, 13px);
-        line-height: 1;
-      }
-      .personal-seat.top .personal-score,
-      .personal-seat.left .personal-score,
-      .personal-seat.right .personal-score {
-        font-size: clamp(17px, 4.4vh, 23px);
-        line-height: 1;
-      }
-      .personal-seat.top .personal-wind,
-      .personal-seat.left .personal-wind,
-      .personal-seat.right .personal-wind {
-        left: 5px;
-        width: clamp(18px, 4.4vh, 22px);
-        height: clamp(18px, 4.4vh, 22px);
-        font-size: clamp(10px, 2.4vh, 13px);
-      }
-      .personal-seat.top .personal-riichi-stick,
-      .personal-seat.left .personal-riichi-stick,
-      .personal-seat.right .personal-riichi-stick {
-        width: 55px;
-        height: 6px;
-        min-height: 6px;
-        margin: 0 auto;
-      }
-      .personal-score-card.is-me {
-        padding: clamp(6px, 1.6vh, 11px) clamp(10px, 2vw, 16px);
-        gap: clamp(3px, 0.9vh, 6px);
-        margin-bottom: 0;
-      }
-      .personal-score-card.is-me .personal-wind {
-        width: clamp(25px, 6vh, 30px);
-        height: clamp(25px, 6vh, 30px);
-        font-size: clamp(13px, 3.2vh, 16px);
-      }
-      .personal-score-card.is-me .personal-name {
-        font-size: clamp(12px, 3vh, 15px);
-      }
-      .personal-score-card.is-me .personal-score {
-        font-size: clamp(28px, 7.6vh, 38px);
-        line-height: 1;
-      }
-      .personal-score-card.is-me .personal-score.long-score {
-        font-size: clamp(23px, 6vh, 32px);
-      }
-      .personal-score-card.is-me .personal-riichi-stick {
-        width: clamp(95px, 20vw, 135px);
-        height: clamp(8px, 1.9vh, 11px);
-        margin: 1px auto;
-      }
-      .personal-command-btn {
-        font-size: clamp(12px, 2.8vh, 14px);
-        padding: clamp(5px, 1.1vh, 7px) 15px;
-      }
-      .personal-score-line .goal-btn {
-        width: clamp(33px, 7.2vw, 38px);
-        height: clamp(23px, 5.2vh, 27px);
-        font-size: 11px;
-      }
-      .personal-diff-btn {
-        width: clamp(25px, 5.2vh, 29px);
-        height: clamp(25px, 5.2vh, 29px);
-        font-size: 12px;
-      }
-    }
-    @media not all and (min-aspect-ratio: 70/100) {
-      .personal-view {
-        overflow: hidden;
-        padding:
-          calc(max(6px, env(safe-area-inset-top)) + 2px)
-          max(6px, env(safe-area-inset-right))
-          calc(max(6px, env(safe-area-inset-bottom)) + 2px)
-          max(6px, env(safe-area-inset-left));
-      }
-      .personal-shell {
-        container-type: inline-size;
-        --opp-h: clamp(42px, 9.5vh, 66px);
-        --sq-size: min(50vw, 50dvh);
-        --opp-w: var(--sq-size);
-        max-width: 480px;
-      }
-      .personal-main-stage {
-        margin: auto 0;
-        justify-content: center;
-        flex: 1;
-        min-height: 0;
-        box-sizing: border-box;
-      }
-      .personal-top-bar {
         padding: 2px 0 4px;
-      }
-      .personal-board-round {
-        font-size: clamp(19px, 5.5vw, 25px);
-      }
-      .personal-board-info-sub {
-        font-size: clamp(12px, 3.4vw, 15px);
-        margin-top: 1px;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
       }
       .personal-seat-change-top {
-        top: 2px;
-        right: 0;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: max(8px, env(safe-area-inset-right));
         font-size: 11px;
         padding: 5px 10px;
+        z-index: 25;
+      }
+      .personal-main-stage {
+        width: 100%;
+        flex: 1;
+        margin: auto 0;
+        justify-content: center;
+        display: flex;
+        align-items: center;
       }
       .personal-table-zone {
-        max-width: 100%;
+        width: 100vw;
+        max-width: 100vw;
+        display: grid;
         grid-template-columns: var(--opp-h) var(--sq-size) var(--opp-h);
         grid-template-rows: var(--opp-h) var(--sq-size) auto;
+        margin: 0;
+        align-items: stretch;
+      }
+      .personal-seat.left {
+        grid-column: 1;
+        grid-row: 2;
+        width: 100%;
+        height: 100%;
+        align-self: center;
+        justify-self: center;
+      }
+      .personal-seat.left .personal-score-card {
+        flex-shrink: 0;
+        width: var(--sq-size);
+        height: var(--opp-h);
+      }
+      .personal-seat.right {
+        grid-column: 3;
+        grid-row: 2;
+        width: 100%;
+        height: 100%;
+        align-self: center;
+        justify-self: center;
+      }
+      .personal-seat.right .personal-score-card {
+        flex-shrink: 0;
+        width: var(--sq-size);
+        height: var(--opp-h);
+      }
+      .personal-seat.top {
+        grid-column: 2;
+        grid-row: 1;
+        width: 100%;
+        height: 100%;
+        align-self: center;
+        justify-self: center;
+      }
+      .personal-seat.top .personal-score-card {
+        width: var(--sq-size);
+        height: var(--opp-h);
       }
       .personal-center-square {
+        grid-column: 2;
+        grid-row: 2;
         width: var(--sq-size);
         height: var(--sq-size);
       }
-      .personal-seat.top    { align-self: center; justify-self: center; }
-      .personal-seat.left   { align-self: center; justify-self: center; }
-      .personal-seat.right  { align-self: center; justify-self: center; }
       .personal-seat.bottom {
-        width: 100%;
-        max-width: 100%;
-        margin-top: clamp(4px, 1vh, 8px);
+        grid-column: 1 / span 3;
+        grid-row: 3;
+        width: 100vw;
+        max-width: 100vw;
+        margin: 0;
       }
       .personal-seat.top .personal-score-card,
       .personal-seat.left .personal-score-card,
@@ -2640,74 +2551,70 @@
       .personal-seat.left .personal-wind,
       .personal-seat.right .personal-wind {
         left: 6px;
-        width: clamp(22px, 5.8vw, 28px);
-        height: clamp(22px, 5.8vw, 28px);
-        font-size: clamp(13px, 3.4vw, 16px);
+        width: clamp(20px, 5.5vw, 26px);
+        height: clamp(20px, 5.5vw, 26px);
+        font-size: clamp(12px, 3.2vw, 15px);
         border-radius: 50%;
       }
       .personal-seat.top .personal-name,
       .personal-seat.left .personal-name,
       .personal-seat.right .personal-name {
-        font-size: clamp(11px, 3.2vw, 13px);
+        font-size: clamp(11px, 3vw, 13px);
         line-height: 1.1;
       }
       .personal-seat.top .personal-score,
       .personal-seat.left .personal-score,
       .personal-seat.right .personal-score {
-        font-size: clamp(20px, 5.5vw, 25px);
+        font-size: clamp(18px, 5vw, 24px);
         line-height: 1.1;
       }
       .personal-seat.top .personal-score.long-score,
       .personal-seat.left .personal-score.long-score,
       .personal-seat.right .personal-score.long-score {
-        font-size: clamp(16px, 4.2vw, 20px);
+        font-size: clamp(15px, 4vw, 19px);
         line-height: 1.1;
       }
       .personal-seat.top .personal-riichi-stick,
       .personal-seat.left .personal-riichi-stick,
       .personal-seat.right .personal-riichi-stick {
-        width: 65px;
-        height: 7px;
-        min-height: 7px;
+        width: 60px;
+        height: 6px;
+        min-height: 6px;
         margin: 0 auto;
       }
-      .personal-seat.top .personal-riichi-stick::after,
-      .personal-seat.left .personal-riichi-stick::after,
-      .personal-seat.right .personal-riichi-stick::after {
-        width: 7px;
-        height: 7px;
-      }
       .personal-score-card.is-me {
-        padding: clamp(8px, 1.5vh, 14px) clamp(10px, 2.8vw, 16px);
-        gap: clamp(6px, 1.2vh, 10px);
-        border-radius: 12px;
-        max-width: 100%;
+        width: 100vw;
+        max-width: 100vw;
+        border-radius: 0;
+        margin: 0;
+        padding: clamp(6px, 1.4vh, 12px) clamp(10px, 2.5vw, 16px);
+        gap: clamp(3px, 1vh, 8px);
         transform: none;
       }
       .personal-score-card.is-me .personal-name-line {
         padding: 0 32px;
       }
       .personal-score-card.is-me .personal-wind {
-        width: clamp(26px, 7vw, 34px);
-        height: clamp(26px, 7vw, 34px);
-        font-size: clamp(15px, 4vw, 20px);
+        width: clamp(24px, 6.5vw, 32px);
+        height: clamp(24px, 6.5vw, 32px);
+        font-size: clamp(14px, 3.8vw, 18px);
       }
       .personal-score-card.is-me .personal-name {
-        font-size: clamp(15px, 4vw, 18px);
+        font-size: clamp(13px, 3.5vw, 17px);
       }
       .personal-score-card.is-me .personal-score {
-        font-size: clamp(32px, 9.5vw, 48px);
+        font-size: clamp(26px, min(9vw, 6.5vh), 42px);
       }
       .personal-score-card.is-me .personal-score.long-score {
-        font-size: clamp(26px, 8vw, 38px);
+        font-size: clamp(22px, min(7.5vw, 5.5vh), 34px);
       }
       .personal-score-card.is-me .personal-riichi-stick {
-        width: clamp(110px, 28vw, 160px);
-        height: clamp(10px, 1.8vh, 14px);
+        width: clamp(100px, 26vw, 150px);
+        height: clamp(8px, 1.6vh, 12px);
       }
       .personal-command-btn {
-        font-size: clamp(13px, 3.5vw, 16px);
-        padding: clamp(6px, 1.1vh, 9px) 18px;
+        font-size: clamp(12px, min(3.5vw, 2.8vh), 15px);
+        padding: clamp(5px, 1vh, 8px) 16px;
       }
       .personal-kicha-mark {
         font-size: clamp(11px, 3.2vw, 13px);
@@ -2716,28 +2623,223 @@
       }
       .personal-score-card.is-me .personal-kicha-mark {
         right: 10px;
-        bottom: -25px;
+        bottom: 8px;
         transform: none;
       }
-      .personal-score-card.is-me.kicha-touch-bottom .personal-kicha-mark {
-        right: clamp(-30px, calc(-1 * ((100vw - 100%) / 2 - 6px)), 8px);
-        bottom: 50%;
-        transform: translateY(50%);
-      }
-      .personal-score-card.left .personal-kicha-mark {
-        top: -24px;
-        right: 4px;
-        bottom: auto;
-      }
+      .personal-score-card.left .personal-kicha-mark,
       .personal-score-card.right .personal-kicha-mark {
         top: -24px;
         right: 4px;
         bottom: auto;
       }
-      .personal-seat-change-top {
-        top: calc(max(8px, env(safe-area-inset-top)) + 4px);
-        right: max(8px, env(safe-area-inset-right));
+    }
+
+    /* ── 横画面 (Landscape: aspect-ratio >= 1/1) ── */
+    @media (min-aspect-ratio: 1/1) {
+      .personal-view {
+        padding: 0;
+        overflow: hidden;
       }
+      .personal-shell {
+        --sq-size: 50dvh;
+        --opp-h: 25dvh;
+        --opp-w: var(--sq-size);
+        width: 100%;
+        max-width: 100%;
+        height: 100%;
+        position: relative;
+        margin: 0;
+        justify-content: center;
+      }
+      .personal-top-bar {
+        position: static;
+        height: 0;
+        padding: 0;
+        margin: 0;
+        border: none;
+      }
+      .personal-board-info {
+        position: absolute;
+        left: max(12px, env(safe-area-inset-left));
+        top: max(10px, env(safe-area-inset-top));
+        align-items: flex-start;
+        text-align: left;
+        z-index: 25;
+        pointer-events: none;
+      }
+      .personal-seat-change-top {
+        position: absolute;
+        top: max(8px, env(safe-area-inset-top));
+        right: max(10px, env(safe-area-inset-right));
+        z-index: 25;
+      }
+      .personal-main-stage {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex: 1;
+      }
+      .personal-table-zone {
+        width: fit-content;
+        height: 100dvh;
+        display: grid;
+        grid-template-columns: var(--opp-h) var(--sq-size) var(--opp-h);
+        grid-template-rows: var(--opp-h) var(--sq-size) var(--opp-h);
+        margin: 0 auto;
+        align-items: stretch;
+      }
+      .personal-seat.top {
+        grid-column: 2;
+        grid-row: 1;
+        width: 100%;
+        height: 100%;
+        align-self: start;
+        justify-self: center;
+      }
+      .personal-seat.top .personal-score-card {
+        width: var(--sq-size);
+        height: var(--opp-h);
+        margin: 0;
+        border-radius: 0 0 10px 10px;
+        padding: 3px 5px;
+      }
+      .personal-center-square {
+        grid-column: 2;
+        grid-row: 2;
+        width: var(--sq-size);
+        height: var(--sq-size);
+        align-self: center;
+        justify-self: center;
+      }
+      .personal-seat.left {
+        grid-column: 1;
+        grid-row: 2;
+        width: 100%;
+        height: 100%;
+        align-self: center;
+        justify-self: center;
+      }
+      .personal-seat.left .personal-score-card {
+        flex-shrink: 0;
+        width: var(--sq-size);
+        height: var(--opp-h);
+        padding: 3px 5px;
+      }
+      .personal-seat.right {
+        grid-column: 3;
+        grid-row: 2;
+        width: 100%;
+        height: 100%;
+        align-self: center;
+        justify-self: center;
+      }
+      .personal-seat.right .personal-score-card {
+        flex-shrink: 0;
+        width: var(--sq-size);
+        height: var(--opp-h);
+        padding: 3px 5px;
+      }
+      .personal-seat.top .personal-score-card-inner,
+      .personal-seat.left .personal-score-card-inner,
+      .personal-seat.right .personal-score-card-inner {
+        justify-content: space-evenly;
+      }
+      .personal-seat.top .personal-name,
+      .personal-seat.left .personal-name,
+      .personal-seat.right .personal-name {
+        font-size: clamp(10px, 2.4vh, 12px);
+        line-height: 1;
+      }
+      .personal-seat.top .personal-score,
+      .personal-seat.left .personal-score,
+      .personal-seat.right .personal-score {
+        font-size: clamp(15px, 4vh, 20px);
+        line-height: 1;
+      }
+      .personal-seat.top .personal-wind,
+      .personal-seat.left .personal-wind,
+      .personal-seat.right .personal-wind {
+        left: 5px;
+        width: clamp(16px, 4vh, 20px);
+        height: clamp(16px, 4vh, 20px);
+        font-size: clamp(10px, 2.2vh, 12px);
+      }
+      .personal-seat.top .personal-riichi-stick,
+      .personal-seat.left .personal-riichi-stick,
+      .personal-seat.right .personal-riichi-stick {
+        width: 50px;
+        height: 5px;
+        min-height: 5px;
+        margin: 0 auto;
+      }
+      .personal-seat.bottom {
+        grid-column: 1 / span 3;
+        grid-row: 3;
+        width: 100%;
+        height: var(--opp-h);
+        margin: 0;
+        align-self: end;
+        display: flex;
+        justify-content: center;
+      }
+      .personal-score-card.is-me {
+        width: calc(var(--sq-size) + var(--opp-h) * 2);
+        max-width: calc(var(--sq-size) + var(--opp-h) * 2);
+        height: 100%;
+        border-radius: 10px 10px 0 0;
+        margin: 0;
+        padding: 4px 12px;
+        gap: 2px;
+      }
+      .personal-score-card.is-me .personal-score {
+        font-size: clamp(22px, 6vh, 32px);
+        line-height: 1;
+      }
+      .personal-score-card.is-me .personal-score.long-score {
+        font-size: clamp(18px, 5vh, 26px);
+      }
+      .personal-score-card.is-me .personal-name {
+        font-size: clamp(11px, 2.8vh, 14px);
+      }
+      .personal-score-card.is-me .personal-wind {
+        width: clamp(22px, 5vh, 28px);
+        height: clamp(22px, 5vh, 28px);
+        font-size: clamp(12px, 2.8vh, 15px);
+      }
+      .personal-score-card.is-me .personal-riichi-stick {
+        height: 6px;
+        margin: 1px auto;
+      }
+      .personal-command-btn {
+        font-size: 11px;
+        padding: 3px 12px;
+      }
+      .personal-score-line .goal-btn {
+        height: 20px;
+        font-size: 10px;
+      }
+      .personal-diff-btn {
+        height: 20px;
+        font-size: 10px;
+      }
+      .personal-kicha-mark {
+        font-size: 11px;
+      }
+      .personal-score-card.is-me .personal-kicha-mark {
+        right: 10px;
+        bottom: 6px;
+        transform: none;
+      }
+      .personal-score-card.left .personal-kicha-mark,
+      .personal-score-card.right .personal-kicha-mark {
+        top: -24px;
+        right: 4px;
+        bottom: auto;
+      }
+    }
       .personal-result-intro {
         align-content: center;
         padding: clamp(14px, 4vw, 22px);
@@ -2839,13 +2941,6 @@
       .personal-fx-delta {
         font-size: clamp(19px, 6vw, 30px);
         padding: 6px 10px;
-      }
-    }
-    @media (min-aspect-ratio: 63/100) and (max-aspect-ratio: 699/1000) {
-      .personal-score-card.is-me .personal-kicha-mark {
-        right: clamp(-30px, calc(-1 * ((100vw - 100%) / 2 - 6px)), 8px);
-        bottom: 50%;
-        transform: translateY(50%);
       }
     }
   </style>
@@ -5368,7 +5463,7 @@
       if (!meCard) return;
       const kicha = meCard.querySelector('.personal-kicha-mark');
       if (!kicha) return;
-      const isWide = window.matchMedia('(min-aspect-ratio: 70/100)').matches;
+      const isWide = window.matchMedia('(min-aspect-ratio: 1/1)').matches;
       if (isWide) {
         meCard.classList.remove('kicha-touch-bottom');
         return;
