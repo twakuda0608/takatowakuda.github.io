@@ -1655,8 +1655,8 @@
       width: 100%;
       height: auto;
       max-width: 520px;
-      padding: clamp(12px, 2vh, 18px) clamp(16px, 3.5vw, 24px);
-      gap: clamp(8px, 1.4vh, 12px);
+      padding: clamp(16px, 2.5vh, 24px) clamp(16px, 3.5vw, 24px);
+      gap: clamp(12px, 2vh, 18px);
       border: 1px solid rgba(251,191,36,0.48);
       border-radius: 14px;
       background: rgba(0,0,0,0.46);
@@ -1681,18 +1681,22 @@
       transform: translateY(-50%);
       width: clamp(26px, 5.5vh, 36px);
       height: clamp(26px, 5.5vh, 36px);
-      border-radius: 6px;
-      display: grid;
-      place-items: center;
-      background: #fff;
-      color: #f97316;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(251, 191, 36, 0.08);
+      border: 2px solid rgba(251, 191, 36, 0.35);
+      color: #fbbf24;
       font-size: clamp(15px, 3.4vh, 22px);
-      font-weight: 900;
+      font-weight: 800;
       flex-shrink: 0;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.22);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: background 0.1s, color 0.1s;
     }
     .personal-wind.east {
       background: #f97316;
+      border-color: #f97316;
       color: #fff;
     }
     .personal-score-card.is-me .personal-wind {
@@ -1701,9 +1705,10 @@
       font-size: clamp(20px, 4.2vh, 28px);
     }
     .personal-name {
-      color: rgba(255,255,255,0.88);
+      color: rgba(255,255,255,0.65);
       font-size: clamp(14px, 3.2vh, 20px);
-      font-weight: 800;
+      font-weight: 600;
+      letter-spacing: 0.5px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -1711,7 +1716,8 @@
     }
     .personal-score-card.is-me .personal-name {
       font-size: clamp(18px, 3.8vh, 24px);
-      color: rgba(255,255,255,0.96);
+      font-weight: 700;
+      color: rgba(255,255,255,0.95);
     }
     .personal-kicha-mark {
       position: absolute;
@@ -1724,8 +1730,8 @@
       color: #fff;
       font-size: clamp(10px, 2.2vh, 13px);
       font-weight: 900;
-      width: clamp(24px, 4.8vh, 30px);
-      height: clamp(19px, 4vh, 24px);
+      width: clamp(24px, 4.8vh, 32px);
+      height: clamp(18px, 3.8vh, 24px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1743,8 +1749,9 @@
     }
     .personal-score {
       font-size: clamp(26px, 6.8vh, 44px);
-      font-weight: 900;
+      font-weight: 700;
       line-height: 1;
+      letter-spacing: -0.5px;
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
       color: #fff;
@@ -1759,6 +1766,7 @@
       padding: 2px 8px;
       flex: 0 0 auto;
       overflow: visible;
+      transition: color 0.1s;
     }
     .personal-score-card.is-me .personal-score.long-score {
       font-size: clamp(34px, 8.5vh, 56px);
@@ -1769,19 +1777,20 @@
     .personal-diff-btn {
       width: clamp(36px, 7.5vh, 50px);
       height: clamp(36px, 7.5vh, 50px);
-      border: 1.5px solid rgba(255,255,255,0.24);
+      border: 1.5px solid rgba(255,255,255,0.22);
       border-radius: 8px;
       background: rgba(255,255,255,0.09);
-      color: rgba(255,255,255,0.65);
+      color: rgba(255,255,255,0.55);
       font-family: inherit;
       font-size: clamp(15px, 3.2vh, 21px);
-      font-weight: 900;
+      font-weight: 800;
       line-height: 1;
       padding: 0;
       cursor: pointer;
       touch-action: none;
       flex-shrink: 0;
       position: relative;
+      transition: background 0.1s, color 0.1s;
     }
     .personal-diff-btn .plus,
     .personal-diff-btn .minus {
@@ -1796,8 +1805,8 @@
       line-height: 1;
     }
     .personal-diff-btn.active {
-      background: rgba(255,255,255,0.24);
-      border-color: rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.22);
+      border-color: rgba(255,255,255,0.55);
       color: #fff;
     }
     .personal-meta {
@@ -1812,12 +1821,12 @@
       min-width: 0;
     }
     .personal-riichi-stick {
-      width: clamp(65px, 15vh, 100px);
-      height: clamp(8px, 1.8vh, 12px);
+      width: clamp(90px, 20vw, 140px);
+      height: clamp(12px, 2.4vh, 16px);
       border-radius: 999px;
       background: #f8fafc;
-      border: 1px solid rgba(0,0,0,0.2);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      border: 1px solid rgba(0,0,0,0.25);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.35);
       margin: 0 auto;
       opacity: 0;
       position: relative;
@@ -1828,20 +1837,21 @@
       position: absolute;
       left: 50%;
       top: 50%;
-      width: clamp(8px, 1.5vh, 10px);
-      height: clamp(8px, 1.5vh, 10px);
+      width: clamp(10px, 1.8vh, 14px);
+      height: clamp(10px, 1.8vh, 14px);
       border-radius: 50%;
       background: #ef4444;
       transform: translate(-50%, -50%);
-      box-shadow: 0 0 0 1px rgba(127,29,29,0.18);
+      box-shadow: 0 0 0 1px rgba(127,29,29,0.2);
     }
     .personal-score-card.is-me .personal-riichi-stick {
-      width: clamp(100px, 20vh, 150px);
-      height: clamp(12px, 2.4vh, 16px);
+      width: clamp(130px, 32vw, 200px);
+      height: clamp(16px, 3.2vh, 22px);
+      margin: clamp(4px, 0.8vh, 8px) auto;
     }
     .personal-score-card.is-me .personal-riichi-stick::after {
-      width: clamp(10px, 2vh, 13px);
-      height: clamp(10px, 2vh, 13px);
+      width: clamp(14px, 2.6vh, 18px);
+      height: clamp(14px, 2.6vh, 18px);
     }
     .personal-command-row {
       display: flex;
@@ -1853,13 +1863,13 @@
       width: 100%;
       max-width: 320px;
       border: 1.5px solid rgba(255,255,255,0.22);
-      border-radius: 20px;
+      border-radius: 22px;
       background: rgba(255,255,255,0.09);
-      color: rgba(255,255,255,0.65);
+      color: rgba(255,255,255,0.55);
       font-family: inherit;
       font-size: clamp(14px, 2.8vh, 19px);
       font-weight: 700;
-      padding: clamp(8px, 1.6vh, 12px) 18px;
+      padding: clamp(10px, 1.8vh, 15px) 20px;
       cursor: pointer;
       min-width: 0;
       letter-spacing: 2px;
@@ -1869,9 +1879,10 @@
       background: #b91c1c;
       border-color: #f87171;
       color: #fff;
-      box-shadow: 0 0 16px rgba(239, 68, 68, 0.6);
+      box-shadow: 0 0 18px rgba(239, 68, 68, 0.65);
     }
-    .personal-command-btn:disabled {
+    .personal-command-btn:disabled,
+    .personal-command-btn.blocked {
       opacity: 0.35;
       cursor: not-allowed;
     }
@@ -1885,7 +1896,6 @@
       font-size: clamp(12px, 2.4vh, 15px);
       border-radius: 8px;
       flex-shrink: 0;
-    }
     }
     .personal-agari-modal {
       position: fixed;
@@ -2434,12 +2444,12 @@
         font-size: 13px;
       }
       .personal-riichi-stick {
-        width: 55px;
-        height: 7px;
+        width: clamp(75px, 18vw, 110px);
+        height: 10px;
       }
       .personal-score-card.is-me .personal-riichi-stick {
-        width: 80px;
-        height: 9px;
+        width: clamp(110px, 26vw, 160px);
+        height: 14px;
       }
       .personal-command-btn {
         font-size: 13px;
@@ -2496,7 +2506,7 @@
         width: clamp(22px, 6vw, 28px);
         height: clamp(22px, 6vw, 28px);
         font-size: clamp(13px, 3.6vw, 17px);
-        border-radius: 5px;
+        border-radius: 50%;
       }
       .personal-seat.top .personal-name,
       .personal-seat.left .personal-name,
@@ -2516,12 +2526,12 @@
       .personal-seat.top .personal-riichi-stick,
       .personal-seat.left .personal-riichi-stick,
       .personal-seat.right .personal-riichi-stick {
-        width: clamp(50px, 14vw, 75px);
-        height: 7px;
+        width: clamp(80px, 24vw, 120px);
+        height: clamp(10px, 1.6vh, 14px);
       }
       .personal-score-card.is-me {
-        padding: clamp(12px, 2vh, 18px) clamp(14px, 3.5vw, 22px);
-        gap: clamp(8px, 1.4vh, 12px);
+        padding: clamp(14px, 2.2vh, 22px) clamp(14px, 3.5vw, 22px);
+        gap: clamp(10px, 1.8vh, 16px);
         border-radius: 12px;
         max-width: 100%;
         transform: none;
@@ -2544,8 +2554,8 @@
         font-size: clamp(34px, 10vw, 50px);
       }
       .personal-score-card.is-me .personal-riichi-stick {
-        width: clamp(90px, 26vw, 140px);
-        height: clamp(10px, 2.5vw, 14px);
+        width: clamp(130px, 36vw, 200px);
+        height: clamp(15px, 2.5vh, 20px);
       }
       .personal-command-btn {
         font-size: clamp(15px, 4.2vw, 19px);
