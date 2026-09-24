@@ -32,8 +32,8 @@
     <div class="tabs">
       <button class="tabbtn active" data-tab="t1">ウマ/オカ 精算</button>
       <button class="tabbtn" data-tab="t2">総合ポイント精算</button>
-      <button class="tabbtn" data-tab="t3">戦績記録</button>
       <button class="tabbtn" data-tab="t4">逆転計算</button>
+      <button class="tabbtn" data-tab="t3">戦績記録</button>
     </div>
 
     <!-- タブ1：ウマ/オカ 精算 -->
@@ -42,97 +42,105 @@
         <span>麻雀テーブルからスコアを取り込みました</span>
         <button id="import-banner-close" type="button" aria-label="通知を閉じる">×</button>
       </div>
-      <fieldset>
-        <legend>設定</legend>
-        <label>初期点（例: 250）<input id="init1" type="number" value="250" /></label>
-        <label>オカ（点返し、例: 300）<input id="oka1" type="number" value="300" /></label>
-        <label>ウマ
-          <select id="uma1">
-            <option value="510">5-10（ゴットー）</option>
-            <option value="1020">10-20（ワンツー）</option>
-            <option value="1030" selected>10-30（ワンスリー）</option>
-            <option value="2030">20-30（ツースリー）</option>
-          </select>
-        </label>
-        <label>レート
-          <select id="rate1">
-            <option value="10">10（テンイチ）</option>
-            <option value="20">20（テンニ）</option>
-            <option value="30" selected>30（テンサン）</option>
-            <option value="50">50（テンゴ）</option>
-            <option value="100">100（テンピン）</option>
-          </select>
-        </label>
-        <label class="checklabel">
-          <input id="decimal1" type="checkbox" checked>
-          小数点（0.1pt）まで計算する
-        </label>
-        <label class="checklabel">
-          <input id="tie1" type="checkbox">
-          同点時はウマを分け合う（例: 1位+30・2位+10 → 両者+20）
-        </label>
-      </fieldset>
+      <div class="tab-grid-2col">
+        <div class="col-left">
+          <fieldset>
+            <legend>設定</legend>
+            <div class="settings-grid-tab1">
+              <label>初期点（例: 250）<input id="init1" type="number" value="250" /></label>
+              <label>オカ（点返し、例: 300）<input id="oka1" type="number" value="300" /></label>
+              <label>ウマ
+                <select id="uma1">
+                  <option value="510">5-10（ゴットー）</option>
+                  <option value="1020">10-20（ワンツー）</option>
+                  <option value="1030" selected>10-30（ワンスリー）</option>
+                  <option value="2030">20-30（ツースリー）</option>
+                </select>
+              </label>
+              <label>レート
+                <select id="rate1">
+                  <option value="10">10（テンイチ）</option>
+                  <option value="20">20（テンニ）</option>
+                  <option value="30" selected>30（テンサン）</option>
+                  <option value="50">50（テンゴ）</option>
+                  <option value="100">100（テンピン）</option>
+                </select>
+              </label>
+            </div>
+            <label class="checklabel">
+              <input id="decimal1" type="checkbox" checked>
+              小数点（0.1pt）まで計算する
+            </label>
+            <label class="checklabel">
+              <input id="tie1" type="checkbox">
+              同点時はウマを分け合う（例: 1位+30・2位+10 → 両者+20）
+            </label>
+          </fieldset>
 
-      <fieldset>
-        <legend>点数（百点単位で入力）</legend>
-        <p class="score-rank-note">名前と点数はそのまま、順位に合わせて行が入れ替わります。</p>
-        <div id="score-rows">
-        <div class="score-row" data-player-slot="1">
-          <select id="sr1_1" class="score-row-rank" aria-label="プレイヤー1の順位">
-            <option value="1" selected>1位</option><option value="2">2位</option><option value="3">3位</option><option value="4">4位</option>
-          </select>
-          <input id="sn1_1" class="player-name-input score-name" placeholder="プレイヤー1" autocomplete="off">
-          <input id="s1_1" type="number" readonly class="score-num" placeholder="自動計算">
+          <fieldset>
+            <legend>点数（百点単位で入力）</legend>
+            <p class="score-rank-note">名前と点数はそのまま、順位に合わせて行が入れ替わります。</p>
+            <div id="score-rows">
+            <div class="score-row" data-player-slot="1">
+              <select id="sr1_1" class="score-row-rank" aria-label="プレイヤー1の順位">
+                <option value="1" selected>1位</option><option value="2">2位</option><option value="3">3位</option><option value="4">4位</option>
+              </select>
+              <input id="sn1_1" class="player-name-input score-name" placeholder="プレイヤー1" autocomplete="off">
+              <input id="s1_1" type="number" readonly class="score-num" placeholder="自動計算">
+            </div>
+            <div class="score-row" data-player-slot="2">
+              <select id="sr2_1" class="score-row-rank" aria-label="プレイヤー2の順位">
+                <option value="1">1位</option><option value="2" selected>2位</option><option value="3">3位</option><option value="4">4位</option>
+              </select>
+              <input id="sn2_1" class="player-name-input score-name" placeholder="プレイヤー2" autocomplete="off">
+              <input id="s2_1" type="number" value="300" class="score-num">
+            </div>
+            <div class="score-row" data-player-slot="3">
+              <select id="sr3_1" class="score-row-rank" aria-label="プレイヤー3の順位">
+                <option value="1">1位</option><option value="2">2位</option><option value="3" selected>3位</option><option value="4">4位</option>
+              </select>
+              <input id="sn3_1" class="player-name-input score-name" placeholder="プレイヤー3" autocomplete="off">
+              <input id="s3_1" type="number" value="200" class="score-num">
+            </div>
+            <div class="score-row" data-player-slot="4">
+              <select id="sr4_1" class="score-row-rank" aria-label="プレイヤー4の順位">
+                <option value="1">1位</option><option value="2">2位</option><option value="3">3位</option><option value="4" selected>4位</option>
+              </select>
+              <input id="sn4_1" class="player-name-input score-name" placeholder="プレイヤー4" autocomplete="off">
+              <input id="s4_1" type="number" value="100" class="score-num">
+            </div>
+            </div>
+          </fieldset>
         </div>
-        <div class="score-row" data-player-slot="2">
-          <select id="sr2_1" class="score-row-rank" aria-label="プレイヤー2の順位">
-            <option value="1">1位</option><option value="2" selected>2位</option><option value="3">3位</option><option value="4">4位</option>
-          </select>
-          <input id="sn2_1" class="player-name-input score-name" placeholder="プレイヤー2" autocomplete="off">
-          <input id="s2_1" type="number" value="300" class="score-num">
-        </div>
-        <div class="score-row" data-player-slot="3">
-          <select id="sr3_1" class="score-row-rank" aria-label="プレイヤー3の順位">
-            <option value="1">1位</option><option value="2">2位</option><option value="3" selected>3位</option><option value="4">4位</option>
-          </select>
-          <input id="sn3_1" class="player-name-input score-name" placeholder="プレイヤー3" autocomplete="off">
-          <input id="s3_1" type="number" value="200" class="score-num">
-        </div>
-        <div class="score-row" data-player-slot="4">
-          <select id="sr4_1" class="score-row-rank" aria-label="プレイヤー4の順位">
-            <option value="1">1位</option><option value="2">2位</option><option value="3">3位</option><option value="4" selected>4位</option>
-          </select>
-          <input id="sn4_1" class="player-name-input score-name" placeholder="プレイヤー4" autocomplete="off">
-          <input id="s4_1" type="number" value="100" class="score-num">
-        </div>
-        </div>
-      </fieldset>
 
-      <fieldset>
-        <legend>計算結果</legend>
-        <div class="results">
-          <div class="card"><div class="rank">1位<span id="rn1_1" class="rank-name"></span></div><div id="r1_1" class="sumline">—</div></div>
-          <div class="card"><div class="rank">2位<span id="rn2_1" class="rank-name"></span></div><div id="r2_1" class="sumline">—</div></div>
-          <div class="card"><div class="rank">3位<span id="rn3_1" class="rank-name"></span></div><div id="r3_1" class="sumline">—</div></div>
-          <div class="card"><div class="rank">4位<span id="rn4_1" class="rank-name"></span></div><div id="r4_1" class="sumline">—</div></div>
-        </div>
-        <div class="footer muted">出目（pt）の合計は常に0になります。</div>
-      </fieldset>
+        <div class="col-right">
+          <fieldset>
+            <legend>計算結果</legend>
+            <div class="results">
+              <div class="card"><div class="rank">1位<span id="rn1_1" class="rank-name"></span></div><div id="r1_1" class="sumline">—</div></div>
+              <div class="card"><div class="rank">2位<span id="rn2_1" class="rank-name"></span></div><div id="r2_1" class="sumline">—</div></div>
+              <div class="card"><div class="rank">3位<span id="rn3_1" class="rank-name"></span></div><div id="r3_1" class="sumline">—</div></div>
+              <div class="card"><div class="rank">4位<span id="rn4_1" class="rank-name"></span></div><div id="r4_1" class="sumline">—</div></div>
+            </div>
+            <div class="footer muted">出目（pt）の合計は常に0になります。</div>
+          </fieldset>
 
-      <!-- 記録エリア -->
-      <div id="record-area">
-        <div id="record-needs-login" class="login-hint">
-          <p class="muted">記録するには「戦績記録」タブでログインしてください。</p>
-        </div>
-        <div id="record-logged-in" style="display:none">
-          <div class="record-summary">
-            <span id="record-source-label" class="record-source-badge">点数のみ</span>
-            <span id="record-preview" class="record-preview"></span>
-            <button id="record-clear-table" class="record-clear-btn" type="button" style="display:none">取り込み解除</button>
-          </div>
-          <div class="record-actions">
-            <button id="record-btn" class="record-btn">試合記録</button>
-            <span id="record-success" class="record-msg"></span>
+          <!-- 記録エリア -->
+          <div id="record-area">
+            <div id="record-needs-login" class="login-hint">
+              <p class="muted">記録するには「戦績記録」タブでログインしてください。</p>
+            </div>
+            <div id="record-logged-in" style="display:none">
+              <div class="record-summary">
+                <span id="record-source-label" class="record-source-badge">点数のみ</span>
+                <span id="record-preview" class="record-preview"></span>
+                <button id="record-clear-table" class="record-clear-btn" type="button" style="display:none">取り込み解除</button>
+              </div>
+              <div class="record-actions">
+                <button id="record-btn" class="record-btn">試合記録</button>
+                <span id="record-success" class="record-msg"></span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -140,35 +148,89 @@
 
     <!-- タブ2：総合ポイント精算 -->
     <div id="t2" class="tab">
-      <fieldset>
-        <legend>設定</legend>
-        <label>レート
-          <select id="rate2">
-            <option value="10">10（テンイチ）</option>
-            <option value="20">20（テンニ）</option>
-            <option value="30" selected>30（テンサン）</option>
-            <option value="50">50（テンゴ）</option>
-            <option value="100">100（テンピン）</option>
-          </select>
-        </label>
-      </fieldset>
+      <div class="tab-grid-2col">
+        <div class="col-left">
+          <fieldset>
+            <legend>設定</legend>
+            <label>レート
+              <select id="rate2">
+                <option value="10">10（テンイチ）</option>
+                <option value="20">20（テンニ）</option>
+                <option value="30" selected>30（テンサン）</option>
+                <option value="50">50（テンゴ）</option>
+                <option value="100">100（テンピン）</option>
+              </select>
+            </label>
+          </fieldset>
 
-      <fieldset>
-        <legend>プレイヤーの総合ポイント</legend>
-        <div class="grid2">
-          <label>名前1 <input id="n1_2" placeholder="1" /><input id="p1_2" type="number" value="0" /></label>
-          <label>名前2 <input id="n2_2" placeholder="2" /><input id="p2_2" type="number" value="0" /></label>
-          <label>名前3 <input id="n3_2" placeholder="3" /><input id="p3_2" type="number" value="0" /></label>
-          <label>名前4 <input id="n4_2" placeholder="4" /><input id="p4_2" type="number" value="0" /></label>
+          <fieldset>
+            <legend>プレイヤーの総合ポイント</legend>
+            <div class="grid2">
+              <label>名前1 <input id="n1_2" placeholder="1" /><input id="p1_2" type="number" value="0" /></label>
+              <label>名前2 <input id="n2_2" placeholder="2" /><input id="p2_2" type="number" value="0" /></label>
+              <label>名前3 <input id="n3_2" placeholder="3" /><input id="p3_2" type="number" value="0" /></label>
+              <label>名前4 <input id="n4_2" placeholder="4" /><input id="p4_2" type="number" value="0" /></label>
+            </div>
+            <div class="note">※ ポイント合計は ±0 にしてください。合計が0以外の時は結果を表示しません。</div>
+          </fieldset>
         </div>
-        <div class="note">※ ポイント合計は ±0 にしてください。合計が0以外の時は結果を表示しません。</div>
-      </fieldset>
 
-      <fieldset>
-        <legend>精算結果</legend>
-        <ul id="resultList2"></ul>
-        <div id="check2" class="note"></div>
-      </fieldset>
+        <div class="col-right">
+          <fieldset>
+            <legend>精算結果</legend>
+            <ul id="resultList2"></ul>
+            <div id="check2" class="note"></div>
+          </fieldset>
+        </div>
+      </div>
+    </div>
+
+    <!-- タブ4：逆転計算 -->
+    <div id="t4" class="tab">
+      <div class="tab-grid-2col">
+        <div class="col-left">
+          <fieldset>
+            <legend>設定</legend>
+            <div class="settings-row4">
+              <label>本場数
+                <input id="honba4" type="number" value="0" min="0">
+              </label>
+              <label>供託（本）
+                <input id="kyoutaku4" type="number" value="0" min="0">
+              </label>
+            </div>
+            <label class="checklabel">
+              <input id="tie4" type="checkbox">
+              同点可（同点は起家に近い方が上位）
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>プレイヤー</legend>
+            <div class="player-col-hdr">
+              <span class="opp-name ph-label">名前</span>
+              <span class="ph-score ph-label">点数（百点）</span>
+              <span class="ph-role ph-label">役割</span>
+              <span class="opp-del-placeholder"></span>
+            </div>
+            <div class="opp-row opp-row-me">
+              <span class="opp-name my-name-label">自分</span>
+              <input id="my-score4" class="opp-score score-num" type="number" value="250" min="0">
+              <select id="my-role4" class="opp-role">
+                <option value="ko">子</option>
+                <option value="oya">親</option>
+              </select>
+              <span class="opp-del-placeholder"></span>
+            </div>
+            <div id="opponents4"></div>
+            <button id="add-opp4" class="logout-btn" style="margin-top:8px">＋ 相手追加</button>
+          </fieldset>
+        </div>
+
+        <div class="col-right">
+          <div id="result4"></div>
+        </div>
+      </div>
     </div>
 
     <!-- タブ3：戦績記録 -->
@@ -204,21 +266,24 @@
         <!-- 試合一覧 -->
         <div id="sessions-list"></div>
 
-        <!-- 全期間集計 -->
-        <div id="alltime-section" style="display:none">
-          <fieldset>
-            <legend>全期間集計</legend>
-            <div id="alltime-table"></div>
-          </fieldset>
-        </div>
+        <!-- 下部2カラムエリア (全期間集計 / プレイヤー一覧) -->
+        <div class="tab3-bottom-grid">
+          <!-- 全期間集計 -->
+          <div id="alltime-section" style="display:none">
+            <fieldset>
+              <legend>全期間集計</legend>
+              <div id="alltime-table"></div>
+            </fieldset>
+          </div>
 
-        <!-- プレイヤー一覧 -->
-        <div id="player-history-section" style="display:none">
-          <fieldset>
-            <legend>プレイヤー一覧</legend>
-            <p class="player-list-note">名前変更は過去の試合にも反映されます。成績・試合履歴は残ります。</p>
-            <div id="player-history-list"></div>
-          </fieldset>
+          <!-- プレイヤー一覧 -->
+          <div id="player-history-section" style="display:none">
+            <fieldset>
+              <legend>プレイヤー一覧</legend>
+              <p class="player-list-note">名前変更は過去の試合にも反映されます。成績・試合履歴は残ります。</p>
+              <div id="player-history-list"></div>
+            </fieldset>
+          </div>
         </div>
 
         <dialog id="player-delete-dialog" class="player-delete-dialog" aria-labelledby="player-delete-title">
@@ -249,48 +314,6 @@
           </div>
         </dialog>
       </div>
-    </div>
-
-    <!-- タブ4：逆転計算 -->
-    <div id="t4" class="tab">
-      <fieldset>
-        <legend>設定</legend>
-        <div class="settings-row4">
-          <label>本場数
-            <input id="honba4" type="number" value="0" min="0">
-          </label>
-          <label>供託（本）
-            <input id="kyoutaku4" type="number" value="0" min="0">
-          </label>
-        </div>
-        <label class="checklabel">
-          <input id="tie4" type="checkbox">
-          同点可（同点は起家に近い方が上位）
-        </label>
-      </fieldset>
-
-      <fieldset>
-        <legend>プレイヤー</legend>
-        <div class="player-col-hdr">
-          <span class="opp-name ph-label">名前</span>
-          <span class="ph-score ph-label">点数（百点）</span>
-          <span class="ph-role ph-label">役割</span>
-          <span class="opp-del-placeholder"></span>
-        </div>
-        <div class="opp-row opp-row-me">
-          <span class="opp-name my-name-label">自分</span>
-          <input id="my-score4" class="opp-score score-num" type="number" value="250" min="0">
-          <select id="my-role4" class="opp-role">
-            <option value="ko">子</option>
-            <option value="oya">親</option>
-          </select>
-          <span class="opp-del-placeholder"></span>
-        </div>
-        <div id="opponents4"></div>
-        <button id="add-opp4" class="logout-btn" style="margin-top:8px">＋ 相手追加</button>
-      </fieldset>
-
-      <div id="result4"></div>
     </div>
 
     </div><!-- /.page-card -->

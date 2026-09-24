@@ -6,6 +6,21 @@
 body{ padding-bottom: 40px; }
 .wrap{ max-width: var(--max); margin: 0 auto; width: 100%; box-sizing: border-box; overflow-x: hidden; padding: 20px 20px 0; }
 
+/* Responsive 2-column layout helpers */
+.tab-grid-2col {
+  display: block;
+}
+.tab-grid-2col > .col-left,
+.tab-grid-2col > .col-right {
+  min-width: 0;
+}
+.tab3-bottom-grid {
+  display: block;
+}
+.settings-grid-tab1 {
+  display: block;
+}
+
 /* =========================
    Fieldset / form controls
 ========================= */
@@ -1199,3 +1214,131 @@ input[type="checkbox"]{ width:auto; }
   border-top: 1px dashed var(--border-soft, #e4e4e4);
   padding-top: 4px;
 }
+
+/* =========================
+   Tab 2: Settlement List
+========================= */
+#resultList2 {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#resultList2 li {
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid var(--border-soft, #e4e4e4);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+/* =========================
+   Desktop / Wide Screen Layout (PC)
+========================= */
+@media (min-width: 768px) {
+  :root { --max: 960px; }
+  .wrap { padding: 24px 20px 0; }
+  .page-card { padding: 24px 28px; }
+
+  /* 2-column grid layout */
+  .tab-grid-2col {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 20px 24px;
+    align-items: start;
+  }
+  .tab-grid-2col > .col-left,
+  .tab-grid-2col > .col-right {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .tab-grid-2col > .col-left > fieldset,
+  .tab-grid-2col > .col-right > fieldset {
+    margin: 0;
+  }
+
+  /* Tab 1: Settings grid */
+  .settings-grid-tab1 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 12px;
+  }
+  .settings-grid-tab1 > label {
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .settings-grid-tab1 > label > input,
+  .settings-grid-tab1 > label > select {
+    width: 100%;
+    margin-top: 0;
+    flex: none;
+  }
+
+  #record-area {
+    margin-top: 0;
+  }
+
+  /* Tab 3: Bottom grid (alltime & player list) */
+  .tab3-bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 24px;
+    align-items: start;
+    margin-top: 12px;
+  }
+  .tab3-bottom-grid > div > fieldset {
+    margin: 0;
+  }
+
+  /* Tab 4: Results */
+  #result4 .rev-card:first-child {
+    margin-top: 0;
+  }
+
+  /* Table and card spacing enhancements */
+  .records-tbl th,
+  .records-tbl td {
+    padding: 8px 4px;
+    font-size: 13.5px;
+  }
+  .th-match,
+  .col-match {
+    width: 32px;
+  }
+  .th-actions,
+  .col-actions {
+    width: 54px;
+  }
+
+  .tabs {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .tabbtn {
+    padding: 8px 18px;
+    font-size: 14px;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .tabbtn:hover:not(.active) {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+  }
+
+  .card {
+    padding: 14px 16px;
+  }
+
+  .score-row .score-num {
+    width: 90px;
+  }
+}
+
