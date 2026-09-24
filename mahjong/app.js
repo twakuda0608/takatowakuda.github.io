@@ -812,18 +812,152 @@ function fitCanvasText(ctx, value, maxWidth) {
   return `${fitted}…`;
 }
 
-async function exportSessionImage(group) {
+let currentPreviewObjectUrl = null;
+let currentPreviewBlob = null;
+let currentPreviewFileName = '';
+
+function initImagePreviewDialog() {
+  const dialog = document.getElementById('image-preview-dialog');
+  if (!dialog) return;
+
+  const closeBtn = document.getElementById('image-preview-close-btn');
+  const cancelBtn = document.getElementById('image-preview-cancel-btn');
+  const downloadBtn = document.getElementById('image-preview-download-btn');
+
+  closeBtn?.addEventListener('click', () => dialog.close());
+  cancelBtn?.addEventListener('click', () => dialog.close());
+
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) dialog.close();
+  });
+
+  dialog.addEventListener('close', () => {
+    const img = document.getElementById('image-preview-img');
+    if (img) img.src = '';
+    if (currentPreviewObjectUrl) {
+      URL.revokeObjectURL(currentPreviewObjectUrl);
+      currentPreviewObjectUrl = null;
+    }
+    currentPreviewBlob = null;
+    currentPreviewFileName = '';
+  });
+
+  downloadBtn?.addEventListener('click', () => {
+    if (!currentPreviewBlob || !currentPreviewFileName) return;
+    const url = URL.createObjectURL(currentPreviewBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = currentPreviewFileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+}
+
+function openImagePreview(blob, fileName) {
+  const dialog = document.getElementById('image-preview-dialog');
+  const img = document.getElementById('image-preview-img');
+  if (!dialog || !img) return;
+
+  if (currentPreviewObjectUrl) {
+    URL.revokeObjectURL(currentPreviewObjectUrl);
+    currentPreviewObjectUrl = null;
+  }
+
+  currentPreviewBlob = blob;
+  currentPreviewFileName = fileName;
+  currentPreviewObjectUrl = URL.createObjectURL(blob);
+  img.src = currentPreviewObjectUrl;
+
+  dialog.showModal();
+}
+
+function getSessionDetailedStats(group) {
+  const stats = group.colPlayers.map(name => ({
+    name,
+    ron: 0,
+    tsumo: 0,
+    houju: 0,
+    riichi: 0,
+    totalRounds: 0,
+    hasStats: false
+  }));
+
+  let hasAnyStats = false;
+
+  group.matches.forEach(m => {
+    const tg = m.tableGame;
+    if (!tg) return;
+    hasAnyStats = true;
+    const roundLog = tg.roundLog || [];
+    const riichiCounts = tg.riichiCounts || [0, 0, 0, 0];
+    const seatToGroup = [];
+    const tgNames = (Array.isArray(tg.playerNames) && tg.playerNames.length)
+      ? tg.playerNames.slice()
+      : (m.players || []).map(p => p.name);
+
+    tgNames.forEach(nm => {
+      const gi = group.colPlayers.indexOf(nm);
+      seatToGroup.push(gi);
+    });
+
+    const tgN = tgNames.length;
+    const validRounds = roundLog.filter(e => e.type === 'agari' || e.type === 'ryukyoku').length;
+
+    for (let si = 0; si < tgN; si++) {
+      const gi = seatToGroup[si];
+      if (gi < 0) continue;
+      stats[gi].riichi += (riichiCounts[si] || 0);
+      stats[gi].totalRounds += validRounds;
+      stats[gi].hasStats = true;
+    }
+
+    for (const ev of roundLog) {
+      if (ev.type === 'agari') {
+        const winners = ev.winnerIdxs || (ev.winnerIdx >= 0 ? [ev.winnerIdx] : []);
+        if (ev.winType === 'ron') {
+          winners.forEach(wi => {
+            const gi = seatToGroup[wi];
+            if (gi >= 0) stats[gi].ron++;
+          });
+          const li = seatToGroup[ev.loserIdx];
+          if (li >= 0) stats[li].houju++;
+        } else {
+          winners.forEach(wi => {
+            const gi = seatToGroup[wi];
+            if (gi >= 0) stats[gi].tsumo++;
+          });
+        }
+      }
+    }
+  });
+
+  return { hasAnyStats, stats };
+}
+
+async function generateSessionImage(group) {
   const width = 1200;
   const margin = 72;
   const contentWidth = width - margin * 2;
   const stats = getSessionStats(group);
   const playerNames = stats.map(stat => stat.name);
+  const detailedStats = getSessionDetailedStats(group);
   const summaryRowHeight = 76;
   const matchHeaderHeight = 70;
   const matchRowHeight = 82;
   const totalRowHeight = 78;
-  const height = 176 + 58 + stats.length * summaryRowHeight + 72 + matchHeaderHeight +
-    group.matches.length * matchRowHeight + totalRowHeight + 96;
+  const detailedHeaderHeight = 56;
+  const detailedRowHeight = 62;
+
+  let totalHeight = 176 + 58 + stats.length * summaryRowHeight;
+  totalHeight += 48 + 52 + matchHeaderHeight + group.matches.length * matchRowHeight + totalRowHeight;
+  if (detailedStats.hasAnyStats) {
+    totalHeight += 48 + 52 + detailedHeaderHeight + stats.length * detailedRowHeight;
+  }
+  totalHeight += 64;
+
+  const height = totalHeight;
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -889,8 +1023,9 @@ async function exportSessionImage(group) {
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
   });
-  y += stats.length * summaryRowHeight + 52;
+  y += stats.length * summaryRowHeight;
 
+  y += 48;
   ctx.fillStyle = colors.brand;
   ctx.font = `700 24px ${fontFamily}`;
   ctx.fillText('各試合', margin, y + 32);
@@ -963,23 +1098,105 @@ async function exportSessionImage(group) {
     ctx.font = `700 26px ${fontFamily}`;
     ctx.fillText(fmtPt(stat.total), centerX, y + totalRowHeight / 2);
   });
+  y += totalRowHeight;
 
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = `500 16px ${fontFamily}`;
-  ctx.fillText('MAHJONG RESULTS', width / 2, height - 62);
+  // プレイヤー統計（ロン・ツモ・放銃・リーチ・和了率・放銃率）
+  if (detailedStats.hasAnyStats) {
+    y += 48;
+    ctx.fillStyle = colors.brand;
+    ctx.font = `700 24px ${fontFamily}`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('プレイヤー統計', margin, y + 32);
+    y += 52;
+
+    drawRoundRect(ctx, margin, y, contentWidth, detailedHeaderHeight, 14, colors.pale);
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = colors.muted;
+    ctx.font = `700 17px ${fontFamily}`;
+
+    const colWidths = [256, 130, 130, 130, 130, 140, 140];
+    const colHeaders = ['名前', 'ロン', 'ツモ', '放銃', 'リーチ', '和了率', '放銃率'];
+
+    let curX = margin;
+    ctx.textAlign = 'left';
+    ctx.fillText(colHeaders[0], curX + 24, y + detailedHeaderHeight / 2);
+    curX += colWidths[0];
+
+    ctx.textAlign = 'center';
+    for (let c = 1; c < colHeaders.length; c++) {
+      ctx.fillText(colHeaders[c], curX + colWidths[c] / 2, y + detailedHeaderHeight / 2);
+      curX += colWidths[c];
+    }
+    y += detailedHeaderHeight;
+
+    stats.forEach((stat, index) => {
+      const pStat = detailedStats.stats.find(item => item.name === stat.name) || {
+        ron: 0, tsumo: 0, houju: 0, riichi: 0, totalRounds: 0, hasStats: false
+      };
+      const rowY = y + index * detailedRowHeight;
+      ctx.fillStyle = index % 2 ? '#fbfdff' : colors.white;
+      ctx.fillRect(margin, rowY, contentWidth, detailedRowHeight);
+      ctx.strokeStyle = colors.line;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(margin, rowY + detailedRowHeight);
+      ctx.lineTo(margin + contentWidth, rowY + detailedRowHeight);
+      ctx.stroke();
+
+      const agari = pStat.ron + pStat.tsumo;
+      const rounds = pStat.totalRounds || 0;
+      const agariPct = rounds > 0 ? `${Math.round(agari / rounds * 100)}%` : '—';
+      const houjuPct = rounds > 0 ? `${Math.round(pStat.houju / rounds * 100)}%` : '—';
+
+      let rowX = margin;
+      // 名前
+      ctx.textAlign = 'left';
+      ctx.fillStyle = colors.ink;
+      ctx.font = `700 20px ${fontFamily}`;
+      ctx.fillText(fitCanvasText(ctx, stat.name, colWidths[0] - 36), rowX + 24, rowY + detailedRowHeight / 2);
+      rowX += colWidths[0];
+
+      // ロン
+      ctx.textAlign = 'center';
+      ctx.font = `600 20px ${fontFamily}`;
+      ctx.fillStyle = colors.ink;
+      ctx.fillText(pStat.hasStats ? String(pStat.ron) : '—', rowX + colWidths[1] / 2, rowY + detailedRowHeight / 2);
+      rowX += colWidths[1];
+
+      // ツモ
+      ctx.fillText(pStat.hasStats ? String(pStat.tsumo) : '—', rowX + colWidths[2] / 2, rowY + detailedRowHeight / 2);
+      rowX += colWidths[2];
+
+      // 放銃
+      ctx.fillStyle = pStat.houju > 0 ? colors.negative : colors.ink;
+      ctx.fillText(pStat.hasStats ? String(pStat.houju) : '—', rowX + colWidths[3] / 2, rowY + detailedRowHeight / 2);
+      rowX += colWidths[3];
+
+      // リーチ
+      ctx.fillStyle = colors.ink;
+      ctx.fillText(pStat.hasStats ? String(pStat.riichi) : '—', rowX + colWidths[4] / 2, rowY + detailedRowHeight / 2);
+      rowX += colWidths[4];
+
+      // 和了率
+      ctx.font = `700 20px ${fontFamily}`;
+      ctx.fillStyle = (rounds > 0 && agari > 0) ? colors.positive : colors.ink;
+      ctx.fillText(agariPct, rowX + colWidths[5] / 2, rowY + detailedRowHeight / 2);
+      rowX += colWidths[5];
+
+      // 放銃率
+      ctx.fillStyle = (rounds > 0 && pStat.houju > 0) ? colors.negative : colors.muted;
+      ctx.fillText(houjuPct, rowX + colWidths[6] / 2, rowY + detailedRowHeight / 2);
+    });
+
+    y += stats.length * detailedRowHeight;
+  }
 
   const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
   if (!blob) throw new Error('Image creation failed');
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
   const safeDate = group.date.replace(/[\\/:*?"<>|\s()（）]+/g, '-').replace(/-+$/g, '');
-  link.href = url;
-  link.download = `麻雀_日別成績_${safeDate}.png`;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const fileName = `麻雀_日別成績_${safeDate}.png`;
+  return { blob, fileName };
 }
 
 function syncTableGameNames(tableGame, players) {
@@ -1144,7 +1361,8 @@ function renderMatches(allMatches) {
       btn.disabled = true;
       btn.textContent = '作成中…';
       try {
-        await exportSessionImage(group);
+        const { blob, fileName } = await generateSessionImage(group);
+        openImagePreview(blob, fileName);
       } catch (err) {
         console.error('結果画像の作成エラー:', err);
         alert('結果画像を作成できませんでした。');
@@ -1672,3 +1890,6 @@ function renderAlltimeTotals(allMatches) {
       </tbody>
     </table>`;
 }
+
+initImagePreviewDialog();
+

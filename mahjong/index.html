@@ -232,6 +232,22 @@
             </div>
           </form>
         </dialog>
+
+        <dialog id="image-preview-dialog" class="image-preview-dialog" aria-labelledby="image-preview-title">
+          <div class="image-preview-container">
+            <div class="image-preview-header">
+              <h2 id="image-preview-title">結果画像プレビュー</h2>
+              <button type="button" id="image-preview-close-btn" class="image-preview-close" aria-label="閉じる">×</button>
+            </div>
+            <div class="image-preview-body">
+              <img id="image-preview-img" src="" alt="結果画像プレビュー">
+            </div>
+            <div class="image-preview-actions">
+              <button type="button" id="image-preview-cancel-btn" class="history-cancel-btn">閉じる</button>
+              <button type="button" id="image-preview-download-btn" class="image-preview-save-btn">画像保存</button>
+            </div>
+          </div>
+        </dialog>
       </div>
     </div>
 
