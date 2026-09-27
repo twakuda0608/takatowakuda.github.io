@@ -1,0 +1,17 @@
+{
+  "name": "Takato Wakuda",
+  "short_name": "Takato Wakuda",
+  "description": "個人ツール・Webアプリポータル",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#0078d7",
+  "icons": [
+    {
+      "src": "/Wave.jpg",
+      "sizes": "259x194",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
