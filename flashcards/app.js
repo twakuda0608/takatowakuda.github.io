@@ -40,7 +40,11 @@ let studyOrderMode = "normal";
 let lastViewedCardId = null;
 let pointerStartX = 0;
 let pointerStartY = 0;
+let pointerStartTime = 0;
+let cardActivePointerId = null;
 let pointerTracking = false;
+let isDraggingCard = false;
+let isCardBusy = false;
 let flipTimer = null;
 let dragCardId = null;
 let currentUndo = null;
@@ -73,7 +77,11 @@ let drillState = {
 
 let drillPointerStartX = 0;
 let drillPointerStartY = 0;
+let drillPointerStartTime = 0;
+let drillActivePointerId = null;
 let drillPointerTracking = false;
+let drillIsDragging = false;
+let drillIsBusy = false;
 let drillFlipTimer = null;
 
 const els = {
@@ -1413,44 +1421,79 @@ function resetSwipeHints() {
 }
 
 function startFlick(event) {
+  if (isCardBusy) return;
   if (event.target.closest(".card-quick-edit-btn")) return;
   if (!cards.length) return;
+  if (event.isPrimary === false) return;
+  if (event.button !== undefined && event.button !== 0) return;
+
   pointerTracking = true;
+  isDraggingCard = false;
+  cardActivePointerId = event.pointerId;
   pointerStartX = event.clientX;
   pointerStartY = event.clientY;
+  pointerStartTime = Date.now();
   els.flashcard.dataset.dragged = "false";
-  els.flashcard.setPointerCapture?.(event.pointerId);
+  try {
+    els.flashcard.setPointerCapture?.(event.pointerId);
+  } catch (_) {}
 }
 
 function moveFlick(event) {
-  if (!pointerTracking) return;
+  if (!pointerTracking || event.pointerId !== cardActivePointerId) return;
   const dx = event.clientX - pointerStartX;
   const dy = event.clientY - pointerStartY;
-  if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return;
-  event.preventDefault();
-  els.flashcard.dataset.dragged = "true";
+  const dist = Math.hypot(dx, dy);
+
+  if (!isDraggingCard && dist < 6) return;
+
+  if (!isDraggingCard) {
+    isDraggingCard = true;
+    els.flashcard.dataset.dragged = "true";
+    els.flashcard.classList.add("is-dragging");
+  }
+
+  if (event.cancelable) {
+    event.preventDefault();
+  }
+
   const limited = Math.max(-140, Math.min(140, dx));
   els.flashcard.style.transform = `translateX(${limited}px) rotate(${limited / 14}deg)`;
 
   if (dx > 0) {
-    const opacity = Math.min(1, Math.max(0, (dx - 10) / 60));
+    const opacity = Math.min(1, Math.max(0, (dx - 8) / 50));
     if (els.swipeHintRight) els.swipeHintRight.style.opacity = String(opacity);
     if (els.swipeHintLeft) els.swipeHintLeft.style.opacity = "0";
   } else {
-    const opacity = Math.min(1, Math.max(0, (-dx - 10) / 60));
+    const opacity = Math.min(1, Math.max(0, (-dx - 8) / 50));
     if (els.swipeHintLeft) els.swipeHintLeft.style.opacity = String(opacity);
     if (els.swipeHintRight) els.swipeHintRight.style.opacity = "0";
   }
 }
 
 function endFlick(event) {
-  if (!pointerTracking) return;
+  if (!pointerTracking || (event.pointerId !== undefined && event.pointerId !== cardActivePointerId)) return;
+  pointerTracking = false;
+  els.flashcard.classList.remove("is-dragging");
+  resetSwipeHints();
+  try {
+    if (els.flashcard.hasPointerCapture?.(event.pointerId)) {
+      els.flashcard.releasePointerCapture(event.pointerId);
+    }
+  } catch (_) {}
+  cardActivePointerId = null;
+
   const dx = event.clientX - pointerStartX;
   const dy = event.clientY - pointerStartY;
-  pointerTracking = false;
-  resetSwipeHints();
+  const dt = Math.max(1, Date.now() - pointerStartTime);
+  const absDx = Math.abs(dx);
+  const absDy = Math.abs(dy);
+  const vx = absDx / dt;
 
-  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.1) {
+  const isFastFlick = dt <= 350 && absDx >= 30 && (vx >= 0.25 || absDx >= absDy * 0.7);
+  const isFarDrag = absDx >= 45 && absDx >= absDy * 0.7;
+
+  if (isFastFlick || isFarDrag) {
     els.flashcard.style.transform = "";
     if (dx > 0) {
       swipeMarkCard(true);
@@ -1462,17 +1505,28 @@ function endFlick(event) {
   }
 }
 
-function cancelFlick() {
+function cancelFlick(event) {
+  if (event && event.pointerId !== undefined && cardActivePointerId !== null && event.pointerId !== cardActivePointerId) return;
   pointerTracking = false;
+  isDraggingCard = false;
+  els.flashcard.classList.remove("is-dragging");
   resetSwipeHints();
   els.flashcard.style.transform = "";
+  try {
+    if (event?.pointerId && els.flashcard.hasPointerCapture?.(event.pointerId)) {
+      els.flashcard.releasePointerCapture(event.pointerId);
+    }
+  } catch (_) {}
+  cardActivePointerId = null;
 }
 
 let cardSwipeHistory = [];
 
 async function swipeMarkCard(isKnown) {
+  if (isCardBusy) return;
   const card = cards[currentIndex];
   if (!card) return;
+  isCardBusy = true;
 
   cardSwipeHistory.push({
     cardId: card.id,
@@ -1506,6 +1560,7 @@ async function swipeMarkCard(isKnown) {
     }
     showingBack = false;
     render();
+    isCardBusy = false;
   }, 200);
 
   await saveWithStatus(() => updateDoc(cardDoc(card.id), data), { silent: true });
@@ -2317,6 +2372,7 @@ function renderDrillStart(deckCards) {
 }
 
 function startDrillSession(resume = false) {
+  drillIsBusy = false;
   drillHistory = [];
   const deckCards = getOrderedDeckCards();
   if (!deckCards.length) {
@@ -2395,6 +2451,7 @@ function initNextDrillSet() {
 let drillHistory = [];
 
 function renderDrillPlay() {
+  drillIsBusy = false;
   const cardId = drillState.roundCards[drillState.roundIndex];
   const card = allCards.find((c) => c.id === cardId);
   const totalDeckCards = getOrderedDeckCards().length;
@@ -2480,6 +2537,8 @@ function flipDrillCard() {
 }
 
 async function handleDrillAnswer(isKnown) {
+  if (drillIsBusy) return;
+  drillIsBusy = true;
   const cardId = drillState.roundCards[drillState.roundIndex];
   const card = allCards.find((c) => c.id === cardId);
 
@@ -2555,6 +2614,7 @@ async function handleDrillAnswer(isKnown) {
     } else {
       processDrillRoundCompletion();
     }
+    drillIsBusy = false;
   }, 200);
 }
 
@@ -2753,43 +2813,78 @@ function resetDrillSwipeHints() {
 }
 
 function startDrillFlick(event) {
+  if (drillIsBusy) return;
   if (event.target.closest(".card-quick-edit-btn")) return;
+  if (event.isPrimary === false) return;
+  if (event.button !== undefined && event.button !== 0) return;
+
   drillPointerTracking = true;
+  drillIsDragging = false;
+  drillActivePointerId = event.pointerId;
   drillPointerStartX = event.clientX;
   drillPointerStartY = event.clientY;
+  drillPointerStartTime = Date.now();
   els.drillFlashcard.dataset.dragged = "false";
-  els.drillFlashcard.setPointerCapture?.(event.pointerId);
+  try {
+    els.drillFlashcard.setPointerCapture?.(event.pointerId);
+  } catch (_) {}
 }
 
 function moveDrillFlick(event) {
-  if (!drillPointerTracking) return;
+  if (!drillPointerTracking || event.pointerId !== drillActivePointerId) return;
   const dx = event.clientX - drillPointerStartX;
   const dy = event.clientY - drillPointerStartY;
-  if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return;
-  event.preventDefault();
-  els.drillFlashcard.dataset.dragged = "true";
+  const dist = Math.hypot(dx, dy);
+
+  if (!drillIsDragging && dist < 6) return;
+
+  if (!drillIsDragging) {
+    drillIsDragging = true;
+    els.drillFlashcard.dataset.dragged = "true";
+    els.drillFlashcard.classList.add("is-dragging");
+  }
+
+  if (event.cancelable) {
+    event.preventDefault();
+  }
+
   const limited = Math.max(-140, Math.min(140, dx));
   els.drillFlashcard.style.transform = `translateX(${limited}px) rotate(${limited / 14}deg)`;
 
   if (dx > 0) {
-    const opacity = Math.min(1, Math.max(0, (dx - 10) / 60));
+    const opacity = Math.min(1, Math.max(0, (dx - 8) / 50));
     if (els.drillSwipeHintRight) els.drillSwipeHintRight.style.opacity = String(opacity);
     if (els.drillSwipeHintLeft) els.drillSwipeHintLeft.style.opacity = "0";
   } else {
-    const opacity = Math.min(1, Math.max(0, (-dx - 10) / 60));
+    const opacity = Math.min(1, Math.max(0, (-dx - 8) / 50));
     if (els.drillSwipeHintLeft) els.drillSwipeHintLeft.style.opacity = String(opacity);
     if (els.drillSwipeHintRight) els.drillSwipeHintRight.style.opacity = "0";
   }
 }
 
 function endDrillFlick(event) {
-  if (!drillPointerTracking) return;
+  if (!drillPointerTracking || (event.pointerId !== undefined && event.pointerId !== drillActivePointerId)) return;
+  drillPointerTracking = false;
+  els.drillFlashcard.classList.remove("is-dragging");
+  resetDrillSwipeHints();
+  try {
+    if (els.drillFlashcard.hasPointerCapture?.(event.pointerId)) {
+      els.drillFlashcard.releasePointerCapture(event.pointerId);
+    }
+  } catch (_) {}
+  drillActivePointerId = null;
+
   const dx = event.clientX - drillPointerStartX;
   const dy = event.clientY - drillPointerStartY;
-  drillPointerTracking = false;
-  resetDrillSwipeHints();
+  const dt = Math.max(1, Date.now() - drillPointerStartTime);
+  const absDx = Math.abs(dx);
+  const absDy = Math.abs(dy);
+  const vx = absDx / dt;
 
-  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.1) {
+  const isFastFlick = dt <= 350 && absDx >= 30 && (vx >= 0.25 || absDx >= absDy * 0.7);
+  const isFarDrag = absDx >= 45 && absDx >= absDy * 0.7;
+
+  if (isFastFlick || isFarDrag) {
     els.drillFlashcard.style.transform = "";
     if (dx > 0) {
       handleDrillAnswer(true);
@@ -2801,8 +2896,17 @@ function endDrillFlick(event) {
   }
 }
 
-function cancelDrillFlick() {
+function cancelDrillFlick(event) {
+  if (event && event.pointerId !== undefined && drillActivePointerId !== null && event.pointerId !== drillActivePointerId) return;
   drillPointerTracking = false;
+  drillIsDragging = false;
+  els.drillFlashcard.classList.remove("is-dragging");
   resetDrillSwipeHints();
   els.drillFlashcard.style.transform = "";
+  try {
+    if (event?.pointerId && els.drillFlashcard.hasPointerCapture?.(event.pointerId)) {
+      els.drillFlashcard.releasePointerCapture(event.pointerId);
+    }
+  } catch (_) {}
+  drillActivePointerId = null;
 }

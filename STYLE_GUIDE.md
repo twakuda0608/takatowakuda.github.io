@@ -38,7 +38,6 @@
 | `/remaining-time/` | 残り時間計算 | 目標日時までのパタパタ時計風カウントダウン | CSS 3D Transforms, Vanilla JS |
 | `/scaleMeasure/` | 図面スケール計測 | 間取り図・図面の縮尺キャリブレーションと実寸計測 | HTML Canvas API |
 | `/shxtUI/` | クソUI選手権 | あえて使いづらいUIコレクション | Leaflet, jsQR, Vanilla JS |
-| `/sql/` | SQLプレイグラウンド | ブラウザ上で動くSQLite学習環境 | sql.js (WebAssembly SQLite) |
 | `/test/` | 練習用プレイグラウンド | 各種HTML/JS UIコンポーネントの動作実験場 | Vanilla JS |
 | `/timer/` | タイマー | カレンダー連動・時給/経過時間収益計算 | Google Calendar API |
 | `/learn/` | 学習ポータル | プログラミング・IT知識を図解するインタラクティブ集 | SVG / Canvas / DOM アニメーション |

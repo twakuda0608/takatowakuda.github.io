@@ -525,11 +525,17 @@ h1 {
   gap: 12px;
   padding: 22px;
   text-align: center;
-  touch-action: pan-y;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
   transition: transform .16s ease, box-shadow .16s ease;
   transform-origin: center;
   transform-style: preserve-3d;
-  user-select: none;
+}
+
+.flashcard.is-dragging {
+  transition: none !important;
 }
 
 .swipe-hint {
@@ -698,6 +704,7 @@ select:focus {
   max-height: 100%;
   width: 100%;
   overflow-y: auto;
+  touch-action: none;
   color: var(--fc-ink);
   font-size: clamp(2.2rem, 5.5vw, 3.2rem);
   font-weight: 900;
