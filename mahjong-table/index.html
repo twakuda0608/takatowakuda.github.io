@@ -16,25 +16,7 @@
   gtag('config', 'G-5XPYDMQ921');
 </script>
   <link rel="stylesheet" href="/common.css">
-  <!-- DEV BANNER — remove this block when ready -->
-  <style>
-    #dev-banner {
-      position: fixed;
-      top: 56px;
-      left: 0;
-      width: 100%;
-      z-index: 9999;
-      background: rgba(0,0,0,0.55);
-      color: #facc15;
-      font-size: 18px;
-      font-family: system-ui, sans-serif;
-      padding: 8px 24px;
-      text-align: center;
-      line-height: 1.5;
-      pointer-events: none;
-    }
-  </style>
-  <!-- END DEV BANNER -->
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -4208,14 +4190,8 @@
     const pageParams = new URLSearchParams(location.search);
     const isEmbedded = pageParams.get('embedded') === '1';
     const isPersonalView = pageParams.get('view') === 'personal' && !!pageParams.get('room');
-    if (isEmbedded) {
-      const banner = document.getElementById('dev-banner');
-      if (banner) banner.style.display = 'none';
-    }
     if (isPersonalView) {
       document.body.classList.add('personal-view-active');
-      const banner = document.getElementById('dev-banner');
-      if (banner) banner.style.display = 'none';
     }
 
     const WINDS = ['東', '南', '西', '北'];
