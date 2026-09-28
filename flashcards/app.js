@@ -229,7 +229,7 @@ document.querySelectorAll(".mode-tab").forEach((tab) => {
 els.flashcard?.addEventListener("click", (event) => {
   if (!cards.length) return;
   if (event.target.closest("#card-quick-edit-btn") || event.target.closest("#selection-highlight-popover")) return;
-  if (window.getSelection() && window.getSelection().toString().trim().length > 0) return;
+  if (!isSmartphone() && window.getSelection() && window.getSelection().toString().trim().length > 0) return;
   if (els.flashcard.dataset.dragged === "true") {
     els.flashcard.dataset.dragged = "false";
     return;
@@ -428,7 +428,7 @@ els.drillCardQuickEditBtn?.addEventListener("click", (event) => {
 
 els.drillFlashcard?.addEventListener("click", (event) => {
   if (event.target.closest("#drill-card-quick-edit-btn") || event.target.closest("#selection-highlight-popover")) return;
-  if (window.getSelection() && window.getSelection().toString().trim().length > 0) return;
+  if (!isSmartphone() && window.getSelection() && window.getSelection().toString().trim().length > 0) return;
   if (els.drillFlashcard.dataset.dragged === "true") {
     els.drillFlashcard.dataset.dragged = "false";
     return;
@@ -2096,9 +2096,24 @@ function toggleHighlightInTextarea(textarea) {
 
 let selectedTargetInfo = null;
 
+function isSmartphone() {
+  if (typeof window === "undefined") return false;
+  const isMobileUA = /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const isCoarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+  const isSmallScreen = window.matchMedia && window.matchMedia("(max-width: 860px)").matches;
+  const hasTouch = "ontouchstart" in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+  return isMobileUA || isCoarse || (hasTouch && isSmallScreen) || isSmallScreen;
+}
+
 function handleSelectionChange() {
+  if (isSmartphone()) {
+    hideSelectionPopover();
+    return;
+  }
+
   const selection = window.getSelection();
   if (!selection || selection.isCollapsed || !selection.toString().trim()) {
+    hideSelectionPopover();
     return;
   }
 
@@ -2117,6 +2132,7 @@ function handleSelectionChange() {
   const isDrill = els.drillCardMain && (els.drillCardMain.contains(anchor) || els.drillCardMain.contains(focus));
 
   if (!isMain && !isDrill) {
+    hideSelectionPopover();
     return;
   }
 
@@ -2145,6 +2161,8 @@ function handleSelectionChange() {
     const rect = range.getBoundingClientRect();
     if (rect.width > 0 || rect.height > 0) {
       showSelectionPopover(rect.left + rect.width / 2, rect.top + window.scrollY);
+    } else {
+      hideSelectionPopover();
     }
   } catch {
     hideSelectionPopover();
@@ -2152,7 +2170,7 @@ function handleSelectionChange() {
 }
 
 function showSelectionPopover(x, y) {
-  if (!els.selectionHighlightPopover) return;
+  if (isSmartphone() || !els.selectionHighlightPopover) return;
   els.selectionHighlightPopover.hidden = false;
   els.selectionHighlightPopover.style.left = `${Math.round(x)}px`;
   els.selectionHighlightPopover.style.top = `${Math.round(y)}px`;
@@ -2166,7 +2184,7 @@ function hideSelectionPopover() {
 }
 
 async function applyHighlightToSelectedCardText() {
-  if (!selectedTargetInfo) return;
+  if (isSmartphone() || !selectedTargetInfo) return;
   const { cardId, side, selectedText } = selectedTargetInfo;
   const card = allCards.find((c) => c.id === cardId);
   if (!card) return;

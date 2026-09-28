@@ -2246,6 +2246,23 @@ mark.card-highlight {
   animation: popoverFadeIn 0.15s ease-out;
 }
 
+.selection-popover[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 860px), (pointer: coarse), (hover: none) {
+  #selection-highlight-popover,
+  .selection-popover {
+    display: none !important;
+  }
+
+  .card-main {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+}
+
 .selection-popover::after {
   content: "";
   position: absolute;
