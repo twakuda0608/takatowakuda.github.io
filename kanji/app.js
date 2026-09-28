@@ -66,9 +66,6 @@ async function main() {
   // -----------------------------
   // 3. DOM 要素の取得
   // -----------------------------
-  const tabButtons = document.querySelectorAll(".tabbtn");
-  const tabs = document.querySelectorAll(".tab");
-
   const inputText = document.getElementById("inputText");
   const resultBody = document.getElementById("resultBody");
   const emptyMessage = document.getElementById("emptyMessage");
@@ -77,23 +74,7 @@ async function main() {
   const kanjiRegex = /[\u4E00-\u9FFF]/;
 
   // -----------------------------
-  // 4. タブ切り替え（タブがないなら何もしない）
-  // -----------------------------
-  tabButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const targetId = btn.dataset.tab;
-
-      tabButtons.forEach((b) => b.classList.remove("active"));
-      tabs.forEach((tab) => tab.classList.remove("active"));
-
-      btn.classList.add("active");
-      const targetTab = document.getElementById(targetId);
-      if (targetTab) targetTab.classList.add("active");
-    });
-  });
-
-  // -----------------------------
-  // 5. テキスト解析
+  // 4. テキスト解析
   //    ※ 同じ漢字は自動で1行にまとめる
   // -----------------------------
   function analyzeText() {
@@ -123,7 +104,7 @@ async function main() {
   }
 
   // -----------------------------
-  // 6. 判定結果の描画
+  // 5. 判定結果の描画
   // -----------------------------
   function renderResult(rows) {
     if (!resultBody) return;
@@ -175,7 +156,7 @@ async function main() {
   }
 
   // -----------------------------
-  // 7. イベント登録
+  // 6. イベント登録
   // -----------------------------
   if (inputText) {
     inputText.addEventListener("input", analyzeText);

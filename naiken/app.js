@@ -369,7 +369,7 @@ function renderPropertyList() {
       <div class="empty-msg">
         <div class="empty-icon">🏠</div>
         <div>物件をまだ追加していません</div>
-        <div class="empty-sub">「＋ 物件を追加」ボタンから始めましょう</div>
+        <div class="empty-sub">「＋ 物件追加」ボタンから始めましょう</div>
       </div>`;
     return;
   }
