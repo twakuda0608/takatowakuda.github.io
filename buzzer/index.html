@@ -77,17 +77,27 @@
           <div class="round-row">
             <span id="role-label" class="role-badge">親機</span>
             <span id="round-label" class="round-label">第1問</span>
+            <span id="game-mode-badge" class="game-mode-badge hidden">ゲーム中</span>
           </div>
           <div id="winner-card" class="winner-card waiting">
             <span class="winner-caption">現在の1着</span>
             <strong id="winner-name">待機中</strong>
             <span id="winner-time" class="winner-time">子機の回答を待っています</span>
+            <div id="winner-judge-actions" class="winner-judge-actions hidden">
+              <button id="judge-correct-btn" class="judge-btn judge-correct" type="button">◯ 正解</button>
+              <button id="judge-wrong-btn" class="judge-btn judge-wrong" type="button">✕ 不正解</button>
+            </div>
+            <div id="winner-judge-badge" class="winner-judge-badge hidden"></div>
           </div>
           <div id="host-actions" class="host-actions">
             <button id="reset-btn" class="primary-btn reset-btn" type="button">
               <span>リセット</span>
               <span class="key-hint">Space</span>
             </button>
+            <div class="game-control-row">
+              <button id="game-toggle-btn" class="secondary-btn game-toggle-btn" type="button">ゲーム開始</button>
+              <button id="score-reset-btn" class="secondary-btn score-reset-btn hidden" type="button">スコアリセット</button>
+            </div>
           </div>
         </section>
 

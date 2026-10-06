@@ -41,6 +41,13 @@ const winnerName = document.getElementById("winner-name");
 const winnerTime = document.getElementById("winner-time");
 const hostActions = document.getElementById("host-actions");
 const resetBtn = document.getElementById("reset-btn");
+const gameToggleBtn = document.getElementById("game-toggle-btn");
+const scoreResetBtn = document.getElementById("score-reset-btn");
+const winnerJudgeActions = document.getElementById("winner-judge-actions");
+const judgeCorrectBtn = document.getElementById("judge-correct-btn");
+const judgeWrongBtn = document.getElementById("judge-wrong-btn");
+const winnerJudgeBadge = document.getElementById("winner-judge-badge");
+const gameModeBadge = document.getElementById("game-mode-badge");
 const playerPanel = document.getElementById("player-panel");
 const buzzBtn = document.getElementById("buzz-btn");
 const wakeLockControl = document.getElementById("wake-lock-control");
@@ -77,6 +84,7 @@ let currentRound = 1;
 let currentSessionId = "";
 let currentWinnerId = null;
 let lastWinnerId = null;
+let lastHandledJudgeId = null;
 let currentKicked = false;
 let wakeLock = null;
 let wakeLockEnabled = readWakeLockPreference();
@@ -103,6 +111,11 @@ nameInput.addEventListener("keydown", e => {
 });
 
 resetBtn.addEventListener("click", resetRound);
+gameToggleBtn?.addEventListener("click", toggleGameMode);
+scoreResetBtn?.addEventListener("click", resetScores);
+judgeCorrectBtn?.addEventListener("click", () => judgeCurrentWinner("correct"));
+judgeWrongBtn?.addEventListener("click", () => judgeCurrentWinner("wrong"));
+winnerJudgeBadge?.addEventListener("click", () => clearWinnerJudgment());
 buzzBtn.addEventListener("click", buzz);
 copyBtn.addEventListener("click", copyRoomUrl);
 qrBtn.addEventListener("click", showQr);
@@ -195,6 +208,7 @@ function leaveRoom() {
   currentSessionId = "";
   currentWinnerId = null;
   lastWinnerId = null;
+  lastHandledJudgeId = null;
   hideQr();
   document.body.classList.remove("player-room", "host-room");
   wakeLockControl.classList.add("hidden");
@@ -339,6 +353,15 @@ function startListening() {
         sessionId: item.sessionId || "",
         createdMs: item.createdAt?.toMillis?.() || item.clientMs || 0
       }));
+    const judgeEvents = events.filter(item => item.action === "judge");
+    const latestJudge = judgeEvents[judgeEvents.length - 1];
+    if (latestJudge && latestJudge.id !== lastHandledJudgeId && (Date.now() - latestJudge.createdMs < 8000)) {
+      lastHandledJudgeId = latestJudge.id;
+      if (role === "player") {
+        if (latestJudge.result === "correct") playCorrectSound();
+        else if (latestJudge.result === "wrong") playWrongSound();
+      }
+    }
     render();
   }, error => {
     buzzBtn.textContent = "通信エラー";
@@ -403,13 +426,15 @@ async function resetRound() {
       ...roomState,
       currentRound: nextRound,
       sessionId: currentSessionId || roomState.sessionId || makeSessionId(),
-      kicked: nextKicked
+      kicked: nextKicked,
+      roundJudgments: {}
     });
     currentSessionId = roomState.sessionId;
     await setDoc(roomStateRef(), {
       currentRound: nextRound,
       sessionId: roomState.sessionId,
       kicked: nextKicked,
+      roundJudgments: {},
       updatedAt: serverTimestamp(),
       resetBy: playerId
     }, { merge: true });
@@ -480,6 +505,13 @@ async function sendEvent(action, extra = {}) {
 
 function render() {
   applyRound(roomState.currentRound || currentRound);
+  const isGame = Boolean(roomState.gameActive);
+  gameModeBadge?.classList.toggle("hidden", !isGame);
+  if (gameToggleBtn) {
+    gameToggleBtn.textContent = isGame ? "ゲーム終了" : "ゲーム開始";
+    gameToggleBtn.classList.toggle("is-active", isGame);
+  }
+  scoreResetBtn?.classList.toggle("hidden", !isGame || role !== "host");
   const sessionEvents = events.filter(belongsToCurrentSession);
 
   const roundBuzzes = uniqueByPlayer(sessionEvents
@@ -540,21 +572,55 @@ function renderPlayers(players, roundBuzzes) {
   emptyPlayers.classList.toggle("hidden", players.length > 0);
   const answerOrder = new Map(roundBuzzes.map((item, index) => [item.playerId, index + 1]));
 
-  players.forEach(player => {
+  const isGame = Boolean(roomState.gameActive);
+  const displayPlayers = isGame
+    ? [...players].sort((a, b) => {
+        const scoreA = Number(roomState.scores?.[a.id]) || 0;
+        const scoreB = Number(roomState.scores?.[b.id]) || 0;
+        if (scoreB !== scoreA) return scoreB - scoreA;
+        return a.lastSeenMs - b.lastSeenMs;
+      })
+    : players;
+
+  displayPlayers.forEach(player => {
     const order = answerOrder.get(player.id);
     const item = document.createElement("li");
     const stateClass = order ? "is-answered" : "is-waiting";
     item.className = `player-item ${stateClass}`;
+    const score = Number(roomState.scores?.[player.id]) || 0;
+    let scoreHtml = "";
+    if (isGame) {
+      if (role === "host") {
+        scoreHtml = `
+          <div class="player-score-ctrl">
+            <button class="score-step-btn score-minus-btn" type="button" data-delta="-1" title="1点減点">−</button>
+            <span class="player-score-badge">${score}pt</span>
+            <button class="score-step-btn score-plus-btn" type="button" data-delta="1" title="1点加点">＋</button>
+          </div>
+        `;
+      } else {
+        scoreHtml = `<span class="player-score-badge">${score}pt</span>`;
+      }
+    }
     item.innerHTML = `
       <div class="player-main">
         <span class="player-name"></span>
         <span class="player-device">端末 ${shortId(player.id)}</span>
       </div>
+      ${scoreHtml}
       <span class="player-status ${stateClass}">${order ? `${order}着` : "未回答"}</span>
       <button class="kick-btn" type="button">キック</button>
     `;
     item.querySelector(".player-name").textContent = player.name || "名無し";
     item.querySelector(".kick-btn").addEventListener("click", () => kickPlayer(player));
+    if (isGame && role === "host") {
+      item.querySelectorAll(".score-step-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const delta = Number(btn.dataset.delta) || 0;
+          adjustScore(player.id, delta);
+        });
+      });
+    }
     playersList.appendChild(item);
   });
 }
@@ -690,21 +756,80 @@ function renderWinner(winner) {
   winnerTime.textContent = winner
     ? formatTime(winner.createdMs)
     : "子機の回答を待っています";
+
+  const isGame = Boolean(roomState.gameActive);
+  if (!isGame || !winner) {
+    winnerJudgeActions?.classList.add("hidden");
+    winnerJudgeBadge?.classList.add("hidden");
+    return;
+  }
+
+  const judgment = roomState.roundJudgments?.[winner.playerId];
+  if (role === "host") {
+    if (judgment) {
+      winnerJudgeActions?.classList.add("hidden");
+      winnerJudgeBadge?.classList.remove("hidden");
+      winnerJudgeBadge.className = `winner-judge-badge is-${judgment}`;
+      winnerJudgeBadge.textContent = judgment === "correct" ? "◯ 正解 (+1pt)" : "✕ 不正解";
+      winnerJudgeBadge.title = "タップで判定解除";
+    } else {
+      winnerJudgeActions?.classList.remove("hidden");
+      winnerJudgeBadge?.classList.add("hidden");
+    }
+  } else {
+    winnerJudgeActions?.classList.add("hidden");
+    if (judgment) {
+      winnerJudgeBadge?.classList.remove("hidden");
+      winnerJudgeBadge.className = `winner-judge-badge is-${judgment}`;
+      winnerJudgeBadge.textContent = judgment === "correct" ? "◯ 正解！" : "✕ 不正解";
+      winnerJudgeBadge.removeAttribute("title");
+    } else {
+      winnerJudgeBadge?.classList.add("hidden");
+    }
+  }
 }
 
 function renderRanking(roundBuzzes) {
   rankingList.innerHTML = "";
   emptyRanking.classList.toggle("hidden", roundBuzzes.length > 0);
   const firstMs = roundBuzzes[0]?.createdMs || 0;
+  const isGame = Boolean(roomState.gameActive);
   roundBuzzes.forEach((item, index) => {
     const li = document.createElement("li");
+    const judgment = roomState.roundJudgments?.[item.playerId];
+    let judgeHtml = "";
+    if (isGame) {
+      if (role === "host") {
+        if (judgment) {
+          judgeHtml = `<span class="judge-status-badge ${judgment}" title="タップで判定解除">${judgment === "correct" ? "◯ 正解" : "✕ 不正解"}</span>`;
+        } else {
+          judgeHtml = `
+            <div class="rank-judge-group">
+              <button class="judge-mini-btn judge-mini-correct" type="button" title="正解 (+1pt)">◯</button>
+              <button class="judge-mini-btn judge-mini-wrong" type="button" title="不正解">✕</button>
+            </div>
+          `;
+        }
+      } else if (judgment) {
+        judgeHtml = `<span class="judge-status-badge ${judgment}">${judgment === "correct" ? "◯" : "✕"}</span>`;
+      }
+    }
     li.innerHTML = `
       <span class="rank-number">${index + 1}着</span>
       <span class="rank-name"></span>
       <span class="rank-time">${formatTime(item.createdMs)}</span>
       <span class="rank-diff">${formatDiff(item.createdMs - firstMs)}</span>
+      ${judgeHtml}
     `;
     li.querySelector(".rank-name").textContent = item.playerName || "名無し";
+    if (isGame && role === "host") {
+      const correctBtn = li.querySelector(".judge-mini-correct");
+      const wrongBtn = li.querySelector(".judge-mini-wrong");
+      const badge = li.querySelector(".judge-status-badge");
+      correctBtn?.addEventListener("click", () => judgePlayer(item.playerId, item.playerName, "correct"));
+      wrongBtn?.addEventListener("click", () => judgePlayer(item.playerId, item.playerName, "wrong"));
+      badge?.addEventListener("click", () => judgePlayer(item.playerId, item.playerName, "clear"));
+    }
     rankingList.appendChild(li);
   });
 }
@@ -771,14 +896,18 @@ function roomUrl() {
 }
 
 function roomStateRef() {
-  return doc(db, "rooms", roomCode, "state", "currentRound");
+  return doc(db, "rooms", roomCode, "clips", "room_state");
 }
 
 function makeDefaultState(sessionId = makeSessionId()) {
   return {
+    type: "state",
     currentRound: 1,
     sessionId,
-    kicked: {}
+    kicked: {},
+    gameActive: false,
+    scores: {},
+    roundJudgments: {}
   };
 }
 
@@ -786,7 +915,10 @@ function normalizeState(state = {}) {
   return {
     currentRound: Math.max(1, Number(state.currentRound) || 1),
     sessionId: state.sessionId || makeSessionId(),
-    kicked: state.kicked && typeof state.kicked === "object" ? state.kicked : {}
+    kicked: state.kicked && typeof state.kicked === "object" ? state.kicked : {},
+    gameActive: Boolean(state.gameActive),
+    scores: state.scores && typeof state.scores === "object" ? state.scores : {},
+    roundJudgments: state.roundJudgments && typeof state.roundJudgments === "object" ? state.roundJudgments : {}
   };
 }
 
@@ -888,3 +1020,216 @@ function playChime() {
 function vibrate() {
   if (navigator.vibrate) navigator.vibrate(40);
 }
+
+// ── 効果音合成 (Web Audio API) ──────────────────────────────────
+let audioCtx = null;
+function getAudioContext() {
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) audioCtx = new AudioContext();
+  }
+  if (audioCtx && audioCtx.state === "suspended") {
+    audioCtx.resume().catch(() => {});
+  }
+  return audioCtx;
+}
+
+function playCorrectSound() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    // 1音目: 2093Hz (C7)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(2093, now);
+    gain1.gain.setValueAtTime(0.3, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.35);
+
+    // 2音目: 1568Hz (G6) - 少し遅れて高らかに鳴る
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(1568, now + 0.28);
+    gain2.gain.setValueAtTime(0.35, now + 0.28);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.28);
+    osc2.stop(now + 0.85);
+  } catch (_) {}
+}
+
+function playWrongSound() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    // 1回目の「ブッ」
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = "sawtooth";
+    osc1.frequency.setValueAtTime(140, now);
+    gain1.gain.setValueAtTime(0.25, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.18);
+
+    // 2回目の「ブッ」
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = "sawtooth";
+    osc2.frequency.setValueAtTime(140, now + 0.25);
+    gain2.gain.setValueAtTime(0.25, now + 0.25);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.25);
+    osc2.stop(now + 0.5);
+  } catch (_) {}
+}
+
+// ── ゲームモード & 判定ロジック ─────────────────────────────────
+async function toggleGameMode() {
+  if (role !== "host" || !roomCode) return;
+  const nextActive = !Boolean(roomState.gameActive);
+  try {
+    roomState = normalizeState({
+      ...roomState,
+      gameActive: nextActive
+    });
+    render();
+    await setDoc(roomStateRef(), {
+      gameActive: nextActive,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    await sendEvent("gameMode", {
+      active: nextActive,
+      text: nextActive ? "[早押し] ゲーム開始" : "[早押し] ゲーム終了"
+    });
+  } catch (error) {
+    console.error("ゲームモード切り替えエラー:", error);
+  }
+}
+
+async function resetScores() {
+  if (role !== "host" || !roomCode) return;
+  if (!confirm("スコアをすべてリセットしますか？")) return;
+  try {
+    roomState = normalizeState({
+      ...roomState,
+      scores: {},
+      roundJudgments: {}
+    });
+    render();
+    await setDoc(roomStateRef(), {
+      scores: {},
+      roundJudgments: {},
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    await sendEvent("scoreReset", {
+      text: "[早押し] スコアリセット"
+    });
+  } catch (error) {
+    console.error("スコアリセットエラー:", error);
+  }
+}
+
+function judgeCurrentWinner(result) {
+  if (!currentWinnerId) return;
+  const winner = events
+    .filter(belongsToCurrentSession)
+    .find(item => item.action === "buzz" && Number(item.round) === currentRound && item.playerId === currentWinnerId);
+  const name = winner?.playerName || "名無し";
+  judgePlayer(currentWinnerId, name, result);
+}
+
+function clearWinnerJudgment() {
+  if (!currentWinnerId) return;
+  const winner = events
+    .filter(belongsToCurrentSession)
+    .find(item => item.action === "buzz" && Number(item.round) === currentRound && item.playerId === currentWinnerId);
+  const name = winner?.playerName || "名無し";
+  judgePlayer(currentWinnerId, name, "clear");
+}
+
+async function judgePlayer(targetPlayerId, targetPlayerName, result) {
+  if (role !== "host" || !roomCode || !targetPlayerId) return;
+  const currentJudgments = { ...(roomState.roundJudgments || {}) };
+  const currentScores = { ...(roomState.scores || {}) };
+  const prev = currentJudgments[targetPlayerId];
+
+  if (result === "clear" || prev === result) {
+    // 判定解除（取り消し）
+    if (prev === "correct") {
+      currentScores[targetPlayerId] = Math.max(0, (Number(currentScores[targetPlayerId]) || 0) - 1);
+    }
+    delete currentJudgments[targetPlayerId];
+  } else {
+    // 新規判定または変更
+    if (prev === "correct") {
+      currentScores[targetPlayerId] = Math.max(0, (Number(currentScores[targetPlayerId]) || 0) - 1);
+    }
+    if (result === "correct") {
+      currentScores[targetPlayerId] = (Number(currentScores[targetPlayerId]) || 0) + 1;
+      playCorrectSound();
+    } else if (result === "wrong") {
+      playWrongSound();
+    }
+    currentJudgments[targetPlayerId] = result;
+  }
+
+  try {
+    roomState = normalizeState({
+      ...roomState,
+      scores: currentScores,
+      roundJudgments: currentJudgments
+    });
+    render();
+    await setDoc(roomStateRef(), {
+      scores: currentScores,
+      roundJudgments: currentJudgments,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    await sendEvent("judge", {
+      round: currentRound,
+      targetPlayerId,
+      targetPlayerName,
+      result: currentJudgments[targetPlayerId] || "clear",
+      text: `[早押し] ${targetPlayerName}：${result === "correct" ? "正解 (+1pt)" : result === "wrong" ? "不正解" : "判定解除"}`
+    });
+  } catch (error) {
+    console.error("判定エラー:", error);
+  }
+}
+
+async function adjustScore(targetPlayerId, delta) {
+  if (role !== "host" || !roomCode || !targetPlayerId) return;
+  const currentScores = { ...(roomState.scores || {}) };
+  currentScores[targetPlayerId] = Math.max(0, (Number(currentScores[targetPlayerId]) || 0) + delta);
+  try {
+    roomState = normalizeState({
+      ...roomState,
+      scores: currentScores
+    });
+    render();
+    await setDoc(roomStateRef(), {
+      scores: currentScores,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  } catch (error) {
+    console.error("スコア変更エラー:", error);
+  }
+}
+
+
+

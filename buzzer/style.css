@@ -389,6 +389,201 @@ h1 {
 
 .reset-btn:hover { background: #334155; }
 
+/* ── スコア / ゲームモード ─────────────────────── */
+.game-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 8px;
+}
+
+.game-control-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.game-toggle-btn,
+.score-reset-btn {
+  flex: 1;
+  padding: 9px 12px;
+  font-size: 0.85rem;
+}
+
+.game-toggle-btn.is-active {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+.game-toggle-btn.is-active:hover {
+  background: #fee2e2;
+}
+
+/* 1着カード内の判定ボタン */
+.winner-judge-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.judge-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.15s, box-shadow 0.15s;
+}
+
+.judge-btn:active {
+  transform: scale(0.97);
+}
+
+.judge-correct {
+  background: #16a34a;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.28);
+}
+.judge-correct:hover {
+  background: #15803d;
+}
+
+.judge-wrong {
+  background: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.28);
+}
+.judge-wrong:hover {
+  background: #dc2626;
+}
+
+.winner-judge-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.winner-judge-badge:hover {
+  opacity: 0.85;
+}
+.winner-judge-badge.is-correct {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1.5px solid #86efac;
+}
+.winner-judge-badge.is-wrong {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1.5px solid #fca5a5;
+}
+
+/* プレイヤー項目のスコアバッジ */
+.player-score-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  margin-left: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.player-score-ctrl {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.score-step-btn {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+.score-step-btn:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+/* 回答順リストの判定ボタン・バッジ */
+.rank-judge-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.judge-mini-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.judge-mini-correct {
+  background: #dcfce7;
+  color: #16a34a;
+  border: 1px solid #86efac;
+}
+.judge-mini-correct:hover {
+  background: #bbf7d0;
+}
+.judge-mini-wrong {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+.judge-mini-wrong:hover {
+  background: #fecaca;
+}
+.judge-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.judge-status-badge.correct {
+  background: #16a34a;
+  color: #ffffff;
+}
+.judge-status-badge.wrong {
+  background: #ef4444;
+  color: #ffffff;
+}
+
 .key-hint {
   display: inline-flex;
   align-items: center;
