@@ -16,7 +16,7 @@
   gtag('config', 'G-5XPYDMQ921');
 </script>
   <link rel="stylesheet" href="/common.css">
-  <link rel="stylesheet" href="style.css?v=20260928">
+  <link rel="stylesheet" href="style.css?v=20261006">
 </head>
 <body>
 
@@ -49,10 +49,16 @@
           <p class="eyebrow">Decks</p>
           <h1>カード集</h1>
         </div>
-        <form id="deck-form" class="deck-form">
-          <input type="text" id="deck-name-input" maxlength="24" placeholder="カード集名">
-          <button type="submit" class="secondary-btn deck-add-btn">カード集追加</button>
-        </form>
+        <div class="deck-bar-actions">
+          <form id="deck-form" class="deck-form">
+            <input type="text" id="deck-name-input" maxlength="24" placeholder="カード集名">
+            <button type="submit" class="secondary-btn deck-add-btn">カード集追加</button>
+          </form>
+          <div class="deck-bar-extra-btns">
+            <button type="button" class="secondary-btn" id="open-combine-btn">カード集結合</button>
+            <button type="button" class="secondary-btn" id="open-deck-export-btn">書き出し・共有</button>
+          </div>
+        </div>
       </div>
       <div class="deck-list" id="deck-list"></div>
     </section>
@@ -333,11 +339,12 @@
         <div class="list-tools">
           <button type="button" class="primary-btn" id="edit-add-btn">追加</button>
           <div class="export-tools">
-            <select id="export-scope" class="export-scope" aria-label="書き出し対象">
+            <select id="export-scope" class="export-scope" aria-label="書き出し対象" hidden>
               <option value="deck">このカード集</option>
               <option value="all">全カード集</option>
             </select>
-            <button type="button" class="secondary-btn" id="export-btn">書き出し</button>
+            <button type="button" class="secondary-btn" id="combine-study-btn">カード集結合</button>
+            <button type="button" class="secondary-btn" id="export-btn">書き出し・共有</button>
           </div>
         </div>
 
@@ -384,12 +391,12 @@
             <section class="add-box">
               <div class="section-header compact">
                 <h2 class="section-title">ファイル追加</h2>
-                <span class="settings-note">JSON / CSV</span>
+                <span class="settings-note">JSON / CSV / TSV</span>
               </div>
               <div class="file-import-row">
-                <span class="file-import-note">`.json` `.csv` `.txt`</span>
+                <span class="file-import-note">`.json` `.csv` `.tsv` `.txt`</span>
                 <label class="import-label">
-                  <input type="file" id="import-file" accept=".json,.csv,.txt,application/json,text/csv,text/plain">
+                  <input type="file" id="import-file" accept=".json,.csv,.tsv,.txt,application/json,text/csv,text/tab-separated-values,text/plain">
                   読み込み
                 </label>
               </div>
@@ -440,9 +447,163 @@
         <div class="list-divider"></div>
         <div id="duplicate-warning" class="duplicate-warning" hidden></div>
         <div class="card-list" id="card-list"></div>
+        <div class="list-footer-danger-zone">
+          <span class="list-footer-danger-note">このカード集が不要になった場合</span>
+          <button type="button" class="danger-btn" id="delete-deck-footer-btn">カード集削除</button>
+        </div>
       </section>
     </section>
   </main>
+
+  <div id="combine-modal" class="modal-backdrop" hidden>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>カード集の結合</h2>
+        <button type="button" class="modal-close-btn" id="combine-close-btn" aria-label="閉じる">&times;</button>
+      </div>
+      <p class="modal-desc">複数のカード集を選択して、1つのカード集にまとめます。</p>
+
+      <form id="combine-form" class="modal-form">
+        <div class="combine-deck-selection">
+          <div class="selection-head">
+            <span class="selection-title">対象のカード集を選択（2つ以上）</span>
+            <div class="selection-actions">
+              <button type="button" class="text-link-btn" id="combine-select-all-btn">全選択</button>
+              <button type="button" class="text-link-btn" id="combine-clear-all-btn">選択解除</button>
+            </div>
+          </div>
+          <div class="combine-deck-list" id="combine-deck-list"></div>
+          <div class="combine-selection-summary" id="combine-selection-summary">
+            選択中: 0個のカード集 (計 0枚)
+          </div>
+        </div>
+
+        <label class="field">
+          <span>結合後のカード集名</span>
+          <input type="text" id="combine-name-input" maxlength="30" placeholder="例: 英語総合復習" required>
+        </label>
+
+        <div class="combine-options">
+          <label class="checkbox-label">
+            <input type="checkbox" id="combine-skip-duplicates" checked>
+            <div>
+              <strong>重複カードをスキップ</strong>
+              <span class="checkbox-help">表面のテキストが一致するカードの重複を防ぎます。</span>
+            </div>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="combine-keep-originals" checked>
+            <div>
+              <strong>元のカード集を残す</strong>
+              <span class="checkbox-help">OFFにすると元のカード集を削除して統合します。</span>
+            </div>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="combine-inherit-progress" checked>
+            <div>
+              <strong>暗記状態・学習履歴を引き継ぐ</strong>
+              <span class="checkbox-help">暗記済みステータスや学習回数を新しいカード集へコピーします。</span>
+            </div>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <div class="modal-action-right">
+            <button type="button" class="secondary-btn" id="combine-cancel-btn">キャンセル</button>
+            <button type="submit" class="primary-btn" id="combine-submit-btn">結合</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="export-modal" class="modal-backdrop" hidden>
+    <div class="modal-card modal-card-large">
+      <div class="modal-header">
+        <h2>カード集の書き出し・共有</h2>
+        <button type="button" class="modal-close-btn" id="export-close-btn" aria-label="閉じる">&times;</button>
+      </div>
+      <p class="modal-desc" id="export-modal-desc">友だちへの共有や他アプリ連携用に、カード集を書き出せます。</p>
+
+      <div class="export-modal-body">
+        <div class="export-controls-grid">
+          <label class="field">
+            <span>対象カード集</span>
+            <select id="export-deck-scope"></select>
+            <div id="export-deck-scope-fixed" class="export-scope-fixed" hidden></div>
+          </label>
+
+          <label class="field">
+            <span>書き出し形式</span>
+            <select id="export-format-select">
+              <option value="tsv">テキスト（タブ区切り / TSV・Quizlet対応）</option>
+              <option value="share">共有テキスト（LINE・メッセージ用）</option>
+              <option value="csv">CSV（カンマ区切り）</option>
+              <option value="json">JSON（単語カードアプリ用）</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="export-multi-deck-box" class="export-multi-deck-box" hidden>
+          <div class="selection-head">
+            <span class="selection-title">結合して書き出すカード集を選択</span>
+            <div class="selection-actions">
+              <button type="button" class="text-link-btn" id="export-multi-all-btn">全選択</button>
+              <button type="button" class="text-link-btn" id="export-multi-clear-btn">選択解除</button>
+            </div>
+          </div>
+          <div class="combine-deck-list" id="export-multi-deck-list"></div>
+        </div>
+
+        <div class="export-options-box">
+          <div class="export-options-title">オプション</div>
+
+          <label class="checkbox-label">
+            <input type="checkbox" id="export-include-highlight" checked>
+            <div>
+              <strong>ハイライト記法を含める（==重要単語==）</strong>
+              <span class="checkbox-help">ON: 「==単語==」の記法を保持します。OFF: 記号を除去しクリーンな平文で書き出します。</span>
+            </div>
+          </label>
+
+          <label class="checkbox-label">
+            <input type="checkbox" id="export-unlearned-only">
+            <div>
+              <strong>未暗記のカードのみ書き出し</strong>
+              <span class="checkbox-help">苦手な単語やこれから覚える単語のみを抽出します。</span>
+            </div>
+          </label>
+
+          <label class="checkbox-label" id="export-dedupe-label" hidden>
+            <input type="checkbox" id="export-dedupe" checked>
+            <div>
+              <strong>重複カードをスキップ</strong>
+              <span class="checkbox-help">複数カード集に重複する同一単語を1枚にまとめます。</span>
+            </div>
+          </label>
+        </div>
+
+        <div class="export-preview-box">
+          <div class="export-preview-header">
+            <span>プレビュー（<strong id="export-preview-count">0</strong>枚）</span>
+            <span class="export-preview-tip" id="export-preview-format-tip">タブ区切りテキスト</span>
+          </div>
+          <textarea id="export-preview-textarea" class="export-preview-textarea" readonly rows="7" placeholder="プレビューがここに表示されます"></textarea>
+        </div>
+
+        <div class="modal-actions export-modal-actions">
+          <div class="export-feedback-area">
+            <span class="export-feedback-msg" id="export-feedback-msg"></span>
+          </div>
+          <div class="modal-action-right">
+            <button type="button" class="secondary-btn" id="export-share-btn">共有</button>
+            <button type="button" class="secondary-btn" id="export-copy-btn">クリップボードコピー</button>
+            <button type="button" class="primary-btn" id="export-download-btn">ファイル保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div id="card-edit-modal" class="modal-backdrop" hidden>
     <div class="modal-card">
@@ -490,7 +651,7 @@
     <button type="button" id="undo-btn">取り消し</button>
   </div>
 
-  <script type="module" src="app.js?v=20260928"></script>
+  <script type="module" src="app.js?v=20261006"></script>
   <script src="/common.js"></script>
 </body>
 </html>

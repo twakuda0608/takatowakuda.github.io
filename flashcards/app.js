@@ -102,6 +102,7 @@ const els = {
   deckRenameForm: document.getElementById("deck-rename-form"),
   deckRenameInput: document.getElementById("deck-rename-input"),
   deleteDeckBtn: document.getElementById("delete-deck-btn"),
+  deleteDeckFooterBtn: document.getElementById("delete-deck-footer-btn"),
   cardCount: document.getElementById("card-count"),
   knownCount: document.getElementById("known-count"),
   knownRate: document.getElementById("known-rate"),
@@ -154,6 +155,47 @@ const els = {
   undoBtn: document.getElementById("undo-btn"),
   selectionHighlightPopover: document.getElementById("selection-highlight-popover"),
   popoverHighlightBtn: document.getElementById("popover-highlight-btn"),
+
+  // Combine Decks Elements
+  openCombineBtn: document.getElementById("open-combine-btn"),
+  combineStudyBtn: document.getElementById("combine-study-btn"),
+  combineModal: document.getElementById("combine-modal"),
+  combineCloseBtn: document.getElementById("combine-close-btn"),
+  combineCancelBtn: document.getElementById("combine-cancel-btn"),
+  combineForm: document.getElementById("combine-form"),
+  combineDeckList: document.getElementById("combine-deck-list"),
+  combineSelectionSummary: document.getElementById("combine-selection-summary"),
+  combineNameInput: document.getElementById("combine-name-input"),
+  combineSelectAllBtn: document.getElementById("combine-select-all-btn"),
+  combineClearAllBtn: document.getElementById("combine-clear-all-btn"),
+  combineSkipDuplicates: document.getElementById("combine-skip-duplicates"),
+  combineKeepOriginals: document.getElementById("combine-keep-originals"),
+  combineInheritProgress: document.getElementById("combine-inherit-progress"),
+  combineSubmitBtn: document.getElementById("combine-submit-btn"),
+
+  // Export / Share Elements
+  openDeckExportBtn: document.getElementById("open-deck-export-btn"),
+  exportModal: document.getElementById("export-modal"),
+  exportCloseBtn: document.getElementById("export-close-btn"),
+  exportModalDesc: document.getElementById("export-modal-desc"),
+  exportDeckScope: document.getElementById("export-deck-scope"),
+  exportDeckScopeFixed: document.getElementById("export-deck-scope-fixed"),
+  exportFormatSelect: document.getElementById("export-format-select"),
+  exportMultiDeckBox: document.getElementById("export-multi-deck-box"),
+  exportMultiDeckList: document.getElementById("export-multi-deck-list"),
+  exportMultiAllBtn: document.getElementById("export-multi-all-btn"),
+  exportMultiClearBtn: document.getElementById("export-multi-clear-btn"),
+  exportIncludeHighlight: document.getElementById("export-include-highlight"),
+  exportUnlearnedOnly: document.getElementById("export-unlearned-only"),
+  exportDedupeLabel: document.getElementById("export-dedupe-label"),
+  exportDedupe: document.getElementById("export-dedupe"),
+  exportPreviewCount: document.getElementById("export-preview-count"),
+  exportPreviewFormatTip: document.getElementById("export-preview-format-tip"),
+  exportPreviewTextarea: document.getElementById("export-preview-textarea"),
+  exportFeedbackMsg: document.getElementById("export-feedback-msg"),
+  exportShareBtn: document.getElementById("export-share-btn"),
+  exportCopyBtn: document.getElementById("export-copy-btn"),
+  exportDownloadBtn: document.getElementById("export-download-btn"),
 
   // Drill Mode Elements
   drillStartView: document.getElementById("drill-start-view"),
@@ -220,6 +262,7 @@ els.backToDecksBtn?.addEventListener("click", showDeckList);
 els.deckForm?.addEventListener("submit", createDeck);
 els.deckRenameForm?.addEventListener("submit", renameDeck);
 els.deleteDeckBtn?.addEventListener("click", deleteCurrentDeck);
+els.deleteDeckFooterBtn?.addEventListener("click", deleteCurrentDeck);
 
 document.querySelectorAll(".mode-tab").forEach((tab) => {
   tab.addEventListener("click", () => setMode(tab.dataset.mode));
@@ -328,7 +371,32 @@ document.querySelectorAll("input[name='term-separator'], input[name='card-separa
   input.addEventListener("change", renderImportPreview);
 });
 els.editAddBtn?.addEventListener("click", toggleEditAddPanel);
-els.exportBtn?.addEventListener("click", exportCards);
+els.exportBtn?.addEventListener("click", () => openExportModal("current", true));
+els.openDeckExportBtn?.addEventListener("click", () => openExportModal("all", false));
+els.openCombineBtn?.addEventListener("click", () => openCombineModal());
+els.combineStudyBtn?.addEventListener("click", () => openCombineModal(currentDeckId));
+els.combineCloseBtn?.addEventListener("click", closeCombineModal);
+els.combineCancelBtn?.addEventListener("click", closeCombineModal);
+els.combineForm?.addEventListener("submit", executeCombineDecks);
+els.combineSelectAllBtn?.addEventListener("click", () => setCombineAllSelection(true));
+els.combineClearAllBtn?.addEventListener("click", () => setCombineAllSelection(false));
+els.combineModal?.addEventListener("click", (e) => {
+  if (e.target === els.combineModal) closeCombineModal();
+});
+els.exportCloseBtn?.addEventListener("click", closeExportModal);
+els.exportModal?.addEventListener("click", (e) => {
+  if (e.target === els.exportModal) closeExportModal();
+});
+els.exportDeckScope?.addEventListener("change", handleExportScopeChange);
+els.exportFormatSelect?.addEventListener("change", updateExportPreview);
+els.exportMultiAllBtn?.addEventListener("click", () => setExportMultiAllSelection(true));
+els.exportMultiClearBtn?.addEventListener("click", () => setExportMultiAllSelection(false));
+els.exportIncludeHighlight?.addEventListener("change", updateExportPreview);
+els.exportUnlearnedOnly?.addEventListener("change", updateExportPreview);
+els.exportDedupe?.addEventListener("change", updateExportPreview);
+els.exportCopyBtn?.addEventListener("click", copyExportToClipboard);
+els.exportDownloadBtn?.addEventListener("click", downloadExportFile);
+els.exportShareBtn?.addEventListener("click", shareExportCards);
 els.importFile?.addEventListener("change", importCards);
 document.addEventListener("keydown", handleKeyboard);
 els.undoBtn?.addEventListener("click", runUndo);
@@ -611,7 +679,8 @@ async function deleteCurrentDeck() {
 
   const deletedDeck = { ...deck };
   const deletedCards = allCards.filter((card) => card.deckId === currentDeckId);
-  els.deleteDeckBtn.disabled = true;
+  if (els.deleteDeckBtn) els.deleteDeckBtn.disabled = true;
+  if (els.deleteDeckFooterBtn) els.deleteDeckFooterBtn.disabled = true;
   try {
     const batch = writeBatch(db);
     deletedCards.forEach((card) => batch.delete(cardDoc(card.id)));
@@ -638,7 +707,8 @@ async function deleteCurrentDeck() {
   } catch {
     alert("削除に失敗しました");
   } finally {
-    els.deleteDeckBtn.disabled = false;
+    if (els.deleteDeckBtn) els.deleteDeckBtn.disabled = false;
+    if (els.deleteDeckFooterBtn) els.deleteDeckFooterBtn.disabled = false;
   }
 }
 
@@ -1599,6 +1669,22 @@ function handleKeyboard(event) {
     }
   }
 
+  if (els.combineModal && !els.combineModal.hidden) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeCombineModal();
+    }
+    return;
+  }
+
+  if (els.exportModal && !els.exportModal.hidden) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeExportModal();
+    }
+    return;
+  }
+
   if (els.cardEditModal && !els.cardEditModal.hidden) {
     if (event.key === "Escape") {
       event.preventDefault();
@@ -1779,9 +1865,11 @@ async function addBulkCards() {
   }
 }
 
-function parseCardText(text) {
-  return parseRows(text)
-    .map(rowToCard)
+function parseCardText(text, filename = "") {
+  const isTsv = filename.toLowerCase().endsWith(".tsv") || text.includes("\t");
+  const delim = isTsv ? "\t" : ",";
+  return parseRows(text, delim)
+    .map((row) => rowToCard(row, delim))
     .filter(Boolean);
 }
 
@@ -1870,7 +1958,8 @@ function splitRespectingQuotes(text, delimiter) {
   return parts.filter((part) => part.trim());
 }
 
-function parseRows(text) {
+function parseRows(text, delimiter = null) {
+  const delim = delimiter || (text.includes("\t") ? "\t" : ",");
   const rows = [];
   let row = [];
   let cell = "";
@@ -1890,7 +1979,7 @@ function parseRows(text) {
       continue;
     }
 
-    if (!quoted && (char === "," || char === "\t")) {
+    if (!quoted && (char === delim || (delim === "," && char === "\t"))) {
       row.push(cell);
       cell = "";
       continue;
@@ -1913,33 +2002,493 @@ function parseRows(text) {
   return rows.filter((items) => items.some((item) => item.trim()));
 }
 
-function rowToCard(row) {
+function rowToCard(row, delim = ",") {
   const [front, ...rest] = row;
-  const back = rest.join(",").trim();
+  const back = rest.join(delim === "\t" ? "\t" : ",").trim();
   if (!front?.trim() || !back) return null;
   if (front.trim().toLowerCase() === "front" && back.toLowerCase() === "back") return null;
   return { front: front.trim(), back, known: false, drillAttempts: 0, drillSuccesses: 0 };
 }
 
-function exportCards() {
-  const scope = els.exportScope.value;
-  const exportData = scope === "all"
-    ? {
-        decks,
-        cards: allCards.map(({ front, back, known, deckId, order, drillAttempts, drillSuccesses }) => ({
-          front, back, known, deckId, order, drillAttempts: drillAttempts || 0, drillSuccesses: drillSuccesses || 0
-        })),
-      }
-    : getOrderedDeckCards().map(({ front, back, known, drillAttempts, drillSuccesses }) => ({
-        front, back, known, drillAttempts: drillAttempts || 0, drillSuccesses: drillSuccesses || 0
-      }));
-  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+/* ==========================================================================
+   Combine Decks Implementation
+   ========================================================================== */
+
+function openCombineModal(initialDeckId = null) {
+  if (decks.length < 2) {
+    alert("結合するにはカード集が2つ以上必要です。（カード集を追加してください）");
+    return;
+  }
+
+  els.combineDeckList.innerHTML = decks.map((deck) => {
+    const deckCards = allCards.filter((c) => c.deckId === deck.id);
+    const isChecked = initialDeckId ? deck.id === initialDeckId : false;
+    return `
+      <label class="combine-deck-item">
+        <input type="checkbox" name="combine-deck-choice" value="${escapeHtml(deck.id)}" ${isChecked ? "checked" : ""}>
+        <span class="combine-deck-name">${escapeHtml(deck.name)}</span>
+        <span class="combine-deck-count">${deckCards.length}枚</span>
+      </label>
+    `;
+  }).join("");
+
+  els.combineDeckList.querySelectorAll("input[name='combine-deck-choice']").forEach((cb) => {
+    cb.addEventListener("change", updateCombineSummary);
+  });
+
+  els.combineSkipDuplicates.checked = true;
+  els.combineKeepOriginals.checked = true;
+  els.combineInheritProgress.checked = true;
+  els.combineNameInput.value = "";
+
+  updateCombineSummary();
+  els.combineModal.hidden = false;
+  els.combineNameInput.focus();
+}
+
+function closeCombineModal() {
+  if (els.combineModal) {
+    els.combineModal.hidden = true;
+  }
+}
+
+function setCombineAllSelection(selected) {
+  els.combineDeckList.querySelectorAll("input[name='combine-deck-choice']").forEach((cb) => {
+    cb.checked = selected;
+  });
+  updateCombineSummary();
+}
+
+function getSelectedCombineDeckIds() {
+  const checkboxes = els.combineDeckList.querySelectorAll("input[name='combine-deck-choice']:checked");
+  return Array.from(checkboxes).map((cb) => cb.value);
+}
+
+function updateCombineSummary() {
+  const selectedIds = getSelectedCombineDeckIds();
+  const selectedDecks = decks.filter((d) => selectedIds.includes(d.id));
+  const totalCards = allCards.filter((c) => selectedIds.includes(c.deckId)).length;
+
+  els.combineSelectionSummary.textContent = `選択中: ${selectedDecks.length}個のカード集 (計 ${totalCards}枚)`;
+
+  if (selectedDecks.length >= 2) {
+    const currentName = els.combineNameInput.value.trim();
+    const isAutoName = !currentName || currentName.includes(" + ") || currentName === "結合カード集";
+    if (isAutoName) {
+      const suggested = selectedDecks.map((d) => d.name).join(" + ");
+      els.combineNameInput.value = suggested.length > 28 ? `${suggested.slice(0, 27)}…` : suggested;
+    }
+  }
+}
+
+async function executeCombineDecks(event) {
+  event.preventDefault();
+  const selectedIds = getSelectedCombineDeckIds();
+  if (selectedIds.length < 2) {
+    alert("結合するカード集を2つ以上選択してください。");
+    return;
+  }
+
+  const name = els.combineNameInput.value.trim();
+  if (!name) return;
+
+  const keepOriginals = els.combineKeepOriginals.checked;
+  if (!keepOriginals) {
+    if (!confirm(`元のカード集（${selectedIds.length}個）は削除されます。結合を続行しますか？`)) {
+      return;
+    }
+  }
+
+  const skipDuplicates = els.combineSkipDuplicates.checked;
+  const inheritProgress = els.combineInheritProgress.checked;
+
+  els.combineSubmitBtn.disabled = true;
+
+  try {
+    let candidateCards = [];
+    selectedIds.forEach((deckId) => {
+      const deckCards = allCards
+        .filter((c) => c.deckId === deckId)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+      candidateCards.push(...deckCards);
+    });
+
+    if (skipDuplicates) {
+      const seen = new Set();
+      candidateCards = candidateCards.filter((card) => {
+        const key = normalizeFront(card.front);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    const newDeckId = `deck-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+    const newDeck = { id: newDeckId, name };
+
+    const baseOrder = Date.now();
+    const createdCards = candidateCards.map((card, index) => ({
+      front: card.front,
+      back: card.back,
+      known: inheritProgress ? Boolean(card.known) : false,
+      deckId: newDeckId,
+      order: baseOrder + index,
+      viewCount: inheritProgress ? Number(card.viewCount || 0) : 0,
+      flipCount: inheritProgress ? Number(card.flipCount || 0) : 0,
+      knownCount: inheritProgress ? Number(card.knownCount || 0) : 0,
+      drillAttempts: inheritProgress ? Number(card.drillAttempts || 0) : 0,
+      drillSuccesses: inheritProgress ? Number(card.drillSuccesses || 0) : 0,
+    }));
+
+    const cardsToDelete = !keepOriginals ? allCards.filter((c) => selectedIds.includes(c.deckId)) : [];
+
+    const operations = [];
+
+    createdCards.forEach((card) => {
+      operations.push((batch) => {
+        const ref = doc(cardCollection());
+        batch.set(ref, {
+          ...card,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      });
+    });
+
+    cardsToDelete.forEach((card) => {
+      operations.push((batch) => {
+        batch.delete(cardDoc(card.id));
+      });
+    });
+
+    const CHUNK_SIZE = 400;
+    for (let i = 0; i < operations.length; i += CHUNK_SIZE) {
+      const chunk = operations.slice(i, i + CHUNK_SIZE);
+      const batch = writeBatch(db);
+      chunk.forEach((op) => op(batch));
+      await saveWithStatus(() => batch.commit());
+    }
+
+    if (!keepOriginals) {
+      decks = decks.filter((d) => !selectedIds.includes(d.id));
+    }
+    decks.push(newDeck);
+    currentDeckId = newDeckId;
+    currentView = "study";
+    currentIndex = 0;
+    showingBack = false;
+    studyOrder = [];
+    drillState.view = "start";
+
+    await saveDeckSettings();
+    closeCombineModal();
+    render();
+
+    showUndo(`カード集「${name}」を作成しました（${createdCards.length}枚）`, null);
+  } catch (err) {
+    console.error(err);
+    alert("結合処理に失敗しました。");
+  } finally {
+    els.combineSubmitBtn.disabled = false;
+  }
+}
+
+/* ==========================================================================
+   Export / Share Implementation
+   ========================================================================== */
+
+function openExportModal(initialScope = "current", isCurrentDeckOnly = false) {
+  const currentDeck = decks.find((d) => d.id === currentDeckId) || decks[0] || { id: DEFAULT_DECK_ID, name: "マイカード" };
+  const currentDeckCards = allCards.filter((c) => c.deckId === (currentDeck?.id || ""));
+
+  if (isCurrentDeckOnly && currentDeck) {
+    els.exportDeckScope.innerHTML = `<option value="current">このカード集（${escapeHtml(currentDeck.name)}: ${currentDeckCards.length}枚）</option>`;
+    els.exportDeckScope.value = "current";
+    els.exportDeckScope.hidden = true;
+    if (els.exportDeckScopeFixed) {
+      els.exportDeckScopeFixed.hidden = false;
+      els.exportDeckScopeFixed.textContent = `${currentDeck.name}（${currentDeckCards.length}枚）`;
+    }
+    if (els.exportModalDesc) {
+      els.exportModalDesc.textContent = `「${currentDeck.name}」（${currentDeckCards.length}枚）を書き出し・共有します。`;
+    }
+    els.exportMultiDeckBox.hidden = true;
+    els.exportDedupeLabel.hidden = true;
+  } else {
+    if (els.exportDeckScopeFixed) {
+      els.exportDeckScopeFixed.hidden = true;
+    }
+    els.exportDeckScope.hidden = false;
+    if (els.exportModalDesc) {
+      els.exportModalDesc.textContent = "友だちへの共有や他アプリ連携用に、カード集を書き出せます。";
+    }
+
+    let optionsHtml = "";
+    optionsHtml += `<option value="all">全カード集（全 ${allCards.length}枚）</option>`;
+    optionsHtml += `<option value="multiple">複数選択（結合して書き出し）</option>`;
+
+    decks.forEach((deck) => {
+      const count = allCards.filter((c) => c.deckId === deck.id).length;
+      optionsHtml += `<option value="deck:${escapeHtml(deck.id)}">${escapeHtml(deck.name)}（${count}枚）</option>`;
+    });
+
+    els.exportDeckScope.innerHTML = optionsHtml;
+
+    if (initialScope === "all" || !initialScope) {
+      els.exportDeckScope.value = "all";
+    } else if (initialScope === "multiple") {
+      els.exportDeckScope.value = "multiple";
+    } else if (initialScope.startsWith("deck:")) {
+      els.exportDeckScope.value = initialScope;
+    } else if (initialScope === "current" && currentDeck) {
+      els.exportDeckScope.value = `deck:${currentDeck.id}`;
+    } else {
+      els.exportDeckScope.value = "all";
+    }
+
+    els.exportMultiDeckList.innerHTML = decks.map((deck) => {
+      const count = allCards.filter((c) => c.deckId === deck.id).length;
+      return `
+        <label class="combine-deck-item">
+          <input type="checkbox" name="export-multi-deck" value="${escapeHtml(deck.id)}" checked>
+          <span class="combine-deck-name">${escapeHtml(deck.name)}</span>
+          <span class="combine-deck-count">${count}枚</span>
+        </label>
+      `;
+    }).join("");
+
+    els.exportMultiDeckList.querySelectorAll("input[name='export-multi-deck']").forEach((cb) => {
+      cb.addEventListener("change", updateExportPreview);
+    });
+  }
+
+  handleExportScopeChange();
+  els.exportFeedbackMsg.textContent = "";
+  els.exportModal.hidden = false;
+}
+
+function closeExportModal() {
+  if (els.exportModal) {
+    els.exportModal.hidden = true;
+  }
+}
+
+function handleExportScopeChange() {
+  const isMulti = !els.exportDeckScope.hidden && els.exportDeckScope.value === "multiple";
+  els.exportMultiDeckBox.hidden = !isMulti;
+  els.exportDedupeLabel.hidden = els.exportDeckScope.hidden || (!isMulti && els.exportDeckScope.value !== "all");
+  updateExportPreview();
+}
+
+function setExportMultiAllSelection(selected) {
+  els.exportMultiDeckList.querySelectorAll("input[name='export-multi-deck']").forEach((cb) => {
+    cb.checked = selected;
+  });
+  updateExportPreview();
+}
+
+function computeExportData() {
+  const scope = els.exportDeckScope.value;
+  let targetDeckName = "カード集";
+  let targetCards = [];
+
+  if (scope === "current") {
+    const deck = decks.find((d) => d.id === currentDeckId) || decks[0];
+    targetDeckName = deck?.name || "単語カード";
+    targetCards = allCards.filter((c) => c.deckId === deck?.id);
+  } else if (scope.startsWith("deck:")) {
+    const deckId = scope.slice(5);
+    const deck = decks.find((d) => d.id === deckId);
+    targetDeckName = deck?.name || "単語カード";
+    targetCards = allCards.filter((c) => c.deckId === deckId);
+  } else if (scope === "all") {
+    targetDeckName = "全カード集";
+    targetCards = [...allCards];
+  } else if (scope === "multiple") {
+    const checkedCheckboxes = Array.from(els.exportMultiDeckList.querySelectorAll("input[name='export-multi-deck']:checked"));
+    const selectedIds = checkedCheckboxes.map((cb) => cb.value);
+    const selectedDecks = decks.filter((d) => selectedIds.includes(d.id));
+    targetDeckName = selectedDecks.map((d) => d.name).join(" + ") || "結合カード集";
+    selectedIds.forEach((deckId) => {
+      targetCards.push(...allCards.filter((c) => c.deckId === deckId));
+    });
+  }
+
+  if (els.exportUnlearnedOnly.checked) {
+    targetCards = targetCards.filter((c) => !c.known);
+  }
+
+  const shouldDedupe = (scope === "multiple" || scope === "all") && els.exportDedupe.checked;
+  if (shouldDedupe) {
+    const seen = new Set();
+    targetCards = targetCards.filter((c) => {
+      const key = normalizeFront(c.front);
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  const includeHighlight = els.exportIncludeHighlight.checked;
+  const format = els.exportFormatSelect.value;
+
+  const processText = (text) => {
+    if (!text) return "";
+    return includeHighlight ? String(text) : stripHighlightSyntax(text);
+  };
+
+  let outputText = "";
+  let fileExt = "txt";
+  let mimeType = "text/plain;charset=utf-8";
+  let tipText = "タブ区切りテキスト";
+
+  if (format === "tsv") {
+    fileExt = "tsv";
+    mimeType = "text/tab-separated-values;charset=utf-8";
+    tipText = "タブ区切りテキスト（Quizlet・スプレッドシート用）";
+    outputText = targetCards.map((c) => {
+      const front = escapeTsvCell(processText(c.front));
+      const back = escapeTsvCell(processText(c.back));
+      return `${front}\t${back}`;
+    }).join("\n");
+  } else if (format === "share") {
+    fileExt = "txt";
+    mimeType = "text/plain;charset=utf-8";
+    tipText = "LINE・チャット共有用テキスト";
+    const header = `【単語カード】${targetDeckName}（${targetCards.length}枚）\n────────────────`;
+    const lines = targetCards.map((c, index) => {
+      const front = processText(c.front);
+      const back = processText(c.back);
+      return `${index + 1}. ${front}\n${back}`;
+    });
+    outputText = [header, ...lines].join("\n\n");
+  } else if (format === "csv") {
+    fileExt = "csv";
+    mimeType = "text/csv;charset=utf-8";
+    tipText = "カンマ区切り CSV";
+    outputText = targetCards.map((c) => {
+      const front = escapeCsvCell(processText(c.front));
+      const back = escapeCsvCell(processText(c.back));
+      return `${front},${back}`;
+    }).join("\n");
+  } else if (format === "json") {
+    fileExt = "json";
+    mimeType = "application/json;charset=utf-8";
+    tipText = "単語カード JSON 形式";
+    const jsonData = {
+      deckName: targetDeckName,
+      exportedAt: new Date().toISOString(),
+      cardCount: targetCards.length,
+      cards: targetCards.map((c) => ({
+        front: processText(c.front),
+        back: processText(c.back),
+        known: Boolean(c.known),
+      })),
+    };
+    outputText = JSON.stringify(jsonData, null, 2);
+  }
+
+  const safeFilename = `${(targetDeckName || "flashcards").replace(/[\\/:*?"<>|]/g, "_")}.${fileExt}`;
+
+  return {
+    text: outputText,
+    count: targetCards.length,
+    filename: safeFilename,
+    title: targetDeckName,
+    mimeType,
+    tipText,
+  };
+}
+
+function escapeTsvCell(val) {
+  const str = String(val || "");
+  if (str.includes("\t") || str.includes("\n") || str.includes("\r") || str.includes('"')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+function escapeCsvCell(val) {
+  const str = String(val || "");
+  return `"${str.replace(/"/g, '""')}"`;
+}
+
+function updateExportPreview() {
+  const data = computeExportData();
+  els.exportPreviewTextarea.value = data.text;
+  els.exportPreviewCount.textContent = data.count;
+  els.exportPreviewFormatTip.textContent = data.tipText;
+  els.exportFeedbackMsg.textContent = "";
+
+  const disabled = data.count === 0;
+  els.exportCopyBtn.disabled = disabled;
+  els.exportDownloadBtn.disabled = disabled;
+  els.exportShareBtn.disabled = disabled;
+}
+
+async function copyExportToClipboard() {
+  const data = computeExportData();
+  if (!data.text) return;
+
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(data.text);
+    } else {
+      els.exportPreviewTextarea.select();
+      document.execCommand("copy");
+    }
+    showExportFeedback("クリップボードにコピーしました！");
+  } catch (err) {
+    showExportFeedback("コピーに失敗しました");
+  }
+}
+
+function downloadExportFile() {
+  const data = computeExportData();
+  if (!data.text) return;
+
+  const blob = new Blob([data.text], { type: data.mimeType });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = scope === "all" ? "flashcards-all.json" : "flashcards.json";
+  link.download = data.filename;
   link.click();
   URL.revokeObjectURL(url);
+  showExportFeedback("ファイルを保存しました！");
+}
+
+async function shareExportCards() {
+  const data = computeExportData();
+  if (!data.text) return;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: data.title,
+        text: data.text,
+      });
+      showExportFeedback("共有しました！");
+      return;
+    } catch (err) {
+      if (err.name === "AbortError") return;
+    }
+  }
+  await copyExportToClipboard();
+}
+
+function showExportFeedback(message) {
+  if (els.exportFeedbackMsg) {
+    els.exportFeedbackMsg.textContent = message;
+    setTimeout(() => {
+      if (els.exportFeedbackMsg.textContent === message) {
+        els.exportFeedbackMsg.textContent = "";
+      }
+    }, 3000);
+  }
+}
+
+function exportCards() {
+  openExportModal("current", currentView === "study");
 }
 
 function importCards(event) {
@@ -1949,7 +2498,7 @@ function importCards(event) {
   const reader = new FileReader();
   reader.addEventListener("load", async () => {
     try {
-      const nextCards = parseImportedCards(String(reader.result));
+      const nextCards = parseImportedCards(String(reader.result), file.name || "");
       if (!nextCards.length) return;
 
       const batch = writeBatch(db);
@@ -1983,7 +2532,7 @@ function deleteCardsByIds(ids) {
   return batch.commit();
 }
 
-function parseImportedCards(text) {
+function parseImportedCards(text, filename = "") {
   try {
     const imported = JSON.parse(text);
     if (Array.isArray(imported)) {
@@ -2013,7 +2562,7 @@ function parseImportedCards(text) {
   } catch {
     // JSON以外はCSV/TSVとして扱う
   }
-  return applyDuplicatePolicy(parseCardText(text));
+  return applyDuplicatePolicy(parseCardText(text, filename));
 }
 
 function applyDuplicatePolicy(nextCards) {
