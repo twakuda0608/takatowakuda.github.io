@@ -165,6 +165,17 @@ function tick() {
     : current.rate >= RATE_A ? COLOR_HIGH : COLOR_LOW;
 }
 
+let hideTotalTimer = null;
+
+function resetTotalAutoClose() {
+  if (hideTotalTimer) {
+    clearTimeout(hideTotalTimer);
+  }
+  hideTotalTimer = setTimeout(function() {
+    closeTotal();
+  }, 60000);
+}
+
 function openTotal() {
   if (!totalReady) {
     var now = new Date();
@@ -179,19 +190,173 @@ function openTotal() {
   }
   document.getElementById('timer-view').classList.add('hidden');
   document.getElementById('total-view').classList.remove('hidden');
+  resetTotalAutoClose();
 }
 
 function closeTotal() {
+  if (hideTotalTimer) {
+    clearTimeout(hideTotalTimer);
+    hideTotalTimer = null;
+  }
   document.getElementById('total-view').classList.add('hidden');
   document.getElementById('timer-view').classList.remove('hidden');
 }
 
+let secTapCount = 0;
+let secLastTapTime = 0;
+let hourTapCount = 0;
+let hourLastTapTime = 0;
+const TAP_THRESHOLD = 500;
+let hideEarnedTimer = null;
+let lastTouchTime = 0;
+
+function handleSecTripleTap() {
+  const el = document.getElementById('earned');
+  const isVisible = el.style.visibility === 'visible';
+  if (isVisible) {
+    el.style.visibility = 'hidden';
+    if (hideEarnedTimer) {
+      clearTimeout(hideEarnedTimer);
+      hideEarnedTimer = null;
+    }
+  } else {
+    el.style.visibility = 'visible';
+    if (hideEarnedTimer) {
+      clearTimeout(hideEarnedTimer);
+    }
+    hideEarnedTimer = setTimeout(function() {
+      el.style.visibility = 'hidden';
+      hideEarnedTimer = null;
+    }, 60000);
+  }
+}
+
+function registerSecTap() {
+  const now = Date.now();
+  if (now - secLastTapTime < TAP_THRESHOLD) {
+    secTapCount++;
+  } else {
+    secTapCount = 1;
+  }
+  secLastTapTime = now;
+
+  if (secTapCount === 3) {
+    secTapCount = 0;
+    secLastTapTime = 0;
+    handleSecTripleTap();
+  }
+}
+
+function registerHourTap() {
+  const now = Date.now();
+  if (now - hourLastTapTime < TAP_THRESHOLD) {
+    hourTapCount++;
+  } else {
+    hourTapCount = 1;
+  }
+  hourLastTapTime = now;
+
+  if (hourTapCount === 3) {
+    hourTapCount = 0;
+    hourLastTapTime = 0;
+    openTotal();
+  }
+}
+
+function isSecTarget(target, touch) {
+  if (target && (target.id === 'sec' || (target.closest && target.closest('#sec')))) {
+    return true;
+  }
+  if (touch && typeof document.elementFromPoint === 'function') {
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (el && (el.id === 'sec' || (el.closest && el.closest('#sec')))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isHourTarget(target, touch) {
+  if (target && (target.id === 'hour' || (target.closest && target.closest('#hour')))) {
+    return true;
+  }
+  if (touch && typeof document.elementFromPoint === 'function') {
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (el && (el.id === 'hour' || (el.closest && el.closest('#hour')))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Touch events for iPhone / mobile: preventDefault on touchend blocks iOS double-tap zoom
+document.addEventListener('touchend', function(e) {
+  const touch = e.changedTouches && e.changedTouches[0];
+  if (isSecTarget(e.target, touch)) {
+    e.preventDefault();
+    lastTouchTime = Date.now();
+    registerSecTap();
+    hourTapCount = 0;
+    hourLastTapTime = 0;
+  } else if (isHourTarget(e.target, touch)) {
+    e.preventDefault();
+    lastTouchTime = Date.now();
+    registerHourTap();
+    secTapCount = 0;
+    secLastTapTime = 0;
+  } else {
+    secTapCount = 0;
+    secLastTapTime = 0;
+    hourTapCount = 0;
+    hourLastTapTime = 0;
+  }
+}, { passive: false });
+
+// Click events for desktop / mouse interaction
 document.addEventListener('click', function(e) {
-  if (e.target.id === 'hour')      openTotal();
   if (e.target.id === 'close-btn') closeTotal();
-  if (e.target.id === 'sec') {
-    const el = document.getElementById('earned');
-    el.style.visibility = el.style.visibility === 'hidden' ? 'visible' : 'hidden';
+
+  // If this click was already handled by touchend on a touch device, skip it
+  if (Date.now() - lastTouchTime < 600) {
+    return;
+  }
+
+  if (e.target.id === 'sec' || (e.target.closest && e.target.closest('#sec'))) {
+    registerSecTap();
+    hourTapCount = 0;
+    hourLastTapTime = 0;
+  } else if (e.target.id === 'hour' || (e.target.closest && e.target.closest('#hour'))) {
+    registerHourTap();
+    secTapCount = 0;
+    secLastTapTime = 0;
+  } else {
+    secTapCount = 0;
+    secLastTapTime = 0;
+    hourTapCount = 0;
+    hourLastTapTime = 0;
+  }
+});
+
+// Suppress double-click zooming / selection on clock
+document.addEventListener('dblclick', function(e) {
+  if (e.target && (
+    e.target.id === 'sec' || e.target.id === 'hour' || e.target.id === 'clock' ||
+    (e.target.closest && (e.target.closest('#sec') || e.target.closest('#hour') || e.target.closest('#clock')))
+  )) {
+    e.preventDefault();
+  }
+});
+
+// Reset total-view auto-close timer when user interacts with total-view
+document.getElementById('total-view').addEventListener('click', function(e) {
+  if (e.target.id === 'close-btn' || (e.target.closest && e.target.closest('#close-btn'))) return;
+  if (!document.getElementById('total-view').classList.contains('hidden')) {
+    resetTotalAutoClose();
+  }
+});
+document.getElementById('total-view').addEventListener('input', function() {
+  if (!document.getElementById('total-view').classList.contains('hidden')) {
+    resetTotalAutoClose();
   }
 });
 

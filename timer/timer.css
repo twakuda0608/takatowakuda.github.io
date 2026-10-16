@@ -6,6 +6,7 @@
 html, body {
   height: 100%;
   margin: 0;
+  touch-action: manipulation;
 }
 
 body {
@@ -32,6 +33,7 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
+  touch-action: manipulation;
 }
 
 .clock {
@@ -40,16 +42,33 @@ body {
   font-size: clamp(64px, min(28vw, 42vh), 380px);
   line-height: 1;
   font-variant-numeric: tabular-nums;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
 }
 
 .clock #colon { opacity: 0.9; }
-.clock #sec { font-size: 0.5em; margin-left: 4px; }
+.clock #hour {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.clock #sec {
+  font-size: 0.5em;
+  margin-left: 4px;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
 
 .earned {
   font-variant-numeric: tabular-nums;
   font-size: clamp(40px, min(16vw, 24vh), 220px);
   font-weight: 300;
   margin-top: clamp(8px, 2vh, 28px);
+  visibility: hidden;
 }
 
 /* ── Total view ── */
