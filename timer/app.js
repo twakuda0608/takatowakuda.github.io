@@ -6,7 +6,7 @@ const COLOR_LOW     = 'goldenrod';
 const COLOR_NEUTRAL = '#000000';
 
 const RATE_A = 2000;
-const RATE_B = 1226;
+const RATE_B = 1280;
 
 // ── Google Calendar 設定 ────────────────────────────────────
 const API_KEY     = 'AIzaSyANL5C5iMZtnZhdUCb0xt59P-LD-WA0ecw';
