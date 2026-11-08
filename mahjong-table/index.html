@@ -1405,14 +1405,15 @@
     .detail-legend-item { display:flex; align-items:center; gap:4px; font-size:11px; color:rgba(255,255,255,0.65); }
     .detail-legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
     .detail-stats-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; margin-bottom:14px; }
-    .detail-stats-table { width:100%; min-width:460px; border-collapse:collapse; font-size:12px; }
+    .detail-stats-table { width:100%; min-width:440px; border-collapse:collapse; font-size:12px; }
     .detail-stats-table th { color:rgba(255,255,255,0.4); font-weight:600; padding:4px 3px 6px; text-align:center; font-size:10px; border-bottom:1px solid rgba(255,255,255,0.12); }
     .detail-stats-table th:first-child { text-align:left; }
-    .detail-stats-table td { padding:7px 3px; text-align:center; color:rgba(255,255,255,0.75); border-bottom:1px solid rgba(255,255,255,0.06); }
+    .detail-stats-table td { padding:7px 3px; text-align:center; color:rgba(255,255,255,0.75); border-bottom:1px solid rgba(255,255,255,0.06); font-variant-numeric:tabular-nums; }
     .detail-stats-table td:first-child { text-align:left; font-weight:700; }
     .detail-stats-table tbody tr { background:linear-gradient(90deg, color-mix(in srgb, var(--p-color) 16%, transparent), transparent 64%); }
-    .detail-stats-name { display:flex; align-items:center; gap:6px; color:rgba(255,255,255,0.88); }
+    .detail-stats-name { display:flex; align-items:center; gap:6px; color:rgba(255,255,255,0.88); white-space:nowrap; }
     .detail-stats-dot { width:9px; height:9px; border-radius:50%; background:var(--p-color); box-shadow:0 0 10px color-mix(in srgb, var(--p-color) 70%, transparent); flex-shrink:0; }
+    .detail-stats-note { font-size:10px; color:rgba(255,255,255,0.38); margin-top:-6px; margin-bottom:14px; line-height:1.45; }
     .detail-roundlog { display:flex; flex-direction:column; gap:4px; }
     .detail-round-item { background:rgba(0,0,0,0.2); border-radius:6px; padding:8px 10px; border:1px solid rgba(255,255,255,0.07); }
     .detail-round-label { font-size:10px; color:rgba(255,255,255,0.35); letter-spacing:0.5px; margin-bottom:3px; }
@@ -3935,7 +3936,20 @@
       // 合算プレイヤー統計 (tableGame がある試合のみ集計)
       const nameToIdx = {};
       colPlayers.forEach((nm, i) => { nameToIdx[nm] = i; });
-      const stats = colPlayers.map(() => ({ ron: 0, tsumo: 0, houju: 0, riichi: 0, totalRounds: 0 }));
+      const stats = colPlayers.map(() => ({
+        ron: 0,
+        tsumo: 0,
+        houju: 0,
+        riichi: 0,
+        totalRounds: 0,
+        totalAgariScore: 0,
+        totalHoujuScore: 0,
+        riichiRounds: 0,
+        riichiAgari: 0,
+        riichiHouju: 0,
+        ryukyokuRounds: 0,
+        tenpaiRounds: 0,
+      }));
       let hasAnyStats = false;
 
       gMatches.forEach(m => {
@@ -3961,20 +3975,51 @@
           stats[gi].totalRounds += validRounds;
         }
         for (const ev of roundLog) {
+          const isRiichi = Array.isArray(ev.riichiAtStart) ? ev.riichiAtStart : [];
+
           if (ev.type === 'agari') {
             const winners = ev.winnerIdxs || (ev.winnerIdx >= 0 ? [ev.winnerIdx] : []);
+            const deltas = Array.isArray(ev.deltas) ? ev.deltas : [0, 0, 0, 0];
+
+            for (let si = 0; si < tgN; si++) {
+              const gi = seatToGroup[si];
+              if (gi < 0) continue;
+              if (isRiichi[si]) stats[gi].riichiRounds++;
+            }
+
             if (ev.winType === 'ron') {
               winners.forEach(wi => {
                 const gi = seatToGroup[wi];
-                if (gi >= 0) stats[gi].ron++;
+                if (gi >= 0) {
+                  stats[gi].ron++;
+                  stats[gi].totalAgariScore += Math.max(0, deltas[wi] || 0);
+                  if (isRiichi[wi]) stats[gi].riichiAgari++;
+                }
               });
               const li = seatToGroup[ev.loserIdx];
-              if (li >= 0) stats[li].houju++;
+              if (li >= 0) {
+                stats[li].houju++;
+                stats[li].totalHoujuScore += Math.abs(deltas[ev.loserIdx] || 0);
+                if (isRiichi[ev.loserIdx]) stats[li].riichiHouju++;
+              }
             } else {
               winners.forEach(wi => {
                 const gi = seatToGroup[wi];
-                if (gi >= 0) stats[gi].tsumo++;
+                if (gi >= 0) {
+                  stats[gi].tsumo++;
+                  stats[gi].totalAgariScore += Math.max(0, deltas[wi] || 0);
+                  if (isRiichi[wi]) stats[gi].riichiAgari++;
+                }
               });
+            }
+          } else if (ev.type === 'ryukyoku') {
+            const tenpai = Array.isArray(ev.tenpai) ? ev.tenpai : [];
+            for (let si = 0; si < tgN; si++) {
+              const gi = seatToGroup[si];
+              if (gi < 0) continue;
+              stats[gi].ryukyokuRounds++;
+              if (tenpai[si]) stats[gi].tenpaiRounds++;
+              if (isRiichi[si]) stats[gi].riichiRounds++;
             }
           }
         }
@@ -3982,7 +4027,7 @@
 
       if (hasAnyStats) {
         // 名前をcolPlayers順で表示
-        html += `<div class="detail-sec-lbl" style="margin-top:16px">プレイヤー統計（合算）</div>
+        html += `<div class="detail-sec-lbl" style="margin-top:16px">プレイヤー統計（基本成績）</div>
           <div class="detail-stats-scroll">
           <table class="detail-stats-table">
             <thead><tr>
@@ -4004,7 +4049,35 @@
               </tr>`;
             }).join('')}</tbody>
           </table>
-          </div>`;
+          </div>
+
+          <div class="detail-sec-lbl" style="margin-top:16px">打点・リーチ・流局分析</div>
+          <div class="detail-stats-scroll">
+          <table class="detail-stats-table">
+            <thead><tr>
+              <th>名前</th><th>和了平均</th><th>放銃平均</th><th>立直和了</th><th>立直討死</th><th>流局聴牌</th>
+            </tr></thead>
+            <tbody>${colPlayers.map((name, i) => {
+              const s = stats[i];
+              const agari = s.ron + s.tsumo;
+              const avgAgari = agari > 0 ? Math.round(s.totalAgariScore / agari).toLocaleString() + '点' : '—';
+              const avgHouju = s.houju > 0 ? Math.round(s.totalHoujuScore / s.houju).toLocaleString() + '点' : '—';
+              const riichiAgariPct = s.riichiRounds > 0 ? Math.round(s.riichiAgari / s.riichiRounds * 100) + '%' : '—';
+              const riichiHoujuPct = s.riichiRounds > 0 ? Math.round(s.riichiHouju / s.riichiRounds * 100) + '%' : '—';
+              const tenpaiPct = s.ryukyokuRounds > 0 ? Math.round(s.tenpaiRounds / s.ryukyokuRounds * 100) + '%' : '—';
+              const colorIdx = i % COLORS.length;
+              return `<tr style="--p-color:${COLORS[colorIdx]}">
+                <td><span class="detail-stats-name"><span class="detail-stats-dot"></span><span>${escH(name)}</span></span></td>
+                <td>${avgAgari}</td>
+                <td>${avgHouju}</td>
+                <td>${riichiAgariPct}</td>
+                <td>${riichiHoujuPct}</td>
+                <td>${tenpaiPct}</td>
+              </tr>`;
+            }).join('')}</tbody>
+          </table>
+          </div>
+          <div class="detail-stats-note">※和了平均・放銃平均＝1回あたりの平均打点 / 立直和了＝リーチ局の和了率 / 立直討死＝リーチ局の放銃率 / 流局聴牌＝流局時のテンパイ率</div>`;
       } else {
         html += `<div style="color:rgba(255,255,255,0.25);font-size:12px;text-align:center;padding:24px 0;line-height:2">
           プレイヤー統計データがありません<br>
@@ -4099,21 +4172,64 @@
         </div>`;
 
       // Per-player stats
-      const stats = Array.from({length:n}, () => ({ ron:0, tsumo:0, houju:0 }));
+      const stats = Array.from({length:n}, () => ({
+        ron: 0,
+        tsumo: 0,
+        houju: 0,
+        totalAgariScore: 0,
+        totalHoujuScore: 0,
+        riichiRounds: 0,
+        riichiAgari: 0,
+        riichiHouju: 0,
+        ryukyokuRounds: 0,
+        tenpaiRounds: 0,
+      }));
+
       for (const ev of roundLog) {
+        const isRiichi = Array.isArray(ev.riichiAtStart) ? ev.riichiAtStart : [];
+
         if (ev.type === 'agari') {
           const winners = ev.winnerIdxs || (ev.winnerIdx >= 0 ? [ev.winnerIdx] : []);
+          const deltas = Array.isArray(ev.deltas) ? ev.deltas : [0, 0, 0, 0];
+
+          for (let si = 0; si < n; si++) {
+            if (isRiichi[si]) stats[si].riichiRounds++;
+          }
+
           if (ev.winType === 'ron') {
-            winners.forEach(wi => { if (wi >= 0 && wi < n) stats[wi].ron++; });
-            if (ev.loserIdx >= 0 && ev.loserIdx < n) stats[ev.loserIdx].houju++;
+            winners.forEach(wi => {
+              if (wi >= 0 && wi < n) {
+                stats[wi].ron++;
+                stats[wi].totalAgariScore += Math.max(0, deltas[wi] || 0);
+                if (isRiichi[wi]) stats[wi].riichiAgari++;
+              }
+            });
+            if (ev.loserIdx >= 0 && ev.loserIdx < n) {
+              stats[ev.loserIdx].houju++;
+              stats[ev.loserIdx].totalHoujuScore += Math.abs(deltas[ev.loserIdx] || 0);
+              if (isRiichi[ev.loserIdx]) stats[ev.loserIdx].riichiHouju++;
+            }
           } else {
-            winners.forEach(wi => { if (wi >= 0 && wi < n) stats[wi].tsumo++; });
+            winners.forEach(wi => {
+              if (wi >= 0 && wi < n) {
+                stats[wi].tsumo++;
+                stats[wi].totalAgariScore += Math.max(0, deltas[wi] || 0);
+                if (isRiichi[wi]) stats[wi].riichiAgari++;
+              }
+            });
+          }
+        } else if (ev.type === 'ryukyoku') {
+          const tenpai = Array.isArray(ev.tenpai) ? ev.tenpai : [];
+          for (let si = 0; si < n; si++) {
+            stats[si].ryukyokuRounds++;
+            if (tenpai[si]) stats[si].tenpaiRounds++;
+            if (isRiichi[si]) stats[si].riichiRounds++;
           }
         }
       }
       const totalRounds = roundLog.filter(e => e.type === 'agari' || e.type === 'ryukyoku').length || 1;
 
-      html += `<div class="detail-sec-lbl" style="margin-top:16px">プレイヤー統計</div>
+      html += `<div class="detail-sec-lbl" style="margin-top:16px">プレイヤー統計（基本成績）</div>
         <div class="detail-stats-scroll">
         <table class="detail-stats-table">
           <thead><tr>
@@ -4131,7 +4247,34 @@
             </tr>`;
           }).join('')}</tbody>
         </table>
-        </div>`;
+        </div>
+
+        <div class="detail-sec-lbl" style="margin-top:16px">打点・リーチ・流局分析</div>
+        <div class="detail-stats-scroll">
+        <table class="detail-stats-table">
+          <thead><tr>
+            <th>名前</th><th>和了平均</th><th>放銃平均</th><th>立直和了</th><th>立直討死</th><th>流局聴牌</th>
+          </tr></thead>
+          <tbody>${seatNames.map((name,i) => {
+            const s = stats[i];
+            const agari = s.ron + s.tsumo;
+            const avgAgari = agari > 0 ? Math.round(s.totalAgariScore / agari).toLocaleString() + '点' : '—';
+            const avgHouju = s.houju > 0 ? Math.round(s.totalHoujuScore / s.houju).toLocaleString() + '点' : '—';
+            const riichiAgariPct = s.riichiRounds > 0 ? Math.round(s.riichiAgari / s.riichiRounds * 100) + '%' : '—';
+            const riichiHoujuPct = s.riichiRounds > 0 ? Math.round(s.riichiHouju / s.riichiRounds * 100) + '%' : '—';
+            const tenpaiPct = s.ryukyokuRounds > 0 ? Math.round(s.tenpaiRounds / s.ryukyokuRounds * 100) + '%' : '—';
+            return `<tr style="--p-color:${COLORS[i] || '#fff'}">
+              <td><span class="detail-stats-name"><span class="detail-stats-dot"></span><span>${escH(name)}</span></span></td>
+              <td>${avgAgari}</td>
+              <td>${avgHouju}</td>
+              <td>${riichiAgariPct}</td>
+              <td>${riichiHoujuPct}</td>
+              <td>${tenpaiPct}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+        </div>
+        <div class="detail-stats-note">※和了平均・放銃平均＝1回あたりの平均打点 / 立直和了＝リーチ時の和了率 / 立直討死＝リーチ時の放銃率 / 流局聴牌＝流局時のテンパイ率</div>`;
 
       // Round history
       if (roundLog.length > 0) {
