@@ -322,6 +322,7 @@ function updateRecordSourceUI() {
 
 el('record-clear-table').addEventListener('click', () => {
   pendingTableGame = null;
+  try { localStorage.removeItem('mahjong_table_autosave_v1'); } catch {}
   setTableSeatNames(getPlayerSlotNames());
   const banner = el('import-banner');
   if (banner) banner.style.display = 'none';
@@ -354,6 +355,7 @@ el('record-btn').addEventListener('click', async () => {
     updateHistoryWithNames(playerRecords.map(p => p.name));
     await savePlayerHistory();
     pendingTableGame = null;
+    try { localStorage.removeItem('mahjong_table_autosave_v1'); } catch {}
     const banner = el('import-banner');
     if (banner) banner.style.display = 'none';
     resetTab1ScoresForNextMatch();

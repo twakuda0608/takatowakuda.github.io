@@ -931,6 +931,22 @@
       letter-spacing: 2px;
       margin-bottom: 10px;
     }
+    .player-reset-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.65);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: all 0.15s;
+    }
+    .player-reset-btn:active {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
     .player-row {
       display: flex;
       align-items: center;
@@ -2951,7 +2967,10 @@
         </div>
 
         <div class="setup-card">
-          <div class="setup-card-lbl">PLAYERS</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div class="setup-card-lbl" style="margin-bottom:0">PLAYERS</div>
+            <button class="player-reset-btn" id="resetNamesBtn" type="button">リセット</button>
+          </div>
 
           <div class="player-row">
             <input class="player-name-inp" id="sn0" placeholder="P1" maxlength="12" autocomplete="off">
@@ -3478,9 +3497,10 @@
     <div class="ag-card">
       <div class="ag-head">対 局 終 了</div>
       <div id="gameEndScores" class="ag-result"></div>
-      <div class="ag-actions" style="margin-top:12px">
-        <button class="ag-cancel" id="gameEndNewGame">テーブルに戻る</button>
-        <button class="ag-apply" id="gameEndRecord" style="background:rgba(14,165,233,0.85)">精算・戦績保存</button>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+        <button class="ag-apply" id="gameEndRecord" style="background:rgba(14,165,233,0.85);width:100%">精算・戦績保存</button>
+        <button class="ag-cancel" id="gameEndRewind" style="width:100%;padding:11px;font-size:13px;font-weight:700">戻る</button>
+        <button class="ag-apply" id="gameEndNewGame" style="background:rgba(220,38,38,0.85);width:100%;font-size:12px;padding:9px;margin-top:4px">新規対局</button>
       </div>
     </div>
   </div>
@@ -4302,6 +4322,7 @@
     let randomSpinInterval = null;
     let randomTimeouts = [];
     const AUTO_SAVE_KEY = 'mahjong_table_autosave_v1';
+    let autoSaveDisabled = false;
     let editingRoundIndex = null;
     let preEditLiveState = null;
     let origRoundScores = null;
@@ -4413,6 +4434,7 @@
     }
 
     function saveGameProgress() {
+      if (autoSaveDisabled) return;
       if (editingRoundIndex !== null) return;
       if (!isGameInProgress()) return;
       try { localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(buildSaveData())); } catch {}
@@ -5816,8 +5838,12 @@
       const data = readSavedGame();
       const card = document.getElementById('resumeCard');
       if (!data || !card) return;
+      if (data.gameEnded) {
+        clearSavedGame();
+        return;
+      }
       const title = card.querySelector('.resume-title');
-      if (title) title.textContent = data.gameEnded ? '終了した対局' : '途中の対局';
+      if (title) title.textContent = '途中の対局';
       document.getElementById('resumeMeta').innerHTML = savedGameLabel(data);
       card.classList.add('vis');
     }
@@ -6292,6 +6318,8 @@
     document.getElementById('startGameBtn').addEventListener('click', () => {
       cancelRandomAnimation();
       clearSavedGame();
+      autoSaveDisabled = false;
+      saveLastPlayers();
       // Collect setup entries; P1 (index 0) always sits at bottom
       const setup = [];
       for (let i = 0; i < 4; i++) {
@@ -6437,94 +6465,21 @@
     ];
 
     const GOAL_FU_BY_HAN = {
-      1: [30, 40, 50, 60, 70, 80, 90, 100, 110],
-      2: [20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110],
-      3: [20, 25, 30, 40, 50, 60],
+      1: [30, 40],
+      2: [20, 25, 30, 40],
+      3: [20, 25, 30, 40],
       4: [20, 25, 30],
     };
     const GOAL_MANGAN = { ronOya: 12000, ronKo: 8000, tsumoOya: 4000, tsumoKo: 2000 };
     const GOAL_ABOVE = {
-      ronOya:   [[12000,'満貫'],[18000,'跳満'],[24000,'倍満'],[36000,'三倍満'],[48000,'役満']],
-      ronKo:    [[8000,'満貫'],[12000,'跳満'],[16000,'倍満'],[24000,'三倍満'],[32000,'役満']],
-      tsumoOya: [[4000,'満貫'],[6000,'跳満'],[8000,'倍満'],[12000,'三倍満'],[16000,'役満']],
-      tsumoKo:  [[2000,'満貫'],[3000,'跳満'],[4000,'倍満'],[6000,'三倍満'],[8000,'役満']],
+      ronOya:   [[12000,'満貫'],[18000,'跳満'],[24000,'倍満'],[36000,'三倍満'],[48000,'役満'],[96000,'二倍役満']],
+      ronKo:    [[8000,'満貫'],[12000,'跳満'],[16000,'倍満'],[24000,'三倍満'],[32000,'役満'],[64000,'二倍役満']],
+      tsumoOya: [[4000,'満貫'],[6000,'跳満'],[8000,'倍満'],[12000,'三倍満'],[16000,'役満'],[32000,'二倍役満']],
+      tsumoKo:  [[2000,'満貫'],[3000,'跳満'],[4000,'倍満'],[6000,'三倍満'],[8000,'役満'],[16000,'二倍役満']],
     };
-
-    function goalCeilTo100(x) {
-      return x <= 0 ? 0 : Math.ceil(x / 100) * 100;
-    }
 
     function goalEsc(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    function goalFindManganPlus(required, mode, tsumoOppIsOya) {
-      if (mode === 'tsumoKo') {
-        const above = [[2000, 4000, '満貫'], [3000, 6000, '跳満'], [4000, 8000, '倍満'], [6000, 12000, '三倍満'], [8000, 16000, '役満']];
-        for (const [ko, dealer, label] of above) {
-          const netChange = tsumoOppIsOya ? (2 * ko + 2 * dealer) : (3 * ko + dealer);
-          if (netChange > required) return { label, pay: ko };
-        }
-      } else {
-        for (const [pay, label] of GOAL_ABOVE[mode]) {
-          if (pay > required) return { label, pay };
-        }
-      }
-      return null;
-    }
-
-    function goalMinHand(required, mode, tsumoOppIsOya = false) {
-      if (required <= 0) return { label: '任意', pay: 0 };
-
-      const manganPay = GOAL_MANGAN[mode];
-      const isRon = mode.startsWith('ron');
-
-      function search(fuLimit) {
-        let minPay = Infinity, best = null;
-        for (let han = 1; han <= 4; han++) {
-          for (const fu of GOAL_FU_BY_HAN[han]) {
-            if (fu > fuLimit) continue;
-            if (isRon && fu === 20) continue;
-            if (fu === 25 && han < 2) continue;
-            const basic = fu * (1 << (han + 2));
-            let raw, netChange;
-            if (mode === 'tsumoKo') {
-              raw = Math.ceil(basic / 100) * 100;
-              if (raw >= manganPay) continue;
-              const dealer = Math.ceil(basic * 2 / 100) * 100;
-              netChange = tsumoOppIsOya ? (2 * raw + 2 * dealer) : (3 * raw + dealer);
-            } else {
-              if (mode === 'ronOya') raw = Math.ceil(basic * 6 / 100) * 100;
-              else if (mode === 'ronKo') raw = Math.ceil(basic * 4 / 100) * 100;
-              else raw = Math.ceil(basic * 2 / 100) * 100;
-              if (raw >= manganPay) continue;
-              netChange = raw;
-            }
-            if (netChange <= required) continue;
-            if (raw < minPay || (raw === minPay && (fu < best.fu || (fu === best.fu && han < best.han)))) {
-              minPay = raw;
-              best = { han, fu };
-            }
-          }
-        }
-        return best ? { han: best.han, fu: best.fu, pay: minPay } : null;
-      }
-
-      const hand = search(110);
-      if (hand) {
-        if (hand.fu > 50) {
-          const alt = search(50) || goalFindManganPlus(required, mode, tsumoOppIsOya);
-          if (alt) {
-            return {
-              ...(alt.han != null ? { label: `${alt.han}翻${alt.fu}符`, han: alt.han, fu: alt.fu } : { label: alt.label }),
-              pay: alt.pay,
-              alt: { label: `${hand.han}翻${hand.fu}符`, pay: hand.pay, han: hand.han, fu: hand.fu }
-            };
-          }
-        }
-        return { label: `${hand.han}翻${hand.fu}符`, pay: hand.pay, han: hand.han, fu: hand.fu };
-      }
-      return goalFindManganPlus(required, mode, tsumoOppIsOya) || { label: '役満でも届かない', pay: null };
     }
 
     function goalDealerPay(hand) {
@@ -6533,87 +6488,206 @@
         : hand.pay * 2;
     }
 
-    function goalDescribeHand(hand, mode, honba, scores) {
-      if (hand.label === '任意') return '<span class="goal-ok">任意の和了</span>';
-      if (hand.pay === null) return '<span class="goal-ng">達成不可</span>';
+    function getAllPossibleHands(mode) {
+      const isRon = mode.startsWith('ron');
+      const manganPay = GOAL_MANGAN[mode];
+      const list = [];
 
-      let payText = '';
-      let myGain = 0, oppLoss = 0;
-      if (mode === 'tsumoOya') {
-        const act = hand.pay + honba * 100;
-        payText = `${act.toLocaleString()}点オール`;
-        myGain = 3 * act;
-        oppLoss = act;
-      } else if (mode === 'tsumoKo') {
-        const dealer = goalDealerPay(hand);
-        const koPay = hand.pay + honba * 100;
-        const dealerPay = dealer + honba * 100;
-        payText = `${koPay.toLocaleString()}-${dealerPay.toLocaleString()}点`;
-        myGain = 2 * koPay + dealerPay;
-        oppLoss = scores.oppIsOya ? dealerPay : koPay;
-      } else {
-        const act = hand.pay + honba * 300;
-        payText = `${act.toLocaleString()}点`;
-        myGain = act;
-        oppLoss = scores.oppPays ? act : 0;
+      for (let han = 1; han <= 4; han++) {
+        for (const fu of GOAL_FU_BY_HAN[han]) {
+          if (isRon && fu === 20) continue;
+          if (fu === 25 && han < 2) continue;
+          const basic = fu * (1 << (han + 2));
+          let pay;
+          if (mode === 'tsumoKo') {
+            pay = Math.ceil(basic / 100) * 100;
+          } else if (mode === 'tsumoOya') {
+            pay = Math.ceil(basic * 2 / 100) * 100;
+          } else if (mode === 'ronKo') {
+            pay = Math.ceil(basic * 4 / 100) * 100;
+          } else if (mode === 'ronOya') {
+            pay = Math.ceil(basic * 6 / 100) * 100;
+          }
+          if (pay >= manganPay) continue;
+          list.push({ han, fu, pay, label: `${han}翻${fu}符` });
+        }
       }
 
-      const myFinal = scores.my + myGain + scores.kyotaku;
-      const oppFinal = scores.opp - oppLoss;
-      const finalClass = myFinal > oppFinal ? 'goal-ok' : 'goal-ng';
-      const alt = hand.alt ? `<span class="goal-alt">または ${hand.alt.label}</span>` : '';
-      return `<strong>${hand.label}</strong> ${payText}<span class="goal-final">→ <span class="${finalClass}">${myFinal.toLocaleString()}点</span> / 境目 ${oppFinal.toLocaleString()}点</span>${alt}`;
+      for (const [pay, label] of GOAL_ABOVE[mode]) {
+        list.push({ han: null, fu: null, pay, label });
+      }
+
+      list.sort((a, b) => {
+        if (a.pay !== b.pay) return a.pay - b.pay;
+        const fuA = a.fu != null ? a.fu : 999;
+        const fuB = b.fu != null ? b.fu : 999;
+        if (fuA !== fuB) return fuA - fuB;
+        const hanA = a.han != null ? a.han : 99;
+        const hanB = b.han != null ? b.han : 99;
+        return hanA - hanB;
+      });
+
+      return list;
+    }
+
+    function getRankInScores(playerIdx, scores) {
+      let rank = 1;
+      const myScore = scores[playerIdx];
+      const mySeat = (playerIdx - kiichaSlot + 4) % 4;
+
+      for (let i = 0; i < 4; i++) {
+        if (i === playerIdx) continue;
+        const oppScore = scores[i];
+        const oppSeat = (i - kiichaSlot + 4) % 4;
+        if (oppScore > myScore) {
+          rank++;
+        } else if (oppScore === myScore && oppSeat < mySeat) {
+          rank++;
+        }
+      }
+      return rank;
     }
 
     function goalCurrentRank(playerIdx) {
-      const order = [0, 1, 2, 3].sort((a, b) => state.players[b].score - state.players[a].score);
-      return order.indexOf(playerIdx) + 1;
+      const scores = state.players.map(p => p.score);
+      return getRankInScores(playerIdx, scores);
     }
 
     function goalCutoffOpponent(playerIdx, targetRank) {
       const rank = goalCurrentRank(playerIdx);
       if (rank <= targetRank) return null;
-      const order = [0, 1, 2, 3].sort((a, b) => state.players[b].score - state.players[a].score);
+      const order = [0, 1, 2, 3].sort((a, b) => {
+        if (state.players[b].score !== state.players[a].score) {
+          return state.players[b].score - state.players[a].score;
+        }
+        return ((a - kiichaSlot + 4) % 4) - ((b - kiichaSlot + 4) % 4);
+      });
       return order[targetRank - 1];
     }
 
-    function goalMethodCell(playerIdx, oppIdx, method) {
+    function simulateAfterScores(playerIdx, method, targetOppIdx, hand) {
+      const scores = state.players.map(p => p.score);
       const me = state.players[playerIdx];
-      const opp = state.players[oppIdx];
-      const diff = opp.score - me.score;
+      const isOya = me.wind === '東';
       const honba = state.honba;
       const kyotaku = state.kyotaku * 1000;
-      const isOya = me.wind === '東';
-      const tsumoMode = isOya ? 'tsumoOya' : 'tsumoKo';
-      const ronMode = isOya ? 'ronOya' : 'ronKo';
-      let required, mode, oppPays = false;
 
       if (method === 'tsumo') {
-        mode = tsumoMode;
-        required = isOya ? goalCeilTo100((diff - honba * 400 - kyotaku) / 4) : (diff - honba * 400 - kyotaku);
-        oppPays = true;
+        let myGain = 0;
+        for (let i = 0; i < 4; i++) {
+          if (i === playerIdx) continue;
+          const isOppOya = state.players[i].wind === '東';
+          let loss = 0;
+          if (isOya) {
+            loss = hand.pay + honba * 100;
+          } else {
+            const dealer = goalDealerPay(hand);
+            loss = (isOppOya ? dealer : hand.pay) + honba * 100;
+          }
+          scores[i] -= loss;
+          myGain += loss;
+        }
+        scores[playerIdx] += myGain + kyotaku;
       } else if (method === 'direct') {
-        mode = ronMode;
-        required = goalCeilTo100((diff - honba * 600 - kyotaku) / 2);
-        oppPays = true;
+        const act = hand.pay + honba * 300;
+        scores[targetOppIdx] -= act;
+        scores[playerIdx] += act + kyotaku;
       } else {
-        mode = ronMode;
-        required = goalCeilTo100(diff - honba * 300 - kyotaku);
+        const otherIdxs = [0, 1, 2, 3].filter(i => i !== playerIdx && i !== targetOppIdx);
+        otherIdxs.sort((a, b) => scores[a] - scores[b]);
+        const loser = otherIdxs[0];
+        const act = hand.pay + honba * 300;
+        if (loser !== undefined) scores[loser] -= act;
+        scores[playerIdx] += act + kyotaku;
+      }
+      return scores;
+    }
+
+    function findGoalHand(playerIdx, targetRank, method, targetOppIdx) {
+      const me = state.players[playerIdx];
+      const isOya = me.wind === '東';
+      const mode = method === 'tsumo' ? (isOya ? 'tsumoOya' : 'tsumoKo') : (isOya ? 'ronOya' : 'ronKo');
+
+      const hands = getAllPossibleHands(mode);
+      let found = null;
+      let foundAfterScores = null;
+
+      for (const hand of hands) {
+        const after = simulateAfterScores(playerIdx, method, targetOppIdx, hand);
+        const rank = getRankInScores(playerIdx, after);
+        if (rank <= targetRank) {
+          found = hand;
+          foundAfterScores = after;
+          break;
+        }
       }
 
-      const hand = goalMinHand(required, mode, opp.wind === '東');
-      return goalDescribeHand(hand, mode, honba, {
-        my: me.score,
-        opp: opp.score,
-        oppPays,
-        oppIsOya: opp.wind === '東',
-        kyotaku
-      });
+      if (!found) {
+        return { hand: { label: '役満でも届かない', pay: null }, mode, cutoffScore: null, afterScores: null };
+      }
+
+      const myScore = foundAfterScores[playerIdx];
+      const mySeat = (playerIdx - kiichaSlot + 4) % 4;
+      let highestBelowScore = null;
+      let highestBelowIdx = -1;
+
+      for (let i = 0; i < 4; i++) {
+        if (i === playerIdx) continue;
+        const s = foundAfterScores[i];
+        const seat = (i - kiichaSlot + 4) % 4;
+        const isBelow = s < myScore || (s === myScore && seat > mySeat);
+        if (isBelow) {
+          if (highestBelowScore === null || s > highestBelowScore || (s === highestBelowScore && seat < (highestBelowIdx - kiichaSlot + 4) % 4)) {
+            highestBelowScore = s;
+            highestBelowIdx = i;
+          }
+        }
+      }
+
+      const cutoffScore = highestBelowScore != null ? highestBelowScore : foundAfterScores[targetOppIdx];
+
+      return {
+        hand: found,
+        mode,
+        cutoffScore,
+        afterScores: foundAfterScores
+      };
+    }
+
+    function goalDescribeHand(res, honba, myIdx) {
+      const hand = res.hand;
+      if (!hand || hand.pay === null) return '<span class="goal-ng">達成不可</span>';
+      if (hand.label === '任意') return '<span class="goal-ok">任意の和了</span>';
+
+      let payText = '';
+      if (res.mode === 'tsumoOya') {
+        const act = hand.pay + honba * 100;
+        payText = `${act.toLocaleString()}点オール`;
+      } else if (res.mode === 'tsumoKo') {
+        const dealer = goalDealerPay(hand);
+        const koPay = hand.pay + honba * 100;
+        const dealerPay = dealer + honba * 100;
+        payText = `${koPay.toLocaleString()}-${dealerPay.toLocaleString()}点`;
+      } else {
+        const act = hand.pay + honba * 300;
+        payText = `${act.toLocaleString()}点`;
+      }
+
+      const myFinal = res.afterScores[myIdx];
+      const oppFinal = res.cutoffScore;
+      const cutoffText = oppFinal != null ? ` / 境目 ${oppFinal.toLocaleString()}点` : '';
+      const alt = hand.alt ? `<span class="goal-alt">または ${hand.alt.label}</span>` : '';
+      return `<strong>${hand.label}</strong> ${payText}<span class="goal-final">→ <span class="goal-ok">${myFinal.toLocaleString()}点</span>${cutoffText}</span>${alt}`;
+    }
+
+    function goalMethodCell(playerIdx, targetRank, oppIdx, method) {
+      const res = findGoalHand(playerIdx, targetRank, method, oppIdx);
+      return goalDescribeHand(res, state.honba, playerIdx);
     }
 
     function renderGoalRank(playerIdx, targetRank) {
-      const oppIdx = goalCutoffOpponent(playerIdx, targetRank);
-      if (oppIdx == null) {
+      const currentRank = goalCurrentRank(playerIdx);
+      if (currentRank <= targetRank) {
         return `<div class="goal-rank-card">
           <div class="goal-rank-head">
             <div class="goal-rank-title">${targetRank}位以内</div>
@@ -6622,15 +6696,16 @@
           <div class="goal-method-row"><div class="goal-method">条件</div><div class="goal-hand"><span class="goal-ok">このままでOK</span></div></div>
         </div>`;
       }
+      const oppIdx = goalCutoffOpponent(playerIdx, targetRank);
       const opp = state.players[oppIdx];
       return `<div class="goal-rank-card">
         <div class="goal-rank-head">
           <div class="goal-rank-title">${targetRank}位以内</div>
           <div class="goal-rank-note">${goalEsc(opp.name)}（${opp.score.toLocaleString()}点）超え</div>
         </div>
-        <div class="goal-method-row"><div class="goal-method">ツモ</div><div class="goal-hand">${goalMethodCell(playerIdx, oppIdx, 'tsumo')}</div></div>
-        <div class="goal-method-row"><div class="goal-method">他家ロン</div><div class="goal-hand">${goalMethodCell(playerIdx, oppIdx, 'otherRon')}</div></div>
-        <div class="goal-method-row"><div class="goal-method">直撃</div><div class="goal-hand">${goalMethodCell(playerIdx, oppIdx, 'direct')}</div></div>
+        <div class="goal-method-row"><div class="goal-method">ツモ</div><div class="goal-hand">${goalMethodCell(playerIdx, targetRank, oppIdx, 'tsumo')}</div></div>
+        <div class="goal-method-row"><div class="goal-method">他家ロン</div><div class="goal-hand">${goalMethodCell(playerIdx, targetRank, oppIdx, 'otherRon')}</div></div>
+        <div class="goal-method-row"><div class="goal-method">直撃</div><div class="goal-hand">${goalMethodCell(playerIdx, targetRank, oppIdx, 'direct')}</div></div>
       </div>`;
     }
 
@@ -7458,6 +7533,9 @@
       if (targetIdx < 0 || targetIdx >= gameHistory.length) return;
       const h = gameHistory[targetIdx];
       if (!h) return;
+      if (endKyotakuAwarded > 0) {
+        rollbackEndKyotaku();
+      }
       const pLog = tableRoundLog[targetIdx];
       const oldDeltas = getRoundDeltas(targetIdx);
 
@@ -7539,6 +7617,7 @@
 
     function cancelRoundEdit() {
       if (editingRoundIndex === null || !preEditLiveState) return;
+      const wasEnded = !!preEditLiveState.tableGameEnded;
       state = preEditLiveState.state;
       tableGameEnded = preEditLiveState.tableGameEnded;
       riichiCounts = preEditLiveState.riichiCounts;
@@ -7560,6 +7639,9 @@
       });
       setBackFabVisible(true);
       render();
+      if (wasEnded) {
+        showGameEnd();
+      }
     }
 
     function finishRoundEdit(newEndScores, newLabel, roundType, extra) {
@@ -7697,18 +7779,21 @@
       if (activeHistIdx >= 0) startRoundEdit(activeHistIdx);
     });
 
-    document.getElementById('hdmRewindBtn').addEventListener('click', () => {
-      if (activeHistIdx < 0 || !gameHistory[activeHistIdx]) return;
-      const h = gameHistory[activeHistIdx];
-      const discardedRounds = gameHistory.length - activeHistIdx;
-      if (!confirm(`「${h.roundLabel}」の直前まで巻き戻しますか？\n（この局を含む以降 ${discardedRounds} 局分の結果は破棄されます）`)) return;
+    function rewindToRound(targetIdx, needConfirm = true) {
+      if (targetIdx < 0 || !gameHistory[targetIdx]) return false;
+      const h = gameHistory[targetIdx];
+      const discardedRounds = gameHistory.length - targetIdx;
+      if (needConfirm) {
+        if (!confirm(`「${h.roundLabel}」のアクション前に巻き戻しますか？\n（この局を含む直近 ${discardedRounds} 局分の結果は破棄されます）`)) return false;
+      }
 
-      const pLog = tableRoundLog[activeHistIdx];
+      rollbackEndKyotaku();
+      const pLog = tableRoundLog[targetIdx];
       const startScores = [0, 1, 2, 3].map(i => {
-        if (activeHistIdx === 0) {
+        if (targetIdx === 0) {
           return (pLog?.scoresBefore ? pLog.scoresBefore[i] + (pLog.riichiAtStart?.[i] ? 1000 : 0) : h.snapshot.players[i].score + (h.snapshot.players[i].riichi ? 1000 : 0));
         }
-        const prev = tableRoundLog[activeHistIdx - 1];
+        const prev = tableRoundLog[targetIdx - 1];
         if (prev?.scoresBefore && prev?.deltas) {
           return prev.scoresBefore[i] + prev.deltas[i];
         }
@@ -7728,8 +7813,8 @@
       state.roundWind = h.snapshot.roundWind;
       state.roundNum  = h.snapshot.roundNum;
       state.inEnchosen = h.snapshot.inEnchosen ?? false;
-      gameHistory = gameHistory.slice(0, activeHistIdx);
-      tableRoundLog = tableRoundLog.slice(0, activeHistIdx);
+      gameHistory = gameHistory.slice(0, targetIdx);
+      tableRoundLog = tableRoundLog.slice(0, targetIdx);
       tableGameEnded = false;
       endKyotakuAwarded = 0;
       endKyotakuRecipient = -1;
@@ -7737,8 +7822,16 @@
       updateHistBadge();
       document.getElementById('histDetailModal').style.display = 'none';
       document.getElementById('historyModal').style.display = 'none';
+      document.getElementById('gameEndModal').style.display = 'none';
       setBackFabVisible(true);
+      saveGameProgress();
       render();
+      publishRoomStateNow();
+      return true;
+    }
+
+    document.getElementById('hdmRewindBtn').addEventListener('click', () => {
+      rewindToRound(activeHistIdx, true);
     });
 
     document.getElementById('hdmCloseBtn').addEventListener('click', () => {
@@ -7845,6 +7938,18 @@
       }
     }
 
+    function rollbackEndKyotaku() {
+      if (endKyotakuAwarded > 0 && endKyotakuRecipient >= 0) {
+        if (state.players[endKyotakuRecipient]) {
+          state.players[endKyotakuRecipient].score -= endKyotakuAwarded;
+        }
+        state.kyotaku += Math.round(endKyotakuAwarded / 1000);
+      }
+      endKyotakuAwarded = 0;
+      endKyotakuRecipient = -1;
+      endKyotakuExcluded = 0;
+    }
+
     function showGameEnd() {
       tableGameEnded = true;
       handleEndKyotaku();
@@ -7884,8 +7989,16 @@
       showGameEnd();
     });
 
+    document.getElementById('gameEndRewind').addEventListener('click', () => {
+      if (gameHistory.length === 0) {
+        document.getElementById('gameEndModal').style.display = 'none';
+        return;
+      }
+      rewindToRound(gameHistory.length - 1, false);
+    });
+
     document.getElementById('gameEndNewGame').addEventListener('click', () => {
-      if (!gameRecorded && !confirm('スコアを記録せずにテーブルに戻りますか？')) return;
+      if (!confirm('【警告】これまでの対局記録やスコアはすべて破棄されます。\n\n本当に対局を終了して新規対局を開始しますか？')) return;
       document.getElementById('gameEndModal').style.display = 'none';
       clearSavedGame();
       state = freshState();
@@ -7905,6 +8018,8 @@
     });
 
     document.getElementById('gameEndRecord').addEventListener('click', () => {
+      autoSaveDisabled = true;
+      saveLastPlayers();
       const tableGameData = {
         playerNames: state.players.map(p => p.name),
         roundLog: tableRoundLog,
@@ -8572,6 +8687,63 @@
       makeAutocomplete(document.getElementById(`sn${i}`), () => getStartNames(i));
     }
 
+    // ── プレイヤー名引き継ぎ & リセット ───────────
+    const LAST_PLAYERS_KEY = 'mahjong_table_last_players';
+
+    function saveLastPlayers() {
+      try {
+        const names = [0, 1, 2, 3].map(i => {
+          const el = document.getElementById(`sn${i}`);
+          return el ? el.value.trim() : '';
+        });
+        localStorage.setItem(LAST_PLAYERS_KEY, JSON.stringify(names));
+      } catch {}
+    }
+
+    function restoreLastPlayers() {
+      try {
+        const savedRaw = localStorage.getItem(LAST_PLAYERS_KEY);
+        if (savedRaw) {
+          const savedNames = JSON.parse(savedRaw);
+          if (Array.isArray(savedNames)) {
+            savedNames.forEach((name, i) => {
+              const inp = document.getElementById(`sn${i}`);
+              if (inp && name) inp.value = name;
+            });
+          }
+        }
+      } catch {}
+
+      try {
+        const p1Inp = document.getElementById('sn0');
+        if (p1Inp && !p1Inp.value) {
+          const historyRaw = localStorage.getItem('mahjong_playerHistory');
+          if (historyRaw) {
+            const history = JSON.parse(historyRaw);
+            if (Array.isArray(history) && history.length > 0) {
+              p1Inp.value = history[0];
+            }
+          }
+        }
+      } catch {}
+    }
+
+    for (let i = 0; i < 4; i++) {
+      const inp = document.getElementById(`sn${i}`);
+      if (inp) {
+        inp.addEventListener('input', saveLastPlayers);
+        inp.addEventListener('change', saveLastPlayers);
+      }
+    }
+
+    document.getElementById('resetNamesBtn')?.addEventListener('click', () => {
+      for (let i = 1; i < 4; i++) {
+        const inp = document.getElementById(`sn${i}`);
+        if (inp) inp.value = '';
+      }
+      saveLastPlayers();
+    });
+
     // ── 点数修正 ──────────────────────────────────
     let seRoundWind = 0, seRoundNum = 0;
 
@@ -8705,16 +8877,7 @@
     startPersonalSubscription();
 
     // Standalone mode: sync shared player names from localStorage if available
-    try {
-      const historyRaw = localStorage.getItem('mahjong_playerHistory');
-      if (historyRaw) {
-        const history = JSON.parse(historyRaw);
-        if (Array.isArray(history) && history.length > 0) {
-          const p1Inp = document.getElementById('sn0');
-          if (p1Inp && !p1Inp.value) p1Inp.value = history[0];
-        }
-      }
-    } catch {}
+    restoreLastPlayers();
   </script>
 
 </body>
