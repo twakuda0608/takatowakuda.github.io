@@ -15,38 +15,56 @@ const CALENDAR_ID = 'd0eb120895b44bb5496dba4a21c45f6e6d393fbb14910748827723b4e57
 let SHIFT_DATA = {};
 
 async function loadCalendarData() {
-  const CACHE_KEY = 'shift_cal_v1';
+  const CACHE_KEY = 'shift_cal_v2';
   const CACHE_TTL = 3 * 60 * 60 * 1000; // 3時間キャッシュ
   try {
-    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+    localStorage.removeItem('shift_cal_v1');
+  } catch (_) {}
+
+  let cached = null;
+  try {
+    cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
     if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data;
   } catch (_) {}
 
   const now  = new Date();
-  const tMin = new Date(now.getFullYear(), now.getMonth() - 3, 1).toISOString();
   const tMax = new Date(now.getFullYear(), now.getMonth() + 24, 1).toISOString();
-  const url  = 'https://www.googleapis.com/calendar/v3/calendars/'
-    + encodeURIComponent(CALENDAR_ID)
-    + '/events?key=' + API_KEY
-    + '&timeMin=' + encodeURIComponent(tMin)
-    + '&timeMax=' + encodeURIComponent(tMax)
-    + '&singleEvents=true&orderBy=startTime&maxResults=500';
-
-  const res  = await fetch(url);
-  if (!res.ok) throw new Error('Calendar API ' + res.status);
-  const json = await res.json();
 
   const result = {};
-  for (const ev of json.items) {
-    if (!ev.start || !ev.start.dateTime) continue;
-    const key   = ev.start.dateTime.substring(0, 10);  // "2026-05-16"
-    const start = ev.start.dateTime.substring(11, 16); // "09:30"
-    const end   = ev.end.dateTime.substring(11, 16);   // "20:45"
-    result[key] = { start, end };
-  }
+  let pageToken = '';
+  try {
+    do {
+      let url = 'https://www.googleapis.com/calendar/v3/calendars/'
+        + encodeURIComponent(CALENDAR_ID)
+        + '/events?key=' + API_KEY
+        + '&timeMax=' + encodeURIComponent(tMax)
+        + '&singleEvents=true&orderBy=startTime&maxResults=2500';
+      if (pageToken) {
+        url += '&pageToken=' + encodeURIComponent(pageToken);
+      }
 
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: result })); } catch (_) {}
-  return result;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Calendar API ' + res.status);
+      const json = await res.json();
+
+      for (const ev of json.items || []) {
+        if (!ev.start || !ev.start.dateTime) continue;
+        const key   = ev.start.dateTime.substring(0, 10);  // "2026-05-16"
+        const start = ev.start.dateTime.substring(11, 16); // "09:30"
+        const end   = ev.end.dateTime.substring(11, 16);   // "20:45"
+        result[key] = { start, end };
+      }
+      pageToken = json.nextPageToken;
+    } while (pageToken);
+
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: result }));
+    } catch (_) {}
+    return result;
+  } catch (err) {
+    if (cached && cached.data) return cached.data;
+    throw err;
+  }
 }
 
 // ── Schedule constants ──────────────────────────────────────
@@ -105,10 +123,6 @@ const asTime = (hhmm, baseDate) => {
 
 // Returns rate blocks + actual shift start/end from calendar data
 const buildBlocks = (baseDate) => {
-  const key   = dayKey(baseDate);
-  const shift = SHIFT_DATA[key];
-  if (!shift) return { blocks: [], shiftStart: null, shiftEnd: null };
-
   const dow      = baseDate.getDay();
   const schedule = dow === 5 ? SCHEDULE_FRI : SCHEDULE_SAT;
   const blocks   = schedule.map(p => ({
@@ -117,10 +131,12 @@ const buildBlocks = (baseDate) => {
     rate:  p.rate,
   }));
 
+  const key   = dayKey(baseDate);
+  const shift = SHIFT_DATA[key];
   return {
     blocks,
-    shiftStart: asTime(shift.start, baseDate),
-    shiftEnd:   asTime(shift.end,   baseDate),
+    shiftStart: shift ? asTime(shift.start, baseDate) : null,
+    shiftEnd:   shift ? asTime(shift.end,   baseDate) : null,
   };
 };
 
@@ -400,11 +416,13 @@ function getWorkingDays(y, m) {
 }
 
 function calcDayEarnings(date, mode, startTime, endTime) {
+  if (mode === 'off') return 0;
   const { blocks, shiftStart, shiftEnd } = buildBlocks(date);
-  if (!shiftStart || blocks.length === 0 || mode === 'off') return 0;
+  if (blocks.length === 0) return 0;
   if (mode === 'custom') {
     const from = startTime ? asTime(startTime, date) : shiftStart;
     const to   = endTime   ? asTime(endTime,   date) : shiftEnd;
+    if (!from || !to) return 0;
     const extBlocks = blocks.slice();
     if (extBlocks.length > 0) {
       if (from < extBlocks[0].start)
@@ -414,6 +432,7 @@ function calcDayEarnings(date, mode, startTime, endTime) {
     }
     return calcEarned(from, to, extBlocks);
   }
+  if (!shiftStart || !shiftEnd) return 0;
   return calcEarned(shiftStart, shiftEnd, blocks);
 }
 
@@ -577,6 +596,9 @@ document.getElementById('next-month').addEventListener('click', function() {
 (async () => {
   try {
     SHIFT_DATA = await loadCalendarData();
+    if (totalReady) {
+      renderTotal();
+    }
   } catch (e) {
     console.error('カレンダー取得失敗:', e);
   }
