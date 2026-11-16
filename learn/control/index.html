@@ -312,6 +312,174 @@
       </div>
     </section>
 
+    <!-- ===== 二重ループ（ループの中にループ） ===== -->
+    <section class="page-card">
+      <div class="sec-header">
+        <span class="badge dfor-badge">二重ループ</span>
+        <h2>二重ループ（二重for文）：ループの中にループがある構造</h2>
+      </div>
+
+      <p class="concept-desc">
+        二重ループ（ネストしたループ）は、<strong>ループ（for文）の中に、もうひとつのループが丸ごと入っている構造</strong> です。<br>
+        外側のループが1回進むたびに、内側のループが最初から最後まで毎回すべて実行されます。
+      </p>
+
+      <!-- ループの中にループがある構造 ＆ i, j の切り替えアニメーション -->
+      <div class="dfor-diagram-card">
+        <div class="dfor-diagram-header">
+          <div class="dfor-header-left">
+            <span class="diagram-tag">図解</span>
+            <div class="diagram-title">二重ループの動き</div>
+          </div>
+          <button class="anim-toggle-btn" id="animToggleBtn">⏸ 一時停止</button>
+        </div>
+
+        <!-- 1つの大きな入れ子構造ステージ（切り替えアニメーション） -->
+        <div class="dfor-nest-stage">
+
+          <!-- 外側の箱（青）：for i in range(2) -->
+          <div class="nest-box-outer" id="stageOuterBox">
+            <div class="nest-stage-header outer-stage-header">
+              <code class="stage-code outer-code"><span class="kw">for</span> i <span class="kw">in</span> range(2):</code>
+              <span class="stage-var-val outer-val" id="stageIVal">i = 0</span>
+            </div>
+
+            <div class="nest-stage-body">
+              <!-- 内側の箱（紫）：for j in range(3)（外側の箱の中にすっぽり入っている！） -->
+              <div class="nest-box-inner" id="stageInnerBox">
+                <div class="nest-stage-header inner-stage-header">
+                  <code class="stage-code inner-code"><span class="kw">for</span> j <span class="kw">in</span> range(3):</code>
+                  <span class="stage-var-val inner-val" id="stageJVal">j = 0</span>
+                </div>
+
+                <!-- 実行処理（緑/黒）：print(i, j) -->
+                <div class="stage-action-box" id="stageActionBox">
+                  <code class="action-code">print(i, j)</code>
+                  <span class="output-arrow">→</span>
+                  <span class="output-badge" id="stageOutputVal">(0, 0)</span>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- 出力履歴スロット -->
+          <div class="dfor-history-panel">
+            <div class="history-slots">
+              <div class="history-group">
+                <span class="history-group-label">i = 0</span>
+                <div class="history-items">
+                  <div class="history-item" id="histItem0">(0, 0)</div>
+                  <div class="history-item" id="histItem1">(0, 1)</div>
+                  <div class="history-item" id="histItem2">(0, 2)</div>
+                </div>
+              </div>
+              <div class="history-divider"></div>
+              <div class="history-group">
+                <span class="history-group-label">i = 1</span>
+                <div class="history-items">
+                  <div class="history-item" id="histItem3">(1, 0)</div>
+                  <div class="history-item" id="histItem4">(1, 1)</div>
+                  <div class="history-item" id="histItem5">(1, 2)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- インタラクティブ・デモ -->
+      <div class="dfor-demo-area">
+        <div class="dfor-indicator-bar">
+          <div class="dfor-loop-state outer-state">
+            <span class="state-label">外側ループ（行）</span>
+            <div class="state-val-box" id="dforIValBox">i = <strong id="dforIVal">-</strong></div>
+          </div>
+          <div class="dfor-indicator-arrow">▶</div>
+          <div class="dfor-loop-state inner-state">
+            <span class="state-label">内側ループ（列）</span>
+            <div class="state-val-box" id="dforJValBox">j = <strong id="dforJVal">-</strong></div>
+          </div>
+          <div class="dfor-current-coord">
+            <span class="state-label">現在のマス</span>
+            <div class="coord-badge" id="dforCoordVal">—</div>
+          </div>
+        </div>
+
+        <div class="dfor-stage">
+          <!-- グリッド -->
+          <div class="dfor-grid-wrapper">
+            <div class="dfor-grid-label-top">内側ループ j（列 →）</div>
+            <div class="dfor-grid-container">
+              <div class="dfor-grid-label-left">外側ループ i（行 ↓）</div>
+              <div class="dfor-grid" id="dforGrid">
+                <!-- JSで動的生成 -->
+              </div>
+            </div>
+          </div>
+
+          <!-- 実行ログ（コンソール出力） -->
+          <div class="dfor-console">
+            <div class="dfor-console-header">実行出力（ターミナル）</div>
+            <div class="dfor-console-body" id="dforConsoleBody">
+              <div class="console-line-hint">「▶ 次へ」を押してステップを確認しよう</div>
+            </div>
+          </div>
+        </div>
+
+        <p class="step-hint" id="dforHint">▶ ボタンを押してステップを確認しよう</p>
+
+        <div class="controls-row">
+          <div class="input-group">
+            <label class="input-label">i の回数（行数）</label>
+            <input class="demo-input mono" id="dforRowsInput" type="number" value="3" min="2" max="4">
+          </div>
+          <div class="input-group">
+            <label class="input-label">j の回数（列数）</label>
+            <input class="demo-input mono" id="dforColsInput" type="number" value="3" min="2" max="4">
+          </div>
+          <button class="action-btn dfor-step-btn" id="dforStepBtn">▶ 次へ</button>
+          <button class="action-btn dfor-auto-btn" id="dforAutoBtn">▶ 自動再生</button>
+          <button class="action-btn reset-btn" id="dforResetBtn">↩ リセット</button>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">Python コード</div>
+        <pre><code id="dforCode"></code></pre>
+      </div>
+
+      <!-- 主な使われ方 -->
+      <div class="dfor-usecases">
+        <div class="usecase-title">二重ループはどんなところで使う？</div>
+        <div class="usecase-grid">
+          <div class="usecase-card">
+            <div class="usecase-card-title">① 九九の表（掛け算表）</div>
+            <p>1の段から9の段まで（9×9=81回）を一気に計算できます。</p>
+            <code>for i in range(1, 10):
+    for j in range(1, 10):
+        print(f"{i*j:2}", end=" ")</code>
+          </div>
+          <div class="usecase-card">
+            <div class="usecase-card-title">② 2次配列のマス目をすべて探索</div>
+            <p>マス目データ（行 <code>i</code>、列 <code>j</code>）を全走査するときに使います。</p>
+            <code>for i in range(len(matrix)):
+    for j in range(len(matrix[i])):
+        print(matrix[i][j])</code>
+          </div>
+          <div class="usecase-card">
+            <div class="usecase-card-title">③ ゲームの盤面や画像処理</div>
+            <p>オセロ、将棋、迷路の壁配置、画像のピクセル（たて×よこ）の処理に必須です。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="concept-note">
+        2次配列（二次元リスト）の詳しい仕組みは <a href="/learn/variables/#matrix-sec" style="color:var(--brand); font-weight:700;">変数とリストを学ぼう（二次元リスト）</a> をご覧ください。
+      </div>
+    </section>
+
     <!-- ===== for vs while ===== -->
     <section class="page-card">
       <div class="sec-header">

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>変数とリストを学ぼう</title>
+  <title>変数・リスト・辞書を学ぼう</title>
   <link rel="icon" type="image/jpeg" href="/Wave.jpg">
   <link rel="apple-touch-icon" href="/Wave.jpg">
   <!-- Google tag (gtag.js) -->
@@ -20,7 +20,7 @@
 </head>
 <body>
   <header class="page-header">
-    <span class="page-header-title">変数とリストを学ぼう</span>
+    <span class="page-header-title">変数・リスト・辞書を学ぼう</span>
   </header>
   <div class="wrap">
     <p class="lead">プログラミングの基本：データを「覚える」仕組みを理解しよう</p>
@@ -248,13 +248,31 @@ print(score)  # → 6</code></pre>
       </div>
     </section>
 
-    <!-- ===== 二次元リスト ===== -->
-    <section class="page-card">
+    <!-- ===== 二次元リスト（2次配列） ===== -->
+    <section class="page-card" id="matrix-sec">
       <div class="sec-header">
-        <span class="badge matrix-badge">応用</span>
-        <h2>二次元リスト（リストのリスト）</h2>
+        <span class="badge matrix-badge">2次配列</span>
+        <h2>二次元リスト（2次配列）とは？</h2>
       </div>
-      <p class="concept-desc">リストの中にリストを入れると、<strong>マンションの階と部屋</strong> のような2次元データを扱えます。行が <strong>階</strong>、列が <strong>号室</strong> です。</p>
+      <p class="concept-desc">
+        リストの中にリストを入れると、<strong>「たて × よこ」のマス目状データ（表・2次配列）</strong> を扱えます。<br>
+        1次元リストが「1列の部屋」なら、2次配列は <strong>マンションの階（行）と号室（列）</strong> です。
+      </p>
+
+      <!-- 2次配列の解説カード -->
+      <div class="matrix-explain-grid">
+        <div class="matrix-explain-card">
+          <div class="matrix-explain-title">🏢 行（たて）と 列（よこ）</div>
+          外側のリストが行（何階か）、内側のリストが列（何号室か）を表します。<br>
+          エクセルの表、カレンダー、座席表、チェス盤やオセロのマス目など、世の中の表形式データはすべて2次配列で表現できます。
+        </div>
+        <div class="matrix-explain-card">
+          <div class="matrix-explain-title">🔍 matrix[i][j] の仕組み</div>
+          <code>matrix[0][2]</code> のようにカッコを2つ並べます。<br>
+          ① <code>matrix[0]</code> で「0階のリスト <code>[1, 2, 3]</code>」を取り出し、<br>
+          ② その中の <code>[2]</code> 番目を取り出すため <code>3</code> にアクセスできます。
+        </div>
+      </div>
 
       <div class="matrix-area">
         <div class="mansion-building matrix-mansion">
@@ -262,7 +280,7 @@ print(score)  # → 6</code></pre>
           <div class="mansion-roof-band">
             <span>🏠</span>
             <code>matrix</code>
-            <span class="mansion-name-sub">マンション名（リスト名）</span>
+            <span class="mansion-name-sub">マンション名（二次元リスト）</span>
           </div>
           <div class="mansion-wall">
             <div class="matrix-container">
@@ -307,14 +325,92 @@ print(score)  # → 6</code></pre>
       </div>
 
       <div class="concept-note">
-        <code>matrix[階][号室]</code> でアクセスします。例：<code>matrix[0][2]</code>（0階の2号室）→ <code>3</code>
+        <strong>💡 二重forループですべてのマス目を調べる：</strong><br>
+        行 <code>i</code> と 列 <code>j</code> の二重ループを使うと、全マスを順番に取り出せます。<br>
+        <code>for i in range(3):<br>&nbsp;&nbsp;&nbsp;&nbsp;for j in range(3):<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(matrix[i][j])</code><br>
+        二重ループ（i, j）の詳しい動きは <a href="/learn/control/" style="color:var(--brand); font-weight:700;">制御構文（二重ループ i と j）</a> で学べます。
+      </div>
+    </section>
+
+    <!-- ===== 辞書（dictionary） ===== -->
+    <section class="page-card" id="dict-sec">
+      <div class="sec-header">
+        <span class="badge dict-badge">辞書</span>
+        <h2>辞書（dictionary）とは？</h2>
+      </div>
+      <p class="concept-desc">
+        リストは番号（0, 1, 2...）でデータを管理しましたが、<strong>「名前（キー）」と「値」のペア</strong> でデータを管理する仕組みが <strong>辞書（dictionary / 辞書型）</strong> です。
+      </p>
+
+      <!-- 辞書のたとえカード -->
+      <div class="dict-concept-cards">
+        <div class="dict-concept-card">
+          <div class="dict-concept-title">🏷️ ラベル付きのロッカー</div>
+          番号ではなく、<code>"name"</code> や <code>"score"</code> といった<strong>名前（キー）のラベル</strong>が貼られたロッカーに中身（値）を保管します。「太郎くんの点数は？」のように名前ですぐに取り出せます。
+        </div>
+        <div class="dict-concept-card">
+          <div class="dict-concept-title">🔑 キー（Key）と 値（Value）</div>
+          波かっこ <code>{ }</code> と コロン <code>:</code> で書きます。<br>
+          <code>user = {"name": "タロウ", "score": 90}</code><br>
+          キー <code>"score"</code> を指定すると、中身の <code>90</code> を瞬時に取り出せます。
+        </div>
+      </div>
+
+      <!-- インタラクティブ・デモ -->
+      <div class="dict-demo-area">
+        <div class="sub-label">辞書の中身（ロッカー一覧）</div>
+        <div class="dict-shelf" id="dictShelf">
+          <!-- JSで動的生成 -->
+        </div>
+        <p class="list-hint" id="dictHint">カードをクリックするとアクセス方法が見られます</p>
+
+        <!-- 操作フォーム -->
+        <div class="dict-controls">
+          <div class="input-group">
+            <label class="input-label">キー（名前）</label>
+            <input class="demo-input mono" id="dictKeyInput" placeholder="例: hp" value="hp" maxlength="15">
+          </div>
+          <div class="input-group">
+            <label class="input-label">値（あたい）</label>
+            <input class="demo-input mono" id="dictValInput" placeholder="例: 100" value="100" maxlength="15">
+          </div>
+          <button class="action-btn dict-btn dict-add-btn" id="dictAddBtn">＋ 追加・更新</button>
+          <button class="action-btn dict-btn dict-remove-btn" id="dictRemoveBtn">－ 項目削除</button>
+          <span class="dict-count"><span id="dictCount">3</span> 件</span>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">Python コード</div>
+        <pre><code id="dictCode"></code></pre>
+      </div>
+
+      <!-- 辞書のよく使う操作 -->
+      <div class="dict-ops-grid">
+        <div class="dict-op-card">
+          <div class="dict-op-title">① 値の取り出し</div>
+          <p>キー名をカギカッコで指定します。</p>
+          <code>print(user["name"])  # → タロウ</code>
+        </div>
+        <div class="dict-op-card">
+          <div class="dict-op-title">② 追加・書き換え</div>
+          <p>新しいキーに代入するだけで追加されます。</p>
+          <code>user["city"] = "東京"  # 追加
+user["score"] = 95     # 更新</code>
+        </div>
+        <div class="dict-op-card">
+          <div class="dict-op-title">③ for文で中身を巡回</div>
+          <p><code>.items()</code> でキーと値を両方取り出せます。</p>
+          <code>for k, v in user.items():
+    print(f"{k}: {v}")</code>
+        </div>
       </div>
     </section>
 
     <!-- ===== 比較 ===== -->
     <section class="page-card">
       <div class="sec-header">
-        <h2>変数 と リスト のちがい</h2>
+        <h2>変数・リスト・辞書のちがい</h2>
       </div>
       <div class="compare-grid">
         <div class="compare-card var-theme">
@@ -335,7 +431,7 @@ print(score)  # → 6</code></pre>
           <ul class="compare-list">
             <li>1つの値を保存</li>
             <li>名前でアクセス：<code>score</code></li>
-            <li>= で値を書き換え可能</li>
+            <li>= で値を上書き更新</li>
           </ul>
         </div>
         <div class="compare-card list-theme">
@@ -355,9 +451,23 @@ print(score)  # → 6</code></pre>
             </div>
           </div>
           <ul class="compare-list">
-            <li>複数の値を部屋に保存</li>
+            <li>複数の値を順番に保存</li>
             <li>部屋番号でアクセス：<code>fruits[0]</code></li>
-            <li>入居（追加）・退去（削除）が可能</li>
+            <li>順序・並び順が重要なデータ</li>
+          </ul>
+        </div>
+        <div class="compare-card dict-theme">
+          <div class="compare-title">辞書（ロッカー）</div>
+          <div class="compare-visual">
+            <div class="mini-locker">
+              <div class="mini-locker-item"><span class="mini-locker-key">name</span><span class="mini-locker-val">タロウ</span></div>
+              <div class="mini-locker-item"><span class="mini-locker-key">score</span><span class="mini-locker-val">90</span></div>
+            </div>
+          </div>
+          <ul class="compare-list">
+            <li>キーと値のペアで保存</li>
+            <li>キー名でアクセス：<code>user["name"]</code></li>
+            <li>意味のある属性や設定値の管理</li>
           </ul>
         </div>
       </div>

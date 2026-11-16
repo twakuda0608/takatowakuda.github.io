@@ -385,3 +385,116 @@ document.querySelectorAll(".matrix-cell").forEach(cell => {
     }
   });
 });
+
+
+/* ============================================================
+   辞書（dictionary）デモ
+============================================================ */
+const dictShelf     = document.getElementById("dictShelf");
+const dictHintEl    = document.getElementById("dictHint");
+const dictCodeEl    = document.getElementById("dictCode");
+const dictCountEl   = document.getElementById("dictCount");
+const dictKeyInput  = document.getElementById("dictKeyInput");
+const dictValInput  = document.getElementById("dictValInput");
+const dictAddBtn    = document.getElementById("dictAddBtn");
+const dictRemoveBtn = document.getElementById("dictRemoveBtn");
+
+let dictData = {
+  "name": "タロウ",
+  "score": 90,
+  "level": 3,
+};
+let selectedDictKey = null;
+
+function formatDictVal(val) {
+  if (typeof val === "number") return `${val}`;
+  if (typeof val === "boolean") return val ? "True" : "False";
+  return `"${val}"`;
+}
+
+function parseInputVal(str) {
+  const trimmed = str.trim();
+  if (!isNaN(trimmed) && trimmed !== "") {
+    return Number(trimmed);
+  }
+  if (trimmed.toLowerCase() === "true") return true;
+  if (trimmed.toLowerCase() === "false") return false;
+  return trimmed;
+}
+
+function updateDictCode() {
+  const entries = Object.entries(dictData);
+  let code = "user = {\n";
+  entries.forEach(([k, v]) => {
+    code += `  "${k}": ${formatDictVal(v)},\n`;
+  });
+  code += "}";
+
+  if (selectedDictKey !== null && dictData[selectedDictKey] !== undefined) {
+    const val = dictData[selectedDictKey];
+    code += `\n\n# キー "${selectedDictKey}" の値を取得\nprint(user["${selectedDictKey}"])  # → ${formatDictVal(val)}`;
+    dictHintEl.textContent = `キー "${selectedDictKey}"（user["${selectedDictKey}"]）の値は ${formatDictVal(val)} です`;
+  } else {
+    dictHintEl.textContent = "カードをクリックするとアクセス方法が見られます";
+  }
+
+  dictCodeEl.textContent = code;
+  dictCountEl.textContent = entries.length;
+  dictRemoveBtn.disabled = entries.length <= 1;
+  dictAddBtn.disabled = entries.length >= 8;
+}
+
+function renderDict(highlightKey = null) {
+  dictShelf.innerHTML = "";
+  const entries = Object.entries(dictData);
+
+  entries.forEach(([k, v]) => {
+    const card = document.createElement("div");
+    card.className = "dict-card";
+    if (k === selectedDictKey) card.classList.add("selected");
+    if (k === highlightKey) {
+      card.style.animation = "pop 0.35s ease";
+    }
+
+    const typeInfo = detectType(String(v));
+
+    card.innerHTML = `
+      <div class="dict-card-key">"${k}":</div>
+      <div class="dict-card-val">${formatDictVal(v)}</div>
+      <div class="dict-card-type">${typeInfo.label}</div>
+    `;
+
+    card.addEventListener("click", () => {
+      selectedDictKey = (selectedDictKey === k) ? null : k;
+      renderDict();
+    });
+
+    dictShelf.appendChild(card);
+  });
+
+  updateDictCode();
+}
+
+dictAddBtn.addEventListener("click", () => {
+  const key = dictKeyInput.value.trim();
+  const valStr = dictValInput.value.trim();
+  if (!key) return;
+
+  const parsedVal = valStr !== "" ? parseInputVal(valStr) : 0;
+  dictData[key] = parsedVal;
+  selectedDictKey = key;
+  renderDict(key);
+});
+
+dictRemoveBtn.addEventListener("click", () => {
+  const keys = Object.keys(dictData);
+  if (keys.length <= 1) return;
+
+  const targetKey = selectedDictKey || keys[keys.length - 1];
+  delete dictData[targetKey];
+  selectedDictKey = null;
+  renderDict();
+});
+
+// 初期描画
+renderDict();

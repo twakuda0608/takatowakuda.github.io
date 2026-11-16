@@ -623,7 +623,7 @@
 /* ===== 比較カード ===== */
 .compare-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-top: 16px;
 }
@@ -1192,14 +1192,286 @@ mark.hl-store { background: #ede9fe; color: #6d28d9; padding: 1px 3px; border-ra
     0 2px 5px rgba(0,0,0,0.15);
 }
 
+/* ===== 2次配列の解説カード ===== */
+.matrix-explain-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.matrix-explain-card {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: .88rem;
+  line-height: 1.6;
+}
+
+.matrix-explain-title {
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 6px;
+  font-size: .92rem;
+}
+
+.matrix-explain-card code {
+  background: #e2e8f0;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: monospace;
+  color: #1e293b;
+}
+
+/* ===== 辞書（dictionary） ===== */
+.dict-badge { background: #fef3c7; color: #92400e; }
+
+.dict-concept-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.dict-concept-card {
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: .88rem;
+  line-height: 1.6;
+}
+
+.dict-concept-title {
+  font-weight: 800;
+  color: #92400e;
+  margin-bottom: 6px;
+  font-size: .92rem;
+}
+
+.dict-concept-card code {
+  background: #fef3c7;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: monospace;
+  color: #78350f;
+}
+
+.dict-demo-area {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.dict-shelf {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  min-height: 110px;
+  align-items: center;
+}
+
+.dict-card {
+  position: relative;
+  background: #ffffff;
+  border: 2px solid #f59e0b;
+  border-radius: 8px;
+  padding: 10px 14px 8px;
+  min-width: 120px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.15);
+  transition: all .2s;
+  user-select: none;
+}
+
+.dict-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+}
+
+.dict-card.selected {
+  background: #fffbeb;
+  border-color: #d97706;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.5);
+  transform: scale(1.05);
+}
+
+.dict-card-key {
+  font-family: 'Courier New', monospace;
+  font-size: .75rem;
+  font-weight: 800;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+
+.dict-card-val {
+  font-family: 'Courier New', monospace;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1e293b;
+  text-align: center;
+}
+
+.dict-card-type {
+  font-size: .65rem;
+  color: #94a3b8;
+  text-align: right;
+  margin-top: 4px;
+}
+
+.dict-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.dict-btn {
+  padding: 9px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: .88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter .15s, transform .1s;
+}
+
+.dict-btn:active { transform: scale(.96); }
+.dict-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.dict-add-btn {
+  background: #d97706;
+  color: #fff;
+}
+.dict-add-btn:hover:not(:disabled) { background: #b45309; }
+
+.dict-remove-btn {
+  background: #fff;
+  color: #6b7280;
+  border: 1.5px solid var(--border);
+}
+.dict-remove-btn:hover:not(:disabled) { background: #f9fafb; }
+
+.dict-count {
+  font-size: .88rem;
+  color: #64748b;
+  font-weight: 700;
+  margin-left: auto;
+  align-self: center;
+}
+
+.dict-ops-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.dict-op-card {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: .84rem;
+  line-height: 1.6;
+}
+
+.dict-op-title {
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 4px;
+  font-size: .86rem;
+}
+
+.dict-op-card p {
+  margin-bottom: 6px;
+  color: #64748b;
+}
+.dict-op-card p code {
+  display: inline;
+  background: #e2e8f0;
+  color: #1e293b;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.dict-op-card > code {
+  display: block;
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: .78rem;
+  font-family: monospace;
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+
+/* 辞書ミニビジュアル（比較カード内） */
+.dict-theme {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+.dict-theme .compare-title {
+  color: #b45309;
+}
+
+.mini-locker {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.mini-locker-item {
+  background: #fff;
+  border: 1.5px solid #f59e0b;
+  border-radius: 6px;
+  padding: 4px 6px;
+  text-align: center;
+  font-family: monospace;
+}
+
+.mini-locker-key {
+  font-size: .62rem;
+  font-weight: 700;
+  color: #b45309;
+  display: block;
+}
+
+.mini-locker-val {
+  font-size: .85rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
 /* ===== レスポンシブ ===== */
-@media (max-width: 600px) {
+@media (max-width: 720px) {
   .demo-area {
     flex-direction: column;
     align-items: flex-start;
   }
 
   .compare-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .matrix-explain-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dict-concept-cards {
     grid-template-columns: 1fr;
   }
 
