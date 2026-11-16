@@ -8,6 +8,7 @@ import {
   getAuth, GoogleAuthProvider, signInWithPopup,
   onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { initYakuTab } from "./yaku-app.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBC0X3taGcEclIO8g7Lg7odIdTwaA6gnGY",
@@ -112,9 +113,16 @@ document.querySelectorAll('.tabbtn').forEach(btn => {
   btn.addEventListener('click', () => activateTab(btn.dataset.tab));
 });
 
+// 役一覧タブ初期化
+initYakuTab();
+
 if (location.hash) {
   const hashId = location.hash.slice(1);
-  if (document.getElementById(hashId)) activateTab(hashId);
+  if (hashId.startsWith('yaku-')) {
+    activateTab('t-yaku');
+  } else if (document.getElementById(hashId)) {
+    activateTab(hashId);
+  }
 }
 
 // ====== Tab 1: ウマ/オカ精算 ======

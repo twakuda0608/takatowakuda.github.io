@@ -1,0 +1,780 @@
+/* =======================================================
+   麻雀役一覧 & 点数早見表 スタイルシート (yaku.css)
+======================================================= */
+
+/* ── ツールバー & 検索 ──────────────────────────────── */
+.yaku-app-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.yaku-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.yaku-search-box {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.yaku-search-icon {
+  position: absolute;
+  left: 10px;
+  font-size: 13px;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.yaku-search-input {
+  width: 100%;
+  padding: 9px 32px 9px 32px;
+  font-size: 14px;
+  border: 1px solid var(--border-soft, #cbd5e1);
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #1e293b;
+  box-sizing: border-box;
+  margin-top: 0;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.yaku-search-input:focus {
+  outline: none;
+  background: #ffffff;
+  border-color: var(--brand, #0078d7);
+  box-shadow: 0 0 0 3px rgba(0, 120, 215, 0.15);
+}
+
+.yaku-search-clear {
+  position: absolute;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: #cbd5e1;
+  color: #475569;
+  border-radius: 999px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
+}
+
+.yaku-search-clear:hover {
+  background: #94a3b8;
+  color: #fff;
+}
+
+.yaku-score-toggle-btn {
+  flex-shrink: 0;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--brand, #0078d7);
+  background: #f0f7ff;
+  border: 1px solid #bae0fd;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.yaku-score-toggle-btn:hover {
+  background: #0078d7;
+  color: #ffffff;
+  border-color: #0078d7;
+}
+
+.yaku-score-toggle-btn.active {
+  background: #0078d7;
+  color: #ffffff;
+  border-color: #0078d7;
+}
+
+/* ── 飜数カテゴリーチップ ─────────────────────────────── */
+.yaku-chips-container {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.yaku-chips-container::-webkit-scrollbar {
+  height: 4px;
+}
+.yaku-chips-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.yaku-chip {
+  padding: 6px 13px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.yaku-chip:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.yaku-chip.active {
+  background: #0078d7;
+  color: #ffffff;
+  border-color: #0078d7;
+  box-shadow: 0 2px 4px rgba(0, 120, 215, 0.25);
+}
+
+/* ── サブフィルターバー ───────────────────────────────── */
+.yaku-filter-subbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid var(--border-soft, #e2e8f0);
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+
+.yaku-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.yaku-filter-group label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+.yaku-select {
+  padding: 5px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  width: auto;
+  margin-top: 0;
+}
+
+.yaku-filter-summary {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.yaku-count-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0369a1;
+  background: #e0f2fe;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.yaku-filter-reset-link {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 4px;
+  text-decoration: underline;
+  margin: 0;
+}
+
+.yaku-filter-reset-link:hover {
+  color: #0f172a;
+}
+
+/* ── 役カードグリッド ───────────────────────────────── */
+.yaku-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.yaku-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.yaku-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+}
+
+.yaku-card.yaku-highlight {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.35);
+  animation: pulseHighlight 1.5s ease-in-out;
+}
+
+@keyframes pulseHighlight {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.015); }
+  100% { transform: scale(1); }
+}
+
+.yaku-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.yaku-title-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.yaku-kana {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.yaku-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 2px 0 0;
+  letter-spacing: 0.5px;
+}
+
+.yaku-badges {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.yaku-han-badge,
+.yaku-naki-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+/* 飜数バッジカラー */
+.yaku-badge-1han {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+.yaku-badge-2han {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+.yaku-badge-3han {
+  background: #ffedd5;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+.yaku-badge-6han {
+  background: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+.yaku-badge-yakuman {
+  background: linear-gradient(135deg, #fef08a 0%, #fde047 100%);
+  color: #854d0e;
+  border: 1px solid #eab308;
+  font-weight: 900;
+}
+.yaku-badge-w-yakuman {
+  background: linear-gradient(135deg, #fbcfe8 0%, #fed7aa 100%);
+  color: #9f1239;
+  border: 1px solid #f472b6;
+  font-weight: 900;
+}
+.yaku-badge-special {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+/* 鳴きバッジカラー */
+.naki-badge-menzen {
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+.naki-badge-naki_ok {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+.naki-badge-kuisagari {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+/* ── 手牌コンテナ & 麻雀牌 ───────────────────────────── */
+.yaku-hand-container {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 8px 0 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mj-hand {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px; /* 手牌ブロック群と右端和了牌との明確な隙間 */
+  min-width: max-content;
+  padding: 16px 2px 4px;
+}
+
+.mj-hand-groups {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px; /* 3, 3, 3, 2 各ブロック間の明確な隙間 */
+}
+
+.mj-hand-group {
+  display: flex;
+  gap: 1.5px; /* ブロック内の牌同士の隙間 */
+  align-items: flex-end;
+}
+
+/* 一番右端固定の和了牌エリア */
+.mj-hand-agari {
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+  padding-left: 10px;
+  border-left: 1.5px dashed #cbd5e1;
+}
+
+.mj-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 37px;
+  background: linear-gradient(180deg, #ffffff 0%, #fdfcf9 55%, #ece6d6 100%);
+  border: 1.5px solid #8c8472; /* くっきりと明瞭な牌の輪郭線 */
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1.5px 0 #ded7c6;
+  position: relative;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  user-select: none;
+  cursor: default;
+}
+
+/* 裏向き牌（伏せ牌）：麻雀牌の黄色い背 */
+.mj-tile-back {
+  background: linear-gradient(180deg, #fcd34d 0%, #f59e0b 55%, #d97706 100%);
+  border-color: #b45309;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -1.5px 0 #92400e;
+}
+
+.mj-tile-img-back {
+  opacity: 0.95;
+}
+
+.mj-tile-img {
+  width: 22px;
+  height: 30px;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.mj-tile-agari {
+  position: relative;
+}
+
+/* ツモ限定・ロン限定などの条件のみ表示する控えめで品のあるバッジ */
+.mj-agari-badge {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  line-height: 1.2;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  z-index: 2;
+  pointer-events: none;
+}
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* ── 説明文 & アコーディオン ─────────────────────────── */
+.yaku-summary {
+  font-size: 13.5px;
+  color: #334155;
+  line-height: 1.55;
+  margin: 0 0 8px;
+}
+
+.yaku-details-collapse {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease-out;
+}
+
+.yaku-details-collapse.expanded {
+  max-height: 500px;
+  transition: max-height 0.35s ease-in;
+}
+
+.yaku-detail-inner {
+  padding-top: 8px;
+  border-top: 1px dashed #e2e8f0;
+  margin-top: 6px;
+}
+
+.yaku-detail-text {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0 0 10px;
+}
+
+.yaku-points-box {
+  background: #f8fafc;
+  border-left: 3px solid #0078d7;
+  padding: 8px 12px;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 10px;
+}
+
+.yaku-points-title {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #0078d7;
+  margin-bottom: 4px;
+}
+
+.yaku-points-list {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 12.5px;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.yaku-points-list li {
+  margin-bottom: 3px;
+}
+
+.yaku-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.yaku-toggle-btn {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  margin: 0;
+}
+
+.yaku-toggle-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+/* ── 空状態 ─────────────────────────────────────────── */
+.yaku-empty-state {
+  text-align: center;
+  padding: 40px 16px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+}
+
+.yaku-empty-icon {
+  font-size: 36px;
+  margin-bottom: 8px;
+}
+
+.yaku-empty-msg {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 14px;
+}
+
+.yaku-filter-btn {
+  background: #0078d7;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ── 点数早見表パネル ─────────────────────────────────── */
+.score-quick-panel {
+  background: #ffffff;
+  border: 1.5px solid #0078d7;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 4px 14px rgba(0, 120, 215, 0.12);
+  margin-bottom: 6px;
+}
+
+.score-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.score-panel-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0078d7;
+  margin: 0;
+}
+
+.score-panel-close-btn {
+  background: none;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 3px 8px;
+  margin: 0;
+}
+
+.score-panel-close-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.score-subtabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+
+.score-subtab-btn {
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.score-subtab-btn.active {
+  background: #0078d7;
+  color: #fff;
+  border-color: #0078d7;
+}
+
+.score-tab-content {
+  display: none;
+}
+
+.score-tab-content.active {
+  display: block;
+}
+
+.score-sub-note {
+  font-size: 11.5px;
+  color: #64748b;
+  margin: 0 0 6px;
+}
+
+.score-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.st-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.st-table th,
+.st-table td {
+  padding: 7px 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.st-table th {
+  background: #f1f5f9;
+  font-weight: 700;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.st-table .st-fu {
+  background: #f8fafc;
+  font-weight: 700;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.st-table tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.st-table-high th,
+.st-table-high td {
+  text-align: left;
+  padding: 8px 10px;
+}
+
+.st-table-high .st-rank {
+  font-weight: 700;
+  color: #0078d7;
+  white-space: nowrap;
+}
+
+.st-table-high .st-han {
+  color: #475569;
+  font-size: 12px;
+}
+
+.st-table-high .st-score {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.fu-guide-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.fu-guide-list li {
+  margin-bottom: 5px;
+}
+
+/* ── モバイル最適化 ───────────────────────────────────── */
+@media (max-width: 600px) {
+  .yaku-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .yaku-score-toggle-btn {
+    text-align: center;
+    width: 100%;
+  }
+  .yaku-filter-subbar {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  .yaku-card {
+    padding: 12px 10px;
+  }
+  .yaku-hand-container {
+    padding: 8px 8px;
+  }
+  .mj-hand {
+    gap: 8px;
+    padding: 14px 2px 3px;
+  }
+  .mj-hand-groups {
+    gap: 6px;
+  }
+  .mj-hand-agari {
+    padding-left: 6px;
+  }
+  .mj-tile {
+    width: 22px;
+    height: 31px;
+    border: 1.2px solid #8c8472;
+    border-radius: 3.5px;
+  }
+  .mj-tile-back {
+    border-color: #b45309;
+  }
+  .mj-tile-img {
+    width: 18px;
+    height: 25px;
+  }
+  .mj-tile-img-back {
+    width: 18px;
+    height: 25px;
+  }
+  .mj-agari-badge {
+    top: -15px;
+    font-size: 8px;
+    padding: 1px 3px;
+  }
+}
