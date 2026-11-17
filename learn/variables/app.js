@@ -163,31 +163,28 @@ assignBtn.addEventListener("click", async () => {
 
 
 /* ============================================================
-   score = score + 1 ステップデモ
+   score = score + 1 アニメーションデモ
 ============================================================ */
-const stepInitInput = document.getElementById("stepInitInput");
-const stepRunBtn    = document.getElementById("stepRunBtn");
-const stepResetBtn  = document.getElementById("stepResetBtn");
-const stepVarValEl  = document.getElementById("stepVarVal");
-const stepVarBoxEl  = document.getElementById("stepVarBox");
-const stepCodeEl2   = document.getElementById("stepCode");
-
-const stepCards = [
-  document.getElementById("step1"),
-  document.getElementById("step2"),
-  document.getElementById("step3"),
-];
+const stepInitInput    = document.getElementById("stepInitInput");
+const stepRunBtn       = document.getElementById("stepRunBtn");
+const stepResetBtn     = document.getElementById("stepResetBtn");
+const stepVarValEl     = document.getElementById("stepVarVal");
+const stepVarBoxEl     = document.getElementById("stepVarBox");
+const stepValueArea    = document.getElementById("stepValueArea");
+const stepCodeEl2      = document.getElementById("stepCode");
+const incrAnimStage    = document.getElementById("incrAnimStage");
+const incrFormulaCard  = document.getElementById("incrFormulaCard");
+const incrRhsWrap      = document.getElementById("incrRhsWrap");
+const incrRhsVar       = document.getElementById("incrRhsVar");
+const incrCalcResult   = document.getElementById("incrCalcResult");
+const pill1            = document.getElementById("pill1");
+const pill2            = document.getElementById("pill2");
+const pill3            = document.getElementById("pill3");
 
 let stepRunning = false;
 
-function updateStepContent(val) {
+function updateStepCode(val) {
   const next = val + 1;
-  document.getElementById("stepReadVal").textContent   = val;
-  document.getElementById("stepCalcExpr").textContent  = `${val} + 1`;
-  document.getElementById("stepCalcResult").textContent = next;
-  document.getElementById("stepOldVal").textContent    = val;
-  document.getElementById("stepStoreVal").textContent  = next;
-  document.getElementById("stepNewVal").textContent    = next;
   stepCodeEl2.textContent =
     `score = ${val}\nscore = score + 1\nprint(score)  # → ${next}`;
 }
@@ -195,17 +192,21 @@ function updateStepContent(val) {
 function resetStep() {
   const init = parseInt(stepInitInput.value) || 0;
   stepVarValEl.textContent = init;
-  stepCards.forEach(c => c.classList.remove("active", "done"));
-  updateStepContent(init);
+  incrRhsVar.textContent = "score";
+  incrRhsWrap.style.display = "inline-flex";
+  incrRhsWrap.classList.remove("highlight");
+  incrCalcResult.style.display = "none";
+  incrCalcResult.classList.remove("pop");
+  if (pill1) pill1.classList.remove("active");
+  if (pill2) pill2.classList.remove("active");
+  if (pill3) pill3.classList.remove("active");
+  updateStepCode(init);
   stepRunBtn.disabled = false;
   stepRunning = false;
 }
 
 stepInitInput.addEventListener("input", resetStep);
-stepResetBtn.addEventListener("click", () => {
-  // 初期値入力を元の値に戻してリセット
-  resetStep();
-});
+stepResetBtn.addEventListener("click", resetStep);
 
 stepRunBtn.addEventListener("click", async () => {
   if (stepRunning) return;
@@ -214,45 +215,135 @@ stepRunBtn.addEventListener("click", async () => {
 
   const oldVal = parseInt(stepInitInput.value) || 0;
   const newVal = oldVal + 1;
-
-  // 全カードを非アクティブに
-  stepCards.forEach(c => c.classList.remove("active", "done"));
-  stepVarValEl.textContent = oldVal;
-
   const wait = ms => new Promise(r => setTimeout(r, ms));
 
-  // STEP 1: 右辺の score を読む
-  await wait(80);
-  stepCards[0].classList.add("active");
+  // リセット状態から開始
+  stepVarValEl.textContent = oldVal;
+  incrRhsVar.textContent = "score";
+  incrRhsWrap.style.display = "inline-flex";
+  incrRhsWrap.classList.remove("highlight");
+  incrCalcResult.style.display = "none";
+  incrCalcResult.classList.remove("pop");
+  [pill1, pill2, pill3].forEach(p => p && p.classList.remove("active"));
 
-  // STEP 2: 計算する
-  await wait(900);
-  stepCards[0].classList.replace("active", "done");
-  stepCards[1].classList.add("active");
+  // ── ステップ①: 右辺を読む（箱から右辺へ値が飛ぶ） ──
+  if (pill1) pill1.classList.add("active");
+  incrRhsWrap.classList.add("highlight");
+  await wait(180);
 
-  // STEP 3: 代入する
-  await wait(900);
-  stepCards[1].classList.replace("active", "done");
-  stepCards[2].classList.add("active");
+  // トークンを生成して飛翔
+  const stageRect = incrAnimStage.getBoundingClientRect();
+  const boxRect   = stepValueArea.getBoundingClientRect();
+  const rhsRect   = incrRhsVar.getBoundingClientRect();
 
-  // 変数ボックスを更新
+  const fromX = boxRect.left - stageRect.left + boxRect.width / 2;
+  const fromY = boxRect.top  - stageRect.top  + boxRect.height / 2;
+  const toX   = rhsRect.left - stageRect.left + rhsRect.width / 2;
+  const toY   = rhsRect.top  - stageRect.top  + rhsRect.height / 2;
+
+  const token1 = document.createElement("div");
+  token1.className = "fly-token";
+  token1.textContent = oldVal;
+  token1.style.left = fromX + "px";
+  token1.style.top  = fromY + "px";
+  token1.style.background = "#a855f7";
+  token1.style.color = "#fff";
+  incrAnimStage.appendChild(token1);
+
+  const dx1 = toX - fromX;
+  const dy1 = toY - fromY;
+  const peakDy1 = -Math.max(50, Math.abs(dx1) * 0.35);
+
+  await new Promise(res => {
+    const anim = token1.animate([
+      { transform: "translate(-50%,-50%) scale(1)", opacity: 1, offset: 0 },
+      { transform: `translate(calc(-50% + ${dx1 * 0.5}px), calc(-50% + ${peakDy1}px)) scale(1.2)`, opacity: 1, offset: 0.5 },
+      { transform: `translate(calc(-50% + ${dx1}px), calc(-50% + ${dy1}px)) scale(0.9)`, opacity: 0.2, offset: 1 },
+    ], { duration: 520, easing: "cubic-bezier(0.25, 1, 0.5, 1)", fill: "forwards" });
+    anim.onfinish = res;
+  });
+  token1.remove();
+
+  // 右辺の score が値に変化
+  incrRhsVar.textContent = oldVal;
+  incrRhsVar.classList.remove("pop");
+  void incrRhsVar.offsetWidth;
+  incrRhsVar.classList.add("pop");
+
+  await wait(600);
+
+  // ── ステップ②: 計算する（合体） ──
+  if (pill1) pill1.classList.remove("active");
+  if (pill2) pill2.classList.add("active");
+
+  incrRhsWrap.style.display = "none";
+  incrCalcResult.textContent = newVal;
+  incrCalcResult.style.display = "block";
+  incrCalcResult.classList.remove("pop");
+  void incrCalcResult.offsetWidth;
+  incrCalcResult.classList.add("pop");
+
+  await wait(850);
+
+  // ── ステップ③: 代入（結果が箱に飛び込む） ──
+  if (pill2) pill2.classList.remove("active");
+  if (pill3) pill3.classList.add("active");
+
+  const calcRect = incrCalcResult.getBoundingClientRect();
+  const cFromX = calcRect.left - stageRect.left + calcRect.width / 2;
+  const cFromY = calcRect.top  - stageRect.top  + calcRect.height / 2;
+  const cToX   = fromX;
+  const cToY   = fromY;
+
+  const token2 = document.createElement("div");
+  token2.className = "fly-token";
+  token2.textContent = newVal;
+  token2.style.left = cFromX + "px";
+  token2.style.top  = cFromY + "px";
+  token2.style.background = "#10b981";
+  token2.style.color = "#fff";
+  incrAnimStage.appendChild(token2);
+
+  stepVarBoxEl.classList.add("box-open");
+
+  const dx2 = cToX - cFromX;
+  const dy2 = cToY - cFromY;
+  const peakDy2 = -Math.max(65, Math.abs(dx2) * 0.4);
+
+  await new Promise(res => {
+    const anim = token2.animate([
+      { transform: "translate(-50%,-50%) scale(1.1)", opacity: 1, offset: 0 },
+      { transform: `translate(calc(-50% + ${dx2 * 0.5}px), calc(-50% + ${peakDy2}px)) scale(1.25)`, opacity: 1, offset: 0.5 },
+      { transform: `translate(calc(-50% + ${dx2}px), calc(-50% + ${dy2}px)) scale(0.4)`, opacity: 0, offset: 1 },
+    ], { duration: 560, easing: "ease-in", fill: "forwards" });
+    anim.onfinish = res;
+  });
+  token2.remove();
+
+  // 箱に着地、更新
+  stepVarBoxEl.classList.remove("box-open");
   stepVarValEl.textContent = newVal;
-  stepVarBoxEl.classList.remove("pop");
+
+  stepVarBoxEl.classList.remove("box-receive");
   void stepVarBoxEl.offsetWidth;
-  stepVarBoxEl.classList.add("pop");
+  stepVarBoxEl.classList.add("box-receive");
 
-  await wait(800);
-  stepCards[2].classList.replace("active", "done");
-
-  // 次の実行のために表示を更新（score がさらに +1 される準備）
   stepInitInput.value = newVal;
-  updateStepContent(newVal);
+  updateStepCode(newVal);
+
+  await wait(600);
+  if (pill3) pill3.classList.remove("active");
+
+  // 数式を次のために戻す
+  incrCalcResult.style.display = "none";
+  incrRhsWrap.style.display = "inline-flex";
+  incrRhsWrap.classList.remove("highlight");
+  incrRhsVar.textContent = "score";
 
   stepRunBtn.disabled = false;
   stepRunning = false;
 });
 
-// 初期化
 resetStep();
 
 
@@ -352,6 +443,9 @@ renderList();
 ============================================================ */
 const matrixHintEl = document.getElementById("matrixHint");
 const matrixCodeEl = document.getElementById("matrixCode");
+const mStructRow   = document.getElementById("mStructRow");
+const mStructCol   = document.getElementById("mStructCol");
+const mStructVal   = document.getElementById("mStructVal");
 
 const matrixData = [
   [1, 2, 3],
@@ -368,17 +462,29 @@ document.querySelectorAll(".matrix-cell").forEach(cell => {
   cell.addEventListener("click", () => {
     const row = parseInt(cell.dataset.row);
     const col = parseInt(cell.dataset.col);
+    const parentRow = cell.closest(".matrix-row");
+
+    // 全セルの選択解除 & 全行のハイライト解除
+    document.querySelectorAll(".matrix-cell").forEach(c => c.classList.remove("selected"));
+    document.querySelectorAll(".matrix-row").forEach(r => r.classList.remove("highlight-row"));
 
     if (selectedMatrixCell === cell) {
       selectedMatrixCell = null;
-      document.querySelectorAll(".matrix-cell").forEach(c => c.classList.remove("selected"));
       matrixHintEl.textContent = "部屋をクリックするとアクセス方法が見られます";
       matrixCodeEl.textContent = baseMatrixCode();
+      if (mStructRow) mStructRow.textContent = "0";
+      if (mStructCol) mStructCol.textContent = "0";
+      if (mStructVal) mStructVal.textContent = "1";
     } else {
-      document.querySelectorAll(".matrix-cell").forEach(c => c.classList.remove("selected"));
-      cell.classList.add("selected");
       selectedMatrixCell = cell;
+      if (parentRow) parentRow.classList.add("highlight-row");
+      cell.classList.add("selected");
       const val = matrixData[row][col];
+
+      if (mStructRow) mStructRow.textContent = row;
+      if (mStructCol) mStructCol.textContent = col;
+      if (mStructVal) mStructVal.textContent = val;
+
       matrixHintEl.textContent = `${row}階の${col}号室（matrix[${row}][${col}]）の値は ${val} です`;
       matrixCodeEl.textContent =
         baseMatrixCode() + `\n\n# [${row}][${col}] にアクセス\nprint(matrix[${row}][${col}])  # → ${val}`;

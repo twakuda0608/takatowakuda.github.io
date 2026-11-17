@@ -25,6 +25,7 @@
 ### ツール・アプリ一覧
 | パス | ツール名 | 説明 | 主な技術 |
 | :--- | :--- | :--- | :--- |
+| `/jr-map/` | JR路線図 | 全国新幹線・関東JR路線のインタラクティブ路線図 | Leaflet, Vanilla JS |
 | `/mahjong/` | 麻雀ツール | ウマオカ精算、総合ポイント、戦績保存、逆転計算 | Firebase Firestore, Auth |
 | `/mahjong-table/` | 麻雀テーブル | 卓用フルスクリーンデジタル表示、サイコロ、QR連携 | Firebase, Wake Lock, SVG |
 | `/clip/` | クリップボード | デバイス間テキスト瞬時共有（3分TTL自動消去） | Firebase Firestore, QRコード |

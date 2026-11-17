@@ -486,3 +486,52 @@ if (animToggleBtn) {
 // 初期実行
 updateStageAnimation();
 startStageAnimation();
+
+
+/* ============================================================
+   インデント実行アニメーション
+============================================================ */
+const indentPlayBtn  = document.getElementById('indentPlayBtn');
+const indentResetBtn = document.getElementById('indentResetBtn');
+
+const ivLines = {
+  1: document.getElementById('ivLine1'),
+  2: document.getElementById('ivLine2'),
+  3: document.getElementById('ivLine3'),
+  4: document.getElementById('ivLine4'),
+  5: document.getElementById('ivLine5'),
+};
+
+let indentRunning = false;
+
+function resetIndent() {
+  Object.values(ivLines).forEach(line => line && line.classList.remove('active-line'));
+  if (indentPlayBtn) indentPlayBtn.disabled = false;
+  indentRunning = false;
+}
+
+if (indentResetBtn) indentResetBtn.addEventListener('click', resetIndent);
+
+if (indentPlayBtn) {
+  indentPlayBtn.addEventListener('click', async () => {
+    if (indentRunning) return;
+    indentRunning = true;
+    indentPlayBtn.disabled = true;
+
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const runSequence = [1, 2, 4, 1, 2, 3, 4, 5];
+
+    for (const num of runSequence) {
+      if (!indentRunning) break;
+      Object.values(ivLines).forEach(line => line && line.classList.remove('active-line'));
+      const line = ivLines[num];
+      if (line) {
+        line.classList.add('active-line');
+      }
+      await wait(550);
+    }
+
+    await wait(600);
+    resetIndent();
+  });
+}

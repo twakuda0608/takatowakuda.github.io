@@ -73,51 +73,160 @@ document.querySelectorAll('.anat-row').forEach(row => {
 
 
 /* ============================================================
-   Section 3: 引数ステップデモ
+   Section 3: 引数アニメーションデモ
 ============================================================ */
-const fsInput   = document.getElementById('fsInput');
-const fsNextBtn = document.getElementById('fsNextBtn');
-const fsCards   = [
-  document.getElementById('fs0'),
-  document.getElementById('fs1'),
-  document.getElementById('fs2'),
-  document.getElementById('fs3'),
-];
+const fsInput     = document.getElementById('fsInput');
+const fsNextBtn   = document.getElementById('fsNextBtn');
+const fsResetBtn  = document.getElementById('fsResetBtn');
+const fnFlowStage = document.getElementById('fnFlowStage');
+const fnCallRes   = document.getElementById('fnCallRes');
+const fnArgToken  = document.getElementById('fnArgToken');
+const fnDownPill  = document.getElementById('fnDownPill');
+const fnUpPill    = document.getElementById('fnUpPill');
+const fnDefPanel  = document.getElementById('fnDefPanel');
+const fnParamBox  = document.getElementById('fnParamBox');
+const fnBodyExpr  = document.getElementById('fnBodyExpr');
+const fnBodyX     = document.getElementById('fnBodyX');
+const fnPill1     = document.getElementById('fnPill1');
+const fnPill2     = document.getElementById('fnPill2');
+const fnPill3     = document.getElementById('fnPill3');
 
-let fsStep = -1;
-
-function updateFsContent() {
-  const x = parseInt(fsInput.value) || 5;
-  const result = x * 2;
-  document.getElementById('fscode0').innerHTML = `double(<mark>${x}</mark>)`;
-  document.getElementById('fscode1').innerHTML = `x = <mark>${x}</mark>`;
-  document.getElementById('fscode2').innerHTML = `<mark>${x}</mark> × 2`;
-  document.getElementById('fscode3').innerHTML = `<mark>${result}</mark>`;
-}
+let fnRunning = false;
 
 function fsReset() {
-  fsStep = -1;
-  fsCards.forEach(c => c.classList.remove('active'));
+  const x = parseInt(fsInput.value) || 5;
+  fnArgToken.textContent = x;
+  fnCallRes.textContent = "result";
+  fnCallRes.classList.remove("highlight");
+  fnParamBox.textContent = "x";
+  fnParamBox.classList.remove("filled");
+  fnBodyExpr.innerHTML = `<span id="fnBodyX">x</span> * 2`;
+  fnBodyExpr.classList.remove("highlight");
+  fnDefPanel.classList.remove("pulse");
+  if (fnDownPill) fnDownPill.classList.remove("active");
+  if (fnUpPill)   fnUpPill.classList.remove("active");
+  [fnPill1, fnPill2, fnPill3].forEach(p => p && p.classList.remove("active"));
   fsNextBtn.disabled = false;
-  updateFsContent();
+  fnRunning = false;
 }
 
-fsNextBtn.addEventListener('click', () => {
-  fsStep++;
-  const card = fsCards[fsStep];
-  card.classList.remove('active');
-  void card.offsetWidth;
-  card.classList.add('active');
-  if (fsStep >= fsCards.length - 1) fsNextBtn.disabled = true;
-});
+fsNextBtn.addEventListener('click', async () => {
+  if (fnRunning) return;
+  fnRunning = true;
+  fsNextBtn.disabled = true;
 
-document.getElementById('fsResetBtn').addEventListener('click', fsReset);
+  const x = parseInt(fsInput.value) || 5;
+  const result = x * 2;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
 
-fsInput.addEventListener('input', () => {
+  // リセット
   fsReset();
+  fnRunning = true;
+  fsNextBtn.disabled = true;
+
+  const stageRect = fnFlowStage.getBoundingClientRect();
+  const argRect   = fnArgToken.getBoundingClientRect();
+  const paramRect = fnParamBox.getBoundingClientRect();
+  const resRect   = fnCallRes.getBoundingClientRect();
+
+  // ── ステップ①: 引数を渡す ──
+  if (fnPill1)    fnPill1.classList.add("active");
+  if (fnDownPill) fnDownPill.classList.add("active");
+  await wait(150);
+
+  const fromX1 = argRect.left - stageRect.left + argRect.width / 2;
+  const fromY1 = argRect.top  - stageRect.top  + argRect.height / 2;
+  const toX1   = paramRect.left - stageRect.left + paramRect.width / 2;
+  const toY1   = paramRect.top  - stageRect.top  + paramRect.height / 2;
+
+  const token1 = document.createElement("div");
+  token1.className = "fly-token";
+  token1.textContent = x;
+  token1.style.left = fromX1 + "px";
+  token1.style.top  = fromY1 + "px";
+  token1.style.background = "#f59e0b";
+  token1.style.color = "#fff";
+  fnFlowStage.appendChild(token1);
+
+  const dx1 = toX1 - fromX1;
+  const dy1 = toY1 - fromY1;
+
+  await new Promise(res => {
+    const anim = token1.animate([
+      { transform: "translate(-50%,-50%) scale(1)", opacity: 1, offset: 0 },
+      { transform: `translate(calc(-50% + ${dx1 * 0.4}px), calc(-50% + ${dy1 * 0.5 - 20}px)) scale(1.2)`, opacity: 1, offset: 0.5 },
+      { transform: `translate(calc(-50% + ${dx1}px), calc(-50% + ${dy1}px)) scale(0.9)`, opacity: 0.2, offset: 1 },
+    ], { duration: 500, easing: "cubic-bezier(0.25, 1, 0.5, 1)", fill: "forwards" });
+    anim.onfinish = res;
+  });
+  token1.remove();
+
+  fnParamBox.textContent = `x=${x}`;
+  fnParamBox.classList.add("filled");
+
+  await wait(600);
+
+  // ── ステップ②: 処理実行（計算） ──
+  if (fnPill1)    fnPill1.classList.remove("active");
+  if (fnDownPill) fnDownPill.classList.remove("active");
+  if (fnPill2)    fnPill2.classList.add("active");
+  fnDefPanel.classList.add("pulse");
+
+  fnBodyExpr.innerHTML = `${x} * 2`;
+  fnBodyExpr.classList.add("highlight");
+  await wait(450);
+
+  fnBodyExpr.innerHTML = `→ ${result}`;
+
+  await wait(750);
+
+  // ── ステップ③: 結果返却 ──
+  if (fnPill2)  fnPill2.classList.remove("active");
+  if (fnPill3)  fnPill3.classList.add("active");
+  if (fnUpPill) fnUpPill.classList.add("active");
+
+  const exprRect = fnBodyExpr.getBoundingClientRect();
+  const fromX2 = exprRect.left - stageRect.left + exprRect.width / 2;
+  const fromY2 = exprRect.top  - stageRect.top  + exprRect.height / 2;
+  const toX2   = resRect.left  - stageRect.left + resRect.width / 2;
+  const toY2   = resRect.top   - stageRect.top  + resRect.height / 2;
+
+  const token2 = document.createElement("div");
+  token2.className = "fly-token";
+  token2.textContent = result;
+  token2.style.left = fromX2 + "px";
+  token2.style.top  = fromY2 + "px";
+  token2.style.background = "#10b981";
+  token2.style.color = "#fff";
+  fnFlowStage.appendChild(token2);
+
+  const dx2 = toX2 - fromX2;
+  const dy2 = toY2 - fromY2;
+
+  await new Promise(res => {
+    const anim = token2.animate([
+      { transform: "translate(-50%,-50%) scale(1.1)", opacity: 1, offset: 0 },
+      { transform: `translate(calc(-50% + ${dx2 * 0.4}px), calc(-50% + ${dy2 * 0.5 - 20}px)) scale(1.25)`, opacity: 1, offset: 0.5 },
+      { transform: `translate(calc(-50% + ${dx2}px), calc(-50% + ${dy2}px)) scale(0.9)`, opacity: 0, offset: 1 },
+    ], { duration: 520, easing: "cubic-bezier(0.25, 1, 0.5, 1)", fill: "forwards" });
+    anim.onfinish = res;
+  });
+  token2.remove();
+
+  fnCallRes.textContent = `result (${result})`;
+  fnCallRes.classList.add("highlight");
+
+  await wait(800);
+  if (fnPill3)  fnPill3.classList.remove("active");
+  if (fnUpPill) fnUpPill.classList.remove("active");
+
+  fsNextBtn.disabled = false;
+  fnRunning = false;
 });
 
-updateFsContent();
+fsResetBtn.addEventListener('click', fsReset);
+fsInput.addEventListener('input', fsReset);
+fsReset();
 
 
 /* ============================================================

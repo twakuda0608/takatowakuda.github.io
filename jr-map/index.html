@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>JR 路線図 | Takato Wakuda</title>
+  <link rel="icon" type="image/jpeg" href="/Wave.jpg">
+  <link rel="apple-touch-icon" href="/Wave.jpg">
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5XPYDMQ921"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-5XPYDMQ921');
+  </script>
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Common & Local Styles -->
+  <link rel="stylesheet" href="/common.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-light">
+  <div id="app">
+    <!-- 地図コンテナ -->
+    <div id="map"></div>
+
+    <!-- 上部ナビゲーション / 検索バー -->
+    <header class="map-header">
+      <div class="header-left">
+        <!-- common.jsの戻るボタンと並ぶタイトル -->
+        <div class="site-branding">
+          <span class="badge-jr">JR</span>
+          <h1 class="header-title">路線図</h1>
+        </div>
+      </div>
+
+      <div class="header-search">
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" fill="none"/>
+            <line x1="16" y1="16" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <input type="text" id="station-search" placeholder="駅名を検索 (例: 新宿, tokyo)" autocomplete="off">
+          <button type="button" id="search-clear" class="btn-icon" aria-label="消去" style="display:none;">✕</button>
+        </div>
+        <div id="search-results" class="search-dropdown" style="display: none;"></div>
+      </div>
+
+      <div class="header-right">
+        <!-- エリア切り替え -->
+        <div class="view-presets">
+          <button type="button" class="btn-preset active" data-view="kanto">関東</button>
+          <button type="button" class="btn-preset" data-view="kansai">関西</button>
+          <button type="button" class="btn-preset" data-view="tokai">東海</button>
+          <button type="button" class="btn-preset" data-view="hokkaido">北海道</button>
+          <button type="button" class="btn-preset" data-view="tohoku">東北</button>
+          <button type="button" class="btn-preset" data-view="chugoku">中国</button>
+          <button type="button" class="btn-preset" data-view="shikoku">四国</button>
+          <button type="button" class="btn-preset" data-view="kyushu">九州</button>
+          <button type="button" class="btn-preset" data-view="japan">全国</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- カテゴリー & 路線フィルターバー (上部直下) -->
+    <div class="filter-bar">
+      <div class="category-tabs" id="category-tabs">
+        <!-- JSで動的生成 -->
+      </div>
+      <div class="line-chips" id="line-chips">
+        <!-- 選択中のカテゴリーに応じた路線チップを動的生成 -->
+      </div>
+    </div>
+
+    <!-- 右側マップ操作コントロール -->
+    <div class="map-controls">
+      <div class="control-group">
+        <button type="button" id="btn-zoom-in" class="ctrl-btn" title="拡大" aria-label="拡大">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <button type="button" id="btn-zoom-out" class="ctrl-btn" title="縮小" aria-label="縮小">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <button type="button" id="btn-zoom-reset" class="ctrl-btn" title="全体表示" aria-label="全体表示">
+          <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="3" fill="currentColor"/><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 駅詳細ボトムシート / カード -->
+    <div id="station-sheet" class="station-sheet" style="display: none;">
+      <div class="sheet-handle" id="sheet-handle"></div>
+      <button type="button" class="btn-sheet-close" id="btn-sheet-close" aria-label="閉">✕</button>
+      
+      <div class="sheet-header">
+        <div class="station-meta">
+          <span class="station-pref" id="sheet-pref">東京都</span>
+          <span class="station-kana" id="sheet-kana">とうきょう</span>
+          <span class="station-en" id="sheet-en">Tokyo</span>
+        </div>
+        <h2 class="station-name" id="sheet-name">東京</h2>
+      </div>
+
+      <div class="sheet-body">
+        <div class="section-title">乗り入れ路線</div>
+        <div class="station-lines" id="sheet-lines">
+          <!-- 路線バッジを動的配置 -->
+        </div>
+
+        <div class="section-title">隣接駅</div>
+        <div class="adjacent-stations" id="sheet-adjacents">
+          <!-- 前後の駅リスト -->
+        </div>
+
+        <div class="sheet-actions">
+          <button type="button" class="btn-primary" id="btn-focus-station">中央表示</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 路線情報ポップアップ / バー (路線クリック時) -->
+    <div id="line-banner" class="line-banner" style="display: none;">
+      <div class="line-badge" id="banner-badge">JY</div>
+      <div class="line-details">
+        <div class="line-name-row">
+          <strong id="banner-name">山手線</strong>
+          <span id="banner-en">Yamanote Line</span>
+        </div>
+        <p class="line-desc" id="banner-desc"></p>
+      </div>
+      <button type="button" class="btn-banner-close" id="btn-banner-close" aria-label="閉">✕</button>
+    </div>
+
+    <!-- 凡例 (左下) -->
+    <div class="map-legend">
+      <div class="legend-item"><span class="legend-dot hub"></span> 主要ターミナル駅</div>
+      <div class="legend-item"><span class="legend-dot regular"></span> 駅</div>
+      <div class="legend-item"><span class="legend-line shinkansen"></span> 新幹線</div>
+      <div class="legend-item"><span class="legend-line local"></span> 在来線</div>
+      <div class="legend-item"><span class="legend-line border-line"></span> 県境</div>
+    </div>
+  </div>
+
+  <!-- データ & ライブラリ読み込み -->
+  <script src="topojson-client.min.js"></script>
+  <script src="data/borders.js"></script>
+  <script src="data/build-data.js"></script>
+  <script src="data/tracks.js"></script>
+  <!-- 共通スクリプト (戻るボタン等) -->
+  <script src="/common.js"></script>
+  <!-- メインロジック -->
+  <script src="app.js"></script>
+</body>
+</html>

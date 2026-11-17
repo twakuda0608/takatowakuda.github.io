@@ -965,23 +965,24 @@
 .assign-btn     { background: #10b981; color: #fff; }
 .assign-btn:hover:not(:disabled) { filter: brightness(.9); }
 
-/* ===== score = score + 1 ステップデモ ===== */
-.step-demo {
+/* ===== score = score + 1 アニメーションステージ ===== */
+.incr-anim-stage {
+  position: relative;
   display: flex;
-  gap: 20px;
-  align-items: flex-start;
+  align-items: center;
+  gap: 24px;
+  background: #fdf4ff;
+  border: 2px solid #e9d5ff;
+  border-radius: 14px;
+  padding: 20px;
   margin: 20px 0;
-  flex-wrap: wrap;
+  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.08);
 }
 
-.step-var-area {
+.incr-box-col {
   flex: 0 0 auto;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  padding-top: 18px;
-  padding-right: 26px;
+  justify-content: center;
 }
 
 /* ── step box theme (purple tint on label) ──── */
@@ -998,70 +999,140 @@
   color: #3B0764;
 }
 
-.step-cards {
-  flex: 1 1 260px;
+.incr-formula-col {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.incr-formula-card {
+  position: relative;
+  background: #0f172a;
+  border: 2px solid #334155;
+  border-radius: 12px;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 76px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.incr-eq-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 1.4rem;
+  font-weight: 800;
+  transition: opacity .25s ease;
+}
+
+.incr-var-left {
+  color: #c084fc;
+}
+
+.incr-eq {
+  color: #94a3b8;
+}
+
+.incr-rhs-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(168, 85, 247, 0.15);
+  border: 2px dashed #a855f7;
+  border-radius: 8px;
+  padding: 4px 14px;
+  transition: all .25s ease;
+}
+
+.incr-rhs-wrap.highlight {
+  border-style: solid;
+  border-color: #facc15;
+  background: rgba(250, 204, 21, 0.2);
+  box-shadow: 0 0 16px rgba(250, 204, 21, 0.4);
+  transform: scale(1.05);
+}
+
+.incr-rhs-term {
+  color: #fde047;
+  font-weight: 800;
+  transition: all .2s;
+}
+
+.incr-rhs-op {
+  color: #94a3b8;
+}
+
+.incr-rhs-const {
+  color: #38bdf8;
+}
+
+/* 計算結果（合体バッジ） */
+.incr-calc-result {
+  display: none;
+  font-family: 'Courier New', monospace;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #ecfdf5;
+  background: #10b981;
+  padding: 6px 24px;
+  border-radius: 10px;
+  border: 2px solid #34d399;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+}
+
+.incr-calc-result.pop {
+  display: block;
+  animation: valPop .35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* ステップ進行トラック */
+.incr-steps-track {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 
-.step-card {
-  border: 2px solid var(--border-soft);
-  border-radius: 10px;
-  padding: 12px 14px;
-  background: #fafafa;
-  opacity: .4;
-  transition: opacity .3s, border-color .3s, background .3s, box-shadow .3s;
-}
-
-.step-card.active {
-  opacity: 1;
-  border-color: #a855f7;
-  background: #fdf4ff;
-  box-shadow: 0 0 0 3px rgba(168,85,247,.15);
-}
-
-.step-card.done {
-  opacity: .75;
-  border-color: #d8b4fe;
-  background: #f5f3ff;
-}
-
-.step-num {
-  font-size: .62rem;
-  font-weight: 800;
-  color: #a855f7;
-  letter-spacing: 1px;
-  margin-bottom: 3px;
-}
-
-.step-title {
-  font-size: .88rem;
-  font-weight: 700;
-  color: #1a202c;
-  margin-bottom: 6px;
-}
-
-.step-code {
-  font-family: 'Courier New', monospace;
-  font-size: .88rem;
-  background: #1e293b;
-  color: #e2e8f0;
-  padding: 6px 10px;
-  border-radius: 6px;
-  margin-bottom: 6px;
-}
-
-.step-desc {
+.incr-step-pill {
   font-size: .82rem;
-  color: #4b5563;
-  line-height: 1.5;
+  font-weight: 700;
+  color: #64748b;
+  background: #fff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 20px;
+  padding: 4px 12px;
+  transition: all .25s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-/* ステップ内ハイライト */
-mark.hl-read  { background: #fef9c3; color: #854d0e; padding: 1px 3px; border-radius: 3px; font-style: normal; }
-mark.hl-calc  { background: #dcfce7; color: #166534; padding: 1px 3px; border-radius: 3px; font-style: normal; }
-mark.hl-store { background: #ede9fe; color: #6d28d9; padding: 1px 3px; border-radius: 3px; font-style: normal; }
+.incr-step-pill .pill-dot {
+  font-size: .88rem;
+  color: #94a3b8;
+}
+
+.incr-step-pill.active {
+  background: #a855f7;
+  color: #fff;
+  border-color: #a855f7;
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.35);
+  transform: translateY(-2px);
+}
+
+.incr-step-pill.active .pill-dot {
+  color: #fff;
+}
+
+.incr-step-arrow {
+  color: #cbd5e1;
+  font-size: .85rem;
+  font-weight: 800;
+}
 
 .step-controls {
   display: flex;
@@ -1192,70 +1263,120 @@ mark.hl-store { background: #ede9fe; color: #6d28d9; padding: 1px 3px; border-ra
     0 2px 5px rgba(0,0,0,0.15);
 }
 
-/* ===== 2次配列の解説カード ===== */
-.matrix-explain-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+/* ===== 2次配列の構造ナビ ===== */
+.matrix-structure-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 12px;
-  margin: 16px 0;
-}
-
-.matrix-explain-card {
   background: #f8fafc;
   border: 1.5px solid #e2e8f0;
   border-radius: 10px;
-  padding: 14px 16px;
-  font-size: .88rem;
-  line-height: 1.6;
+  padding: 12px 18px;
+  margin: 16px 0;
+  flex-wrap: wrap;
 }
 
-.matrix-explain-title {
+.matrix-struct-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.struct-tag {
+  font-size: .68rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.struct-code {
+  font-family: 'Courier New', monospace;
+  font-size: 1.15rem;
   font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 6px;
+  background: #fff;
+  border: 1.5px solid #cbd5e1;
   color: #1e293b;
-  margin-bottom: 6px;
-  font-size: .92rem;
+  transition: all .25s ease;
 }
 
-.matrix-explain-card code {
-  background: #e2e8f0;
-  padding: 1px 5px;
-  border-radius: 4px;
-  font-family: monospace;
-  color: #1e293b;
+.struct-outer .struct-code {
+  border-color: #3b82f6;
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.struct-inner .struct-code {
+  border-color: #10b981;
+  color: #047857;
+  background: #ecfdf5;
+}
+
+.struct-result .struct-code {
+  border-color: #8b5cf6;
+  color: #6d28d9;
+  background: #f5f3ff;
+}
+
+.matrix-struct-arrow {
+  color: #94a3b8;
+  font-weight: 800;
+  font-size: .95rem;
+}
+
+/* マンション行ハイライト */
+.matrix-row.highlight-row {
+  background: rgba(59, 130, 246, 0.12);
+  border-radius: 6px;
+  outline: 2px solid #3b82f6;
 }
 
 /* ===== 辞書（dictionary） ===== */
 .dict-badge { background: #fef3c7; color: #92400e; }
 
-.dict-concept-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin: 16px 0;
-}
-
-.dict-concept-card {
+.dict-structure-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
   background: #fffbeb;
   border: 1.5px solid #fde68a;
   border-radius: 10px;
-  padding: 14px 16px;
-  font-size: .88rem;
-  line-height: 1.6;
+  padding: 12px 18px;
+  margin: 16px 0;
+  flex-wrap: wrap;
 }
 
-.dict-concept-title {
-  font-weight: 800;
+.dict-struct-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.dict-struct-tag {
+  font-size: .68rem;
+  font-weight: 700;
   color: #92400e;
-  margin-bottom: 6px;
-  font-size: .92rem;
 }
 
-.dict-concept-card code {
-  background: #fef3c7;
-  padding: 1px 5px;
-  border-radius: 4px;
-  font-family: monospace;
-  color: #78350f;
+.dict-struct-code {
+  font-family: 'Courier New', monospace;
+  font-size: 1.15rem;
+  font-weight: 800;
+  padding: 4px 14px;
+  border-radius: 6px;
+  background: #fff;
+  border: 1.5px solid #f59e0b;
+  color: #b45309;
+}
+
+.dict-struct-sep {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #d97706;
 }
 
 .dict-demo-area {
@@ -1467,12 +1588,33 @@ mark.hl-store { background: #ede9fe; color: #6d28d9; padding: 1px 3px; border-ra
     grid-template-columns: 1fr;
   }
 
-  .matrix-explain-grid {
-    grid-template-columns: 1fr;
+  .incr-anim-stage {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
   }
 
-  .dict-concept-cards {
-    grid-template-columns: 1fr;
+  .incr-formula-col {
+    width: 100%;
+  }
+
+  .incr-formula-card {
+    padding: 14px 16px;
+  }
+
+  .incr-eq-row {
+    font-size: 1.15rem;
+    gap: 8px;
+  }
+
+  .matrix-structure-bar, .dict-structure-bar {
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .struct-code, .dict-struct-code {
+    font-size: .95rem;
+    padding: 3px 8px;
   }
 
   .list-box {

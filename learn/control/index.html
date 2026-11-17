@@ -266,48 +266,45 @@
     <!-- ===== インデント ===== -->
     <section class="page-card">
       <div class="sec-header">
+        <span class="badge" style="background:#e0e7ff; color:#3730a3;">スコープ</span>
         <h2>インデント（字下げ）でスコープを決める</h2>
       </div>
 
-      <div class="iv nested-iv">
-        <div class="iv-line">
-          <code><span class="kw">for</span> i <span class="kw">in</span> range(3):</code>
-          <span class="iv-tag iv-tag-for">← for ループ</span>
+      <div class="indent-stage-header">
+        <button class="action-btn" id="indentPlayBtn" style="background:#4f46e5; color:#fff;">▶ 実行</button>
+        <button class="action-btn reset-btn" id="indentResetBtn">↩ リセット</button>
+      </div>
+
+      <div class="iv nested-iv" id="indentVisualizer">
+        <div class="iv-line" id="ivLine1">
+          <code><span class="kw">for</span> i <span class="kw">in</span> range(2):</code>
         </div>
-        <div class="iv-scope iv-for-scope">
-          <div class="iv-line">
+        <div class="iv-scope iv-for-scope" id="ivScopeFor">
+          <div class="iv-line" id="ivLine2">
             <code>    <span class="kw">if</span> i &gt; 0:</code>
-            <span class="iv-tag iv-tag-for">← for の中の if</span>
           </div>
-          <div class="iv-scope iv-if-scope">
-            <div class="iv-line">
+          <div class="iv-scope iv-if-scope" id="ivScopeIf">
+            <div class="iv-line" id="ivLine3">
               <code>        print(i)</code>
-              <span class="iv-tag iv-tag-if">← for かつ if の中</span>
             </div>
           </div>
-          <div class="iv-line">
+          <div class="iv-line" id="ivLine4">
             <code>    print("A")</code>
-            <span class="iv-tag iv-tag-for">← for の中、if の外</span>
           </div>
         </div>
-        <div class="iv-line iv-outside">
+        <div class="iv-line iv-outside" id="ivLine5">
           <code>print("done")</code>
-          <span class="iv-tag iv-tag-out">← 全部の外（1回だけ）</span>
         </div>
       </div>
 
       <div class="indent-rule">
         <div class="indent-rule-item">
           <div class="indent-rule-bar" style="background:var(--for-color)"></div>
-          <span>スペース <strong>4つ</strong> → for ループの中</span>
+          <span>スペース <strong>4つ</strong>（外側ブロック）</span>
         </div>
         <div class="indent-rule-item">
           <div class="indent-rule-bar" style="background:var(--if-color)"></div>
-          <span>スペース <strong>8つ</strong> → for の中の if の中</span>
-        </div>
-        <div class="indent-rule-item">
-          <div class="indent-rule-bar" style="background:#94a3b8"></div>
-          <span>字下げ <strong>なし</strong> → どのブロックの外</span>
+          <span>スペース <strong>8つ</strong>（内側ブロック）</span>
         </div>
       </div>
     </section>

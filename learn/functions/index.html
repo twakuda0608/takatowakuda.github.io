@@ -123,38 +123,47 @@ double(5)  # → 10</code></pre>
         <span class="badge arg-badge">引数</span>
         <h2>引数が関数に入る流れ</h2>
       </div>
-      <p class="concept-desc"><code>double(5)</code> を呼ぶと <strong>5 が x に入り</strong>、処理されます。ボタンを押してステップを進めよう。</p>
+      <p class="concept-desc">引数が関数に渡され、結果が戻る動きを確認しよう。</p>
 
-      <div class="step-flow">
-        <div class="flow-card" id="fs0">
-          <div class="fs-num">①</div>
-          <div class="fs-title">呼び出し</div>
-          <div class="fs-code" id="fscode0">double(<mark>5</mark>)</div>
-          <div class="fs-note">5 を渡す</div>
+      <div class="fn-flow-stage" id="fnFlowStage">
+        <!-- 呼び出し元 -->
+        <div class="fn-call-panel" id="fnCallPanel">
+          <div class="fn-panel-label">呼び出し元</div>
+          <div class="fn-call-code">
+            <span class="call-var" id="fnCallRes">result</span>
+            <span class="call-eq">=</span>
+            <span class="call-fn">double</span>(<span class="fn-arg-token" id="fnArgToken">5</span>)
+          </div>
         </div>
-        <div class="flow-card" id="fs1">
-          <div class="fs-num">②</div>
-          <div class="fs-title">代入</div>
-          <div class="fs-code" id="fscode1">x = <mark>5</mark></div>
-          <div class="fs-note">引数 x に 5 が入る</div>
+
+        <!-- コネクタ -->
+        <div class="fn-flow-connector">
+          <div class="connector-pill down-pill" id="fnDownPill">↓ 引数を渡す</div>
+          <div class="connector-pill up-pill" id="fnUpPill">↑ 結果を返す</div>
         </div>
-        <div class="flow-card" id="fs2">
-          <div class="fs-num">③</div>
-          <div class="fs-title">計算</div>
-          <div class="fs-code" id="fscode2"><mark>5</mark> × 2</div>
-          <div class="fs-note">x * 2 を実行</div>
+
+        <!-- 関数の中身 -->
+        <div class="fn-def-panel" id="fnDefPanel">
+          <div class="fn-panel-label">関数の中身</div>
+          <div class="fn-def-code">
+            <div class="fn-def-line"><span class="sp-kw">def</span> <span class="sp-name">double</span>(<span class="fn-param-box" id="fnParamBox">x</span>):</div>
+            <div class="fn-def-line fn-indent"><span class="sp-kw">return</span> <span class="fn-body-expr" id="fnBodyExpr"><span id="fnBodyX">x</span> * 2</span></div>
+          </div>
         </div>
-        <div class="flow-card" id="fs3">
-          <div class="fs-num">④</div>
-          <div class="fs-title">return</div>
-          <div class="fs-code fs-result" id="fscode3"><mark>10</mark></div>
-          <div class="fs-note">結果を返す</div>
+
+        <!-- 進行インジケーター（体言止め） -->
+        <div class="fn-track-row">
+          <div class="fn-pill" id="fnPill1"><span class="pill-dot">①</span> 引数渡し</div>
+          <div class="fn-track-arrow">→</div>
+          <div class="fn-pill" id="fnPill2"><span class="pill-dot">②</span> 処理実行</div>
+          <div class="fn-track-arrow">→</div>
+          <div class="fn-pill" id="fnPill3"><span class="pill-dot">③</span> 結果返却</div>
         </div>
       </div>
 
       <div class="controls-row">
         <label class="ctrl-lbl">引数：<input type="number" id="fsInput" class="demo-input" value="5"></label>
-        <button class="action-btn arg-btn" id="fsNextBtn">次へ ▶</button>
+        <button class="action-btn arg-btn" id="fsNextBtn">▶ 実行</button>
         <button class="action-btn reset-btn" id="fsResetBtn">↩ リセット</button>
       </div>
 
