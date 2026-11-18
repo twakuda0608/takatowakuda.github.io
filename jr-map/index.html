@@ -51,6 +51,16 @@
         </div>
         <div id="search-results" class="search-dropdown" style="display: none;"></div>
       </div>
+
+      <!-- ルート検索切り替えボタン -->
+      <button type="button" id="btn-toggle-route" class="btn-route-toggle" title="マルス経路探索">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="6" cy="19" r="3"/>
+          <path d="M9 19h8.5a4.5 4.5 0 0 0 0-9H7a3 3 0 0 1 0-6h11"/>
+          <circle cx="18" cy="5" r="3"/>
+        </svg>
+        <span>経路探索</span>
+      </button>
     </header>
 
     <!-- 右側マップ操作コントロール -->
@@ -95,7 +105,116 @@
 
         <div class="sheet-actions">
           <button type="button" class="btn-primary" id="btn-focus-station">中央表示</button>
+          <button type="button" class="btn-secondary btn-route-action" id="btn-set-dept">発駅設定</button>
+          <button type="button" class="btn-secondary btn-route-action" id="btn-add-via">経由追加</button>
+          <button type="button" class="btn-secondary btn-route-action" id="btn-set-dest">着駅設定</button>
         </div>
+      </div>
+    </div>
+
+    <!-- マルス経路探索パネル -->
+    <div id="route-panel" class="route-panel" style="display: none;">
+      <div class="route-panel-header">
+        <div class="route-panel-title">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="6" cy="19" r="3"/>
+            <path d="M9 19h8.5a4.5 4.5 0 0 0 0-9H7a3 3 0 0 1 0-6h11"/>
+            <circle cx="18" cy="5" r="3"/>
+          </svg>
+          <span>マルス経路探索</span>
+        </div>
+        <button type="button" class="btn-panel-close" id="btn-close-route" aria-label="閉">✕</button>
+      </div>
+
+      <div class="route-panel-body">
+        <!-- 駅入力セクション -->
+        <div class="route-inputs">
+          <!-- 発駅 -->
+          <div class="route-input-row dept-row">
+            <span class="route-node-icon dept-icon">発</span>
+            <div class="route-field-wrapper">
+              <input type="text" id="route-dept-input" class="route-station-input" placeholder="発駅名 (例: 東京)" autocomplete="off">
+              <button type="button" class="btn-input-clear" data-target="route-dept-input" aria-label="消去" tabindex="-1">✕</button>
+              <div class="route-suggest-dropdown" id="route-dept-suggest" style="display:none;"></div>
+            </div>
+          </div>
+
+          <!-- 経由駅リスト (動的・ドラッグ並び替え対応) -->
+          <div id="route-via-container" class="route-via-container">
+            <!-- 動的経由駅アイテム -->
+          </div>
+
+          <!-- 着駅 -->
+          <div class="route-input-row dest-row">
+            <span class="route-node-icon dest-icon">着</span>
+            <div class="route-field-wrapper">
+              <input type="text" id="route-dest-input" class="route-station-input" placeholder="着駅名 (例: 新宿)" autocomplete="off">
+              <button type="button" class="btn-input-clear" data-target="route-dest-input" aria-label="消去" tabindex="-1">✕</button>
+              <div class="route-suggest-dropdown" id="route-dest-suggest" style="display:none;"></div>
+            </div>
+          </div>
+
+          <!-- 経由駅追加ボタン -->
+          <div class="route-add-via-row">
+            <button type="button" id="btn-add-via-field" class="btn-text-action" tabindex="0">＋ 経由駅追加</button>
+          </div>
+        </div>
+
+        <!-- オプション -->
+        <div class="route-options-container">
+          <!-- 探索モード切り替え -->
+          <div class="route-mode-group" id="route-mode-selector">
+            <button type="button" class="route-mode-btn active" data-mode="shortest" id="btn-mode-shortest">最短経路</button>
+            <button type="button" class="route-mode-btn" data-mode="oneway" id="btn-mode-oneway">※重複区間なし</button>
+          </div>
+
+          <div class="route-options">
+            <label class="route-checkbox-label">
+              <input type="checkbox" id="chk-use-shinkansen" checked>
+              <span>新幹線利用</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- アクションボタン -->
+        <div class="route-buttons">
+          <button type="button" id="btn-search-route" class="btn-search-route">経路探索</button>
+          <button type="button" id="btn-clear-route" class="btn-clear-route">クリア</button>
+        </div>
+
+        <!-- 探索結果表示エリア -->
+        <div id="route-result-container" class="route-result-container" style="display: none;">
+          <!-- マルス券面風カード -->
+          <div class="mars-ticket-card">
+            <div class="ticket-header">
+              <span class="ticket-type">普通乗車券</span>
+              <span class="ticket-status-badge" id="route-validity-badge">一筆書き成立</span>
+            </div>
+            <div class="ticket-stations-row">
+              <span class="ticket-dept" id="ticket-dept-name">東京</span>
+              <span class="ticket-arrow">→</span>
+              <span class="ticket-dest" id="ticket-dest-name">新宿</span>
+            </div>
+            <div class="ticket-via-block">
+              <div class="ticket-via-label">経由</div>
+              <div class="ticket-via-text" id="ticket-via-text">中央東</div>
+            </div>
+            <div class="ticket-footer-row">
+              <span class="ticket-kilo" id="ticket-total-kilo">営業キロ: 10.3 km</span>
+              <span class="ticket-kilo-warning" id="ticket-kilo-warning" style="display: none;"></span>
+              <button type="button" class="btn-copy-ticket" id="btn-copy-ticket">コピー</button>
+            </div>
+          </div>
+
+          <!-- 詳細区間リスト -->
+          <div class="route-details-section">
+            <div class="route-details-title">通過路線・接続駅</div>
+            <div id="route-sections-list" class="route-sections-list"></div>
+          </div>
+        </div>
+
+        <!-- エラー・案内メッセージ -->
+        <div id="route-error-msg" class="route-error-msg" style="display: none;"></div>
       </div>
     </div>
 
@@ -126,9 +245,12 @@
   <script src="topojson-client.min.js"></script>
   <script src="data/borders.js"></script>
   <script src="data/build-data.js"></script>
+  <script src="data/official-kilos.js"></script>
   <script src="data/tracks.js"></script>
   <!-- 共通スクリプト (戻るボタン等) -->
   <script src="/common.js"></script>
+  <!-- マルス経路探索エンジン -->
+  <script src="route-engine.js"></script>
   <!-- メインロジック -->
   <script src="app.js"></script>
 </body>

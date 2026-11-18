@@ -114,11 +114,13 @@
       return;
     }
 
+    normalizeStationPrefectures();
     initMap();
     buildAdjacentStationsIndex();
     renderCategoryTabs();
     renderLineChips();
     setupEventHandlers();
+    initRouteEngineUI();
     drawBorders();
     updateMapLayers();
     updateLabelsVisibility();
@@ -161,6 +163,147 @@
       closeStationSheet();
       closeLineBanner();
     });
+  }
+
+  // =======================================================
+  // 1.5 駅都道府県データの自動補正 (国土地理院 行政界ポリゴン判定)
+  // =======================================================
+  function normalizeStationPrefectures() {
+    const topo = TOPO || window.JR_TOPO;
+    if (!topo || typeof topojson === 'undefined' || !topo.objects || !topo.objects.japan) return;
+
+    try {
+      const geojson = topojson.feature(topo, topo.objects.japan);
+      if (!geojson || !geojson.features) return;
+
+      function pointInRing(x, y, ring) {
+        let inside = false;
+        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+          const xi = ring[i][0], yi = ring[i][1];
+          const xj = ring[j][0], yj = ring[j][1];
+          const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+          if (intersect) inside = !inside;
+        }
+        return inside;
+      }
+
+      function pointInPoly(x, y, coords) {
+        if (!pointInRing(x, y, coords[0])) return false;
+        for (let h = 1; h < coords.length; h++) {
+          if (pointInRing(x, y, coords[h])) return false;
+        }
+        return true;
+      }
+
+      function pointInGeom(x, y, geom) {
+        if (geom.type === 'Polygon') {
+          return pointInPoly(x, y, geom.coordinates);
+        } else if (geom.type === 'MultiPolygon') {
+          for (let p = 0; p < geom.coordinates.length; p++) {
+            if (pointInPoly(x, y, geom.coordinates[p])) return true;
+          }
+        }
+        return false;
+      }
+
+      function distSqToSegment(x, y, x1, y1, x2, y2) {
+        const dx = x2 - x1, dy = y2 - y1;
+        if (dx === 0 && dy === 0) {
+          const ddx = x - x1, ddy = y - y1;
+          return ddx * ddx + ddy * ddy;
+        }
+        const t = Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy)));
+        const px = x1 + t * dx, py = y1 + t * dy;
+        const ex = x - px, ey = y - py;
+        return ex * ex + ey * ey;
+      }
+
+      function distSqToGeom(x, y, geom) {
+        let minD = Infinity;
+        const checkRings = (rings) => {
+          for (let r = 0; r < rings.length; r++) {
+            const ring = rings[r];
+            for (let i = 0; i < ring.length - 1; i++) {
+              const d = distSqToSegment(x, y, ring[i][0], ring[i][1], ring[i + 1][0], ring[i + 1][1]);
+              if (d < minD) minD = d;
+            }
+          }
+        };
+        if (geom.type === 'Polygon') {
+          checkRings(geom.coordinates);
+        } else if (geom.type === 'MultiPolygon') {
+          for (let p = 0; p < geom.coordinates.length; p++) {
+            checkRings(geom.coordinates[p]);
+          }
+        }
+        return minD;
+      }
+
+      const prefList = geojson.features.map(f => {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        const updateBBox = (ring) => {
+          for (let i = 0; i < ring.length; i++) {
+            const x = ring[i][0], y = ring[i][1];
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        };
+
+        if (f.geometry.type === 'Polygon') {
+          f.geometry.coordinates.forEach(updateBBox);
+        } else if (f.geometry.type === 'MultiPolygon') {
+          f.geometry.coordinates.forEach(poly => poly.forEach(updateBBox));
+        }
+
+        return {
+          name: f.properties.nam_ja,
+          minX, minY, maxX, maxY,
+          geom: f.geometry
+        };
+      });
+
+      const unassigned = [];
+      for (const stId in STATIONS) {
+        const st = STATIONS[stId];
+        const x = st.lng, y = st.lat;
+        let matched = false;
+        for (let i = 0; i < prefList.length; i++) {
+          const p = prefList[i];
+          if (x < p.minX || x > p.maxX || y < p.minY || y > p.maxY) continue;
+          if (pointInGeom(x, y, p.geom)) {
+            st.pref = p.name;
+            matched = true;
+            break;
+          }
+        }
+        if (!matched) {
+          unassigned.push(st);
+        }
+      }
+
+      // 沿岸部・埋立地等のフォールバック判定 (最寄り境界線)
+      unassigned.forEach(st => {
+        const x = st.lng, y = st.lat;
+        let bestPref = null;
+        let bestDist = Infinity;
+        for (let i = 0; i < prefList.length; i++) {
+          const p = prefList[i];
+          if (x < p.minX - 1.0 || x > p.maxX + 1.0 || y < p.minY - 1.0 || y > p.maxY + 1.0) continue;
+          const d = distSqToGeom(x, y, p.geom);
+          if (d < bestDist) {
+            bestDist = d;
+            bestPref = p.name;
+          }
+        }
+        if (bestPref) {
+          st.pref = bestPref;
+        }
+      });
+    } catch (e) {
+      console.warn('Failed to normalize station prefectures:', e);
+    }
   }
 
   // =======================================================
@@ -311,12 +454,14 @@
       });
 
       polyline.on('mouseover', () => {
+        if (ROUTE_STATE && ROUTE_STATE.lastResult) return;
         if (!STATE.selectedLineId) {
           polyline.setStyle({ weight: defaultWeight + 2, opacity: 1 });
         }
       });
 
       polyline.on('mouseout', () => {
+        if (ROUTE_STATE && ROUTE_STATE.lastResult) return;
         if (!STATE.selectedLineId) {
           polyline.setStyle({ weight: defaultWeight, opacity: 0.9 });
         }
@@ -391,6 +536,32 @@
   // ズームレベルに応じた駅マーカーの表示・サイズ動的調整 (ズームアウト時の駅丸印非表示)
   function updateStationMarkerSizes() {
     const zoom = map.getZoom();
+
+    // ルート探索結果が表示されている場合は、通過駅・未通過駅のスタイルを維持
+    if (ROUTE_STATE && ROUTE_STATE.lastResult) {
+      const passedStationSet = new Set(ROUTE_STATE.lastResult.allStationIds || []);
+      const dupStationSet = new Set(ROUTE_STATE.lastResult.duplicateStationIds || []);
+      stationMarkers.forEach((marker, stId) => {
+        if (passedStationSet.has(stId)) {
+          const isDup = dupStationSet.has(stId);
+          marker.setStyle({
+            color: isDup ? '#ef4444' : '#0284c7',
+            weight: 2.5,
+            opacity: 1.0,
+            fillColor: '#ffffff',
+            fillOpacity: 1.0,
+            radius: isDup ? 5.5 : 4.5
+          });
+          marker.bringToFront();
+        } else {
+          marker.setStyle({
+            opacity: 0.1,
+            fillOpacity: 0.08
+          });
+        }
+      });
+      return;
+    }
 
     stationMarkers.forEach((marker, stId) => {
       const el = marker.getElement();
@@ -1033,6 +1204,20 @@
     const zoom = map.getZoom();
     const baseWeight = zoom >= 14 ? 5 : (zoom >= 11 ? 3.5 : (zoom <= 8 ? 2 : 2.5));
 
+    // ルート探索結果が表示されている場合は、全未選択路線のディムアウト状態を維持
+    if (ROUTE_STATE && ROUTE_STATE.lastResult) {
+      LINES.forEach(line => {
+        const polylines = linePolylines.get(line.id) || [];
+        polylines.forEach(p => {
+          p.setStyle({
+            weight: 1.8,
+            opacity: 0.12
+          });
+        });
+      });
+      return;
+    }
+
     LINES.forEach(line => {
       const polylines = linePolylines.get(line.id) || [];
       const isShinkansen = line.category === 'shinkansen';
@@ -1432,6 +1617,1001 @@
     window.addEventListener('resize', () => {
       updateLabelsVisibility();
     });
+  }
+
+  // =======================================================
+  // 9. マルス経路探索 UI & 地図連携
+  // =======================================================
+  const ROUTE_STATE = {
+    isOpen: false,
+    useShinkansen: true,
+    searchMode: 'shortest',
+    activeRouteLayers: [],
+    activePinLayers: [],
+    lastResult: null
+  };
+
+  function initRouteEngineUI() {
+    if (!window.JR_ROUTE_ENGINE) {
+      console.warn('JR_ROUTE_ENGINE is not loaded.');
+      return;
+    }
+
+    // グラフ構築 (STATIONS と LINES から)
+    window.JR_ROUTE_ENGINE.buildGraph(STATIONS, LINES);
+
+    // ヘッダーのトグルボタン
+    const toggleBtn = document.getElementById('btn-toggle-route');
+    const closeBtn = document.getElementById('btn-close-route');
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        toggleRoutePanel();
+      });
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        toggleRoutePanel(false);
+      });
+    }
+
+    // 発駅入力サジェスト
+    const deptInput = document.getElementById('route-dept-input');
+    const deptSuggest = document.getElementById('route-dept-suggest');
+    setupStationSuggest(deptInput, deptSuggest, (st) => {
+      deptInput.value = st.name;
+      deptInput.setAttribute('data-id', st.id);
+    });
+
+    // 着駅入力サジェスト
+    const destInput = document.getElementById('route-dest-input');
+    const destSuggest = document.getElementById('route-dest-suggest');
+    setupStationSuggest(destInput, destSuggest, (st) => {
+      destInput.value = st.name;
+      destInput.setAttribute('data-id', st.id);
+    });
+
+    // 各入力フィールドのクリアボタン (✕)
+    document.querySelectorAll('.btn-input-clear').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-target');
+        const targetInput = document.getElementById(targetId);
+        if (targetInput) {
+          targetInput.value = '';
+          targetInput.removeAttribute('data-id');
+          targetInput.focus();
+        }
+      });
+    });
+
+    // 経由駅追加ボタン (＋ 経由駅追加)
+    const addViaBtn = document.getElementById('btn-add-via-field');
+    if (addViaBtn) {
+      addViaBtn.addEventListener('click', () => {
+        addViaStationRow();
+      });
+    }
+
+    // 探索モード切り替えボタン (最短経路 / 重複区間なし)
+    const modeBtns = document.querySelectorAll('.route-mode-btn');
+    modeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        modeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const mode = btn.getAttribute('data-mode') || 'shortest';
+        ROUTE_STATE.searchMode = mode;
+        const deptInput = document.getElementById('route-dept-input');
+        const destInput = document.getElementById('route-dest-input');
+        if (deptInput && deptInput.value.trim() && destInput && destInput.value.trim()) {
+          executeRouteSearch();
+        }
+      });
+    });
+
+    // 新幹線利用チェックボックス
+    const shinkansenChk = document.getElementById('chk-use-shinkansen');
+    if (shinkansenChk) {
+      shinkansenChk.addEventListener('change', (e) => {
+        ROUTE_STATE.useShinkansen = e.target.checked;
+      });
+    }
+
+    // 経路探索ボタン
+    const searchBtn = document.getElementById('btn-search-route');
+    if (searchBtn) {
+      searchBtn.addEventListener('click', () => {
+        executeRouteSearch();
+      });
+    }
+
+    // クリアボタン
+    const clearBtn = document.getElementById('btn-clear-route');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        clearRouteEngineUI();
+      });
+    }
+
+    // コピーボタン
+    const copyBtn = document.getElementById('btn-copy-ticket');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        if (!ROUTE_STATE.lastResult || !ROUTE_STATE.lastResult.marsString) return;
+        const text = ROUTE_STATE.lastResult.marsString;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => {
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = 'コピー済';
+            setTimeout(() => {
+              copyBtn.textContent = originalText;
+            }, 1500);
+          }).catch(() => {
+            copyFallback(text, copyBtn);
+          });
+        } else {
+          copyFallback(text, copyBtn);
+        }
+      });
+    }
+
+    // 駅詳細シート内のアクションボタン (発駅設定 / 経由追加 / 着駅設定)
+    const setDeptBtn = document.getElementById('btn-set-dept');
+    if (setDeptBtn) {
+      setDeptBtn.addEventListener('click', () => {
+        if (!STATE.selectedStationId) return;
+        const st = STATIONS[STATE.selectedStationId];
+        if (!st) return;
+        deptInput.value = st.name;
+        deptInput.setAttribute('data-id', st.id);
+        toggleRoutePanel(true);
+      });
+    }
+
+    const addViaActionBtn = document.getElementById('btn-add-via');
+    if (addViaActionBtn) {
+      addViaActionBtn.addEventListener('click', () => {
+        if (!STATE.selectedStationId) return;
+        const st = STATIONS[STATE.selectedStationId];
+        if (!st) return;
+        addViaStationRow(st);
+        toggleRoutePanel(true);
+      });
+    }
+
+    const setDestBtn = document.getElementById('btn-set-dest');
+    if (setDestBtn) {
+      setDestBtn.addEventListener('click', () => {
+        if (!STATE.selectedStationId) return;
+        const st = STATIONS[STATE.selectedStationId];
+        if (!st) return;
+        destInput.value = st.name;
+        destInput.setAttribute('data-id', st.id);
+        toggleRoutePanel(true);
+      });
+    }
+  }
+
+  function copyFallback(text, copyBtn) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      const originalText = copyBtn.textContent;
+      copyBtn.textContent = 'コピー済';
+      setTimeout(() => {
+        copyBtn.textContent = originalText;
+      }, 1500);
+    } catch (e) {
+      console.warn('Copy failed', e);
+    }
+    document.body.removeChild(ta);
+  }
+
+  function toggleRoutePanel(forceOpen) {
+    const panel = document.getElementById('route-panel');
+    const toggleBtn = document.getElementById('btn-toggle-route');
+    if (!panel) return;
+
+    if (forceOpen === undefined) {
+      ROUTE_STATE.isOpen = !ROUTE_STATE.isOpen;
+    } else {
+      ROUTE_STATE.isOpen = !!forceOpen;
+    }
+
+    if (ROUTE_STATE.isOpen) {
+      panel.style.display = 'flex';
+      if (toggleBtn) toggleBtn.classList.add('active');
+    } else {
+      panel.style.display = 'none';
+      if (toggleBtn) toggleBtn.classList.remove('active');
+    }
+  }
+
+  function setupStationSuggest(inputEl, dropdownEl, onSelectCallback) {
+    if (!inputEl || !dropdownEl) return;
+
+    let selectedIndex = -1;
+    let currentMatches = [];
+
+    function updateHighlight() {
+      const items = dropdownEl.querySelectorAll('.suggest-item');
+      items.forEach((item, idx) => {
+        if (idx === selectedIndex) {
+          item.classList.add('selected');
+          item.scrollIntoView({ block: 'nearest' });
+        } else {
+          item.classList.remove('selected');
+        }
+      });
+    }
+
+    inputEl.addEventListener('input', () => {
+      const q = inputEl.value.trim().toLowerCase();
+      selectedIndex = -1;
+      currentMatches = [];
+
+      if (!q) {
+        dropdownEl.style.display = 'none';
+        return;
+      }
+
+      currentMatches = Object.values(STATIONS).filter(st => {
+        return (
+          st.name.includes(q) ||
+          st.kana.includes(q) ||
+          st.en.toLowerCase().includes(q)
+        );
+      }).slice(0, 8);
+
+      if (currentMatches.length === 0) {
+        dropdownEl.innerHTML = '<div style="padding:8px 12px;color:#94a3b8;font-size:12px;">該当駅なし</div>';
+        dropdownEl.style.display = 'block';
+        return;
+      }
+
+      dropdownEl.innerHTML = '';
+      currentMatches.forEach((st, idx) => {
+        const item = document.createElement('div');
+        item.className = 'suggest-item' + (idx === 0 ? ' selected' : '');
+        item.innerHTML = `
+          <span class="suggest-st-name">${st.name}</span>
+          <span class="suggest-st-meta">${st.pref}・${st.kana}</span>
+        `;
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          onSelectCallback(st);
+          dropdownEl.style.display = 'none';
+        });
+        dropdownEl.appendChild(item);
+      });
+
+      selectedIndex = 0; // 先頭候補をデフォルトで選択状態に
+      dropdownEl.style.display = 'block';
+    });
+
+    inputEl.addEventListener('keydown', (e) => {
+      const isDropdownOpen = dropdownEl.style.display !== 'none' && currentMatches.length > 0;
+
+      if (e.key === 'ArrowDown') {
+        if (isDropdownOpen) {
+          e.preventDefault();
+          selectedIndex = (selectedIndex + 1) % currentMatches.length;
+          updateHighlight();
+        }
+      } else if (e.key === 'ArrowUp') {
+        if (isDropdownOpen) {
+          e.preventDefault();
+          selectedIndex = (selectedIndex - 1 + currentMatches.length) % currentMatches.length;
+          updateHighlight();
+        }
+      } else if (e.key === 'Enter') {
+        if (isDropdownOpen && selectedIndex >= 0 && selectedIndex < currentMatches.length) {
+          e.preventDefault();
+          const targetSt = currentMatches[selectedIndex];
+          onSelectCallback(targetSt);
+          dropdownEl.style.display = 'none';
+        } else {
+          // ドロップダウン非表示時の Enter: 次マスへ移動、または即座に経路探索を実行
+          e.preventDefault();
+          const deptInput = document.getElementById('route-dept-input');
+          const destInput = document.getElementById('route-dest-input');
+          const viaInputs = Array.from(document.querySelectorAll('.route-via-input'));
+
+          if (inputEl === deptInput) {
+            // 発駅: 経由駅があれば最初の経由駅、なければ着駅へ移動（両方入力済なら探索）
+            if (destInput && destInput.value.trim()) {
+              executeRouteSearch();
+            } else if (viaInputs.length > 0) {
+              viaInputs[0].focus();
+            } else if (destInput) {
+              destInput.focus();
+            }
+          } else if (inputEl.classList.contains('route-via-input')) {
+            // 経由駅: 次の経由駅、なければ着駅へ移動（着駅入力済なら探索）
+            const currentIdx = viaInputs.indexOf(inputEl);
+            if (currentIdx >= 0 && currentIdx < viaInputs.length - 1) {
+              viaInputs[currentIdx + 1].focus();
+            } else if (destInput && !destInput.value.trim()) {
+              destInput.focus();
+            } else {
+              executeRouteSearch();
+            }
+          } else if (inputEl === destInput) {
+            // 着駅: 即座に経路探索を実行
+            executeRouteSearch();
+          }
+        }
+      } else if (e.key === 'Tab') {
+        if (isDropdownOpen && selectedIndex >= 0 && selectedIndex < currentMatches.length) {
+          const targetSt = currentMatches[selectedIndex];
+          onSelectCallback(targetSt);
+          dropdownEl.style.display = 'none';
+          // Tabのデフォルト挙動により次の入力欄へ自然にフォーカス移動する
+        }
+      } else if (e.key === 'Escape') {
+        if (isDropdownOpen) {
+          e.preventDefault();
+          dropdownEl.style.display = 'none';
+        }
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!inputEl.contains(e.target) && !dropdownEl.contains(e.target)) {
+        dropdownEl.style.display = 'none';
+      }
+    });
+  }
+
+  let draggedViaRow = null;
+
+  function updateViaStationNumbers() {
+    const container = document.getElementById('route-via-container');
+    if (!container) return;
+    const rows = container.querySelectorAll('.route-input-row.via-row');
+    rows.forEach((row, idx) => {
+      const icon = row.querySelector('.via-icon');
+      if (icon) {
+        icon.textContent = rows.length > 1 ? `経${idx + 1}` : '経';
+      }
+    });
+  }
+
+  function addViaStationRow(initialStation = null) {
+    const container = document.getElementById('route-via-container');
+    if (!container) return;
+
+    const rowId = 'via-row-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+    const row = document.createElement('div');
+    row.className = 'route-input-row via-row';
+    row.id = rowId;
+
+    row.innerHTML = `
+      <div class="route-drag-handle" title="ドラッグまたは Alt+↑/↓ で並び替え" aria-label="並び替え" draggable="true">⠿</div>
+      <span class="route-node-icon via-icon">経</span>
+      <div class="route-field-wrapper">
+        <input type="text" class="route-station-input route-via-input" placeholder="経由駅名 (例: 熱海)" autocomplete="off">
+        <button type="button" class="btn-input-clear" aria-label="消去" tabindex="-1">✕</button>
+        <div class="route-suggest-dropdown" style="display:none;"></div>
+      </div>
+      <button type="button" class="btn-remove-via" title="経由駅削除" aria-label="削除" tabindex="-1">✕</button>
+    `;
+
+    const handle = row.querySelector('.route-drag-handle');
+    const input = row.querySelector('.route-via-input');
+    const dropdown = row.querySelector('.route-suggest-dropdown');
+    const clearBtn = row.querySelector('.btn-input-clear');
+    const removeBtn = row.querySelector('.btn-remove-via');
+
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      input.removeAttribute('data-id');
+      input.focus();
+    });
+
+    removeBtn.addEventListener('click', () => {
+      container.removeChild(row);
+      updateViaStationNumbers();
+      const deptInput = document.getElementById('route-dept-input');
+      const destInput = document.getElementById('route-dest-input');
+      if (deptInput && deptInput.value.trim() && destInput && destInput.value.trim()) {
+        executeRouteSearch();
+      }
+    });
+
+    // キーボード操作: Backspaceで空行削除、Alt+↑/↓で経由駅順序並び替え
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !input.value) {
+        e.preventDefault();
+        const prevRow = row.previousElementSibling;
+        const prevInput = prevRow ? prevRow.querySelector('.route-via-input') : document.getElementById('route-dept-input');
+        container.removeChild(row);
+        updateViaStationNumbers();
+        if (prevInput) {
+          prevInput.focus();
+        }
+      } else if (e.altKey && e.key === 'ArrowUp') {
+        // Alt + ArrowUp: 1つ上の経由駅と順序入れ替え
+        const prevRow = row.previousElementSibling;
+        if (prevRow && prevRow.classList.contains('via-row')) {
+          e.preventDefault();
+          container.insertBefore(row, prevRow);
+          updateViaStationNumbers();
+          input.focus();
+          const deptInput = document.getElementById('route-dept-input');
+          const destInput = document.getElementById('route-dest-input');
+          if (deptInput && deptInput.value.trim() && destInput && destInput.value.trim()) {
+            executeRouteSearch();
+          }
+        }
+      } else if (e.altKey && e.key === 'ArrowDown') {
+        // Alt + ArrowDown: 1つ下の経由駅と順序入れ替え
+        const nextRow = row.nextElementSibling;
+        if (nextRow && nextRow.classList.contains('via-row')) {
+          e.preventDefault();
+          container.insertBefore(nextRow, row);
+          updateViaStationNumbers();
+          input.focus();
+          const deptInput = document.getElementById('route-dept-input');
+          const destInput = document.getElementById('route-dest-input');
+          if (deptInput && deptInput.value.trim() && destInput && destInput.value.trim()) {
+            executeRouteSearch();
+          }
+        }
+      }
+    });
+
+    // ドラッグ＆ドロップ (ドラッグハンドルから開始)
+    handle.addEventListener('dragstart', (e) => {
+      draggedViaRow = row;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', row.id);
+      setTimeout(() => {
+        row.classList.add('is-dragging');
+      }, 0);
+    });
+
+    handle.addEventListener('dragend', () => {
+      row.classList.remove('is-dragging');
+      container.querySelectorAll('.via-row').forEach(r => {
+        r.classList.remove('drag-over-above', 'drag-over-below', 'is-dragging');
+      });
+      draggedViaRow = null;
+    });
+
+    row.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (!draggedViaRow || draggedViaRow === row) return;
+
+      const rect = row.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      if (e.clientY < midY) {
+        row.classList.add('drag-over-above');
+        row.classList.remove('drag-over-below');
+      } else {
+        row.classList.add('drag-over-below');
+        row.classList.remove('drag-over-above');
+      }
+    });
+
+    row.addEventListener('dragleave', () => {
+      row.classList.remove('drag-over-above', 'drag-over-below');
+    });
+
+    row.addEventListener('drop', (e) => {
+      e.preventDefault();
+      row.classList.remove('drag-over-above', 'drag-over-below');
+      if (!draggedViaRow || draggedViaRow === row) return;
+
+      const rect = row.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      if (e.clientY < midY) {
+        container.insertBefore(draggedViaRow, row);
+      } else {
+        container.insertBefore(draggedViaRow, row.nextSibling);
+      }
+
+      updateViaStationNumbers();
+
+      // 並び替え完了後に自動再探索
+      const deptInput = document.getElementById('route-dept-input');
+      const destInput = document.getElementById('route-dest-input');
+      if (deptInput && deptInput.value.trim() && destInput && destInput.value.trim()) {
+        executeRouteSearch();
+      }
+    });
+
+    setupStationSuggest(input, dropdown, (st) => {
+      input.value = st.name;
+      input.setAttribute('data-id', st.id);
+    });
+
+    if (initialStation) {
+      input.value = initialStation.name;
+      input.setAttribute('data-id', initialStation.id);
+    }
+
+    container.appendChild(row);
+    updateViaStationNumbers();
+
+    if (!initialStation) {
+      input.focus();
+    }
+  }
+
+  function resolveStation(inputEl) {
+    if (!inputEl) return null;
+    const directId = inputEl.getAttribute('data-id');
+    if (directId && STATIONS[directId]) {
+      return STATIONS[directId];
+    }
+    const val = inputEl.value.trim();
+    if (!val) return null;
+    return findStationByName(val);
+  }
+
+  function findStationByName(query) {
+    if (!query) return null;
+    const q = query.trim().toLowerCase();
+    const exact = Object.values(STATIONS).find(st =>
+      st.name === q || st.id === q || st.kana === q || st.en.toLowerCase() === q
+    );
+    if (exact) return exact;
+
+    const prefix = Object.values(STATIONS).find(st =>
+      st.name.startsWith(q) || st.kana.startsWith(q) || st.en.toLowerCase().startsWith(q)
+    );
+    if (prefix) return prefix;
+
+    return Object.values(STATIONS).find(st =>
+      st.name.includes(q) || st.kana.includes(q)
+    ) || null;
+  }
+
+  function executeRouteSearch() {
+    const errorMsg = document.getElementById('route-error-msg');
+    const resultContainer = document.getElementById('route-result-container');
+    errorMsg.style.display = 'none';
+    resultContainer.style.display = 'none';
+
+    const deptInput = document.getElementById('route-dept-input');
+    const destInput = document.getElementById('route-dest-input');
+    const deptSt = resolveStation(deptInput);
+    const destSt = resolveStation(destInput);
+
+    if (!deptSt) {
+      showRouteError('発駅を正しく入力してください。');
+      deptInput.focus();
+      return;
+    }
+    if (!destSt) {
+      showRouteError('着駅を正しく入力してください。');
+      destInput.focus();
+      return;
+    }
+
+    // 経由駅のリストを取得
+    const viaInputs = document.querySelectorAll('.route-via-input');
+    const viaStIds = [];
+    for (let i = 0; i < viaInputs.length; i++) {
+      const vInput = viaInputs[i];
+      if (!vInput.value.trim()) continue;
+      const vSt = resolveStation(vInput);
+      if (!vSt) {
+        showRouteError(`経由駅「${vInput.value}」が見つかりません。`);
+        vInput.focus();
+        return;
+      }
+      viaStIds.push(vSt.id);
+    }
+
+    if (!window.JR_ROUTE_ENGINE) {
+      showRouteError('経路探索エンジンが読み込まれていません。');
+      return;
+    }
+
+    const options = {
+      useShinkansen: ROUTE_STATE.useShinkansen,
+      searchMode: ROUTE_STATE.searchMode
+    };
+
+    const result = window.JR_ROUTE_ENGINE.searchMarsRoute(deptSt.id, viaStIds, destSt.id, options);
+
+    if (!result || !result.success) {
+      showRouteError((result && result.error) || '指定された区間のルートが見つかりませんでした。経由駅や新幹線利用の設定をご確認ください。');
+      return;
+    }
+
+    ROUTE_STATE.lastResult = result;
+
+    // 券面・結果を描画
+    document.getElementById('ticket-dept-name').textContent = result.deptName;
+    document.getElementById('ticket-dest-name').textContent = result.destName;
+    document.getElementById('ticket-via-text').textContent = result.marsString || '(直通)';
+    document.getElementById('ticket-total-kilo').textContent = `営業キロ: ${result.totalKm.toFixed(1)} km`;
+
+    // 概算距離（未登録路線フォールバック）警告表示
+    const kiloWarnElem = document.getElementById('ticket-kilo-warning');
+    if (kiloWarnElem) {
+      if (result.hasEstimatedDistance && result.unregisteredLines && result.unregisteredLines.length > 0) {
+        const lineNamesStr = result.unregisteredLines.join('、');
+        kiloWarnElem.textContent = `※概算距離を含む（未登録路線: ${lineNamesStr}）`;
+        kiloWarnElem.style.display = 'inline-block';
+      } else {
+        kiloWarnElem.textContent = '';
+        kiloWarnElem.style.display = 'none';
+      }
+    }
+
+    const validityBadge = document.getElementById('route-validity-badge');
+    if (result.isOneWayTrip) {
+      validityBadge.textContent = '一筆書き成立';
+      validityBadge.className = 'ticket-status-badge';
+      validityBadge.style.cursor = 'default';
+      validityBadge.onclick = null;
+      validityBadge.title = '重複のない一筆書き経路です';
+    } else {
+      validityBadge.textContent = '※重複区間あり (クリックで移動)';
+      validityBadge.className = 'ticket-status-badge badge-overlap';
+      validityBadge.style.cursor = 'pointer';
+      validityBadge.title = 'クリックすると地図上の重複区間へズームします';
+      validityBadge.onclick = () => {
+        focusDuplicateSections(result);
+      };
+    }
+
+    // 区間一覧を描画
+    const sectionsList = document.getElementById('route-sections-list');
+    sectionsList.innerHTML = '';
+    result.sections.forEach((sec) => {
+      const item = document.createElement('div');
+      const isDup = sec.isDuplicate;
+      item.className = 'route-section-item' + (isDup ? ' is-duplicate' : '');
+      item.style.cursor = 'pointer';
+      item.title = isDup ? 'クリックで重複区間へ移動' : 'クリックでこの区間を表示';
+      item.innerHTML = `
+        <div class="route-section-bar" style="background:${isDup ? '#dc2626' : (sec.lineColor || '#0284c7')};"></div>
+        <div class="route-section-info">
+          <div class="route-section-line-name">
+            <span>${sec.lineName}</span>
+            <span class="mars-pill ${isDup ? 'pill-duplicate' : ''}">${isDup ? '重複' : sec.marsName}</span>
+          </div>
+          <div class="route-section-stations">${sec.deptName} → ${sec.destName} (${sec.stationCount}駅)</div>
+        </div>
+        <div class="route-section-kilo" style="${isDup ? 'color:#dc2626;font-weight:800;' : ''}">${sec.km.toFixed(1)} km</div>
+      `;
+      item.addEventListener('click', () => {
+        if (isDup && result.duplicatePolylines && result.duplicatePolylines.length > 0) {
+          focusDuplicateSections(result);
+          return;
+        }
+        if (sec.stations && sec.stations.length > 0) {
+          const latlngs = sec.stations.map(id => {
+            const st = STATIONS[id];
+            return st ? [st.lat, st.lng] : null;
+          }).filter(Boolean);
+          if (latlngs.length > 0) {
+            const b = L.latLngBounds(latlngs);
+            map.fitBounds(b, { padding: [60, 60], maxZoom: 13, animate: true, duration: 0.8 });
+          }
+        }
+      });
+      sectionsList.appendChild(item);
+    });
+
+    resultContainer.style.display = 'block';
+
+    // 地図上にハイライト描画
+    drawRouteOnMap(result);
+  }
+
+  function showRouteError(msg) {
+    const errorEl = document.getElementById('route-error-msg');
+    if (errorEl) {
+      errorEl.textContent = msg;
+      errorEl.style.display = 'block';
+    }
+  }
+
+  function clearRouteEngineUI() {
+    const deptInput = document.getElementById('route-dept-input');
+    const destInput = document.getElementById('route-dest-input');
+    if (deptInput) {
+      deptInput.value = '';
+      deptInput.removeAttribute('data-id');
+    }
+    if (destInput) {
+      destInput.value = '';
+      destInput.removeAttribute('data-id');
+    }
+
+    const viaContainer = document.getElementById('route-via-container');
+    if (viaContainer) viaContainer.innerHTML = '';
+
+    const errorMsg = document.getElementById('route-error-msg');
+    if (errorMsg) errorMsg.style.display = 'none';
+
+    const resultContainer = document.getElementById('route-result-container');
+    if (resultContainer) resultContainer.style.display = 'none';
+
+    ROUTE_STATE.searchMode = 'shortest';
+    document.querySelectorAll('.route-mode-btn').forEach(b => {
+      if (b.getAttribute('data-mode') === 'shortest') {
+        b.classList.add('active');
+      } else {
+        b.classList.remove('active');
+      }
+    });
+
+    clearRouteMapLayers();
+    ROUTE_STATE.lastResult = null;
+  }
+
+  function resetAllMapStyles() {
+    // 既存路線ポリラインのスタイルを完全に元通りに復元
+    LINES.forEach(line => {
+      const isShinkansen = line.category === 'shinkansen';
+      const defaultWeight = isShinkansen ? 4 : 3;
+      const pls = linePolylines.get(line.id);
+      if (pls) {
+        pls.forEach(pl => {
+          pl.setStyle({
+            color: line.color,
+            weight: defaultWeight,
+            opacity: 0.9,
+            dashArray: isShinkansen ? '8, 6' : null
+          });
+        });
+      }
+    });
+
+    // 駅マーカーのスタイルを元通りに復元
+    stationMarkers.forEach((marker, stId) => {
+      const isMega = TIER1_MEGA_HUBS.has(stId) || (STATIONS[stId] && TIER1_STATION_NAMES.has(STATIONS[stId].name));
+      const isMajor = TIER2_MAJOR_HUBS.has(stId) || (STATIONS[stId] && TIER2_STATION_NAMES.has(STATIONS[stId].name));
+      const strokeColor = isMega ? '#e11d48' : (isMajor ? '#f59e0b' : '#64748b');
+      marker.setStyle({
+        radius: isMega ? 5.5 : 3.5,
+        color: strokeColor,
+        weight: isMega ? 2.5 : 1.5,
+        opacity: 1,
+        fillColor: '#ffffff',
+        fillOpacity: 1
+      });
+    });
+  }
+
+  function clearRouteMapLayers() {
+    resetAllMapStyles();
+
+    ROUTE_STATE.activeRouteLayers.forEach(layer => {
+      map.removeLayer(layer);
+    });
+    ROUTE_STATE.activeRouteLayers = [];
+
+    ROUTE_STATE.activePinLayers.forEach(layer => {
+      map.removeLayer(layer);
+    });
+    ROUTE_STATE.activePinLayers = [];
+  }
+
+  // 重複区間への自動フォーカス (ズーム & パン)
+  function focusDuplicateSections(result) {
+    if (!result) return;
+    const dupCoords = [];
+    if (result.duplicatePolylines && result.duplicatePolylines.length > 0) {
+      result.duplicatePolylines.forEach(chain => {
+        dupCoords.push(...chain);
+      });
+    }
+    if (dupCoords.length === 0 && result.duplicateStationIds && result.duplicateStationIds.length > 0) {
+      result.duplicateStationIds.forEach(id => {
+        const st = STATIONS[id];
+        if (st) dupCoords.push([st.lat, st.lng]);
+      });
+    }
+    if (dupCoords.length > 0) {
+      const bounds = L.latLngBounds(dupCoords);
+      map.fitBounds(bounds, {
+        padding: [80, 80],
+        maxZoom: 13,
+        animate: true,
+        duration: 0.8
+      });
+    }
+  }
+
+  function drawRouteOnMap(result) {
+    clearRouteMapLayers();
+    if (!result || !result.geometryLatlngs || result.geometryLatlngs.length === 0) return;
+
+    // 1. 選択されていない箇所（全路線・全駅）を薄くフェードアウト
+    LINES.forEach(line => {
+      const pls = linePolylines.get(line.id);
+      if (pls) {
+        pls.forEach(pl => {
+          pl.setStyle({
+            opacity: 0.12, // 未選択路線を極薄にして背景化
+            weight: 1.8
+          });
+        });
+      }
+    });
+
+    const passedStationSet = new Set(result.allStationIds || []);
+    const dupStationSet = new Set(result.duplicateStationIds || []);
+    stationMarkers.forEach((marker, stId) => {
+      if (passedStationSet.has(stId)) {
+        const isDup = dupStationSet.has(stId);
+        // 通過駅: クッキリ前面表示 (重複訪問駅は赤枠で強調)
+        marker.setStyle({
+          color: isDup ? '#ef4444' : '#0284c7',
+          weight: 2.5,
+          opacity: 1.0,
+          fillColor: '#ffffff',
+          fillOpacity: 1.0,
+          radius: isDup ? 5.5 : 4.5
+        });
+        marker.bringToFront();
+      } else {
+        // 未通過駅: 薄くフェードアウト
+        marker.setStyle({
+          opacity: 0.1,
+          fillOpacity: 0.08
+        });
+      }
+    });
+
+    // 2. 選択経路の通常区間: 極太ハイライト (幅広グロー + コアライン + 芯線)
+    const normalCoordsList = (result.normalPolylines && result.normalPolylines.length > 0)
+      ? result.normalPolylines
+      : (result.geometryLatlngs.length > 0 ? [result.geometryLatlngs] : []);
+
+    normalCoordsList.forEach(coords => {
+      // 外側ワイド発光グロー (太さ 15px)
+      const glow = L.polyline(coords, {
+        color: '#00ffff',
+        weight: 15,
+        opacity: 0.45,
+        lineCap: 'round',
+        lineJoin: 'round',
+        className: 'route-glow-path',
+        interactive: false
+      }).addTo(map);
+
+      // 中間メインコアライン (太さ 8.5px の力強い鮮烈ブルー)
+      const core = L.polyline(coords, {
+        color: '#0284c7',
+        weight: 8.5,
+        opacity: 1.0,
+        lineCap: 'round',
+        lineJoin: 'round',
+        interactive: false
+      }).addTo(map);
+
+      // 最上面ハイライト光沢芯線 (太さ 2.5px)
+      const shine = L.polyline(coords, {
+        color: '#bae6fd',
+        weight: 2.5,
+        opacity: 0.85,
+        lineCap: 'round',
+        lineJoin: 'round',
+        interactive: false
+      }).addTo(map);
+
+      glow.bringToFront();
+      core.bringToFront();
+      shine.bringToFront();
+      ROUTE_STATE.activeRouteLayers.push(glow, core, shine);
+    });
+
+    // 3. 重複区間: 極太警告ハイライト (太さ 9.5px の警告レッド + 白ストライプ破線)
+    if (result.duplicatePolylines && result.duplicatePolylines.length > 0) {
+      result.duplicatePolylines.forEach(coords => {
+        // 赤色ワイドグロー (太さ 17px)
+        const dupGlow = L.polyline(coords, {
+          color: '#ef4444',
+          weight: 17,
+          opacity: 0.65,
+          lineCap: 'round',
+          lineJoin: 'round',
+          className: 'route-duplicate-path',
+          interactive: false
+        }).addTo(map);
+
+        // 赤色メインコア (太さ 9.5px の深紅)
+        const dupCore = L.polyline(coords, {
+          color: '#dc2626',
+          weight: 9.5,
+          opacity: 1.0,
+          lineCap: 'round',
+          lineJoin: 'round',
+          className: 'route-duplicate-core',
+          interactive: false
+        }).addTo(map);
+
+        // 中央ストライプ破線 (太さ 3.5px のホワイト破線)
+        const dupStripe = L.polyline(coords, {
+          color: '#ffffff',
+          weight: 3.5,
+          opacity: 0.95,
+          dashArray: '7, 7',
+          lineCap: 'butt',
+          lineJoin: 'round',
+          interactive: false
+        }).addTo(map);
+
+        dupGlow.bringToFront();
+        dupCore.bringToFront();
+        dupStripe.bringToFront();
+        ROUTE_STATE.activeRouteLayers.push(dupGlow, dupCore, dupStripe);
+      });
+    }
+
+    // 4. 発駅ピン
+    const deptSt = STATIONS[result.deptId];
+    if (deptSt) {
+      const deptIcon = L.divIcon({
+        className: 'route-map-pin dept-pin',
+        html: '発',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+      const deptMarker = L.marker([deptSt.lat, deptSt.lng], { icon: deptIcon, zIndexOffset: 2000 })
+        .addTo(map)
+        .bindTooltip(`発駅: ${deptSt.name}`, { direction: 'top', offset: [0, -14] });
+      ROUTE_STATE.activePinLayers.push(deptMarker);
+    }
+
+    // 5. 経由駅ピン
+    if (result.viaIds && result.viaIds.length > 0) {
+      result.viaIds.forEach((vId, idx) => {
+        const vSt = STATIONS[vId];
+        if (!vSt) return;
+        const viaIcon = L.divIcon({
+          className: 'route-map-pin via-pin',
+          html: (idx + 1).toString(),
+          iconSize: [26, 26],
+          iconAnchor: [13, 13]
+        });
+        const viaMarker = L.marker([vSt.lat, vSt.lng], { icon: viaIcon, zIndexOffset: 1900 })
+          .addTo(map)
+          .bindTooltip(`経由${idx + 1}: ${vSt.name}`, { direction: 'top', offset: [0, -13] });
+        ROUTE_STATE.activePinLayers.push(viaMarker);
+      });
+    }
+
+    // 6. 着駅ピン
+    const destSt = STATIONS[result.destId];
+    if (destSt) {
+      const destIcon = L.divIcon({
+        className: 'route-map-pin dest-pin',
+        html: '着',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+      const destMarker = L.marker([destSt.lat, destSt.lng], { icon: destIcon, zIndexOffset: 2000 })
+        .addTo(map)
+        .bindTooltip(`着駅: ${destSt.name}`, { direction: 'top', offset: [0, -14] });
+      ROUTE_STATE.activePinLayers.push(destMarker);
+    }
+
+    // 7. 選択経路全体を画面内に自動フォーカス (FitBounds)
+    if (result.geometryLatlngs.length >= 2) {
+      const bounds = L.latLngBounds(result.geometryLatlngs);
+      map.fitBounds(bounds, {
+        padding: [60, 60],
+        maxZoom: 13,
+        animate: true,
+        duration: 0.8
+      });
+    }
   }
 
   if (document.readyState === 'loading') {

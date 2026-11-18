@@ -2641,6 +2641,7 @@
       "st-fjx0",
       "st-lfx1",
       "st-fh9w",
+      "aizu-wakamatsu",
       "st-gpvx",
       "st-fvbqx",
       "st-i7hob",
@@ -2655,8 +2656,7 @@
       "st-bx8vdz",
       "st-cxdev",
       "st-intxn8",
-      "koriyama",
-      "aizu-wakamatsu"
+      "koriyama"
     ]
   },
   {
@@ -2736,16 +2736,10 @@
       "st-nadn",
       "st-kuba",
       "st-kq6",
-      "st-i659",
-      "st-e2zqe",
-      "st-hjz0",
-      "st-ea8z2q",
-      "st-ea73qs",
-      "st-rr61",
+      "st-mrxe7",
+      "st-l3fik",
       "st-bp4q57",
       "st-fred",
-      "st-l3fik",
-      "st-mrxe7",
       "st-dwi8",
       "shin-hakodate-hokuto",
       "st-e3ws",
@@ -2753,6 +2747,26 @@
       "st-ibib",
       "st-c3wmd",
       "st-esaz"
+    ]
+  },
+  {
+    "id": "hokkaido-hakodate-sawara",
+    "name": "函館本線(砂原支線)",
+    "en": "Hakodate Main Line (Sawara Branch)",
+    "category": "hokkaido",
+    "color": "#00a73c",
+    "textColor": "#ffffff",
+    "code": "H",
+    "description": "大沼から渡島砂原を経て森に至る函館本線のバイパス支線。",
+    "stations": [
+      "st-fred",
+      "st-rr61",
+      "st-ea73qs",
+      "st-ea8z2q",
+      "st-hjz0",
+      "st-e2zqe",
+      "st-i659",
+      "st-kq6"
     ]
   },
   {
@@ -2777,9 +2791,22 @@
       "st-q7vq",
       "st-er2o-1",
       "st-cm78n",
-      "st-1hea2id",
       "st-il4a",
       "st-g6bvh"
+    ]
+  },
+  {
+    "id": "hokkaido-chitose-airport",
+    "name": "千歳線(空港支線)",
+    "en": "Chitose Line (Airport Branch)",
+    "category": "hokkaido",
+    "color": "#00a73c",
+    "textColor": "#ffffff",
+    "code": "AP",
+    "description": "南千歳から新千歳空港を結ぶアクセス支線。",
+    "stations": [
+      "st-cm78n",
+      "st-1hea2id"
     ]
   },
   {
@@ -2820,10 +2847,6 @@
       "st-ghnd",
       "st-rbeb",
       "st-flrne",
-      "st-p3th",
-      "st-gryl",
-      "st-iv4u",
-      "st-gbnt",
       "st-ft4n5",
       "st-gbwa",
       "st-rszx",
@@ -2839,6 +2862,23 @@
       "st-g6cd",
       "st-qdgw",
       "st-ma6wo"
+    ]
+  },
+  {
+    "id": "hokkaido-muroran-branch",
+    "name": "室蘭本線(室蘭支線)",
+    "en": "Muroran Main Line (Muroran Branch)",
+    "category": "hokkaido",
+    "color": "#00a73c",
+    "textColor": "#ffffff",
+    "code": "M",
+    "description": "東室蘭から室蘭を結ぶ室蘭本線の支線。",
+    "stations": [
+      "st-flrne",
+      "st-p3th",
+      "st-gryl",
+      "st-iv4u",
+      "st-gbnt"
     ]
   },
   {
@@ -3170,8 +3210,6 @@
       "st-i46o-2",
       "st-m5sp7",
       "st-fbdf",
-      "st-mucs-1",
-      "st-gk8843",
       "st-fn8c",
       "st-lgsr",
       "st-klky3",
@@ -3250,6 +3288,21 @@
       "mishima",
       "st-eeii",
       "atami"
+    ]
+  },
+  {
+    "id": "tokai-minoakasaka",
+    "name": "東海道本線(美濃赤坂線)",
+    "en": "Tokaido Line (Mino-Akasaka Branch)",
+    "category": "tokai",
+    "color": "#f68b1e",
+    "textColor": "#ffffff",
+    "code": "CA",
+    "description": "大垣から美濃赤坂を結ぶ東海道本線の支線。",
+    "stations": [
+      "st-fn8c",
+      "st-mucs-1",
+      "st-gk8843"
     ]
   },
   {
@@ -3731,11 +3784,11 @@
       "st-kfxz",
       "st-fm3gu",
       "st-cqjlpt",
-      "st-l6pz",
       "st-dyqn",
       "st-fj37g",
       "st-frsn",
       "st-fzkz",
+      "st-l6pz",
       "st-pfz6",
       "st-kiwrn",
       "st-ecrg2",
@@ -4655,7 +4708,6 @@
     "stations": [
       "st-l6l6",
       "st-edhy",
-      "st-cy96w",
       "st-fm9ft",
       "st-rbwd",
       "st-kdseq3",
@@ -4779,6 +4831,20 @@
       "shin-shimonoseki",
       "st-gp26",
       "st-e3g7"
+    ]
+  },
+  {
+    "id": "sanyo-wadamisaki",
+    "name": "山陽本線(和田岬線)",
+    "en": "Sanyo Main Line (Wadamisaki Branch)",
+    "category": "chugoku",
+    "color": "#0072bc",
+    "textColor": "#ffffff",
+    "code": "W",
+    "description": "兵庫から和田岬を結ぶ山陽本線の支線。",
+    "stations": [
+      "st-edhy",
+      "st-cy96w"
     ]
   },
   {
@@ -4929,7 +4995,6 @@
       "st-e10i",
       "st-qg06",
       "st-jgy9tx",
-      "st-dx79",
       "st-mm2ih",
       "st-ns862",
       "st-jgyyiv",
@@ -4952,6 +5017,20 @@
       "st-1vzqks6",
       "st-j1aip",
       "st-gp26"
+    ]
+  },
+  {
+    "id": "sanin-senzaki",
+    "name": "山陰本線(仙崎支線)",
+    "en": "Sanin Main Line (Senzaki Branch)",
+    "category": "chugoku",
+    "color": "#804192",
+    "textColor": "#ffffff",
+    "code": "E",
+    "description": "長門市から仙崎を結ぶ山陰本線の支線。",
+    "stations": [
+      "st-mm2ih",
+      "st-dx79"
     ]
   },
   {
@@ -5571,7 +5650,6 @@
       "st-n862n",
       "st-byn7o",
       "st-cp3sr",
-      "st-aatoiy",
       "st-ndsx3",
       "st-aarw0c",
       "st-dw31",
@@ -5583,10 +5661,6 @@
       "st-ccxv1",
       "st-i5a3",
       "st-e5ru",
-      "st-i2dj",
-      "st-ed7v",
-      "st-aazeeo",
-      "st-aarswy",
       "st-aatrft",
       "st-kkrze",
       "st-aauv3t",
@@ -5602,6 +5676,27 @@
       "st-qs8h",
       "st-av3kfu",
       "st-dtigh"
+    ]
+  },
+  {
+    "id": "shikoku-yosan-new",
+    "name": "予讃線(内子経由新線)",
+    "en": "Yosan Line (via Uchiko)",
+    "category": "shikoku",
+    "color": "#f15a24",
+    "textColor": "#ffffff",
+    "code": "Y",
+    "description": "向井原から内子線を経由して伊予大洲を結ぶ短絡ルート（特急列車ルート）。",
+    "stations": [
+      "st-cp3sr",
+      "st-aatoiy",
+      "st-aarswy",
+      "st-aazeeo",
+      "st-ed7v",
+      "st-edg0a",
+      "st-cwlhq",
+      "st-i2dj",
+      "st-aatrft"
     ]
   },
   {
@@ -5971,8 +6066,8 @@
       "st-gevc-1",
       "st-mfjor",
       "st-ddy2n5",
-      "st-byo2g",
       "st-1prsvda",
+      "st-byo2g",
       "st-gk2r",
       "st-gk2rr",
       "st-fm02c",
@@ -6149,15 +6244,29 @@
       "st-gi81",
       "st-gkljfo",
       "st-k8tb",
+      "st-j1b8",
+      "nagasaki"
+    ]
+  },
+  {
+    "id": "kyushu-nagasaki-nagayo",
+    "name": "長崎本線（長与支線）",
+    "en": "Nagasaki Main Line (Nagayo Branch)",
+    "category": "kyushu",
+    "color": "#00a3e0",
+    "textColor": "#ffffff",
+    "code": "JH",
+    "description": "喜々津から大草・長与を経て浦上を結ぶ長崎本線の旧線区間。",
+    "stations": [
+      "st-cs6l8",
+      "st-i2m9",
+      "st-fvuq",
       "st-fkfp0",
       "st-punr",
       "st-qzbs",
       "st-ldtqb",
       "st-ko1sz",
-      "st-j1b8",
-      "nagasaki",
-      "st-fvuq",
-      "st-i2m9"
+      "st-j1b8"
     ]
   },
   {
@@ -6247,8 +6356,8 @@
       "st-grpi",
       "st-i3dneu",
       "st-pgic",
-      "st-crwcp",
       "st-hmrhs",
+      "st-crwcp",
       "st-jaw4",
       "st-giv5",
       "st-dnags",
@@ -6479,8 +6588,8 @@
       "st-eyyo",
       "st-kx4kv",
       "st-ievl",
-      "st-d7ex9g",
       "st-d7dvta",
+      "st-d7ex9g",
       "st-e4dd",
       "st-fpygxj",
       "st-fqbbxp",
@@ -33434,7 +33543,7 @@
     "lng": 136.58338,
     "pref": "岐阜県",
     "lines": [
-      "tokai-tokaido"
+      "tokai-minoakasaka"
     ]
   },
   "st-i46o-2": {
@@ -33458,7 +33567,7 @@
     "lng": 136.58219,
     "pref": "岐阜県",
     "lines": [
-      "tokai-tokaido"
+      "tokai-minoakasaka"
     ]
   },
   "st-lkcj5": {
@@ -33554,7 +33663,8 @@
     "lng": 136.61796,
     "pref": "愛知県",
     "lines": [
-      "tokai-tokaido"
+      "tokai-tokaido",
+      "tokai-minoakasaka"
     ]
   },
   "st-ldps": {
