@@ -1,73 +1,24 @@
-/**
- * JR 全国路線 & 駅マスターデータ (JR Nationwide Railway Dataset)
- * 収録: 全国のJR旅客6社 (JR北海道・JR東日本・JR東海・JR西日本・JR四国・JR九州)
- * 路線名規約: 国土交通省『鉄道要覧』およびJR各社線路名称公告に基づく100%完全な正式路線名
- */
+// JR East & Nationwide Stations and Lines Data
+(function() {
+  const JR_CATEGORIES = [
+    { "id": "all", "name": "全路線" },
+    { "id": "shinkansen", "name": "全国新幹線" },
+    { "id": "tokyo-core", "name": "都心・東京" },
+    { "id": "kanagawa", "name": "神奈川・湘南" },
+    { "id": "chiba", "name": "千葉・房総" },
+    { "id": "saitama", "name": "埼玉・北関東" },
+    { "id": "suburban", "name": "中央・多摩・郊外" },
+    { "id": "shinetsu", "name": "甲信越・新潟" },
+    { "id": "tohoku", "name": "東北エリア" },
+    { "id": "hokkaido", "name": "北海道エリア" },
+    { "id": "tokai", "name": "東海エリア" },
+    { "id": "kansai", "name": "近畿・関西" },
+    { "id": "chugoku", "name": "中国エリア" },
+    { "id": "shikoku", "name": "四国エリア" },
+    { "id": "kyushu", "name": "九州エリア" }
+  ];
 
-window.JR_CATEGORIES = [
-  {
-    "id": "all",
-    "name": "全路線"
-  },
-  {
-    "id": "shinkansen",
-    "name": "全国新幹線"
-  },
-  {
-    "id": "tokyo-core",
-    "name": "都心・東京"
-  },
-  {
-    "id": "kanagawa",
-    "name": "神奈川・湘南"
-  },
-  {
-    "id": "chiba",
-    "name": "千葉・房総"
-  },
-  {
-    "id": "saitama",
-    "name": "埼玉・北関東"
-  },
-  {
-    "id": "suburban",
-    "name": "中央・多摩・郊外"
-  },
-  {
-    "id": "shinetsu",
-    "name": "甲信越・新潟"
-  },
-  {
-    "id": "tohoku",
-    "name": "東北エリア"
-  },
-  {
-    "id": "hokkaido",
-    "name": "北海道エリア"
-  },
-  {
-    "id": "tokai",
-    "name": "東海エリア"
-  },
-  {
-    "id": "kansai",
-    "name": "近畿・関西"
-  },
-  {
-    "id": "chugoku",
-    "name": "中国エリア"
-  },
-  {
-    "id": "shikoku",
-    "name": "四国エリア"
-  },
-  {
-    "id": "kyushu",
-    "name": "九州エリア"
-  }
-];
-
-window.JR_LINES = [
+  const JR_LINES = [
   {
     "id": "yamanote",
     "name": "山手線",
@@ -123,85 +74,6 @@ window.JR_LINES = [
       "konandai",
       "hongodai",
       "ofuna"
-    ]
-  },
-  {
-    "id": "chuo-rapid",
-    "name": "中央本線",
-    "en": "Chuo Main Line",
-    "code": "JC",
-    "color": "#f15a22",
-    "textColor": "#ffffff",
-    "category": "tokyo-core",
-    "isLoop": false,
-    "trackOffset": 12,
-    "description": "東京〜高尾・大月を結ぶ大動脈",
-    "stations": [
-      "kanda",
-      "ochanomizu",
-      "tokyo",
-      "yotsuya",
-      "shinjuku",
-      "nakano",
-      "koenji",
-      "ogikubo",
-      "nishi-ogikubo",
-      "kichijoji",
-      "mitaka",
-      "musashi-sakai",
-      "higashi-koganei",
-      "musashi-koganei",
-      "kokubunji",
-      "nishi-kokubunji",
-      "kunitachi",
-      "tachikawa",
-      "hino",
-      "toyoda",
-      "hachioji",
-      "nishi-hachioji",
-      "takao",
-      "sagamiko",
-      "fujino",
-      "uenohara",
-      "otsuki"
-    ],
-    "trackPath": [
-      "tokyo",
-      "kanda",
-      "ochanomizu",
-      "suidobashi",
-      "iidabashi",
-      "ichigaya",
-      "yotsuya",
-      "shinanomachi",
-      "sendagaya",
-      "yoyogi",
-      "shinjuku",
-      "okubo",
-      "higashi-nakano",
-      "nakano",
-      "koenji",
-      "asagaya",
-      "ogikubo",
-      "nishi-ogikubo",
-      "kichijoji",
-      "mitaka",
-      "musashi-sakai",
-      "higashi-koganei",
-      "musashi-koganei",
-      "kokubunji",
-      "nishi-kokubunji",
-      "kunitachi",
-      "tachikawa",
-      "hino",
-      "toyoda",
-      "hachioji",
-      "nishi-hachioji",
-      "takao",
-      "sagamiko",
-      "fujino",
-      "uenohara",
-      "otsuki"
     ]
   },
   {
@@ -560,8 +432,8 @@ window.JR_LINES = [
     "isLoop": false,
     "description": "府中本町から埼玉をぐるりと回り西船橋・南船橋・東京方面へ繋ぐ大環状線。",
     "stations": [
-      "funabashihoten",
       "nishi-funabashi",
+      "funabashihoten",
       "ichikawaono",
       "higashi-matsudo",
       "shin-yahashira",
@@ -586,94 +458,6 @@ window.JR_LINES = [
       "nishi-kokubunji",
       "kita-fuchu",
       "fuchuhommachi"
-    ]
-  },
-  {
-    "id": "utsunomiya-line",
-    "name": "東北本線",
-    "en": "Tohoku Main Line",
-    "code": "JU",
-    "color": "#f68b1f",
-    "textColor": "#ffffff",
-    "category": "saitama",
-    "isLoop": false,
-    "trackOffset": 12,
-    "description": "東京・上野〜宇都宮〜黒磯を結ぶ大動脈",
-    "stations": [
-      "kuroiso",
-      "nasushiobara",
-      "nishi-nasuno",
-      "yaita",
-      "ujiie",
-      "hoshakuji",
-      "utsunomiya",
-      "suzumeno-miya",
-      "ishibashi",
-      "jichi-idai",
-      "koganei",
-      "oyama",
-      "mamada",
-      "nogi",
-      "koga",
-      "kurihashi",
-      "higashi-washinomiya",
-      "kuki",
-      "shin-shiraoka",
-      "shiraoka",
-      "hasuda",
-      "higashi-omiya",
-      "toro",
-      "omiya",
-      "saitama-shintoshin",
-      "urawa",
-      "akabane",
-      "oku",
-      "ueno",
-      "tokyo"
-    ],
-    "trackPath": [
-      "tokyo",
-      "kanda",
-      "akihabara",
-      "okachimachi",
-      "ueno",
-      "uguisudani",
-      "nippori",
-      "tabata",
-      "oku",
-      "akabane",
-      "kawaguchi",
-      "nishi-kawaguchi",
-      "warabi",
-      "minami-urawa",
-      "urawa",
-      "kita-urawa",
-      "yono",
-      "saitama-shintoshin",
-      "omiya",
-      "toro",
-      "higashi-omiya",
-      "hasuda",
-      "shiraoka",
-      "shin-shiraoka",
-      "kuki",
-      "higashi-washinomiya",
-      "kurihashi",
-      "koga",
-      "nogi",
-      "mamada",
-      "oyama",
-      "koganei",
-      "jichi-idai",
-      "ishibashi",
-      "suzumeno-miya",
-      "utsunomiya",
-      "hoshakuji",
-      "ujiie",
-      "yaita",
-      "nishi-nasuno",
-      "nasushiobara",
-      "kuroiso"
     ]
   },
   {
@@ -746,89 +530,6 @@ window.JR_LINES = [
       "shimmachi",
       "kuragano",
       "takasaki"
-    ]
-  },
-  {
-    "id": "joban-rapid",
-    "name": "常磐線",
-    "en": "Joban Line Rapid",
-    "code": "JJ",
-    "color": "#007b43",
-    "textColor": "#ffffff",
-    "category": "saitama",
-    "isLoop": false,
-    "trackOffset": 12,
-    "description": "品川・東京・上野から松戸・柏・土浦・水戸を経ていわきへ至る太平洋沿岸幹線。",
-    "stations": [
-      "iwaki",
-      "hitachi",
-      "katsuta",
-      "mito",
-      "tomobe",
-      "ishioka",
-      "tsuchiura",
-      "arakawaoki",
-      "hitachinoushiku",
-      "ushiku",
-      "ryugasakishi",
-      "fujishiro",
-      "toride",
-      "tennodai",
-      "abiko",
-      "kashiwa",
-      "matsudo",
-      "kita-senju",
-      "minami-senju",
-      "mikawashima",
-      "nippori",
-      "ueno",
-      "tokyo",
-      "shimbashi",
-      "shinagawa"
-    ],
-    "trackPath": [
-      "shinagawa",
-      "takanawa-gateway",
-      "tamachi",
-      "hamamatsucho",
-      "shimbashi",
-      "yurakucho",
-      "tokyo",
-      "kanda",
-      "akihabara",
-      "okachimachi",
-      "ueno",
-      "uguisudani",
-      "nippori",
-      "mikawashima",
-      "minami-senju",
-      "kita-senju",
-      "ayase",
-      "kameari",
-      "kanamachi",
-      "matsudo",
-      "kita-matsudo",
-      "mabashi",
-      "shin-matsudo",
-      "kita-kogane",
-      "minami-kashiwa",
-      "kashiwa",
-      "kita-kashiwa",
-      "abiko",
-      "tennodai",
-      "toride",
-      "fujishiro",
-      "ryugasakishi",
-      "ushiku",
-      "hitachinoushiku",
-      "arakawaoki",
-      "tsuchiura",
-      "ishioka",
-      "tomobe",
-      "mito",
-      "katsuta",
-      "hitachi",
-      "iwaki"
     ]
   },
   {
@@ -1286,55 +987,74 @@ window.JR_LINES = [
   {
     "id": "chuo-main",
     "name": "中央本線",
-    "en": "Chuo Main Line (Takao - Shiojiri)",
-    "code": "JC",
-    "color": "#0070c0",
-    "textColor": "#ffffff",
-    "category": "suburban",
-    "description": "高尾から大月・甲府・小淵沢・茅野・上諏訪・岡谷を経て塩尻を結ぶJR東日本の中央東線特急「あずさ」「かいじ」動脈。",
-    "n02": [
-      "中央線"
-    ],
+    "company": "JR東日本",
+    "color": "#f15a22",
+    "type": "local",
     "stations": [
-      "shiojiri",
-      "st-6bjeqe",
-      "okaya",
-      "st-c3vye",
-      "kamisuwa",
-      "chino",
-      "st-qb4x",
-      "st-hxrsyx",
-      "st-dvx70",
-      "st-c8p1d",
-      "kobuchizawa",
-      "st-pwh7",
-      "st-fmncs",
-      "st-lc3h",
-      "st-htd8",
-      "nirasaki",
-      "st-fjr9",
-      "st-lj5b",
-      "kofu",
-      "st-p9c6",
-      "st-fhkbjt",
-      "st-db6eid",
-      "st-e1rbf",
-      "st-flqq0",
-      "st-fjmw",
-      "st-xpzlnn",
-      "st-f7g6eb",
-      "st-lgl3",
-      "st-elik",
-      "otsuki",
-      "st-k6p8",
-      "st-ra71",
-      "st-iags",
-      "st-d7vzb",
-      "uenohara",
-      "fujino",
+      "tokyo",
+      "kanda",
+      "ochanomizu",
+      "yotsuya",
+      "shinjuku",
+      "nakano",
+      "koenji",
+      "st-ja2vn6",
+      "ogikubo",
+      "nishi-ogikubo",
+      "kichijoji",
+      "mitaka",
+      "musashi-sakai",
+      "higashi-koganei",
+      "musashi-koganei",
+      "kokubunji",
+      "nishi-kokubunji",
+      "kunitachi",
+      "tachikawa",
+      "hino",
+      "toyoda",
+      "hachioji",
+      "nishi-hachioji",
+      "takao",
       "sagamiko",
-      "takao"
-    ]
+      "fujino",
+      "uenohara",
+      "st-d7vzb",
+      "st-iags",
+      "st-ra71",
+      "st-k6p8",
+      "otsuki",
+      "st-elik",
+      "st-lgl3",
+      "st-f7g6eb",
+      "st-xpzlnn",
+      "st-fjmw",
+      "st-flqq0",
+      "st-e1rbf",
+      "st-db6eid",
+      "st-fhkbjt",
+      "st-p9c6",
+      "kofu",
+      "st-lj5b",
+      "st-fjr9",
+      "nirasaki",
+      "st-htd8",
+      "st-lc3h",
+      "st-fmncs",
+      "st-pwh7",
+      "kobuchizawa",
+      "st-c8p1d",
+      "st-dvx70",
+      "st-hxrsyx",
+      "st-qb4x",
+      "chino",
+      "kamisuwa",
+      "st-c3vye",
+      "okaya",
+      "st-6bjeqe",
+      "shiojiri"
+    ],
+    "en": "Chuo Main Line",
+    "description": "東京〜甲府〜塩尻を結ぶ主要幹線"
   },
   {
     "id": "chuo-tatsuno",
@@ -1504,81 +1224,6 @@ window.JR_LINES = [
     ]
   },
   {
-    "id": "uetsu-niigata",
-    "name": "羽越本線",
-    "en": "Uetsu Main Line (Niigata / Shonai)",
-    "code": "",
-    "color": "#00838f",
-    "textColor": "#ffffff",
-    "category": "shinetsu",
-    "description": "新津から新発田・村上・あつみ温泉・鶴岡・酒田を経て秋田へ向かう日本海縦貫大幹線。",
-    "n02": [
-      "羽越線"
-    ],
-    "stations": [
-      "akita",
-      "st-gik622",
-      "st-hswr",
-      "st-ib07",
-      "st-dvht",
-      "st-p2ay",
-      "st-if8cd4",
-      "st-gie7a7",
-      "st-hdhl",
-      "st-gigqjh",
-      "st-giih5n",
-      "st-o1fz",
-      "st-c7na6",
-      "st-peid",
-      "st-ohlq",
-      "st-dvgy",
-      "st-e2cmi",
-      "st-g31o",
-      "st-excd",
-      "st-oz7q",
-      "st-cyqix",
-      "st-i4lf",
-      "sakata",
-      "st-fuszz",
-      "st-l6tk",
-      "st-cka30",
-      "amarume",
-      "st-o4x8",
-      "st-na8i",
-      "tsuruoka",
-      "st-ggi15m",
-      "st-ggld0e",
-      "st-dw03",
-      "st-e0jpq",
-      "st-bx0ls",
-      "st-1gxv9wd",
-      "st-dxp5v",
-      "st-nk7m4",
-      "st-glkf",
-      "st-ensb",
-      "st-i948wd",
-      "st-dx03",
-      "st-i9bg",
-      "st-i95yom",
-      "st-py9v",
-      "murakami",
-      "st-e7dze",
-      "st-gmtg",
-      "sakamachi",
-      "st-ec7uj",
-      "st-dv4k",
-      "st-pacp",
-      "st-enff",
-      "shibata",
-      "st-dwbd",
-      "st-i17d",
-      "st-l5g3",
-      "st-iv3f",
-      "st-brs0y",
-      "niitsu"
-    ]
-  },
-  {
     "id": "iiyama-line",
     "name": "飯山線",
     "en": "Iiyama Line",
@@ -1627,17 +1272,18 @@ window.JR_LINES = [
   {
     "id": "oito-line",
     "name": "大糸線",
-    "en": "Oito Line",
-    "code": "",
+    "company": "JR東日本",
     "color": "#673ab7",
-    "textColor": "#ffffff",
-    "category": "shinetsu",
-    "description": "松本から信濃大町・白馬を経て南小谷・糸魚川を結ぶ北アルプス山麓ライン。",
-    "n02": [
-      "大糸線"
-    ],
+    "type": "local",
     "stations": [
       "itoigawa",
+      "st-ft5e",
+      "st-jkgza5",
+      "st-idvw",
+      "st-g9m6",
+      "st-gknq",
+      "st-cmk4f",
+      "st-drwy",
       "st-cnvkv",
       "st-en16",
       "st-fkyfjc",
@@ -1671,7 +1317,9 @@ window.JR_LINES = [
       "st-g9cf",
       "st-coath",
       "matsumoto"
-    ]
+    ],
+    "en": "Oito Line",
+    "description": "松本〜信濃大町〜南小谷〜糸魚川を結ぶ北アルプス山麓線"
   },
   {
     "id": "koumi-line",
@@ -2323,426 +1971,18 @@ window.JR_LINES = [
       "hirai",
       "kameido",
       "kinshicho",
-      "ryogoku",
-      "asakusabashi",
       "bakurocho",
       "shin-nihombashi",
-      "akihabara",
-      "ochanomizu",
       "tokyo"
-    ]
-  },
-  {
-    "id": "tohoku-main-sendai",
-    "name": "東北本線",
-    "en": "Tohoku Main Line (Sendai Area)",
-    "code": "",
-    "color": "#008000",
-    "textColor": "#ffffff",
-    "category": "tohoku",
-    "description": "白河から郡山・福島・白石・仙台・小牛田を経て一ノ関を結ぶ南東北の動脈。",
-    "n02": [
-      "東北線"
     ],
-    "stations": [
-      "morioka",
-      "st-byjdo",
-      "st-c3v9as",
-      "st-kwpv",
-      "st-f3yc",
-      "st-g8o5x4",
-      "st-i3aj",
-      "st-iby1x",
-      "st-gvs3xb",
-      "hanamaki",
-      "st-flevl",
-      "kitakami",
-      "st-eb4i",
-      "st-llq3t",
-      "st-j01a",
-      "st-jb5gki",
-      "st-elf9",
-      "st-gnue",
-      "st-dse8h",
-      "ichinoseki",
-      "st-i0go",
-      "st-gmzsg",
-      "st-mtrs",
-      "st-j04d",
-      "st-l6gn",
-      "st-hxts",
-      "st-fk1wx",
-      "st-jl8k",
-      "st-kft7",
-      "kogota",
-      "st-fm2uf",
-      "st-no0op",
-      "st-csv9k",
-      "st-h0pm",
-      "st-n42dg",
-      "st-i43c",
-      "st-ehsj",
-      "st-faoub",
-      "st-jbqaj3",
-      "st-1wb9h55",
-      "st-fu6r",
-      "st-g7lq",
-      "st-fjbe0",
-      "sendai",
-      "st-q2eb",
-      "st-di6ak",
-      "st-clbke",
-      "st-er8p",
-      "st-qrew",
-      "st-gcvn",
-      "st-ilcd",
-      "st-mnpk",
-      "st-dl1o3",
-      "st-cqst3",
-      "st-fq98n",
-      "st-kt92",
-      "st-oo6h",
-      "st-ok6r",
-      "st-nf0s",
-      "st-ia93",
-      "st-e8i2",
-      "st-fqmpk",
-      "fukushima",
-      "st-csmvy",
-      "st-m191z",
-      "st-i49r",
-      "st-gd0r",
-      "st-c0aji",
-      "st-i7lz",
-      "st-i1vm",
-      "st-c30dv",
-      "st-fcb7t",
-      "koriyama",
-      "asaka-nagamori",
-      "st-my42t",
-      "st-pt82",
-      "st-kuqf",
-      "st-j0it",
-      "st-c1g2r",
-      "shirakawa",
-      "shin-shirakawa",
-      "st-kmsl",
-      "st-obkl",
-      "st-ntuip",
-      "st-qrn1",
-      "kuroiso",
-      "nasushiobara",
-      "nishi-nasuno",
-      "st-pb7k",
-      "yaita",
-      "st-jy2i",
-      "st-k61d8",
-      "ujiie",
-      "hoshakuji",
-      "st-gbl7",
-      "utsunomiya",
-      "suzumeno-miya",
-      "ishibashi",
-      "jichi-idai",
-      "koganei",
-      "oyama",
-      "mamada",
-      "nogi",
-      "koga",
-      "kurihashi",
-      "higashi-washinomiya",
-      "kuki",
-      "shin-shiraoka",
-      "shiraoka",
-      "hasuda",
-      "higashi-omiya",
-      "toro",
-      "omiya",
-      "saitama-shintoshin",
-      "st-ck7h3",
-      "yono-hommachi",
-      "yono",
-      "kita-urawa",
-      "minami-yono",
-      "naka-urawa",
-      "musashi-urawa",
-      "urawa",
-      "minami-urawa",
-      "kita-toda",
-      "toda",
-      "toda-koen",
-      "ukima-funado",
-      "kita-akabane",
-      "akabane",
-      "higashi-jujo",
-      "oji",
-      "kami-nakazato",
-      "tabata",
-      "nishi-nippori",
-      "nippori",
-      "uguisudani",
-      "ueno",
-      "okachimachi",
-      "akihabara",
-      "kanda",
-      "tokyo",
-      "kawaguchi",
-      "nishi-kawaguchi",
-      "warabi"
-    ]
-  },
-  {
-    "id": "tohoku-main-morioka",
-    "name": "東北本線",
-    "en": "Tohoku Main Line (Iwate)",
-    "code": "",
-    "color": "#008000",
-    "textColor": "#ffffff",
-    "category": "tohoku",
-    "description": "一ノ関から水沢・北上・花巻を経て盛岡を結ぶ岩手県の中央動脈。",
-    "n02": [
-      "東北線"
-    ],
-    "stations": [
-      "morioka",
-      "st-byjdo",
-      "st-c3v9as",
-      "st-kwpv",
-      "st-f3yc",
-      "st-g8o5x4",
-      "st-i3aj",
-      "st-iby1x",
-      "st-gvs3xb",
-      "hanamaki",
-      "st-flevl",
-      "kitakami",
-      "st-eb4i",
-      "st-llq3t",
-      "st-j01a",
-      "st-jb5gki",
-      "st-elf9",
-      "st-gnue",
-      "st-dse8h",
-      "ichinoseki",
-      "st-i0go",
-      "st-gmzsg",
-      "st-mtrs",
-      "st-j04d",
-      "st-l6gn",
-      "st-hxts",
-      "st-fk1wx",
-      "st-jl8k",
-      "st-kft7",
-      "kogota",
-      "st-fm2uf",
-      "st-no0op",
-      "st-csv9k",
-      "st-h0pm",
-      "st-n42dg",
-      "st-i43c",
-      "st-ehsj",
-      "st-faoub",
-      "st-jbqaj3",
-      "st-1wb9h55",
-      "st-fu6r",
-      "st-g7lq",
-      "st-fjbe0",
-      "sendai",
-      "st-q2eb",
-      "st-di6ak",
-      "st-clbke",
-      "st-er8p",
-      "st-qrew",
-      "st-gcvn",
-      "st-ilcd",
-      "st-mnpk",
-      "st-dl1o3",
-      "st-cqst3",
-      "st-fq98n",
-      "st-kt92",
-      "st-oo6h",
-      "st-ok6r",
-      "st-nf0s",
-      "st-ia93",
-      "st-e8i2",
-      "st-fqmpk",
-      "fukushima",
-      "st-csmvy",
-      "st-m191z",
-      "st-i49r",
-      "st-gd0r",
-      "st-c0aji",
-      "st-i7lz",
-      "st-i1vm",
-      "st-c30dv",
-      "st-fcb7t",
-      "koriyama",
-      "asaka-nagamori",
-      "st-my42t",
-      "st-pt82",
-      "st-kuqf",
-      "st-j0it",
-      "st-c1g2r",
-      "shirakawa",
-      "shin-shirakawa",
-      "st-kmsl",
-      "st-obkl",
-      "st-ntuip",
-      "st-qrn1",
-      "kuroiso",
-      "nasushiobara",
-      "nishi-nasuno",
-      "st-pb7k",
-      "yaita",
-      "st-jy2i",
-      "st-k61d8",
-      "ujiie",
-      "hoshakuji",
-      "st-gbl7",
-      "utsunomiya",
-      "suzumeno-miya",
-      "ishibashi",
-      "jichi-idai",
-      "koganei",
-      "oyama",
-      "mamada",
-      "nogi",
-      "koga",
-      "kurihashi",
-      "higashi-washinomiya",
-      "kuki",
-      "shin-shiraoka",
-      "shiraoka",
-      "hasuda",
-      "higashi-omiya",
-      "toro",
-      "omiya",
-      "saitama-shintoshin",
-      "st-ck7h3",
-      "yono-hommachi",
-      "yono",
-      "kita-urawa",
-      "minami-yono",
-      "naka-urawa",
-      "musashi-urawa",
-      "urawa",
-      "minami-urawa",
-      "kita-toda",
-      "toda",
-      "toda-koen",
-      "ukima-funado",
-      "kita-akabane",
-      "akabane",
-      "higashi-jujo",
-      "oji",
-      "kami-nakazato",
-      "tabata",
-      "nishi-nippori",
-      "nippori",
-      "uguisudani",
-      "ueno",
-      "okachimachi",
-      "akihabara",
-      "kanda",
-      "tokyo",
-      "kawaguchi",
-      "nishi-kawaguchi",
-      "warabi"
-    ]
-  },
-  {
-    "id": "joban-north",
-    "name": "常磐線",
-    "en": "Joban Line (Iwaki - Sendai)",
-    "code": "",
-    "color": "#0078d7",
-    "textColor": "#ffffff",
-    "category": "tohoku",
-    "description": "いわきから富岡・原ノ町・相馬・岩沼を経て仙台を結ぶ浜通り・太平洋沿岸幹線。",
-    "n02": [
-      "常磐線"
-    ],
-    "stations": [
-      "st-gcvn",
-      "st-pcbq",
-      "st-e06m",
-      "st-gfl43",
-      "st-g5h6",
-      "st-fadd",
-      "st-hrwg",
-      "st-mrxli",
-      "st-l2us",
-      "st-fiqn6",
-      "st-rgwn",
-      "st-chvkb",
-      "st-flv35w",
-      "st-giax",
-      "st-i6jm",
-      "st-j7ed",
-      "st-ez99",
-      "st-fypz",
-      "st-daqyk",
-      "st-g4et",
-      "st-ljh0",
-      "st-i32o",
-      "st-joubvs",
-      "st-gvjf",
-      "st-i8jz",
-      "st-bpm4z",
-      "st-cypy8",
-      "st-n4px",
-      "iwaki",
-      "st-ente",
-      "st-jcm5",
-      "st-lhl",
-      "st-iif7",
-      "st-eona",
-      "st-dl9n5",
-      "st-l11s",
-      "st-clji9",
-      "st-r2a9",
-      "st-esmi",
-      "st-dzkgc",
-      "hitachi",
-      "st-ciak2u",
-      "st-ft1q",
-      "st-i71i",
-      "st-dyd8",
-      "katsuta",
-      "mito",
-      "st-ca0cq",
-      "st-oj92",
-      "st-ebp6",
-      "tomobe",
-      "st-gky2",
-      "st-ml6w",
-      "ishioka",
-      "st-qxs4",
-      "st-lbfx",
-      "tsuchiura",
-      "arakawaoki",
-      "hitachinoushiku",
-      "ushiku",
-      "ryugasakishi",
-      "fujishiro",
-      "toride",
-      "tennodai",
-      "abiko",
-      "kita-kashiwa",
-      "kashiwa",
-      "minami-kashiwa",
-      "kita-kogane",
-      "shin-matsudo",
-      "mabashi",
-      "kita-matsudo",
-      "matsudo",
-      "kanamachi",
-      "kameari",
-      "ayase",
-      "kita-senju",
-      "minami-senju",
-      "mikawashima",
-      "nippori"
+    "branches": [
+      [
+        "kinshicho",
+        "ryogoku",
+        "asakusabashi",
+        "akihabara",
+        "ochanomizu"
+      ]
     ]
   },
   {
@@ -2823,313 +2063,6 @@ window.JR_LINES = [
       "st-ck03y",
       "st-fp8ig",
       "sendai"
-    ]
-  },
-  {
-    "id": "ou-main-south",
-    "name": "奥羽本線",
-    "en": "Ou Main Line (Yamagata - Akita)",
-    "code": "",
-    "color": "#ff8c00",
-    "textColor": "#ffffff",
-    "category": "tohoku",
-    "description": "福島から米沢・山形・新庄・湯沢・横手・大曲・秋田を結ぶ奥羽山脈西側の幹線。",
-    "n02": [
-      "奥羽線"
-    ],
-    "stations": [
-      "aomori",
-      "shin-aomori",
-      "st-ed0rkm",
-      "st-ncdds",
-      "st-dron9",
-      "st-j4af",
-      "st-cmt4z",
-      "kawabe",
-      "st-farsw",
-      "hirosaki",
-      "st-kx1m",
-      "st-bw7akp",
-      "st-pxll",
-      "st-hwoqb",
-      "st-j23fhn",
-      "st-q2b5",
-      "st-kr0l",
-      "odate",
-      "st-bw2x9",
-      "st-hsm2",
-      "st-lu4i",
-      "st-ndswe",
-      "st-ei84",
-      "st-bqwgt",
-      "st-g6p9",
-      "st-rcj2",
-      "higashi-noshiro",
-      "st-cvfwn",
-      "st-icud",
-      "st-rkaq",
-      "st-r0hg",
-      "st-cmk1o",
-      "st-z67cqv",
-      "st-giqpdm",
-      "st-dfulb-1",
-      "oiwake",
-      "st-c60s1",
-      "st-fbv3",
-      "st-e3hvb1",
-      "akita",
-      "st-b5ywbp",
-      "st-f0v8",
-      "st-dj3c0",
-      "st-j6ar8",
-      "st-e0v6s",
-      "st-cfqa2",
-      "st-i82cq",
-      "omagari",
-      "st-qrtt",
-      "st-edlw7",
-      "yokote",
-      "st-ibod",
-      "st-pk0z",
-      "st-corld",
-      "st-bywda",
-      "st-jdoz",
-      "st-byvml",
-      "st-e3eh",
-      "st-ijh2",
-      "st-q0yr",
-      "st-eoqr",
-      "st-frti",
-      "st-pevt",
-      "st-hw848",
-      "st-ggr0tu",
-      "st-j5af",
-      "shinjo",
-      "st-mnmr",
-      "st-mth8",
-      "st-aux765",
-      "st-dn56s",
-      "st-nqrc",
-      "st-i2ww",
-      "st-i608",
-      "st-1tz0alc",
-      "st-lacc",
-      "st-duvg",
-      "st-fu8s",
-      "st-dni0r",
-      "st-qw4e",
-      "st-je3v",
-      "st-cm3dm",
-      "uzen-chitose",
-      "st-cmdm0",
-      "yamagata",
-      "st-naie",
-      "st-upzs09",
-      "st-cj8jys",
-      "st-ggg5xw",
-      "st-dt8w",
-      "st-onm3",
-      "st-qzd4",
-      "st-mg4u",
-      "yonezawa",
-      "st-q0uv",
-      "st-frdn",
-      "st-icg",
-      "st-idg8",
-      "st-gkz9",
-      "st-ik3hb",
-      "fukushima"
-    ]
-  },
-  {
-    "id": "ou-main-north",
-    "name": "奥羽本線",
-    "en": "Ou Main Line (Akita - Aomori)",
-    "code": "",
-    "color": "#ff8c00",
-    "textColor": "#ffffff",
-    "category": "tohoku",
-    "description": "秋田から八郎潟・東能代・鷹ノ巣・大館・弘前・新青森を経て青森を結ぶ幹線。",
-    "n02": [
-      "奥羽線"
-    ],
-    "stations": [
-      "aomori",
-      "shin-aomori",
-      "st-ed0rkm",
-      "st-ncdds",
-      "st-dron9",
-      "st-j4af",
-      "st-cmt4z",
-      "kawabe",
-      "st-farsw",
-      "hirosaki",
-      "st-kx1m",
-      "st-bw7akp",
-      "st-pxll",
-      "st-hwoqb",
-      "st-j23fhn",
-      "st-q2b5",
-      "st-kr0l",
-      "odate",
-      "st-bw2x9",
-      "st-hsm2",
-      "st-lu4i",
-      "st-ndswe",
-      "st-ei84",
-      "st-bqwgt",
-      "st-g6p9",
-      "st-rcj2",
-      "higashi-noshiro",
-      "st-cvfwn",
-      "st-icud",
-      "st-rkaq",
-      "st-r0hg",
-      "st-cmk1o",
-      "st-z67cqv",
-      "st-giqpdm",
-      "st-dfulb-1",
-      "oiwake",
-      "st-c60s1",
-      "st-fbv3",
-      "st-e3hvb1",
-      "akita",
-      "st-b5ywbp",
-      "st-f0v8",
-      "st-dj3c0",
-      "st-j6ar8",
-      "st-e0v6s",
-      "st-cfqa2",
-      "st-i82cq",
-      "omagari",
-      "st-qrtt",
-      "st-edlw7",
-      "yokote",
-      "st-ibod",
-      "st-pk0z",
-      "st-corld",
-      "st-bywda",
-      "st-jdoz",
-      "st-byvml",
-      "st-e3eh",
-      "st-ijh2",
-      "st-q0yr",
-      "st-eoqr",
-      "st-frti",
-      "st-pevt",
-      "st-hw848",
-      "st-ggr0tu",
-      "st-j5af",
-      "shinjo",
-      "st-mnmr",
-      "st-mth8",
-      "st-aux765",
-      "st-dn56s",
-      "st-nqrc",
-      "st-i2ww",
-      "st-i608",
-      "st-1tz0alc",
-      "st-lacc",
-      "st-duvg",
-      "st-fu8s",
-      "st-dni0r",
-      "st-qw4e",
-      "st-je3v",
-      "st-cm3dm",
-      "uzen-chitose",
-      "st-cmdm0",
-      "yamagata",
-      "st-naie",
-      "st-upzs09",
-      "st-cj8jys",
-      "st-ggg5xw",
-      "st-dt8w",
-      "st-onm3",
-      "st-qzd4",
-      "st-mg4u",
-      "yonezawa",
-      "st-q0uv",
-      "st-frdn",
-      "st-icg",
-      "st-idg8",
-      "st-gkz9",
-      "st-ik3hb",
-      "fukushima"
-    ]
-  },
-  {
-    "id": "uetsu-north",
-    "name": "羽越本線",
-    "en": "Uetsu Main Line (Sakata - Akita)",
-    "code": "",
-    "color": "#00838f",
-    "textColor": "#ffffff",
-    "category": "tohoku",
-    "description": "酒田から遊佐・象潟・仁賀保・羽後本荘を経て秋田を結ぶ鳥海山・日本海路線。",
-    "n02": [
-      "羽越線"
-    ],
-    "stations": [
-      "akita",
-      "st-gik622",
-      "st-hswr",
-      "st-ib07",
-      "st-dvht",
-      "st-p2ay",
-      "st-if8cd4",
-      "st-gie7a7",
-      "st-hdhl",
-      "st-gigqjh",
-      "st-giih5n",
-      "st-o1fz",
-      "st-c7na6",
-      "st-peid",
-      "st-ohlq",
-      "st-dvgy",
-      "st-e2cmi",
-      "st-g31o",
-      "st-excd",
-      "st-oz7q",
-      "st-cyqix",
-      "st-i4lf",
-      "sakata",
-      "st-fuszz",
-      "st-l6tk",
-      "st-cka30",
-      "amarume",
-      "st-o4x8",
-      "st-na8i",
-      "tsuruoka",
-      "st-ggi15m",
-      "st-ggld0e",
-      "st-dw03",
-      "st-e0jpq",
-      "st-bx0ls",
-      "st-1gxv9wd",
-      "st-dxp5v",
-      "st-nk7m4",
-      "st-glkf",
-      "st-ensb",
-      "st-i948wd",
-      "st-dx03",
-      "st-i9bg",
-      "st-i95yom",
-      "st-py9v",
-      "murakami",
-      "st-e7dze",
-      "st-gmtg",
-      "sakamachi",
-      "st-ec7uj",
-      "st-dv4k",
-      "st-pacp",
-      "st-enff",
-      "shibata",
-      "st-dwbd",
-      "st-i17d",
-      "st-l5g3",
-      "st-iv3f",
-      "st-brs0y",
-      "niitsu"
     ]
   },
   {
@@ -5689,27 +4622,6 @@ window.JR_LINES = [
     ]
   },
   {
-    "id": "oito-west",
-    "name": "大糸線",
-    "en": "Oito Line (West)",
-    "category": "kansai",
-    "color": "#804192",
-    "textColor": "#ffffff",
-    "code": "OI",
-    "description": "南小谷から姫川渓谷沿いに糸魚川に至るJR西日本管轄路線。",
-    "stations": [
-      "itoigawa",
-      "st-ft5e",
-      "st-jkgza5",
-      "st-idvw",
-      "st-g9m6",
-      "st-gknq",
-      "st-cmk4f",
-      "st-drwy",
-      "st-cnvkv"
-    ]
-  },
-  {
     "id": "takayama-west",
     "name": "高山本線",
     "en": "Takayama Main Line (West)",
@@ -7832,10 +6744,438 @@ window.JR_LINES = [
       "st-e3lljk",
       "musashi-itsukaichi"
     ]
+  },
+  {
+    "id": "joban",
+    "name": "常磐線",
+    "company": "JR東日本",
+    "category": "conventional",
+    "color": "#008080",
+    "stations": [
+      "st-gcvn",
+      "st-pcbq",
+      "st-e06m",
+      "st-gfl43",
+      "st-g5h6",
+      "st-fadd",
+      "st-hrwg",
+      "st-mrxli",
+      "st-l2us",
+      "st-fiqn6",
+      "st-rgwn",
+      "st-chvkb",
+      "st-flv35w",
+      "st-giax",
+      "st-i6jm",
+      "st-j7ed",
+      "st-ez99",
+      "st-fypz",
+      "st-daqyk",
+      "st-g4et",
+      "st-ljh0",
+      "st-i32o",
+      "st-joubvs",
+      "st-gvjf",
+      "st-i8jz",
+      "st-bpm4z",
+      "st-cypy8",
+      "st-n4px",
+      "iwaki",
+      "st-ente",
+      "st-jcm5",
+      "st-lhl",
+      "st-iif7",
+      "st-eona",
+      "st-dl9n5",
+      "st-l11s",
+      "st-clji9",
+      "st-r2a9",
+      "st-esmi",
+      "st-dzkgc",
+      "hitachi",
+      "st-ciak2u",
+      "st-ft1q",
+      "st-i71i",
+      "st-dyd8",
+      "katsuta",
+      "mito",
+      "st-ca0cq",
+      "st-oj92",
+      "st-ebp6",
+      "tomobe",
+      "st-gky2",
+      "st-ml6w",
+      "ishioka",
+      "st-qxs4",
+      "st-lbfx",
+      "tsuchiura",
+      "arakawaoki",
+      "hitachinoushiku",
+      "ushiku",
+      "ryugasakishi",
+      "fujishiro",
+      "toride",
+      "tennodai",
+      "abiko",
+      "kita-kashiwa",
+      "kashiwa",
+      "minami-kashiwa",
+      "kita-kogane",
+      "shin-matsudo",
+      "mabashi",
+      "kita-matsudo",
+      "matsudo",
+      "kanamachi",
+      "kameari",
+      "ayase",
+      "kita-senju",
+      "minami-senju",
+      "mikawashima",
+      "nippori"
+    ],
+    "en": "Joban Line",
+    "description": "日暮里〜水戸〜いわき〜岩沼を結ぶ主要幹線"
+  },
+  {
+    "id": "tohoku-main",
+    "name": "東北本線",
+    "company": "JR東日本",
+    "color": "#008000",
+    "type": "local",
+    "stations": [
+      "tokyo",
+      "kanda",
+      "akihabara",
+      "okachimachi",
+      "ueno",
+      "uguisudani",
+      "nippori",
+      "nishi-nippori",
+      "tabata",
+      "kami-nakazato",
+      "oji",
+      "higashi-jujo",
+      "warabi",
+      "nishi-kawaguchi",
+      "kawaguchi",
+      "akabane",
+      "kita-akabane",
+      "ukima-funado",
+      "toda-koen",
+      "toda",
+      "kita-toda",
+      "minami-urawa",
+      "urawa",
+      "musashi-urawa",
+      "naka-urawa",
+      "minami-yono",
+      "kita-urawa",
+      "yono",
+      "yono-hommachi",
+      "st-ck7h3",
+      "saitama-shintoshin",
+      "omiya",
+      "toro",
+      "higashi-omiya",
+      "hasuda",
+      "shiraoka",
+      "shin-shiraoka",
+      "kuki",
+      "higashi-washinomiya",
+      "kurihashi",
+      "koga",
+      "nogi",
+      "mamada",
+      "oyama",
+      "koganei",
+      "jichi-idai",
+      "ishibashi",
+      "suzumeno-miya",
+      "utsunomiya",
+      "st-gbl7",
+      "hoshakuji",
+      "ujiie",
+      "st-k61d8",
+      "st-jy2i",
+      "yaita",
+      "st-pb7k",
+      "nishi-nasuno",
+      "nasushiobara",
+      "kuroiso",
+      "st-qrn1",
+      "st-ntuip",
+      "st-obkl",
+      "st-kmsl",
+      "shin-shirakawa",
+      "shirakawa",
+      "st-c1g2r",
+      "st-j0it",
+      "st-kuqf",
+      "st-pt82",
+      "st-my42t",
+      "asaka-nagamori",
+      "koriyama",
+      "st-fcb7t",
+      "st-c30dv",
+      "st-i1vm",
+      "st-i7lz",
+      "st-c0aji",
+      "st-gd0r",
+      "st-i49r",
+      "st-m191z",
+      "st-csmvy",
+      "fukushima",
+      "st-fqmpk",
+      "st-e8i2",
+      "st-ia93",
+      "st-nf0s",
+      "st-ok6r",
+      "st-oo6h",
+      "st-kt92",
+      "st-fq98n",
+      "st-cqst3",
+      "st-dl1o3",
+      "st-mnpk",
+      "st-ilcd",
+      "st-gcvn",
+      "st-qrew",
+      "st-er8p",
+      "st-clbke",
+      "st-di6ak",
+      "st-q2eb",
+      "sendai",
+      "st-fjbe0",
+      "st-g7lq",
+      "st-fu6r",
+      "st-1wb9h55",
+      "st-jbqaj3",
+      "st-faoub",
+      "st-ehsj",
+      "st-i43c",
+      "st-n42dg",
+      "st-h0pm",
+      "st-csv9k",
+      "st-no0op",
+      "st-fm2uf",
+      "kogota",
+      "st-kft7",
+      "st-jl8k",
+      "st-fk1wx",
+      "st-hxts",
+      "st-l6gn",
+      "st-j04d",
+      "st-mtrs",
+      "st-gmzsg",
+      "st-i0go",
+      "ichinoseki",
+      "st-dse8h",
+      "st-gnue",
+      "st-elf9",
+      "st-jb5gki",
+      "st-j01a",
+      "st-llq3t",
+      "st-eb4i",
+      "kitakami",
+      "st-flevl",
+      "hanamaki",
+      "st-gvs3xb",
+      "st-iby1x",
+      "st-i3aj",
+      "st-g8o5x4",
+      "st-f3yc",
+      "st-kwpv",
+      "st-c3v9as",
+      "st-byjdo",
+      "morioka"
+    ],
+    "en": "Tohoku Main Line",
+    "description": "東京〜宇都宮〜仙台〜盛岡を結ぶ東北の大動脈"
+  },
+  {
+    "id": "uetsu-main",
+    "name": "羽越本線",
+    "company": "JR東日本",
+    "color": "#00838f",
+    "type": "local",
+    "stations": [
+      "niitsu",
+      "st-brs0y",
+      "st-iv3f",
+      "st-l5g3",
+      "st-i17d",
+      "st-dwbd",
+      "shibata",
+      "st-enff",
+      "st-pacp",
+      "st-dv4k",
+      "st-ec7uj",
+      "sakamachi",
+      "st-gmtg",
+      "st-e7dze",
+      "murakami",
+      "st-py9v",
+      "st-i95yom",
+      "st-i9bg",
+      "st-dx03",
+      "st-i948wd",
+      "st-ensb",
+      "st-glkf",
+      "st-nk7m4",
+      "st-dxp5v",
+      "st-1gxv9wd",
+      "st-bx0ls",
+      "st-e0jpq",
+      "st-dw03",
+      "st-ggld0e",
+      "st-ggi15m",
+      "tsuruoka",
+      "st-na8i",
+      "st-o4x8",
+      "amarume",
+      "st-cka30",
+      "st-l6tk",
+      "st-fuszz",
+      "sakata",
+      "st-i4lf",
+      "st-cyqix",
+      "st-oz7q",
+      "st-excd",
+      "st-g31o",
+      "st-e2cmi",
+      "st-dvgy",
+      "st-ohlq",
+      "st-peid",
+      "st-c7na6",
+      "st-o1fz",
+      "st-giih5n",
+      "st-gigqjh",
+      "st-hdhl",
+      "st-gie7a7",
+      "st-if8cd4",
+      "st-p2ay",
+      "st-dvht",
+      "st-ib07",
+      "st-hswr",
+      "st-gik622",
+      "akita"
+    ],
+    "en": "Uetsu Main Line",
+    "description": "新津〜鶴岡〜酒田〜秋田を結ぶ日本海縦貫幹線"
+  },
+  {
+    "id": "ou-main",
+    "name": "奥羽本線",
+    "company": "JR東日本",
+    "color": "#ff8c00",
+    "type": "local",
+    "stations": [
+      "fukushima",
+      "st-ik3hb",
+      "st-gkz9",
+      "st-idg8",
+      "st-icg",
+      "st-frdn",
+      "st-q0uv",
+      "yonezawa",
+      "st-mg4u",
+      "st-qzd4",
+      "st-onm3",
+      "st-dt8w",
+      "st-ggg5xw",
+      "st-cj8jys",
+      "st-upzs09",
+      "st-naie",
+      "yamagata",
+      "st-cmdm0",
+      "uzen-chitose",
+      "st-cm3dm",
+      "st-je3v",
+      "st-qw4e",
+      "st-dni0r",
+      "st-fu8s",
+      "st-duvg",
+      "st-lacc",
+      "st-1tz0alc",
+      "st-i608",
+      "st-i2ww",
+      "st-nqrc",
+      "st-dn56s",
+      "st-aux765",
+      "st-mth8",
+      "st-mnmr",
+      "shinjo",
+      "st-j5af",
+      "st-ggr0tu",
+      "st-hw848",
+      "st-pevt",
+      "st-frti",
+      "st-eoqr",
+      "st-q0yr",
+      "st-ijh2",
+      "st-e3eh",
+      "st-byvml",
+      "st-jdoz",
+      "st-bywda",
+      "st-corld",
+      "st-pk0z",
+      "st-ibod",
+      "yokote",
+      "st-edlw7",
+      "st-qrtt",
+      "omagari",
+      "st-i82cq",
+      "st-cfqa2",
+      "st-e0v6s",
+      "st-j6ar8",
+      "st-dj3c0",
+      "st-f0v8",
+      "st-b5ywbp",
+      "akita",
+      "st-e3hvb1",
+      "st-fbv3",
+      "st-c60s1",
+      "oiwake",
+      "st-dfulb-1",
+      "st-giqpdm",
+      "st-z67cqv",
+      "st-cmk1o",
+      "st-r0hg",
+      "st-rkaq",
+      "st-icud",
+      "st-cvfwn",
+      "higashi-noshiro",
+      "st-rcj2",
+      "st-g6p9",
+      "st-bqwgt",
+      "st-ei84",
+      "st-ndswe",
+      "st-lu4i",
+      "st-hsm2",
+      "st-bw2x9",
+      "odate",
+      "st-kr0l",
+      "st-q2b5",
+      "st-j23fhn",
+      "st-hwoqb",
+      "st-pxll",
+      "st-bw7akp",
+      "st-kx1m",
+      "hirosaki",
+      "st-farsw",
+      "kawabe",
+      "st-cmt4z",
+      "st-j4af",
+      "st-dron9",
+      "st-ncdds",
+      "st-ed0rkm",
+      "shin-aomori",
+      "aomori"
+    ],
+    "en": "Ou Main Line",
+    "description": "福島〜山形〜秋田〜青森を結ぶ奥羽山脈縦断幹線"
   }
 ];
-
-window.JR_STATIONS = {
+  const JR_STATIONS = {
   "st-c0cdw": {
     "id": "st-c0cdw",
     "name": "二月田",
@@ -27361,7 +26701,7 @@ window.JR_STATIONS = {
     "lng": 137.9079,
     "pref": "新潟県",
     "lines": [
-      "oito-west"
+      "oito-line"
     ]
   },
   "st-cnvkv": {
@@ -27373,8 +26713,7 @@ window.JR_STATIONS = {
     "lng": 137.90836,
     "pref": "群馬県",
     "lines": [
-      "oito-line",
-      "oito-west"
+      "oito-line"
     ]
   },
   "st-cmk4f": {
@@ -27386,7 +26725,7 @@ window.JR_STATIONS = {
     "lng": 137.90645,
     "pref": "新潟県",
     "lines": [
-      "oito-west"
+      "oito-line"
     ]
   },
   "st-g9m6": {
@@ -27398,7 +26737,7 @@ window.JR_STATIONS = {
     "lng": 137.85951,
     "pref": "新潟県",
     "lines": [
-      "oito-west"
+      "oito-line"
     ]
   },
   "st-idvw": {
@@ -27410,7 +26749,7 @@ window.JR_STATIONS = {
     "lng": 137.86712,
     "pref": "新潟県",
     "lines": [
-      "oito-west"
+      "oito-line"
     ]
   },
   "st-gknq": {
@@ -27422,7 +26761,7 @@ window.JR_STATIONS = {
     "lng": 137.86562,
     "pref": "新潟県",
     "lines": [
-      "oito-west"
+      "oito-line"
     ]
   },
   "st-ft5e": {
@@ -27434,7 +26773,7 @@ window.JR_STATIONS = {
     "lng": 137.86098,
     "pref": "新潟県",
     "lines": [
-      "oito-west"
+      "oito-line"
     ]
   },
   "st-jkgza5": {
@@ -27446,7 +26785,7 @@ window.JR_STATIONS = {
     "lng": 137.87249,
     "pref": "新潟県",
     "lines": [
-      "oito-west"
+      "oito-line"
     ]
   },
   "itoigawa": {
@@ -27459,8 +26798,7 @@ window.JR_STATIONS = {
     "pref": "新潟県",
     "lines": [
       "shinkansen-hokuriku",
-      "oito-line",
-      "oito-west"
+      "oito-line"
     ]
   },
   "st-j2lo": {
@@ -33555,20 +32893,17 @@ window.JR_STATIONS = {
     "lng": 139.76667,
     "pref": "千葉県",
     "lines": [
-      "chuo-rapid",
+      "chuo-main",
       "tokaido",
       "keiyo",
-      "utsunomiya-line",
-      "joban-rapid",
+      "tohoku-main",
       "shinkansen-tokaido",
       "shinkansen-tohoku",
       "shinkansen-joetsu",
       "shinkansen-hokuriku",
       "shinkansen-yamagata",
       "shinkansen-akita",
-      "sobu-main",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "sobu-main"
     ]
   },
   "shinagawa": {
@@ -33582,7 +32917,6 @@ window.JR_STATIONS = {
     "lines": [
       "yamanote",
       "tokaido",
-      "joban-rapid",
       "shinkansen-tokaido"
     ]
   },
@@ -36097,10 +35431,8 @@ window.JR_STATIONS = {
     "lng": 139.97952,
     "pref": "栃木県",
     "lines": [
-      "utsunomiya-line",
-      "karasuyama-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main",
+      "karasuyama-line"
     ]
   },
   "akita": {
@@ -36113,10 +35445,8 @@ window.JR_STATIONS = {
     "pref": "秋田県",
     "lines": [
       "shinkansen-akita",
-      "uetsu-niigata",
-      "ou-main-south",
-      "ou-main-north",
-      "uetsu-north"
+      "uetsu-main",
+      "ou-main"
     ]
   },
   "st-gik622": {
@@ -36128,8 +35458,7 @@ window.JR_STATIONS = {
     "lng": 140.1165,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-ib07": {
@@ -36141,8 +35470,7 @@ window.JR_STATIONS = {
     "lng": 140.06639,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-dvht": {
@@ -36154,8 +35482,7 @@ window.JR_STATIONS = {
     "lng": 140.06451,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-hswr": {
@@ -36167,8 +35494,7 @@ window.JR_STATIONS = {
     "lng": 140.08774,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-giih5n": {
@@ -36180,8 +35506,7 @@ window.JR_STATIONS = {
     "lng": 140.05759,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-ggi15m": {
@@ -36193,8 +35518,7 @@ window.JR_STATIONS = {
     "lng": 139.76798,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-fuszz": {
@@ -36206,8 +35530,7 @@ window.JR_STATIONS = {
     "lng": 139.87527,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "sakata": {
@@ -36219,8 +35542,7 @@ window.JR_STATIONS = {
     "lng": 139.84592,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-hdhl": {
@@ -36232,8 +35554,7 @@ window.JR_STATIONS = {
     "lng": 140.09113,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-excd": {
@@ -36245,8 +35566,7 @@ window.JR_STATIONS = {
     "lng": 139.87865,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-if8cd4": {
@@ -36258,8 +35578,7 @@ window.JR_STATIONS = {
     "lng": 140.05487,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-o4x8": {
@@ -36271,8 +35590,7 @@ window.JR_STATIONS = {
     "lng": 139.90772,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-g31o": {
@@ -36284,8 +35602,7 @@ window.JR_STATIONS = {
     "lng": 139.88098,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-cyqix": {
@@ -36297,8 +35614,7 @@ window.JR_STATIONS = {
     "lng": 139.89871,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-o1fz": {
@@ -36310,8 +35626,7 @@ window.JR_STATIONS = {
     "lng": 140.01875,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-oz7q": {
@@ -36323,8 +35638,7 @@ window.JR_STATIONS = {
     "lng": 139.90515,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-peid": {
@@ -36336,8 +35650,7 @@ window.JR_STATIONS = {
     "lng": 139.92074,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-gigqjh": {
@@ -36349,8 +35662,7 @@ window.JR_STATIONS = {
     "lng": 140.08936,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-ggld0e": {
@@ -36362,8 +35674,7 @@ window.JR_STATIONS = {
     "lng": 139.73155,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "tsuruoka": {
@@ -36375,8 +35686,7 @@ window.JR_STATIONS = {
     "lng": 139.83539,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-gie7a7": {
@@ -36388,8 +35698,7 @@ window.JR_STATIONS = {
     "lng": 140.06301,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-ohlq": {
@@ -36401,8 +35710,7 @@ window.JR_STATIONS = {
     "lng": 139.90225,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-e2cmi": {
@@ -36414,8 +35722,7 @@ window.JR_STATIONS = {
     "lng": 139.88572,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-l6tk": {
@@ -36427,8 +35734,7 @@ window.JR_STATIONS = {
     "lng": 139.90733,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-c7na6": {
@@ -36440,8 +35746,7 @@ window.JR_STATIONS = {
     "lng": 139.96466,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-dvgy": {
@@ -36453,8 +35758,7 @@ window.JR_STATIONS = {
     "lng": 139.9029,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-i4lf": {
@@ -36466,8 +35770,7 @@ window.JR_STATIONS = {
     "lng": 139.88197,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-na8i": {
@@ -36479,8 +35782,7 @@ window.JR_STATIONS = {
     "lng": 139.89407,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "amarume": {
@@ -36492,8 +35794,7 @@ window.JR_STATIONS = {
     "lng": 139.91131,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north",
+      "uetsu-main",
       "rikuusai-line"
     ]
   },
@@ -36506,8 +35807,7 @@ window.JR_STATIONS = {
     "lng": 139.90813,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-p2ay": {
@@ -36519,8 +35819,7 @@ window.JR_STATIONS = {
     "lng": 140.05708,
     "pref": "秋田県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-i17d": {
@@ -36532,8 +35831,7 @@ window.JR_STATIONS = {
     "lng": 139.27246,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-py9v": {
@@ -36545,8 +35843,7 @@ window.JR_STATIONS = {
     "lng": 139.45025,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-e7dze": {
@@ -36558,8 +35855,7 @@ window.JR_STATIONS = {
     "lng": 139.45969,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "murakami": {
@@ -36571,8 +35867,7 @@ window.JR_STATIONS = {
     "lng": 139.46332,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-enff": {
@@ -36584,8 +35879,7 @@ window.JR_STATIONS = {
     "lng": 139.35855,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-1gxv9wd": {
@@ -36597,8 +35891,7 @@ window.JR_STATIONS = {
     "lng": 139.58789,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-dxp5v": {
@@ -36610,8 +35903,7 @@ window.JR_STATIONS = {
     "lng": 139.56599,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-dwbd": {
@@ -36623,8 +35915,7 @@ window.JR_STATIONS = {
     "lng": 139.30277,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-ec7uj": {
@@ -36636,8 +35927,7 @@ window.JR_STATIONS = {
     "lng": 139.42791,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-i95yom": {
@@ -36649,8 +35939,7 @@ window.JR_STATIONS = {
     "lng": 139.44994,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-i948wd": {
@@ -36662,8 +35951,7 @@ window.JR_STATIONS = {
     "lng": 139.49004,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-e0jpq": {
@@ -36675,8 +35963,7 @@ window.JR_STATIONS = {
     "lng": 139.64968,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-pacp": {
@@ -36688,8 +35975,7 @@ window.JR_STATIONS = {
     "lng": 139.37954,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-iv3f": {
@@ -36701,8 +35987,7 @@ window.JR_STATIONS = {
     "lng": 139.21719,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-l5g3": {
@@ -36714,8 +35999,7 @@ window.JR_STATIONS = {
     "lng": 139.24485,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-bx0ls": {
@@ -36727,8 +36011,7 @@ window.JR_STATIONS = {
     "lng": 139.61611,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-dw03": {
@@ -36740,8 +36023,7 @@ window.JR_STATIONS = {
     "lng": 139.6734,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-dx03": {
@@ -36753,8 +36035,7 @@ window.JR_STATIONS = {
     "lng": 139.46838,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-gmtg": {
@@ -36766,8 +36047,7 @@ window.JR_STATIONS = {
     "lng": 139.45903,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-nk7m4": {
@@ -36779,8 +36059,7 @@ window.JR_STATIONS = {
     "lng": 139.54876,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-ensb": {
@@ -36792,8 +36071,7 @@ window.JR_STATIONS = {
     "lng": 139.51746,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-brs0y": {
@@ -36805,8 +36083,7 @@ window.JR_STATIONS = {
     "lng": 139.17848,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-glkf": {
@@ -36818,8 +36095,7 @@ window.JR_STATIONS = {
     "lng": 139.53043,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-i9bg": {
@@ -36831,8 +36107,7 @@ window.JR_STATIONS = {
     "lng": 139.45879,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "st-dv4k": {
@@ -36844,8 +36119,7 @@ window.JR_STATIONS = {
     "lng": 139.39801,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "niitsu": {
@@ -36858,8 +36132,7 @@ window.JR_STATIONS = {
     "pref": "山形県",
     "lines": [
       "shinetsu-line",
-      "uetsu-niigata",
-      "uetsu-north",
+      "uetsu-main",
       "banetsu-west"
     ]
   },
@@ -36873,8 +36146,7 @@ window.JR_STATIONS = {
     "pref": "山形県",
     "lines": [
       "hakushin-line",
-      "uetsu-niigata",
-      "uetsu-north"
+      "uetsu-main"
     ]
   },
   "sakamachi": {
@@ -36886,9 +36158,8 @@ window.JR_STATIONS = {
     "lng": 139.44585,
     "pref": "山形県",
     "lines": [
-      "uetsu-niigata",
-      "yonesaka-line",
-      "uetsu-north"
+      "uetsu-main",
+      "yonesaka-line"
     ]
   },
   "kashiwazaki": {
@@ -37289,8 +36560,7 @@ window.JR_STATIONS = {
     "lng": 140.52162,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north",
+      "ou-main",
       "gonou-line"
     ]
   },
@@ -37303,8 +36573,7 @@ window.JR_STATIONS = {
     "lng": 140.73465,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north",
+      "ou-main",
       "tsugaru-line"
     ]
   },
@@ -37317,8 +36586,7 @@ window.JR_STATIONS = {
     "lng": 140.55579,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north",
+      "ou-main",
       "hanawa-line"
     ]
   },
@@ -37331,8 +36599,7 @@ window.JR_STATIONS = {
     "lng": 140.06572,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north",
+      "ou-main",
       "gonou-line"
     ]
   },
@@ -37345,8 +36612,7 @@ window.JR_STATIONS = {
     "lng": 140.05782,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north",
+      "ou-main",
       "oga-line"
     ]
   },
@@ -37359,8 +36625,7 @@ window.JR_STATIONS = {
     "lng": 140.27416,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-bw7akp": {
@@ -37372,8 +36637,7 @@ window.JR_STATIONS = {
     "lng": 140.56702,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-bw2x9": {
@@ -37385,8 +36649,7 @@ window.JR_STATIONS = {
     "lng": 140.49663,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-kx1m": {
@@ -37398,8 +36661,7 @@ window.JR_STATIONS = {
     "lng": 140.53076,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-dron9": {
@@ -37411,8 +36673,7 @@ window.JR_STATIONS = {
     "lng": 140.58782,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "hirosaki": {
@@ -37424,8 +36685,7 @@ window.JR_STATIONS = {
     "lng": 140.48482,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-hwoqb": {
@@ -37437,8 +36697,7 @@ window.JR_STATIONS = {
     "lng": 140.62241,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-g6p9": {
@@ -37450,8 +36709,7 @@ window.JR_STATIONS = {
     "lng": 140.17266,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-dfulb-1": {
@@ -37463,8 +36721,7 @@ window.JR_STATIONS = {
     "lng": 140.06305,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-cvfwn": {
@@ -37476,8 +36733,7 @@ window.JR_STATIONS = {
     "lng": 140.06348,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-j6ar8": {
@@ -37489,8 +36745,7 @@ window.JR_STATIONS = {
     "lng": 140.32055,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-lu4i": {
@@ -37502,8 +36757,7 @@ window.JR_STATIONS = {
     "lng": 140.3975,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-giqpdm": {
@@ -37515,8 +36769,7 @@ window.JR_STATIONS = {
     "lng": 140.07339,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-ncdds": {
@@ -37528,8 +36781,7 @@ window.JR_STATIONS = {
     "lng": 140.63513,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-ndswe": {
@@ -37541,8 +36793,7 @@ window.JR_STATIONS = {
     "lng": 140.36966,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-q2b5": {
@@ -37554,8 +36805,7 @@ window.JR_STATIONS = {
     "lng": 140.60763,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-c60s1": {
@@ -37567,8 +36817,7 @@ window.JR_STATIONS = {
     "lng": 140.06845,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-r0hg": {
@@ -37580,8 +36829,7 @@ window.JR_STATIONS = {
     "lng": 140.07755,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-icud": {
@@ -37593,8 +36841,7 @@ window.JR_STATIONS = {
     "lng": 140.07081,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-b5ywbp": {
@@ -37606,8 +36853,7 @@ window.JR_STATIONS = {
     "lng": 140.14489,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-cmk1o": {
@@ -37619,8 +36865,7 @@ window.JR_STATIONS = {
     "lng": 140.07849,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-f0v8": {
@@ -37632,8 +36877,7 @@ window.JR_STATIONS = {
     "lng": 140.21876,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-j4af": {
@@ -37645,8 +36889,7 @@ window.JR_STATIONS = {
     "lng": 140.58095,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-bqwgt": {
@@ -37658,8 +36901,7 @@ window.JR_STATIONS = {
     "lng": 140.23565,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-kr0l": {
@@ -37671,8 +36913,7 @@ window.JR_STATIONS = {
     "lng": 140.5917,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-pxll": {
@@ -37684,8 +36925,7 @@ window.JR_STATIONS = {
     "lng": 140.60311,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-rcj2": {
@@ -37697,8 +36937,7 @@ window.JR_STATIONS = {
     "lng": 140.11855,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-farsw": {
@@ -37710,8 +36949,7 @@ window.JR_STATIONS = {
     "lng": 140.49781,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-ei84": {
@@ -37723,8 +36961,7 @@ window.JR_STATIONS = {
     "lng": 140.31245,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-hsm2": {
@@ -37736,8 +36973,7 @@ window.JR_STATIONS = {
     "lng": 140.44746,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-z67cqv": {
@@ -37749,8 +36985,7 @@ window.JR_STATIONS = {
     "lng": 140.076,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-rkaq": {
@@ -37762,8 +36997,7 @@ window.JR_STATIONS = {
     "lng": 140.08261,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-fbv3": {
@@ -37775,8 +37009,7 @@ window.JR_STATIONS = {
     "lng": 140.07345,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-cmt4z": {
@@ -37788,8 +37021,7 @@ window.JR_STATIONS = {
     "lng": 140.54373,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-ed0rkm": {
@@ -37801,8 +37033,7 @@ window.JR_STATIONS = {
     "lng": 140.67151,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-j23fhn": {
@@ -37814,8 +37045,7 @@ window.JR_STATIONS = {
     "lng": 140.63231,
     "pref": "青森県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "shin-aomori": {
@@ -37829,8 +37059,7 @@ window.JR_STATIONS = {
     "lines": [
       "shinkansen-tohoku",
       "shinkansen-hokkaido",
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "omagari": {
@@ -37843,8 +37072,7 @@ window.JR_STATIONS = {
     "pref": "秋田県",
     "lines": [
       "shinkansen-akita",
-      "ou-main-south",
-      "ou-main-north",
+      "ou-main",
       "tazawako-line"
     ]
   },
@@ -37857,8 +37085,7 @@ window.JR_STATIONS = {
     "lng": 140.56045,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north",
+      "ou-main",
       "kitakami-line"
     ]
   },
@@ -37872,8 +37099,7 @@ window.JR_STATIONS = {
     "pref": "山形県",
     "lines": [
       "shinkansen-yamagata",
-      "ou-main-south",
-      "ou-main-north",
+      "ou-main",
       "rikuuto-line",
       "rikuusai-line"
     ]
@@ -37889,10 +37115,8 @@ window.JR_STATIONS = {
     "lines": [
       "shinkansen-tohoku",
       "shinkansen-yamagata",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka",
-      "ou-main-south",
-      "ou-main-north"
+      "tohoku-main",
+      "ou-main"
     ]
   },
   "st-qzd4": {
@@ -37905,8 +37129,7 @@ window.JR_STATIONS = {
     "pref": "山形県",
     "lines": [
       "shinkansen-yamagata",
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-i2ww": {
@@ -37919,8 +37142,7 @@ window.JR_STATIONS = {
     "pref": "山形県",
     "lines": [
       "shinkansen-yamagata",
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-e3eh": {
@@ -37932,8 +37154,7 @@ window.JR_STATIONS = {
     "lng": 140.48381,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-i82cq": {
@@ -37945,8 +37166,7 @@ window.JR_STATIONS = {
     "lng": 140.42583,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-cj8jys": {
@@ -37959,8 +37179,7 @@ window.JR_STATIONS = {
     "pref": "山形県",
     "lines": [
       "shinkansen-yamagata",
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-frti": {
@@ -37972,8 +37191,7 @@ window.JR_STATIONS = {
     "lng": 140.32016,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-mth8": {
@@ -37985,8 +37203,7 @@ window.JR_STATIONS = {
     "lng": 140.36105,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-e0v6s": {
@@ -37998,8 +37215,7 @@ window.JR_STATIONS = {
     "lng": 140.32302,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-je3v": {
@@ -38011,8 +37227,7 @@ window.JR_STATIONS = {
     "lng": 140.34767,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-eoqr": {
@@ -38024,8 +37239,7 @@ window.JR_STATIONS = {
     "lng": 140.36118,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-frdn": {
@@ -38037,8 +37251,7 @@ window.JR_STATIONS = {
     "lng": 140.20035,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-bywda": {
@@ -38050,8 +37263,7 @@ window.JR_STATIONS = {
     "lng": 140.50253,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-ggr0tu": {
@@ -38063,8 +37275,7 @@ window.JR_STATIONS = {
     "lng": 140.24229,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-nqrc": {
@@ -38076,8 +37287,7 @@ window.JR_STATIONS = {
     "lng": 140.39136,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "uzen-chitose": {
@@ -38090,8 +37300,7 @@ window.JR_STATIONS = {
     "pref": "山形県",
     "lines": [
       "senzan-line",
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-upzs09": {
@@ -38103,8 +37312,7 @@ window.JR_STATIONS = {
     "lng": 140.29826,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-dn56s": {
@@ -38117,8 +37325,7 @@ window.JR_STATIONS = {
     "pref": "山形県",
     "lines": [
       "shinkansen-yamagata",
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-mnmr": {
@@ -38130,8 +37337,7 @@ window.JR_STATIONS = {
     "lng": 140.31612,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-hw848": {
@@ -38143,8 +37349,7 @@ window.JR_STATIONS = {
     "lng": 140.25486,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-gkz9": {
@@ -38156,8 +37361,7 @@ window.JR_STATIONS = {
     "lng": 140.38983,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-icg": {
@@ -38169,8 +37373,7 @@ window.JR_STATIONS = {
     "lng": 140.23591,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-cfqa2": {
@@ -38182,8 +37385,7 @@ window.JR_STATIONS = {
     "lng": 140.37182,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-dt8w": {
@@ -38195,8 +37397,7 @@ window.JR_STATIONS = {
     "lng": 140.20349,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-q0uv": {
@@ -38208,8 +37409,7 @@ window.JR_STATIONS = {
     "lng": 140.14627,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-1tz0alc": {
@@ -38222,8 +37422,7 @@ window.JR_STATIONS = {
     "pref": "山形県",
     "lines": [
       "shinkansen-yamagata",
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-jdoz": {
@@ -38235,8 +37434,7 @@ window.JR_STATIONS = {
     "lng": 140.48705,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-duvg": {
@@ -38248,8 +37446,7 @@ window.JR_STATIONS = {
     "lng": 140.37476,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-cm3dm": {
@@ -38261,8 +37458,7 @@ window.JR_STATIONS = {
     "lng": 140.34466,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-naie": {
@@ -38274,8 +37470,7 @@ window.JR_STATIONS = {
     "lng": 140.30334,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-idg8": {
@@ -38287,8 +37482,7 @@ window.JR_STATIONS = {
     "lng": 140.26816,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-fu8s": {
@@ -38301,8 +37495,7 @@ window.JR_STATIONS = {
     "pref": "山形県",
     "lines": [
       "shinkansen-yamagata",
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "yamagata": {
@@ -38315,8 +37508,7 @@ window.JR_STATIONS = {
     "pref": "山形県",
     "lines": [
       "shinkansen-yamagata",
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-ijh2": {
@@ -38328,8 +37520,7 @@ window.JR_STATIONS = {
     "lng": 140.45153,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-q0yr": {
@@ -38341,8 +37532,7 @@ window.JR_STATIONS = {
     "lng": 140.41395,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-byvml": {
@@ -38354,8 +37544,7 @@ window.JR_STATIONS = {
     "lng": 140.48526,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-ggg5xw": {
@@ -38367,8 +37556,7 @@ window.JR_STATIONS = {
     "lng": 140.21873,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-qrtt": {
@@ -38380,8 +37568,7 @@ window.JR_STATIONS = {
     "lng": 140.51529,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-pevt": {
@@ -38393,8 +37580,7 @@ window.JR_STATIONS = {
     "lng": 140.26397,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-onm3": {
@@ -38407,8 +37593,7 @@ window.JR_STATIONS = {
     "pref": "山形県",
     "lines": [
       "shinkansen-yamagata",
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-i608": {
@@ -38420,8 +37605,7 @@ window.JR_STATIONS = {
     "lng": 140.38408,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-lacc": {
@@ -38433,8 +37617,7 @@ window.JR_STATIONS = {
     "lng": 140.37849,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-aux765": {
@@ -38446,8 +37629,7 @@ window.JR_STATIONS = {
     "lng": 140.37125,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "yonezawa": {
@@ -38461,8 +37643,7 @@ window.JR_STATIONS = {
     "lines": [
       "shinkansen-yamagata",
       "yonesaka-line",
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-pk0z": {
@@ -38474,8 +37655,7 @@ window.JR_STATIONS = {
     "lng": 140.53854,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-ibod": {
@@ -38487,8 +37667,7 @@ window.JR_STATIONS = {
     "lng": 140.55383,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-ik3hb": {
@@ -38500,8 +37679,7 @@ window.JR_STATIONS = {
     "lng": 140.42611,
     "pref": "宮城県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-qw4e": {
@@ -38513,8 +37691,7 @@ window.JR_STATIONS = {
     "lng": 140.35883,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-j5af": {
@@ -38526,8 +37703,7 @@ window.JR_STATIONS = {
     "lng": 140.31009,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-edlw7": {
@@ -38539,8 +37715,7 @@ window.JR_STATIONS = {
     "lng": 140.53846,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-corld": {
@@ -38552,8 +37727,7 @@ window.JR_STATIONS = {
     "lng": 140.52648,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-cmdm0": {
@@ -38565,8 +37739,7 @@ window.JR_STATIONS = {
     "lng": 140.33269,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north",
+      "ou-main",
       "aterazawa-line"
     ]
   },
@@ -38579,8 +37752,7 @@ window.JR_STATIONS = {
     "lng": 140.14255,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "kinugasa": {
@@ -38919,7 +38091,7 @@ window.JR_STATIONS = {
     "lng": 139.33936,
     "pref": "東京都",
     "lines": [
-      "chuo-rapid",
+      "chuo-main",
       "yokohama-line",
       "hachiko-line"
     ]
@@ -39791,8 +38963,7 @@ window.JR_STATIONS = {
     "lng": 141.11032,
     "pref": "岩手県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka",
+      "tohoku-main",
       "kamaishi-line"
     ]
   },
@@ -41173,16 +40344,14 @@ window.JR_STATIONS = {
     "lng": 139.62311,
     "pref": "埼玉県",
     "lines": [
-      "utsunomiya-line",
+      "tohoku-main",
       "takasaki-line",
       "shinkansen-tohoku",
       "shinkansen-joetsu",
       "shinkansen-hokuriku",
       "shinkansen-yamagata",
       "shinkansen-akita",
-      "kawagoe-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "kawagoe-line"
     ]
   },
   "ageo": {
@@ -41570,8 +40739,7 @@ window.JR_STATIONS = {
     "pref": "埼玉県",
     "lines": [
       "yamanote",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "sugamo": {
@@ -41729,7 +40897,7 @@ window.JR_STATIONS = {
     "pref": "千葉県",
     "lines": [
       "yamanote",
-      "chuo-rapid"
+      "chuo-main"
     ]
   },
   "yoyogi": {
@@ -41875,8 +41043,7 @@ window.JR_STATIONS = {
     "lines": [
       "shinkansen-tohoku",
       "shinkansen-akita",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka",
+      "tohoku-main",
       "yamada-line",
       "tazawako-line"
     ]
@@ -43007,7 +42174,7 @@ window.JR_STATIONS = {
     "lng": 140.92507,
     "pref": "宮城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-fadd": {
@@ -43019,7 +42186,7 @@ window.JR_STATIONS = {
     "lng": 140.90106,
     "pref": "宮城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-gfl43": {
@@ -43031,7 +42198,7 @@ window.JR_STATIONS = {
     "lng": 140.89009,
     "pref": "宮城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-l2us": {
@@ -43043,7 +42210,7 @@ window.JR_STATIONS = {
     "lng": 140.92573,
     "pref": "宮城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-hrwg": {
@@ -43055,7 +42222,7 @@ window.JR_STATIONS = {
     "lng": 140.92563,
     "pref": "宮城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-fiqn6": {
@@ -43067,7 +42234,7 @@ window.JR_STATIONS = {
     "lng": 140.93466,
     "pref": "宮城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-pcbq": {
@@ -43079,7 +42246,7 @@ window.JR_STATIONS = {
     "lng": 140.85475,
     "pref": "宮城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-g5h6": {
@@ -43091,7 +42258,7 @@ window.JR_STATIONS = {
     "lng": 140.88897,
     "pref": "宮城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-gcvn": {
@@ -43103,9 +42270,8 @@ window.JR_STATIONS = {
     "lng": 140.86367,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka",
-      "joban-north"
+      "tohoku-main",
+      "joban"
     ]
   },
   "st-e06m": {
@@ -43117,7 +42283,7 @@ window.JR_STATIONS = {
     "lng": 140.86129,
     "pref": "宮城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "iwaki": {
@@ -43129,9 +42295,8 @@ window.JR_STATIONS = {
     "lng": 140.89235,
     "pref": "福島県",
     "lines": [
-      "joban-rapid",
-      "joban-north",
-      "banetsu-east"
+      "banetsu-east",
+      "joban"
     ]
   },
   "st-lhl": {
@@ -43143,7 +42308,7 @@ window.JR_STATIONS = {
     "lng": 140.85408,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-i32o": {
@@ -43155,7 +42320,7 @@ window.JR_STATIONS = {
     "lng": 141.00253,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-gvjf": {
@@ -43167,7 +42332,7 @@ window.JR_STATIONS = {
     "lng": 140.99873,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-i8jz": {
@@ -43179,7 +42344,7 @@ window.JR_STATIONS = {
     "lng": 140.99565,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-iif7": {
@@ -43191,7 +42356,7 @@ window.JR_STATIONS = {
     "lng": 140.79649,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-daqyk": {
@@ -43203,7 +42368,7 @@ window.JR_STATIONS = {
     "lng": 140.99201,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-jcm5": {
@@ -43215,7 +42380,7 @@ window.JR_STATIONS = {
     "lng": 140.84984,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-flv35w": {
@@ -43227,7 +42392,7 @@ window.JR_STATIONS = {
     "lng": 140.99148,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-i6jm": {
@@ -43239,7 +42404,7 @@ window.JR_STATIONS = {
     "lng": 140.98436,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-g4et": {
@@ -43251,7 +42416,7 @@ window.JR_STATIONS = {
     "lng": 141.02272,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-ljh0": {
@@ -43263,7 +42428,7 @@ window.JR_STATIONS = {
     "lng": 141.00282,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-eona": {
@@ -43275,7 +42440,7 @@ window.JR_STATIONS = {
     "lng": 140.78672,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-giax": {
@@ -43287,7 +42452,7 @@ window.JR_STATIONS = {
     "lng": 140.99639,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-chvkb": {
@@ -43299,7 +42464,7 @@ window.JR_STATIONS = {
     "lng": 140.9711,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-fypz": {
@@ -43311,7 +42476,7 @@ window.JR_STATIONS = {
     "lng": 140.98411,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-ente": {
@@ -43323,7 +42488,7 @@ window.JR_STATIONS = {
     "lng": 140.85489,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-ez99": {
@@ -43335,7 +42500,7 @@ window.JR_STATIONS = {
     "lng": 141.00585,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-rgwn": {
@@ -43347,7 +42512,7 @@ window.JR_STATIONS = {
     "lng": 140.97006,
     "pref": "宮城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-n4px": {
@@ -43359,7 +42524,7 @@ window.JR_STATIONS = {
     "lng": 140.94726,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-j7ed": {
@@ -43371,7 +42536,7 @@ window.JR_STATIONS = {
     "lng": 140.98951,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-cypy8": {
@@ -43383,7 +42548,7 @@ window.JR_STATIONS = {
     "lng": 140.98088,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-bpm4z": {
@@ -43395,7 +42560,7 @@ window.JR_STATIONS = {
     "lng": 140.99577,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "hitachi": {
@@ -43407,8 +42572,7 @@ window.JR_STATIONS = {
     "lng": 140.6618,
     "pref": "茨城県",
     "lines": [
-      "joban-rapid",
-      "joban-north"
+      "joban"
     ]
   },
   "st-ciak2u": {
@@ -43420,7 +42584,7 @@ window.JR_STATIONS = {
     "lng": 140.63275,
     "pref": "茨城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-dzkgc": {
@@ -43432,7 +42596,7 @@ window.JR_STATIONS = {
     "lng": 140.67529,
     "pref": "茨城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "ishioka": {
@@ -43444,8 +42608,7 @@ window.JR_STATIONS = {
     "lng": 140.27996,
     "pref": "茨城県",
     "lines": [
-      "joban-rapid",
-      "joban-north"
+      "joban"
     ]
   },
   "st-clji9": {
@@ -43457,7 +42620,7 @@ window.JR_STATIONS = {
     "lng": 140.72907,
     "pref": "茨城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-ft1q": {
@@ -43469,7 +42632,7 @@ window.JR_STATIONS = {
     "lng": 140.61947,
     "pref": "茨城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-gky2": {
@@ -43481,7 +42644,7 @@ window.JR_STATIONS = {
     "lng": 140.27647,
     "pref": "栃木県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-oj92": {
@@ -43493,7 +42656,7 @@ window.JR_STATIONS = {
     "lng": 140.41516,
     "pref": "茨城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-l11s": {
@@ -43505,7 +42668,7 @@ window.JR_STATIONS = {
     "lng": 140.74644,
     "pref": "茨城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "mito": {
@@ -43517,9 +42680,8 @@ window.JR_STATIONS = {
     "lng": 140.47703,
     "pref": "茨城県",
     "lines": [
-      "joban-rapid",
       "suigun-line",
-      "joban-north"
+      "joban"
     ]
   },
   "st-ml6w": {
@@ -43531,7 +42693,7 @@ window.JR_STATIONS = {
     "lng": 140.28676,
     "pref": "栃木県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-esmi": {
@@ -43543,7 +42705,7 @@ window.JR_STATIONS = {
     "lng": 140.68594,
     "pref": "茨城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-ca0cq": {
@@ -43555,7 +42717,7 @@ window.JR_STATIONS = {
     "lng": 140.45634,
     "pref": "茨城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-dyd8": {
@@ -43567,7 +42729,7 @@ window.JR_STATIONS = {
     "lng": 140.5405,
     "pref": "茨城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-ebp6": {
@@ -43579,7 +42741,7 @@ window.JR_STATIONS = {
     "lng": 140.35263,
     "pref": "茨城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-dl9n5": {
@@ -43591,7 +42753,7 @@ window.JR_STATIONS = {
     "lng": 140.77801,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "katsuta": {
@@ -43603,8 +42765,7 @@ window.JR_STATIONS = {
     "lng": 140.52426,
     "pref": "茨城県",
     "lines": [
-      "joban-rapid",
-      "joban-north"
+      "joban"
     ]
   },
   "st-r2a9": {
@@ -43616,7 +42777,7 @@ window.JR_STATIONS = {
     "lng": 140.71696,
     "pref": "茨城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-i71i": {
@@ -43628,7 +42789,7 @@ window.JR_STATIONS = {
     "lng": 140.56604,
     "pref": "茨城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "tomobe": {
@@ -43640,9 +42801,8 @@ window.JR_STATIONS = {
     "lng": 140.30603,
     "pref": "茨城県",
     "lines": [
-      "joban-rapid",
       "mito-line",
-      "joban-north"
+      "joban"
     ]
   },
   "minami-kashiwa": {
@@ -43654,7 +42814,7 @@ window.JR_STATIONS = {
     "lng": 139.95418,
     "pref": "埼玉県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "ryugasakishi": {
@@ -43666,8 +42826,7 @@ window.JR_STATIONS = {
     "lng": 140.13803,
     "pref": "茨城県",
     "lines": [
-      "joban-rapid",
-      "joban-north"
+      "joban"
     ]
   },
   "toride": {
@@ -43679,8 +42838,7 @@ window.JR_STATIONS = {
     "lng": 140.06269,
     "pref": "茨城県",
     "lines": [
-      "joban-rapid",
-      "joban-north"
+      "joban"
     ]
   },
   "kashiwa": {
@@ -43692,8 +42850,7 @@ window.JR_STATIONS = {
     "lng": 139.97102,
     "pref": "埼玉県",
     "lines": [
-      "joban-rapid",
-      "joban-north"
+      "joban"
     ]
   },
   "fujishiro": {
@@ -43705,8 +42862,7 @@ window.JR_STATIONS = {
     "lng": 140.11815,
     "pref": "茨城県",
     "lines": [
-      "joban-rapid",
-      "joban-north"
+      "joban"
     ]
   },
   "kita-kashiwa": {
@@ -43718,7 +42874,7 @@ window.JR_STATIONS = {
     "lng": 139.98804,
     "pref": "埼玉県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-qxs4": {
@@ -43730,7 +42886,7 @@ window.JR_STATIONS = {
     "lng": 140.29466,
     "pref": "茨城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "shin-matsudo": {
@@ -43743,7 +42899,7 @@ window.JR_STATIONS = {
     "pref": "埼玉県",
     "lines": [
       "musashino",
-      "joban-north"
+      "joban"
     ]
   },
   "st-lbfx": {
@@ -43755,7 +42911,7 @@ window.JR_STATIONS = {
     "lng": 140.24861,
     "pref": "茨城県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "kita-kogane": {
@@ -43767,7 +42923,7 @@ window.JR_STATIONS = {
     "lng": 139.93075,
     "pref": "埼玉県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "tennodai": {
@@ -43779,8 +42935,7 @@ window.JR_STATIONS = {
     "lng": 140.04232,
     "pref": "茨城県",
     "lines": [
-      "joban-rapid",
-      "joban-north"
+      "joban"
     ]
   },
   "hitachinoushiku": {
@@ -43792,8 +42947,7 @@ window.JR_STATIONS = {
     "lng": 140.15825,
     "pref": "茨城県",
     "lines": [
-      "joban-rapid",
-      "joban-north"
+      "joban"
     ]
   },
   "tsuchiura": {
@@ -43805,8 +42959,7 @@ window.JR_STATIONS = {
     "lng": 140.20623,
     "pref": "茨城県",
     "lines": [
-      "joban-rapid",
-      "joban-north"
+      "joban"
     ]
   },
   "abiko": {
@@ -43818,9 +42971,8 @@ window.JR_STATIONS = {
     "lng": 140.01046,
     "pref": "茨城県",
     "lines": [
-      "joban-rapid",
       "narita-line",
-      "joban-north"
+      "joban"
     ]
   },
   "arakawaoki": {
@@ -43832,8 +42984,7 @@ window.JR_STATIONS = {
     "lng": 140.16599,
     "pref": "茨城県",
     "lines": [
-      "joban-rapid",
-      "joban-north"
+      "joban"
     ]
   },
   "ushiku": {
@@ -43845,8 +42996,7 @@ window.JR_STATIONS = {
     "lng": 140.14103,
     "pref": "茨城県",
     "lines": [
-      "joban-rapid",
-      "joban-north"
+      "joban"
     ]
   },
   "kita-matsudo": {
@@ -43858,7 +43008,7 @@ window.JR_STATIONS = {
     "lng": 139.91162,
     "pref": "埼玉県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "nippori": {
@@ -43870,10 +43020,8 @@ window.JR_STATIONS = {
     "lng": 139.77126,
     "pref": "埼玉県",
     "lines": [
-      "joban-rapid",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka",
-      "joban-north"
+      "tohoku-main",
+      "joban"
     ]
   },
   "mabashi": {
@@ -43885,7 +43033,7 @@ window.JR_STATIONS = {
     "lng": 139.91731,
     "pref": "埼玉県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "minami-senju": {
@@ -43897,8 +43045,7 @@ window.JR_STATIONS = {
     "lng": 139.79982,
     "pref": "埼玉県",
     "lines": [
-      "joban-rapid",
-      "joban-north"
+      "joban"
     ]
   },
   "kita-senju": {
@@ -43910,8 +43057,7 @@ window.JR_STATIONS = {
     "lng": 139.80465,
     "pref": "埼玉県",
     "lines": [
-      "joban-rapid",
-      "joban-north"
+      "joban"
     ]
   },
   "ayase": {
@@ -43923,7 +43069,7 @@ window.JR_STATIONS = {
     "lng": 139.82493,
     "pref": "埼玉県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "mikawashima": {
@@ -43935,8 +43081,7 @@ window.JR_STATIONS = {
     "lng": 139.77728,
     "pref": "埼玉県",
     "lines": [
-      "joban-rapid",
-      "joban-north"
+      "joban"
     ]
   },
   "kameari": {
@@ -43948,7 +43093,7 @@ window.JR_STATIONS = {
     "lng": 139.84756,
     "pref": "埼玉県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "matsudo": {
@@ -43960,8 +43105,7 @@ window.JR_STATIONS = {
     "lng": 139.90087,
     "pref": "埼玉県",
     "lines": [
-      "joban-rapid",
-      "joban-north"
+      "joban"
     ]
   },
   "kanamachi": {
@@ -43973,7 +43117,7 @@ window.JR_STATIONS = {
     "lng": 139.87039,
     "pref": "埼玉県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-fjrwi": {
@@ -44551,8 +43695,7 @@ window.JR_STATIONS = {
     "pref": "福島県",
     "lines": [
       "suigun-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-luytk": {
@@ -45080,12 +44223,10 @@ window.JR_STATIONS = {
     "lng": 139.80632,
     "pref": "栃木県",
     "lines": [
-      "utsunomiya-line",
+      "tohoku-main",
       "shinkansen-tohoku",
       "ryomo-line",
-      "mito-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "mito-line"
     ]
   },
   "st-hw5n": {
@@ -45567,7 +44708,7 @@ window.JR_STATIONS = {
     "lng": 139.41396,
     "pref": "東京都",
     "lines": [
-      "chuo-rapid",
+      "chuo-main",
       "nambu",
       "ome-line"
     ]
@@ -45977,8 +45118,7 @@ window.JR_STATIONS = {
     "lng": 141.06442,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka",
+      "tohoku-main",
       "ishinomaki-line",
       "rikuuto-line"
     ]
@@ -46006,9 +45146,7 @@ window.JR_STATIONS = {
     "pref": "埼玉県",
     "lines": [
       "akabane-line",
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "jujo": {
@@ -46058,8 +45196,7 @@ window.JR_STATIONS = {
     "lines": [
       "shinkansen-tohoku",
       "shinkansen-akita",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka",
+      "tohoku-main",
       "senseki-line",
       "senzan-line"
     ]
@@ -46493,8 +45630,7 @@ window.JR_STATIONS = {
     "lng": 141.07355,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka",
+      "tohoku-main",
       "senseki-line"
     ]
   },
@@ -47205,7 +46341,7 @@ window.JR_STATIONS = {
     "lng": 139.76503,
     "pref": "千葉県",
     "lines": [
-      "chuo-rapid",
+      "chuo-main",
       "sobu-main"
     ]
   },
@@ -47303,8 +46439,7 @@ window.JR_STATIONS = {
     "pref": "千葉県",
     "lines": [
       "sobu-main",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "ryogoku": {
@@ -47881,8 +47016,7 @@ window.JR_STATIONS = {
     "pref": "岩手県",
     "lines": [
       "shinkansen-tohoku",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka",
+      "tohoku-main",
       "ofunato-line"
     ]
   },
@@ -48564,7 +47698,7 @@ window.JR_STATIONS = {
     "lng": 139.66577,
     "pref": "埼玉県",
     "lines": [
-      "chuo-rapid"
+      "chuo-main"
     ]
   },
   "higashi-nakano": {
@@ -48586,7 +47720,7 @@ window.JR_STATIONS = {
     "lng": 139.57999,
     "pref": "埼玉県",
     "lines": [
-      "chuo-rapid"
+      "chuo-main"
     ]
   },
   "nishi-ogikubo": {
@@ -48598,7 +47732,7 @@ window.JR_STATIONS = {
     "lng": 139.5997,
     "pref": "埼玉県",
     "lines": [
-      "chuo-rapid"
+      "chuo-main"
     ]
   },
   "ogikubo": {
@@ -48610,7 +47744,7 @@ window.JR_STATIONS = {
     "lng": 139.62025,
     "pref": "埼玉県",
     "lines": [
-      "chuo-rapid"
+      "chuo-main"
     ]
   },
   "st-ja2vn6": {
@@ -48621,7 +47755,9 @@ window.JR_STATIONS = {
     "lat": 35.70489,
     "lng": 139.63626,
     "pref": "埼玉県",
-    "lines": []
+    "lines": [
+      "chuo-main"
+    ]
   },
   "koenji": {
     "id": "koenji",
@@ -48632,7 +47768,7 @@ window.JR_STATIONS = {
     "lng": 139.64972,
     "pref": "埼玉県",
     "lines": [
-      "chuo-rapid"
+      "chuo-main"
     ]
   },
   "okubo": {
@@ -48654,9 +47790,8 @@ window.JR_STATIONS = {
     "lng": 139.77087,
     "pref": "千葉県",
     "lines": [
-      "chuo-rapid",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "chuo-main",
+      "tohoku-main"
     ]
   },
   "yotsuya": {
@@ -48668,7 +47803,7 @@ window.JR_STATIONS = {
     "lng": 139.73056,
     "pref": "千葉県",
     "lines": [
-      "chuo-rapid"
+      "chuo-main"
     ]
   },
   "st-e0sqr": {
@@ -48710,7 +47845,7 @@ window.JR_STATIONS = {
     "lng": 139.48056,
     "pref": "埼玉県",
     "lines": [
-      "chuo-rapid"
+      "chuo-main"
     ]
   },
   "st-elik": {
@@ -48770,7 +47905,7 @@ window.JR_STATIONS = {
     "lng": 139.46599,
     "pref": "東京都",
     "lines": [
-      "chuo-rapid",
+      "chuo-main",
       "musashino"
     ]
   },
@@ -48783,7 +47918,7 @@ window.JR_STATIONS = {
     "lng": 139.54356,
     "pref": "埼玉県",
     "lines": [
-      "chuo-rapid"
+      "chuo-main"
     ]
   },
   "higashi-koganei": {
@@ -48795,7 +47930,7 @@ window.JR_STATIONS = {
     "lng": 139.52376,
     "pref": "埼玉県",
     "lines": [
-      "chuo-rapid"
+      "chuo-main"
     ]
   },
   "st-qb4x": {
@@ -48904,7 +48039,7 @@ window.JR_STATIONS = {
     "lng": 139.50593,
     "pref": "埼玉県",
     "lines": [
-      "chuo-rapid"
+      "chuo-main"
     ]
   },
   "st-fmncs": {
@@ -48964,7 +48099,6 @@ window.JR_STATIONS = {
     "lng": 139.11541,
     "pref": "東京都",
     "lines": [
-      "chuo-rapid",
       "chuo-main"
     ]
   },
@@ -48977,7 +48111,6 @@ window.JR_STATIONS = {
     "lng": 138.94215,
     "pref": "山梨県",
     "lines": [
-      "chuo-rapid",
       "chuo-main"
     ]
   },
@@ -49014,7 +48147,6 @@ window.JR_STATIONS = {
     "lng": 139.15133,
     "pref": "東京都",
     "lines": [
-      "chuo-rapid",
       "chuo-main"
     ]
   },
@@ -49039,7 +48171,7 @@ window.JR_STATIONS = {
     "lng": 139.312,
     "pref": "東京都",
     "lines": [
-      "chuo-rapid"
+      "chuo-main"
     ]
   },
   "st-pwh7": {
@@ -49063,7 +48195,7 @@ window.JR_STATIONS = {
     "lng": 139.44642,
     "pref": "東京都",
     "lines": [
-      "chuo-rapid"
+      "chuo-main"
     ]
   },
   "kamisuwa": {
@@ -49111,7 +48243,7 @@ window.JR_STATIONS = {
     "lng": 139.38149,
     "pref": "東京都",
     "lines": [
-      "chuo-rapid"
+      "chuo-main"
     ]
   },
   "st-lc3h": {
@@ -49183,7 +48315,6 @@ window.JR_STATIONS = {
     "lng": 139.18852,
     "pref": "東京都",
     "lines": [
-      "chuo-rapid",
       "chuo-main"
     ]
   },
@@ -49196,7 +48327,6 @@ window.JR_STATIONS = {
     "lng": 139.28263,
     "pref": "東京都",
     "lines": [
-      "chuo-rapid",
       "chuo-main"
     ]
   },
@@ -49269,7 +48399,7 @@ window.JR_STATIONS = {
     "lng": 139.56071,
     "pref": "埼玉県",
     "lines": [
-      "chuo-rapid"
+      "chuo-main"
     ]
   },
   "hino": {
@@ -49281,7 +48411,7 @@ window.JR_STATIONS = {
     "lng": 139.3935,
     "pref": "東京都",
     "lines": [
-      "chuo-rapid"
+      "chuo-main"
     ]
   },
   "st-ed21t5": {
@@ -49821,8 +48951,7 @@ window.JR_STATIONS = {
     "lng": 139.75821,
     "pref": "千葉県",
     "lines": [
-      "tokaido",
-      "joban-rapid"
+      "tokaido"
     ]
   },
   "omori": {
@@ -50169,8 +49298,7 @@ window.JR_STATIONS = {
     "pref": "岩手県",
     "lines": [
       "shinkansen-tohoku",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka",
+      "tohoku-main",
       "kitakami-line"
     ]
   },
@@ -50234,8 +49362,7 @@ window.JR_STATIONS = {
     "lines": [
       "shinkansen-tohoku",
       "shinkansen-yamagata",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka",
+      "tohoku-main",
       "banetsu-east",
       "banetsu-west"
     ]
@@ -50249,10 +49376,8 @@ window.JR_STATIONS = {
     "lng": 140.02092,
     "pref": "福島県",
     "lines": [
-      "utsunomiya-line",
-      "shinkansen-tohoku",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main",
+      "shinkansen-tohoku"
     ]
   },
   "shin-shirakawa": {
@@ -50265,8 +49390,7 @@ window.JR_STATIONS = {
     "pref": "福島県",
     "lines": [
       "shinkansen-tohoku",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "utsunomiya": {
@@ -50278,12 +49402,10 @@ window.JR_STATIONS = {
     "lng": 139.89865,
     "pref": "栃木県",
     "lines": [
-      "utsunomiya-line",
+      "tohoku-main",
       "shinkansen-tohoku",
       "shinkansen-yamagata",
-      "nikko-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "nikko-line"
     ]
   },
   "ueno": {
@@ -50295,15 +49417,12 @@ window.JR_STATIONS = {
     "lng": 139.77636,
     "pref": "埼玉県",
     "lines": [
-      "utsunomiya-line",
-      "joban-rapid",
+      "tohoku-main",
       "shinkansen-tohoku",
       "shinkansen-joetsu",
       "shinkansen-hokuriku",
       "shinkansen-yamagata",
-      "shinkansen-akita",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "shinkansen-akita"
     ]
   },
   "st-kwpv": {
@@ -50315,8 +49434,7 @@ window.JR_STATIONS = {
     "lng": 141.14811,
     "pref": "岩手県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-byjdo": {
@@ -50328,8 +49446,7 @@ window.JR_STATIONS = {
     "lng": 141.14875,
     "pref": "岩手県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-c3v9as": {
@@ -50341,8 +49458,7 @@ window.JR_STATIONS = {
     "lng": 141.14661,
     "pref": "岩手県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-jb5gki": {
@@ -50354,8 +49470,7 @@ window.JR_STATIONS = {
     "lng": 141.14092,
     "pref": "岩手県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-l6gn": {
@@ -50367,8 +49482,7 @@ window.JR_STATIONS = {
     "lng": 141.15915,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-elf9": {
@@ -50380,8 +49494,7 @@ window.JR_STATIONS = {
     "lng": 141.12624,
     "pref": "岩手県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-gvs3xb": {
@@ -50393,8 +49506,7 @@ window.JR_STATIONS = {
     "lng": 141.12731,
     "pref": "岩手県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-eb4i": {
@@ -50406,8 +49518,7 @@ window.JR_STATIONS = {
     "lng": 141.09781,
     "pref": "岩手県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-gnue": {
@@ -50419,8 +49530,7 @@ window.JR_STATIONS = {
     "lng": 141.11781,
     "pref": "岩手県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-llq3t": {
@@ -50432,8 +49542,7 @@ window.JR_STATIONS = {
     "lng": 141.11294,
     "pref": "岩手県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-mtrs": {
@@ -50445,8 +49554,7 @@ window.JR_STATIONS = {
     "lng": 141.18001,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-f3yc": {
@@ -50458,8 +49566,7 @@ window.JR_STATIONS = {
     "lng": 141.15463,
     "pref": "岩手県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-iby1x": {
@@ -50471,8 +49578,7 @@ window.JR_STATIONS = {
     "lng": 141.14689,
     "pref": "岩手県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-j01a": {
@@ -50484,8 +49590,7 @@ window.JR_STATIONS = {
     "lng": 141.14632,
     "pref": "岩手県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-i0go": {
@@ -50497,8 +49602,7 @@ window.JR_STATIONS = {
     "lng": 141.12109,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-flevl": {
@@ -50510,8 +49614,7 @@ window.JR_STATIONS = {
     "lng": 141.12049,
     "pref": "岩手県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-gmzsg": {
@@ -50523,8 +49626,7 @@ window.JR_STATIONS = {
     "lng": 141.15646,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-g8o5x4": {
@@ -50536,8 +49638,7 @@ window.JR_STATIONS = {
     "lng": 141.15991,
     "pref": "岩手県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-dse8h": {
@@ -50549,8 +49650,7 @@ window.JR_STATIONS = {
     "lng": 141.13195,
     "pref": "岩手県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-j04d": {
@@ -50562,8 +49662,7 @@ window.JR_STATIONS = {
     "lng": 141.17571,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-i3aj": {
@@ -50575,8 +49674,7 @@ window.JR_STATIONS = {
     "lng": 141.16055,
     "pref": "岩手県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-fu6r": {
@@ -50588,8 +49686,7 @@ window.JR_STATIONS = {
     "lng": 141.00954,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-1wb9h55": {
@@ -50601,8 +49698,7 @@ window.JR_STATIONS = {
     "lng": 140.99474,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-no0op": {
@@ -50614,8 +49710,7 @@ window.JR_STATIONS = {
     "lng": 141.09796,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-csv9k": {
@@ -50627,8 +49722,7 @@ window.JR_STATIONS = {
     "lng": 141.08238,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-g7lq": {
@@ -50640,8 +49734,7 @@ window.JR_STATIONS = {
     "lng": 140.95533,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-ehsj": {
@@ -50653,8 +49746,7 @@ window.JR_STATIONS = {
     "lng": 140.9848,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-i43c": {
@@ -50666,8 +49758,7 @@ window.JR_STATIONS = {
     "lng": 141.06536,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-qrew": {
@@ -50679,8 +49770,7 @@ window.JR_STATIONS = {
     "lng": 140.88016,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-hxts": {
@@ -50692,8 +49782,7 @@ window.JR_STATIONS = {
     "lng": 141.11953,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-fjbe0": {
@@ -50705,8 +49794,7 @@ window.JR_STATIONS = {
     "lng": 140.91965,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-kft7": {
@@ -50718,8 +49806,7 @@ window.JR_STATIONS = {
     "lng": 141.05904,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-fk1wx": {
@@ -50731,8 +49818,7 @@ window.JR_STATIONS = {
     "lng": 141.08523,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-fm2uf": {
@@ -50744,8 +49830,7 @@ window.JR_STATIONS = {
     "lng": 141.07493,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-jl8k": {
@@ -50757,8 +49842,7 @@ window.JR_STATIONS = {
     "lng": 141.07385,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-faoub": {
@@ -50770,8 +49854,7 @@ window.JR_STATIONS = {
     "lng": 140.9731,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-er8p": {
@@ -50783,8 +49866,7 @@ window.JR_STATIONS = {
     "lng": 140.88277,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-clbke": {
@@ -50796,8 +49878,7 @@ window.JR_STATIONS = {
     "lng": 140.88331,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-q2eb": {
@@ -50809,8 +49890,7 @@ window.JR_STATIONS = {
     "lng": 140.88625,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-h0pm": {
@@ -50822,8 +49902,7 @@ window.JR_STATIONS = {
     "lng": 141.06512,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-jbqaj3": {
@@ -50835,8 +49914,7 @@ window.JR_STATIONS = {
     "lng": 140.97948,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-ilcd": {
@@ -50848,8 +49926,7 @@ window.JR_STATIONS = {
     "lng": 140.81018,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-fq98n": {
@@ -50861,8 +49938,7 @@ window.JR_STATIONS = {
     "lng": 140.65109,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-ia93": {
@@ -50874,8 +49950,7 @@ window.JR_STATIONS = {
     "lng": 140.5173,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-kt92": {
@@ -50887,8 +49962,7 @@ window.JR_STATIONS = {
     "lng": 140.62626,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-mnpk": {
@@ -50900,8 +49974,7 @@ window.JR_STATIONS = {
     "lng": 140.7674,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-cqst3": {
@@ -50913,8 +49986,7 @@ window.JR_STATIONS = {
     "lng": 140.69255,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-nf0s": {
@@ -50926,8 +49998,7 @@ window.JR_STATIONS = {
     "lng": 140.53941,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-fqmpk": {
@@ -50939,8 +50010,7 @@ window.JR_STATIONS = {
     "lng": 140.47741,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-dl1o3": {
@@ -50952,8 +50022,7 @@ window.JR_STATIONS = {
     "lng": 140.74033,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-ok6r": {
@@ -50965,8 +50034,7 @@ window.JR_STATIONS = {
     "lng": 140.58098,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-oo6h": {
@@ -50978,8 +50046,7 @@ window.JR_STATIONS = {
     "lng": 140.60467,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-e8i2": {
@@ -50991,8 +50058,7 @@ window.JR_STATIONS = {
     "lng": 140.49337,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-obkl": {
@@ -51004,8 +50070,7 @@ window.JR_STATIONS = {
     "lng": 140.15508,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-kuqf": {
@@ -51017,8 +50082,7 @@ window.JR_STATIONS = {
     "lng": 140.32826,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "kuroiso": {
@@ -51030,9 +50094,7 @@ window.JR_STATIONS = {
     "lng": 140.06015,
     "pref": "福島県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-kmsl": {
@@ -51044,8 +50106,7 @@ window.JR_STATIONS = {
     "lng": 140.1847,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-fcb7t": {
@@ -51057,8 +50118,7 @@ window.JR_STATIONS = {
     "lng": 140.38836,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-i49r": {
@@ -51070,8 +50130,7 @@ window.JR_STATIONS = {
     "lng": 140.48416,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-j0it": {
@@ -51083,8 +50142,7 @@ window.JR_STATIONS = {
     "lng": 140.2991,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "shirakawa": {
@@ -51096,8 +50154,7 @@ window.JR_STATIONS = {
     "lng": 140.21242,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-m191z": {
@@ -51109,8 +50166,7 @@ window.JR_STATIONS = {
     "lng": 140.452,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-csmvy": {
@@ -51122,8 +50178,7 @@ window.JR_STATIONS = {
     "lng": 140.45585,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-c30dv": {
@@ -51135,8 +50190,7 @@ window.JR_STATIONS = {
     "lng": 140.38772,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-ntuip": {
@@ -51148,8 +50202,7 @@ window.JR_STATIONS = {
     "lng": 140.12108,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-pt82": {
@@ -51161,8 +50214,7 @@ window.JR_STATIONS = {
     "lng": 140.34685,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-qrn1": {
@@ -51174,8 +50226,7 @@ window.JR_STATIONS = {
     "lng": 140.08735,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-gd0r": {
@@ -51187,8 +50238,7 @@ window.JR_STATIONS = {
     "lng": 140.46669,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-my42t": {
@@ -51200,8 +50250,7 @@ window.JR_STATIONS = {
     "lng": 140.37143,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-i7lz": {
@@ -51213,8 +50262,7 @@ window.JR_STATIONS = {
     "lng": 140.41399,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "nishi-nasuno": {
@@ -51226,9 +50274,7 @@ window.JR_STATIONS = {
     "lng": 139.98645,
     "pref": "福島県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-c0aji": {
@@ -51240,8 +50286,7 @@ window.JR_STATIONS = {
     "lng": 140.43552,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-i1vm": {
@@ -51253,8 +50298,7 @@ window.JR_STATIONS = {
     "lng": 140.39933,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-c1g2r": {
@@ -51266,8 +50310,7 @@ window.JR_STATIONS = {
     "lng": 140.26019,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "ishibashi": {
@@ -51279,9 +50322,7 @@ window.JR_STATIONS = {
     "lng": 139.8665,
     "pref": "栃木県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "koga": {
@@ -51293,9 +50334,7 @@ window.JR_STATIONS = {
     "lng": 139.70971,
     "pref": "埼玉県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "ujiie": {
@@ -51307,9 +50346,7 @@ window.JR_STATIONS = {
     "lng": 139.96211,
     "pref": "栃木県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-jy2i": {
@@ -51321,8 +50358,7 @@ window.JR_STATIONS = {
     "lng": 139.94555,
     "pref": "栃木県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "mamada": {
@@ -51334,9 +50370,7 @@ window.JR_STATIONS = {
     "lng": 139.76111,
     "pref": "栃木県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-k61d8": {
@@ -51348,8 +50382,7 @@ window.JR_STATIONS = {
     "lng": 139.95044,
     "pref": "栃木県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-gbl7": {
@@ -51361,8 +50394,7 @@ window.JR_STATIONS = {
     "lng": 139.94425,
     "pref": "栃木県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-pb7k": {
@@ -51374,8 +50406,7 @@ window.JR_STATIONS = {
     "lng": 139.9581,
     "pref": "福島県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "jichi-idai": {
@@ -51387,9 +50418,7 @@ window.JR_STATIONS = {
     "lng": 139.85452,
     "pref": "栃木県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "koganei": {
@@ -51401,9 +50430,7 @@ window.JR_STATIONS = {
     "lng": 139.84229,
     "pref": "栃木県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "suzumeno-miya": {
@@ -51415,9 +50442,7 @@ window.JR_STATIONS = {
     "lng": 139.87705,
     "pref": "栃木県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "yaita": {
@@ -51429,9 +50454,7 @@ window.JR_STATIONS = {
     "lng": 139.93296,
     "pref": "福島県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "nogi": {
@@ -51443,9 +50466,7 @@ window.JR_STATIONS = {
     "lng": 139.73481,
     "pref": "栃木県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "nishi-nippori": {
@@ -51457,8 +50478,7 @@ window.JR_STATIONS = {
     "lng": 139.76672,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "oku": {
@@ -51470,7 +50490,7 @@ window.JR_STATIONS = {
     "lng": 139.75373,
     "pref": "埼玉県",
     "lines": [
-      "utsunomiya-line"
+      "tohoku-main"
     ]
   },
   "okachimachi": {
@@ -51482,8 +50502,7 @@ window.JR_STATIONS = {
     "lng": 139.77472,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "uguisudani": {
@@ -51495,8 +50514,7 @@ window.JR_STATIONS = {
     "lng": 139.77803,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "oji": {
@@ -51508,8 +50526,7 @@ window.JR_STATIONS = {
     "lng": 139.73821,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "kami-nakazato": {
@@ -51521,8 +50538,7 @@ window.JR_STATIONS = {
     "lng": 139.74628,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "urawa": {
@@ -51534,9 +50550,7 @@ window.JR_STATIONS = {
     "lng": 139.65715,
     "pref": "埼玉県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "kurihashi": {
@@ -51548,9 +50562,7 @@ window.JR_STATIONS = {
     "lng": 139.69402,
     "pref": "埼玉県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "minami-urawa": {
@@ -51563,8 +50575,7 @@ window.JR_STATIONS = {
     "pref": "埼玉県",
     "lines": [
       "musashino",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "kita-toda": {
@@ -51576,8 +50587,7 @@ window.JR_STATIONS = {
     "lng": 139.66145,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "shin-shiraoka": {
@@ -51589,9 +50599,7 @@ window.JR_STATIONS = {
     "lng": 139.67189,
     "pref": "埼玉県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-ck7h3": {
@@ -51603,8 +50611,7 @@ window.JR_STATIONS = {
     "lng": 139.62856,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "yono-hommachi": {
@@ -51616,8 +50623,7 @@ window.JR_STATIONS = {
     "lng": 139.626,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "saitama-shintoshin": {
@@ -51629,9 +50635,7 @@ window.JR_STATIONS = {
     "lng": 139.6339,
     "pref": "埼玉県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "hasuda": {
@@ -51643,9 +50647,7 @@ window.JR_STATIONS = {
     "lng": 139.65298,
     "pref": "埼玉県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "higashi-washinomiya": {
@@ -51657,9 +50659,7 @@ window.JR_STATIONS = {
     "lng": 139.67971,
     "pref": "埼玉県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "yono": {
@@ -51671,8 +50671,7 @@ window.JR_STATIONS = {
     "lng": 139.63899,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "kuki": {
@@ -51684,9 +50683,7 @@ window.JR_STATIONS = {
     "lng": 139.67738,
     "pref": "埼玉県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "shiraoka": {
@@ -51698,9 +50695,7 @@ window.JR_STATIONS = {
     "lng": 139.66687,
     "pref": "埼玉県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "higashi-omiya": {
@@ -51712,9 +50707,7 @@ window.JR_STATIONS = {
     "lng": 139.64026,
     "pref": "埼玉県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "nishi-kawaguchi": {
@@ -51726,8 +50719,7 @@ window.JR_STATIONS = {
     "lng": 139.70436,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "kita-urawa": {
@@ -51739,8 +50731,7 @@ window.JR_STATIONS = {
     "lng": 139.64575,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "musashi-urawa": {
@@ -51753,8 +50744,7 @@ window.JR_STATIONS = {
     "pref": "埼玉県",
     "lines": [
       "musashino",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "higashi-jujo": {
@@ -51766,8 +50756,7 @@ window.JR_STATIONS = {
     "lng": 139.72673,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "kawaguchi": {
@@ -51779,8 +50768,7 @@ window.JR_STATIONS = {
     "lng": 139.71751,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "toda-koen": {
@@ -51792,8 +50780,7 @@ window.JR_STATIONS = {
     "lng": 139.67835,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "minami-yono": {
@@ -51805,8 +50792,7 @@ window.JR_STATIONS = {
     "lng": 139.63105,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "ukima-funado": {
@@ -51818,8 +50804,7 @@ window.JR_STATIONS = {
     "lng": 139.69149,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "kita-akabane": {
@@ -51831,8 +50816,7 @@ window.JR_STATIONS = {
     "lng": 139.70582,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "toda": {
@@ -51844,8 +50828,7 @@ window.JR_STATIONS = {
     "lng": 139.66961,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "warabi": {
@@ -51857,8 +50840,7 @@ window.JR_STATIONS = {
     "lng": 139.69042,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "toro": {
@@ -51870,9 +50852,7 @@ window.JR_STATIONS = {
     "lng": 139.6322,
     "pref": "埼玉県",
     "lines": [
-      "utsunomiya-line",
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "naka-urawa": {
@@ -51884,8 +50864,7 @@ window.JR_STATIONS = {
     "lng": 139.6373,
     "pref": "埼玉県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-g6x8": {
@@ -59306,8 +58285,7 @@ window.JR_STATIONS = {
     "lng": 140.88369,
     "pref": "宮城県",
     "lines": [
-      "tohoku-main-sendai",
-      "tohoku-main-morioka"
+      "tohoku-main"
     ]
   },
   "st-m6l1ba": {
@@ -59849,8 +58827,7 @@ window.JR_STATIONS = {
     "lng": 140.36572,
     "pref": "山形県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "st-fguyx": {
@@ -60124,7 +59101,7 @@ window.JR_STATIONS = {
     "lng": 141.00764,
     "pref": "福島県",
     "lines": [
-      "joban-north"
+      "joban"
     ]
   },
   "st-1c9rvs9": {
@@ -60206,8 +59183,7 @@ window.JR_STATIONS = {
     "lng": 140.11285,
     "pref": "秋田県",
     "lines": [
-      "ou-main-south",
-      "ou-main-north"
+      "ou-main"
     ]
   },
   "shin-omura": {
@@ -60344,3 +59320,13 @@ window.JR_STATIONS = {
     ]
   }
 };
+
+  if (typeof window !== 'undefined') {
+    window.JR_CATEGORIES = JR_CATEGORIES;
+    window.JR_LINES = JR_LINES;
+    window.JR_STATIONS = JR_STATIONS;
+  }
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { JR_CATEGORIES, JR_LINES, JR_STATIONS };
+  }
+})();

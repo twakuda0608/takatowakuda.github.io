@@ -621,9 +621,9 @@
 
   const TIER2_MAJOR_TRUNK = new Set([
     // 東日本・関東
-    'yamanote', 'tokaido', 'chuo-main', 'chuo-rapid',
-    'tohoku-main-sendai', 'tohoku-main-morioka', 'joban-rapid', 'joban-north',
-    'sobu-main', 'takasaki-line', 'utsunomiya-line', 'shinetsu-line', 'shinetsu-takasaki',
+    'yamanote', 'tokaido', 'chuo-main',
+    'tohoku-main', 'joban',
+    'sobu-main', 'takasaki-line', 'shinetsu-line', 'shinetsu-takasaki',
     // 北海道
     'hokkaido-hakodate', 'hokkaido-chitose', 'hokkaido-muroran',
     // 東海
@@ -644,7 +644,7 @@
     'musashino', 'keiyo', 'nambu', 'kawagoe-line', 'ome-line', 'itsukaichi-line',
     'uchibo-line', 'sotobo-line', 'narita-line',
     'shinonoi-line', 'joetsu-line', 'echigo-line', 'hakushin-line',
-    'ou-main-south', 'ou-main-north', 'uetsu-niigata', 'uetsu-north',
+    'ou-main', 'uetsu-main', 'oito-line',
     'senzan-line', 'senseki-line', 'ryomo-line', 'mito-line',
     'banetsu-west', 'banetsu-east', 'suigun-line', 'hachiko-line', 'chuo-tatsuno',
     // 北海道
@@ -1056,19 +1056,33 @@
 
   function buildAdjacentStationsIndex() {
     LINES.forEach(line => {
-      const stIds = line.stations;
-      for (let i = 0; i < stIds.length; i++) {
-        const cur = stIds[i];
-        if (!adjacentIndex.has(cur)) {
-          adjacentIndex.set(cur, {});
+      const chains = [line.stations, ...(line.branches || [])];
+      chains.forEach(stIds => {
+        for (let i = 0; i < stIds.length; i++) {
+          const cur = stIds[i];
+          if (!adjacentIndex.has(cur)) {
+            adjacentIndex.set(cur, {});
+          }
+          const adj = adjacentIndex.get(cur);
+
+          const prev = i > 0 ? stIds[i - 1] : (line.isLoop ? stIds[stIds.length - 2] : null);
+          const next = i < stIds.length - 1 ? stIds[i + 1] : (line.isLoop ? stIds[1] : null);
+
+          if (!adj[line.id]) {
+            adj[line.id] = {
+              prev: prev ? [prev] : [],
+              next: next ? [next] : []
+            };
+          } else {
+            if (prev && !adj[line.id].prev.includes(prev)) {
+              adj[line.id].prev.push(prev);
+            }
+            if (next && !adj[line.id].next.includes(next)) {
+              adj[line.id].next.push(next);
+            }
+          }
         }
-        const adj = adjacentIndex.get(cur);
-
-        const prev = i > 0 ? stIds[i - 1] : (line.isLoop ? stIds[stIds.length - 2] : null);
-        const next = i < stIds.length - 1 ? stIds[i + 1] : (line.isLoop ? stIds[1] : null);
-
-        adj[line.id] = { prev, next };
-      }
+      });
     });
   }
 
@@ -1077,13 +1091,14 @@
   // =======================================================
   function renderCategoryTabs() {
     const container = document.getElementById('category-tabs');
+    if (!container) return;
     container.innerHTML = '';
 
     CATEGORIES.forEach(cat => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = `cat-tab ${cat.id === STATE.currentCategory ? 'active' : ''}`;
-      btn.innerHTML = `<span>${cat.icon}</span> <span>${cat.name}</span>`;
+      btn.innerHTML = `${cat.icon ? `<span>${cat.icon}</span> ` : ''}<span>${cat.name}</span>`;
       btn.addEventListener('click', () => {
         setCategory(cat.id);
       });
@@ -1093,6 +1108,7 @@
 
   function renderLineChips() {
     const container = document.getElementById('line-chips');
+    if (!container) return;
     container.innerHTML = '';
 
     const linesToDisplay = STATE.currentCategory === 'all'
@@ -1158,8 +1174,10 @@
     badge.style.color = line.textColor || '#fff';
 
     document.getElementById('banner-name').textContent = line.name;
-    document.getElementById('banner-en').textContent = line.en;
-    document.getElementById('banner-desc').textContent = `${line.description} (全${line.stations.length}駅)`;
+    document.getElementById('banner-en').textContent = line.en || '';
+    const desc = line.description ? `${line.description} ` : '';
+    const totalCount = new Set([...line.stations, ...(line.branches ? line.branches.flat() : [])]).size;
+    document.getElementById('banner-desc').textContent = `${desc}(全${totalCount}駅)`;
     banner.style.display = 'flex';
 
     updateLineWeights();
@@ -1221,21 +1239,33 @@
     let hasAdj = false;
     Object.keys(adjInfo).forEach(lId => {
       const line = LINES.find(l => l.id === lId);
-      const { prev, next } = adjInfo[lId];
-      if (!line || (!prev && !next)) return;
+      const info = adjInfo[lId];
+      if (!line || !info) return;
+
+      const prevList = Array.isArray(info.prev) ? info.prev : (info.prev ? [info.prev] : []);
+      const nextList = Array.isArray(info.next) ? info.next : (info.next ? [info.next] : []);
+
+      if (prevList.length === 0 && nextList.length === 0) return;
       hasAdj = true;
 
-      const prevSt = prev ? STATIONS[prev] : null;
-      const nextSt = next ? STATIONS[next] : null;
+      const prevHtml = prevList
+        .map(id => STATIONS[id] ? `<span class="adj-link" data-id="${id}">${STATIONS[id].name}</span>` : '')
+        .filter(Boolean)
+        .join('・');
+
+      const nextHtml = nextList
+        .map(id => STATIONS[id] ? `<span class="adj-link" data-id="${id}">${STATIONS[id].name}</span>` : '')
+        .filter(Boolean)
+        .join('・');
 
       const row = document.createElement('div');
       row.className = 'adj-row';
       row.innerHTML = `
         <span style="color:${line.color};font-weight:700;">${line.name}</span>
         <div>
-          ${prevSt ? `← <span class="adj-link" data-id="${prevSt.id}">${prevSt.name}</span>` : ''}
-          ${prevSt && nextSt ? ' / ' : ''}
-          ${nextSt ? `<span class="adj-link" data-id="${nextSt.id}">${nextSt.name}</span> →` : ''}
+          ${prevHtml ? `← ${prevHtml}` : ''}
+          ${prevHtml && nextHtml ? ' / ' : ''}
+          ${nextHtml ? `${nextHtml} →` : ''}
         </div>
       `;
       row.querySelectorAll('.adj-link').forEach(link => {

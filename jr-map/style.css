@@ -135,12 +135,13 @@ body.theme-light .station-hover-tooltip::before {
   position: absolute;
   top: 10px;
   left: 12px;
-  right: 12px;
+  right: auto;
+  max-width: 560px;
+  width: calc(100% - 24px);
   z-index: 1000;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   padding: 8px 16px;
   padding-left: 56px; /* common.jsの戻るボタンスペース */
   background: var(--panel-bg);
@@ -194,8 +195,7 @@ body.theme-light .station-hover-tooltip::before {
 .header-search {
   position: relative;
   flex: 1;
-  max-width: 380px;
-  min-width: 160px;
+  min-width: 0;
 }
 
 .search-box {
@@ -661,7 +661,7 @@ body.theme-light .station-pref {
 ======================================================= */
 .line-banner {
   position: absolute;
-  top: 124px;
+  top: 72px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
@@ -795,46 +795,31 @@ body.theme-light .station-pref {
 ======================================================= */
 @media (max-width: 768px) {
   .map-header {
-    flex-wrap: wrap;
-    padding: 6px 10px;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    width: calc(100% - 20px);
+    max-width: none;
+    padding: 6px 12px;
     padding-left: 48px;
-    gap: 8px;
+    gap: 10px;
   }
   
   .header-left {
-    order: 1;
-  }
-  
-  .header-right {
-    order: 2;
-    max-width: calc(100% - 100px);
-    overflow-x: auto;
-  }
-  .view-presets {
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .view-presets::-webkit-scrollbar {
-    display: none;
-  }
-  .btn-preset {
-    font-size: 11px;
-    padding: 3px 8px;
     flex-shrink: 0;
   }
   
+  .header-title {
+    font-size: 0.95rem;
+  }
+  
   .header-search {
-    order: 3;
-    max-width: 100%;
-    width: 100%;
-    margin-top: 2px;
+    flex: 1;
+    min-width: 0;
   }
   .search-box {
-    padding: 4px 10px;
-  }
-
-  .filter-bar {
-    top: 108px;
+    padding: 5px 10px;
+    font-size: 13px;
   }
 
   .station-sheet {
@@ -864,7 +849,7 @@ body.theme-light .station-pref {
   }
 
   .line-banner {
-    top: 150px;
+    top: 68px;
     padding: 6px 12px;
   }
   .line-desc {
