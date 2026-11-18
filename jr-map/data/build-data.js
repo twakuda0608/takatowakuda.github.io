@@ -27,7 +27,7 @@
     "color": "#80c241",
     "textColor": "#ffffff",
     "category": "tokyo-core",
-    "isLoop": true,
+    "isLoop": false,
     "trackOffset": 8,
     "description": "東京の都心を一周する大動脈環状線。",
     "stations": [
@@ -146,12 +146,21 @@
       "tamachi",
       "takanawa-gateway",
       "shinagawa",
+      "oimachi",
+      "omori",
+      "kamata",
       "kawasaki",
+      "tsurumi",
+      "shin-koyasu",
+      "higashi-kanagawa",
       "yokohama",
+      "hodogaya",
+      "higashi-totsuka",
       "totsuka",
       "ofuna",
       "fujisawa",
       "tsujido",
+      "chigasaki",
       "hiratsuka",
       "oiso",
       "ninomiya",
@@ -349,12 +358,23 @@
     "isLoop": false,
     "description": "茅ケ崎から海老名・厚木を経て橋本を結ぶ神奈川の内陸路線。",
     "stations": [
-      "hashimoto",
-      "kamimizo",
-      "harataima",
-      "ebina",
+      "chigasaki",
+      "st-b0pr8m",
+      "st-qn38",
+      "samukawa",
+      "st-g3nn",
+      "st-ed9e",
+      "st-mfdd5",
+      "st-l4jc",
       "atsugi",
-      "samukawa"
+      "ebina",
+      "st-em42",
+      "st-dvqq",
+      "harataima",
+      "st-km4m",
+      "kamimizo",
+      "st-cq3fc",
+      "hashimoto"
     ]
   },
   {
@@ -368,11 +388,27 @@
     "isLoop": false,
     "description": "京浜工業地帯を走る個性豊かな臨海鉄道。",
     "stations": [
-      "ogimachi",
-      "hamakawasaki",
-      "anzen",
+      "tsurumi",
+      "st-fl6e",
+      "st-kgo8c6",
+      "st-ecpab",
       "asano",
-      "tsurumi"
+      "anzen",
+      "st-e3qsx1",
+      "hamakawasaki",
+      "st-hudb",
+      "ogimachi"
+    ],
+    "branches": [
+      [
+        "asano",
+        "st-fj0gp",
+        "st-go0tc"
+      ],
+      [
+        "anzen",
+        "st-fogm"
+      ]
     ]
   },
   {
@@ -387,6 +423,10 @@
     "description": "熱海から伊豆半島東岸の伊東へ至るリゾート路線。",
     "stations": [
       "atami",
+      "st-i38p",
+      "st-ajvhpe",
+      "st-lt9t",
+      "st-dst8l",
       "ito"
     ]
   },
@@ -736,8 +776,8 @@
       "北陸新幹線"
     ],
     "stations": [
-      "ueno",
       "tokyo",
+      "ueno",
       "omiya",
       "kumagaya",
       "honjowaseda",
@@ -857,16 +897,16 @@
       "奥羽線"
     ],
     "stations": [
+      "tokyo",
+      "ueno",
+      "omiya",
+      "sendai",
       "morioka",
       "st-qbu0",
       "tazawako",
       "kakunodate",
       "omagari",
-      "akita",
-      "sendai",
-      "omiya",
-      "ueno",
-      "tokyo"
+      "akita"
     ]
   },
   {
@@ -882,6 +922,7 @@
       "信越線"
     ],
     "stations": [
+      "niigata",
       "st-i990v4",
       "st-dzu8",
       "st-mvnm",
@@ -922,8 +963,7 @@
       "st-d82py",
       "st-k34v",
       "st-rg1v",
-      "naoetsu",
-      "niigata"
+      "naoetsu"
     ]
   },
   {
@@ -1651,11 +1691,6 @@
       "st-tw9",
       "st-ko1z",
       "st-cilw08",
-      "st-cwm7z",
-      "st-qjr7",
-      "st-iy7p",
-      "st-l2apv",
-      "hitachi-ota",
       "st-c2oik",
       "st-c3egv",
       "st-c2p99",
@@ -1663,6 +1698,16 @@
       "st-cidu5n",
       "st-cikxsx",
       "mito"
+    ],
+    "branches": [
+      [
+        "st-c2oik",
+        "st-cwm7z",
+        "st-qjr7",
+        "st-iy7p",
+        "st-l2apv",
+        "hitachi-ota"
+      ]
     ]
   },
   {
@@ -1900,10 +1945,6 @@
       "st-gepi",
       "st-adakxg",
       "narita",
-      "st-livb6",
-      "sakura",
-      "narita-airport",
-      "st-k0en03",
       "st-dqy2",
       "st-jg1u",
       "st-addmdw",
@@ -1917,6 +1958,18 @@
       "st-adh4o6",
       "st-ifty",
       "st-i41m"
+    ],
+    "branches": [
+      [
+        "narita",
+        "st-livb6",
+        "sakura"
+      ],
+      [
+        "narita",
+        "st-k0en03",
+        "narita-airport"
+      ]
     ]
   },
   {
@@ -2087,8 +2140,8 @@
       "st-fm8op",
       "ishinomaki",
       "st-jbv5fc",
-      "st-c0ftm",
       "st-jbvl",
+      "st-c0ftm",
       "st-j4cu",
       "st-j40p",
       "onagawa"
@@ -2382,9 +2435,9 @@
       "大湊線"
     ],
     "stations": [
+      "ominato",
       "shimokita",
       "st-okc9",
-      "ominato",
       "st-m1bz0",
       "st-oz70",
       "st-i63s",
@@ -2408,6 +2461,12 @@
       "五能線"
     ],
     "stations": [
+      "kawabe",
+      "st-na96",
+      "st-i4pj",
+      "st-i6ac",
+      "st-rf6e",
+      "st-jd2t2h",
       "goshogawara",
       "st-ic54",
       "st-dxur",
@@ -2444,13 +2503,7 @@
       "st-csi59",
       "st-cxniv",
       "noshiro",
-      "higashi-noshiro",
-      "st-na96",
-      "kawabe",
-      "st-i4pj",
-      "st-i6ac",
-      "st-rf6e",
-      "st-jd2t2h"
+      "higashi-noshiro"
     ]
   },
   {
@@ -2466,8 +2519,8 @@
       "男鹿線"
     ],
     "stations": [
-      "st-mege",
       "oga",
+      "st-mege",
       "st-mih1",
       "st-mxdd",
       "st-fssi",
@@ -2669,8 +2722,8 @@
     "code": "A",
     "description": "函館〜長万部〜小樽〜札幌〜旭川を結ぶ北海道の大動脈。",
     "stations": [
-      "st-p0pi",
       "st-huog",
+      "st-p0pi",
       "st-lpug",
       "st-j7rg",
       "st-drn2g",
@@ -2918,49 +2971,53 @@
       "st-mo8v",
       "st-c266h",
       "st-lzifo",
-      "st-e311n",
-      "st-htk7",
-      "st-aup47f",
-      "st-gsfk",
-      "st-mqo7",
-      "st-fpah",
-      "st-kljw3",
-      "st-fpglk",
-      "st-gjec",
-      "st-hzw8",
-      "st-ghv4",
-      "st-efbw",
-      "st-j2s0",
-      "st-eol2",
-      "st-op2x",
-      "st-fbafp",
-      "st-j4iu",
-      "st-eo17",
-      "st-qaoi",
-      "st-ku83",
-      "st-klwhk",
-      "st-gvzt",
-      "st-dkmsl",
-      "st-d7apbp",
-      "st-fcaq7",
-      "st-plgo",
-      "st-fv1g9",
-      "st-ipbe",
-      "st-ees8",
-      "st-bvpeg",
-      "st-g7gu",
-      "st-q9cp",
-      "st-eq8u",
-      "st-mrkf",
-      "st-j13l",
-      "st-fq0s",
-      "st-eqls",
-      "st-ci4s2",
-      "st-n5g6",
-      "st-felz2",
-      "st-kk1cz",
-      "st-i8az",
-      "st-fnoak"
+      "st-e311n"
+    ],
+    "branches": [
+      [
+        "st-htk7",
+        "st-aup47f",
+        "st-gsfk",
+        "st-mqo7",
+        "st-fpah",
+        "st-kljw3",
+        "st-fpglk",
+        "st-gjec",
+        "st-hzw8",
+        "st-ghv4",
+        "st-efbw",
+        "st-j2s0",
+        "st-eol2",
+        "st-op2x",
+        "st-fbafp",
+        "st-j4iu",
+        "st-eo17",
+        "st-qaoi",
+        "st-ku83",
+        "st-klwhk",
+        "st-gvzt",
+        "st-dkmsl",
+        "st-d7apbp",
+        "st-fcaq7",
+        "st-plgo",
+        "st-fv1g9",
+        "st-ipbe",
+        "st-ees8",
+        "st-bvpeg",
+        "st-g7gu",
+        "st-q9cp",
+        "st-eq8u",
+        "st-mrkf",
+        "st-j13l",
+        "st-fq0s",
+        "st-eqls",
+        "st-ci4s2",
+        "st-n5g6",
+        "st-felz2",
+        "st-kk1cz",
+        "st-fnoak",
+        "st-i8az"
+      ]
     ]
   },
   {
@@ -3004,7 +3061,6 @@
     "stations": [
       "st-l7sb",
       "st-csnya",
-      "st-hdgb",
       "st-eqke",
       "st-efog",
       "st-od6q",
@@ -3103,9 +3159,9 @@
       "st-b1h6g1",
       "st-e6kv2a",
       "st-ips3",
-      "st-gtkmr",
-      "st-byavx",
       "st-fiqth1",
+      "st-byavx",
+      "st-gtkmr",
       "st-i2l5",
       "st-oup",
       "st-cawr5e",
@@ -3797,7 +3853,11 @@
       "st-dwkk",
       "st-fa3mc"
     ],
-    "isLoop": true
+    "isLoop": true,
+    "edgeDistances": {
+      "st-fa3mc-st-dmapk": 1.0,
+      "新今宮-天王寺": 1.0
+    }
   },
   {
     "id": "tokaido-west",
@@ -3845,7 +3905,6 @@
       "st-fomku",
       "shin-osaka",
       "st-fzkz",
-      "st-l6pz",
       "st-flea",
       "st-g76a",
       "st-llqe",
@@ -3895,9 +3954,9 @@
     "code": "F",
     "description": "新大阪・大阪から放出・俊徳道を経て久宝寺を結ぶ東部環状ルート。",
     "stations": [
+      "shin-osaka",
       "st-cmf1q",
       "st-1wepi",
-      "shin-osaka",
       "st-1y0i5fv",
       "st-22c2h",
       "st-rj7n",
@@ -3963,8 +4022,8 @@
       "st-rg1v-1",
       "st-l1n0",
       "st-i46o-1",
-      "st-dvsi",
       "st-od52",
+      "st-dvsi",
       "st-abk9f7",
       "st-ildgy",
       "st-cs9ug",
@@ -4014,7 +4073,6 @@
       "st-gdmoe",
       "st-v03",
       "st-g6ho",
-      "st-frx4n",
       "st-ck7gg",
       "st-c4vfs",
       "st-b4ad8u",
@@ -4035,6 +4093,12 @@
       "st-ccabn",
       "st-1tovij",
       "st-cwkkx"
+    ],
+    "branches": [
+      [
+        "st-v03",
+        "st-frx4n"
+      ]
     ]
   },
   {
@@ -4684,6 +4748,7 @@
     "code": "TK",
     "description": "猪谷から越中八尾を経て富山に至るJR西日本管轄路線。",
     "stations": [
+      "toyama",
       "st-kl4v8",
       "st-bqo759",
       "st-p2ow",
@@ -4692,8 +4757,7 @@
       "st-fjsro",
       "st-lk3w",
       "st-idsu",
-      "st-kcwd",
-      "toyama"
+      "st-kcwd"
     ]
   },
   {
@@ -5123,6 +5187,7 @@
     "code": "B",
     "description": "広島・横川から緑井・可部を経てあき亀山に至る広島北部の通勤路線。",
     "stations": [
+      "st-6akvp8",
       "st-bly5ix",
       "st-f2l5",
       "st-dt2h",
@@ -5135,8 +5200,7 @@
       "st-c0mw6",
       "st-c3ht93",
       "st-dvqs",
-      "st-ikmr-1",
-      "st-6akvp8"
+      "st-ikmr-1"
     ]
   },
   {
@@ -5169,8 +5233,8 @@
       "st-dr5j",
       "st-ds6ug",
       "st-buk2s",
-      "st-l7l7",
       "st-foj5",
+      "st-l7l7",
       "st-efpy",
       "st-dv08",
       "st-kivhz",
@@ -5506,9 +5570,14 @@
       "st-qa9c",
       "st-jha6yc",
       "st-frub",
-      "st-gehk",
-      "st-gjl3i",
-      "st-jh28a6"
+      "st-gehk"
+    ],
+    "branches": [
+      [
+        "st-qa9c",
+        "st-gjl3i",
+        "st-jh28a6"
+      ]
     ]
   },
   {
@@ -5566,7 +5635,7 @@
     "id": "hakataminami-line",
     "name": "博多南線",
     "en": "Hakata-Minami Line",
-    "category": "chugoku",
+    "category": "kyushu",
     "color": "#0072bc",
     "textColor": "#ffffff",
     "code": "HN",
@@ -5693,8 +5762,8 @@
       "st-aarswy",
       "st-aazeeo",
       "st-ed7v",
-      "st-edg0a",
-      "st-cwlhq",
+      "st-bx0g1",
+      "st-cz2ur",
       "st-i2dj",
       "st-aatrft"
     ]
@@ -5782,10 +5851,10 @@
     "code": "T",
     "description": "高松から志度・三本松を経て徳島を結ぶ香川・徳島直通都市間幹線。",
     "stations": [
+      "st-qwme",
       "st-fdsm3",
       "st-xo46uq",
       "st-i9uo",
-      "st-qwme",
       "st-fjr08",
       "st-g7ij",
       "st-b83i19",
@@ -6062,21 +6131,25 @@
       "st-hylj",
       "st-el9a",
       "shin-yatsushiro",
-      "st-ea54",
-      "st-gevc-1",
-      "st-mfjor",
-      "st-ddy2n5",
-      "st-1prsvda",
-      "st-byo2g",
-      "st-gk2r",
-      "st-gk2rr",
-      "st-fm02c",
-      "st-cb8py",
-      "st-ha3wit",
-      "st-a6nonw",
-      "st-gn45",
-      "kagoshima-chuo",
-      "st-nm351"
+      "st-ea54"
+    ],
+    "branches": [
+      [
+        "st-gevc-1",
+        "st-mfjor",
+        "st-ddy2n5",
+        "st-byo2g",
+        "st-1prsvda",
+        "st-gk2r",
+        "st-gk2rr",
+        "st-fm02c",
+        "st-cb8py",
+        "st-ha3wit",
+        "st-a6nonw",
+        "st-gn45",
+        "kagoshima-chuo",
+        "st-nm351"
+      ]
     ]
   },
   {
@@ -6199,6 +6272,7 @@
       "st-g0mx",
       "st-paxr-1306",
       "st-i8r8a",
+      "senganen",
       "st-nm351"
     ]
   },
@@ -6381,6 +6455,7 @@
     "code": "豊",
     "description": "熊本から新水前寺・肥後大津・阿蘇カルデラを越え大分を結ぶ阿蘇高原線。",
     "stations": [
+      "st-fm4f",
       "st-jd35",
       "st-hspt",
       "st-45dyi7",
@@ -6416,8 +6491,7 @@
       "st-d9z4k1",
       "st-crbsp",
       "st-glq5",
-      "kumamoto",
-      "st-fm4f"
+      "kumamoto"
     ]
   },
   {
@@ -6588,8 +6662,8 @@
       "st-eyyo",
       "st-kx4kv",
       "st-ievl",
-      "st-d7dvta",
       "st-d7ex9g",
+      "st-d7dvta",
       "st-e4dd",
       "st-fpygxj",
       "st-fqbbxp",
@@ -6621,9 +6695,9 @@
     "code": "吉",
     "description": "吉松から小林・えびの高原を望み都城に至るえびの高原線。",
     "stations": [
-      "st-aexcni",
-      "st-r950",
       "st-ev11",
+      "st-r950",
+      "st-aexcni",
       "st-7b3c3",
       "st-1h19svs",
       "st-1h1mqw2",
@@ -6750,8 +6824,8 @@
     "code": "JD",
     "description": "西戸崎（志賀島近郊）から香椎を経て宇美を結ぶ海の中道線。",
     "stations": [
-      "st-e0kt31",
       "st-km8b9",
+      "st-e0kt31",
       "st-mbql2",
       "st-fob6",
       "st-f14h",
@@ -6964,24 +7038,14 @@
       "kami-nakazato",
       "oji",
       "higashi-jujo",
-      "warabi",
-      "nishi-kawaguchi",
-      "kawaguchi",
       "akabane",
-      "kita-akabane",
-      "ukima-funado",
-      "toda-koen",
-      "toda",
-      "kita-toda",
+      "kawaguchi",
+      "nishi-kawaguchi",
+      "warabi",
       "minami-urawa",
       "urawa",
-      "musashi-urawa",
-      "naka-urawa",
-      "minami-yono",
       "kita-urawa",
       "yono",
-      "yono-hommachi",
-      "st-ck7h3",
       "saitama-shintoshin",
       "omiya",
       "toro",
@@ -7055,13 +7119,10 @@
       "sendai",
       "st-fjbe0",
       "st-g7lq",
-      "st-fu6r",
-      "st-1wb9h55",
       "st-jbqaj3",
-      "st-faoub",
-      "st-ehsj",
+      "st-1wb9h55",
+      "st-fu6r",
       "st-i43c",
-      "st-n42dg",
       "st-h0pm",
       "st-csv9k",
       "st-no0op",
@@ -7097,8 +7158,33 @@
       "st-byjdo",
       "morioka"
     ],
+    "branches": [
+      [
+        "akabane",
+        "kita-akabane",
+        "ukima-funado",
+        "toda-koen",
+        "toda",
+        "kita-toda",
+        "musashi-urawa",
+        "naka-urawa",
+        "minami-yono",
+        "yono-hommachi",
+        "st-ck7h3",
+        "omiya"
+      ],
+      [
+        "st-g7lq",
+        "st-faoub",
+        "st-ehsj"
+      ]
+    ],
     "en": "Tohoku Main Line",
-    "description": "東京〜宇都宮〜仙台〜盛岡を結ぶ東北の大動脈"
+    "description": "東京〜宇都宮〜仙台〜盛岡を結ぶ東北の大動脈",
+    "edgeDistances": {
+      "st-ck7h3-omiya": 1.6,
+      "北与野-大宮": 1.6
+    }
   },
   {
     "id": "uetsu-main",
@@ -7285,6 +7371,31 @@
   }
 ];
   const JR_STATIONS = {
+  "chigasaki": {
+    "id": "chigasaki",
+    "name": "茅ケ崎",
+    "kana": "ちがさき",
+    "en": "Chigasaki",
+    "lat": 35.33055,
+    "lng": 139.40719,
+    "pref": "神奈川県",
+    "lines": [
+      "tokaido",
+      "sagami"
+    ]
+  },
+  "senganen": {
+    "id": "senganen",
+    "name": "仙巌園",
+    "kana": "せんがんえん",
+    "en": "Senganen",
+    "lat": 31.6176,
+    "lng": 130.5788,
+    "pref": "鹿児島県",
+    "lines": [
+      "kyushu-nippo"
+    ]
+  },
   "st-c0cdw": {
     "id": "st-c0cdw",
     "name": "二月田",
@@ -15338,7 +15449,8 @@
     "lng": 132.61144,
     "pref": "愛媛県",
     "lines": [
-      "shikoku-uchiko"
+      "shikoku-uchiko",
+      "shikoku-yosan-new"
     ]
   },
   "st-bx0g1": {
@@ -15350,7 +15462,8 @@
     "lng": 132.63636,
     "pref": "愛媛県",
     "lines": [
-      "shikoku-uchiko"
+      "shikoku-uchiko",
+      "shikoku-yosan-new"
     ]
   },
   "st-ed7v": {
@@ -26736,8 +26849,7 @@
     "lng": 135.48658,
     "pref": "大阪府",
     "lines": [
-      "osaka-loop",
-      "tokaido-west"
+      "osaka-loop"
     ]
   },
   "st-frsn": {
@@ -35411,42 +35523,50 @@
   "st-i38p": {
     "id": "st-i38p",
     "name": "来宮",
-    "kana": "",
-    "en": "来宮",
+    "kana": "きのみや",
+    "en": "Kinomiya",
     "lat": 35.09872,
     "lng": 139.06557,
     "pref": "静岡県",
-    "lines": []
+    "lines": [
+      "ito-line"
+    ]
   },
   "st-ajvhpe": {
     "id": "st-ajvhpe",
     "name": "伊豆多賀",
-    "kana": "",
-    "en": "伊豆多賀",
+    "kana": "いずたが",
+    "en": "Izu-Taga",
     "lat": 35.05948,
     "lng": 139.06691,
     "pref": "静岡県",
-    "lines": []
+    "lines": [
+      "ito-line"
+    ]
   },
   "st-dst8l": {
     "id": "st-dst8l",
     "name": "宇佐美",
-    "kana": "",
-    "en": "宇佐美",
+    "kana": "うさみ",
+    "en": "Usami",
     "lat": 35.00564,
     "lng": 139.07978,
     "pref": "静岡県",
-    "lines": []
+    "lines": [
+      "ito-line"
+    ]
   },
   "st-lt9t": {
     "id": "st-lt9t",
     "name": "網代",
-    "kana": "",
-    "en": "網代",
+    "kana": "あじろ",
+    "en": "Ajiro",
     "lat": 35.04351,
     "lng": 139.08107,
     "pref": "静岡県",
-    "lines": []
+    "lines": [
+      "ito-line"
+    ]
   },
   "st-nqdpa": {
     "id": "st-nqdpa",
@@ -37984,7 +38104,8 @@
     "lng": 139.63393,
     "pref": "神奈川県",
     "lines": [
-      "yokohama-line"
+      "yokohama-line",
+      "tokaido"
     ]
   },
   "kozukue": {
@@ -45928,22 +46049,26 @@
   "st-km4m": {
     "id": "st-km4m",
     "name": "番田",
-    "kana": "",
-    "en": "番田",
+    "kana": "ばんだ",
+    "en": "Banda",
     "lat": 35.54538,
     "lng": 139.36311,
-    "pref": "東京都",
-    "lines": []
+    "pref": "神奈川県",
+    "lines": [
+      "sagami"
+    ]
   },
   "st-cq3fc": {
     "id": "st-cq3fc",
     "name": "南橋本",
-    "kana": "",
-    "en": "南橋本",
+    "kana": "みなみはしもと",
+    "en": "Minami-Hashimoto",
     "lat": 35.5804,
     "lng": 139.35242,
-    "pref": "東京都",
-    "lines": []
+    "pref": "神奈川県",
+    "lines": [
+      "sagami"
+    ]
   },
   "harataima": {
     "id": "harataima",
@@ -45952,7 +46077,7 @@
     "en": "Harataima",
     "lat": 35.52899,
     "lng": 139.37536,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "sagami"
     ]
@@ -45960,102 +46085,123 @@
   "st-dvqq": {
     "id": "st-dvqq",
     "name": "下溝",
-    "kana": "",
-    "en": "下溝",
+    "kana": "しもみぞ",
+    "en": "Shimomizo",
     "lat": 35.51832,
     "lng": 139.38051,
-    "pref": "東京都",
-    "lines": []
+    "pref": "神奈川県",
+    "lines": [
+      "sagami"
+    ]
   },
   "st-fgbx1l": {
     "id": "st-fgbx1l",
     "name": "相武台下",
-    "kana": "",
-    "en": "相武台下",
+    "kana": "そうぶだいした",
+    "en": "Sobudai-shita",
     "lat": 35.49278,
     "lng": 139.38632,
     "pref": "神奈川県",
-    "lines": []
+    "lines": [
+      "sagami"
+    ]
   },
   "st-qn38": {
     "id": "st-qn38",
     "name": "香川",
-    "kana": "",
-    "en": "香川",
+    "kana": "かがわ",
+    "en": "Kagawa",
     "lat": 35.3566,
     "lng": 139.39983,
     "pref": "神奈川県",
-    "lines": []
+    "lines": [
+      "sagami"
+    ]
   },
   "st-mfdd5": {
     "id": "st-mfdd5",
     "name": "門沢橋",
-    "kana": "",
-    "en": "門沢橋",
+    "kana": "かどさわばし",
+    "en": "Kadosawabashi",
     "lat": 35.4067,
     "lng": 139.38006,
     "pref": "神奈川県",
-    "lines": []
+    "lines": [
+      "sagami"
+    ]
   },
   "st-l4jc": {
     "id": "st-l4jc",
     "name": "社家",
-    "kana": "",
-    "en": "社家",
+    "kana": "しゃけ",
+    "en": "Shake",
     "lat": 35.42041,
     "lng": 139.37719,
     "pref": "神奈川県",
-    "lines": []
+    "lines": [
+      "sagami"
+    ]
   },
   "st-ed9e": {
     "id": "st-ed9e",
     "name": "倉見",
-    "kana": "",
-    "en": "倉見",
+    "kana": "くらみ",
+    "en": "Kurami",
     "lat": 35.39506,
     "lng": 139.37838,
     "pref": "神奈川県",
-    "lines": []
+    "lines": [
+      "sagami"
+    ]
   },
   "st-jfp99": {
     "id": "st-jfp99",
     "name": "茅ヶ崎",
-    "kana": "",
-    "en": "茅ヶ崎",
+    "kana": "ちがさき",
+    "en": "Chigasaki",
     "lat": 35.33055,
     "lng": 139.40719,
     "pref": "神奈川県",
-    "lines": []
+    "lines": [
+      "tokaido",
+      "sagami"
+    ]
   },
   "st-b0pr8m": {
     "id": "st-b0pr8m",
-    "name": "北茅ヶ崎",
-    "kana": "",
-    "en": "北茅ヶ崎",
+    "name": "北茅ケ崎",
+    "kana": "きたちがさき",
+    "en": "Kita-Chigasaki",
     "lat": 35.33968,
     "lng": 139.40747,
     "pref": "神奈川県",
-    "lines": []
+    "lines": [
+      "sagami"
+    ]
   },
   "st-em42": {
     "id": "st-em42",
     "name": "入谷",
-    "kana": "",
-    "en": "入谷",
+    "kana": "いりや",
+    "en": "Iriya",
     "lat": 35.47838,
     "lng": 139.39187,
     "pref": "神奈川県",
-    "lines": []
+    "lines": [
+      "sagami"
+    ]
   },
   "st-g3nn": {
     "id": "st-g3nn",
     "name": "宮山",
-    "kana": "",
-    "en": "宮山",
+    "kana": "みややま",
+    "en": "Miyayama",
     "lat": 35.38222,
     "lng": 139.37966,
     "pref": "神奈川県",
-    "lines": []
+    "lines": [
+      "sagami"
+    ]
   },
   "ebina": {
     "id": "ebina",
@@ -48736,20 +48882,23 @@
     "en": "Tsurumi",
     "lat": 35.50766,
     "lng": 139.67575,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
-      "tsurumi-line"
+      "tsurumi-line",
+      "tokaido"
     ]
   },
   "st-kgo8c6": {
     "id": "st-kgo8c6",
     "name": "鶴見小野",
-    "kana": "",
-    "en": "鶴見小野",
+    "kana": "つるみおの",
+    "en": "Tsurumi-Ono",
     "lat": 35.49702,
     "lng": 139.68128,
     "pref": "神奈川県",
-    "lines": []
+    "lines": [
+      "tsurumi-line"
+    ]
   },
   "ogimachi": {
     "id": "ogimachi",
@@ -48790,42 +48939,50 @@
   "st-ecpab": {
     "id": "st-ecpab",
     "name": "弁天橋",
-    "kana": "",
-    "en": "弁天橋",
+    "kana": "べんてんばし",
+    "en": "Bentenbashi",
     "lat": 35.4958,
     "lng": 139.68948,
     "pref": "神奈川県",
-    "lines": []
+    "lines": [
+      "tsurumi-line"
+    ]
   },
   "st-fogm": {
     "id": "st-fogm",
     "name": "大川",
-    "kana": "",
-    "en": "大川",
+    "kana": "おおかわ",
+    "en": "Okawa",
     "lat": 35.49541,
     "lng": 139.71138,
-    "pref": "千葉県",
-    "lines": []
+    "pref": "神奈川県",
+    "lines": [
+      "tsurumi-line"
+    ]
   },
   "st-fj0gp": {
     "id": "st-fj0gp",
     "name": "新芝浦",
-    "kana": "",
-    "en": "新芝浦",
+    "kana": "しんしばうら",
+    "en": "Shin-Shibaura",
     "lat": 35.49192,
     "lng": 139.70013,
-    "pref": "千葉県",
-    "lines": []
+    "pref": "神奈川県",
+    "lines": [
+      "tsurumi-line"
+    ]
   },
   "st-hudb": {
     "id": "st-hudb",
     "name": "昭和",
-    "kana": "",
-    "en": "昭和",
+    "kana": "しょうわ",
+    "en": "Showa",
     "lat": 35.50689,
     "lng": 139.72393,
-    "pref": "千葉県",
-    "lines": []
+    "pref": "神奈川県",
+    "lines": [
+      "tsurumi-line"
+    ]
   },
   "asano": {
     "id": "asano",
@@ -48842,32 +48999,38 @@
   "st-fl6e": {
     "id": "st-fl6e",
     "name": "国道",
-    "kana": "",
-    "en": "国道",
+    "kana": "こくどう",
+    "en": "Kokudo",
     "lat": 35.50077,
     "lng": 139.67571,
-    "pref": "東京都",
-    "lines": []
+    "pref": "神奈川県",
+    "lines": [
+      "tsurumi-line"
+    ]
   },
   "st-e3qsx1": {
     "id": "st-e3qsx1",
     "name": "武蔵白石",
-    "kana": "",
-    "en": "武蔵白石",
+    "kana": "むさししらいし",
+    "en": "Musashi-Shiraishi",
     "lat": 35.50193,
     "lng": 139.70653,
-    "pref": "千葉県",
-    "lines": []
+    "pref": "神奈川県",
+    "lines": [
+      "tsurumi-line"
+    ]
   },
   "st-go0tc": {
     "id": "st-go0tc",
     "name": "海芝浦",
-    "kana": "",
-    "en": "海芝浦",
+    "kana": "うみしばうら",
+    "en": "Umi-Shibaura",
     "lat": 35.48613,
     "lng": 139.70067,
-    "pref": "千葉県",
-    "lines": []
+    "pref": "神奈川県",
+    "lines": [
+      "tsurumi-line"
+    ]
   },
   "st-fyqd": {
     "id": "st-fyqd",
@@ -49071,8 +49234,10 @@
     "en": "Omori",
     "lat": 35.58885,
     "lng": 139.7281,
-    "pref": "千葉県",
-    "lines": []
+    "pref": "東京都",
+    "lines": [
+      "tokaido"
+    ]
   },
   "hamamatsucho": {
     "id": "hamamatsucho",
@@ -49115,8 +49280,10 @@
     "en": "Oimachi",
     "lat": 35.60707,
     "lng": 139.73501,
-    "pref": "千葉県",
-    "lines": []
+    "pref": "東京都",
+    "lines": [
+      "tokaido"
+    ]
   },
   "yurakucho": {
     "id": "yurakucho",
@@ -49161,7 +49328,9 @@
     "lat": 35.48681,
     "lng": 139.6541,
     "pref": "神奈川県",
-    "lines": []
+    "lines": [
+      "tokaido"
+    ]
   },
   "kamata": {
     "id": "kamata",
@@ -49170,18 +49339,34 @@
     "en": "Kamata",
     "lat": 35.56248,
     "lng": 139.71604,
-    "pref": "千葉県",
-    "lines": []
+    "pref": "東京都",
+    "lines": [
+      "tokaido"
+    ]
   },
   "st-afn49v": {
     "id": "st-afn49v",
     "name": "保土ヶ谷",
-    "kana": "",
-    "en": "保土ヶ谷",
+    "kana": "ほどがや",
+    "en": "Hodogaya",
     "lat": 35.44722,
     "lng": 139.60037,
     "pref": "神奈川県",
-    "lines": []
+    "lines": [
+      "tokaido"
+    ]
+  },
+  "hodogaya": {
+    "id": "hodogaya",
+    "name": "保土ケ谷",
+    "kana": "ほどがや",
+    "en": "Hodogaya",
+    "lat": 35.44722,
+    "lng": 139.60037,
+    "pref": "神奈川県",
+    "lines": [
+      "tokaido"
+    ]
   },
   "totsuka": {
     "id": "totsuka",
@@ -49251,7 +49436,9 @@
     "lat": 35.43001,
     "lng": 139.55652,
     "pref": "神奈川県",
-    "lines": []
+    "lines": [
+      "tokaido"
+    ]
   },
   "ninomiya": {
     "id": "ninomiya",
@@ -56504,18 +56691,6 @@
     "en": "豊富",
     "lat": 45.1044,
     "lng": 141.77239,
-    "pref": "北海道",
-    "lines": [
-      "hokkaido-soya"
-    ]
-  },
-  "st-hdgb": {
-    "id": "st-hdgb",
-    "name": "抜海",
-    "kana": "",
-    "en": "抜海",
-    "lat": 45.3167,
-    "lng": 141.6447,
     "pref": "北海道",
     "lines": [
       "hokkaido-soya"

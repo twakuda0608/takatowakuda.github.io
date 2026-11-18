@@ -87,6 +87,7 @@
     'hakushin-line': '白新',
     'iiyama-line': '飯山',
     'oito-line': '大糸',
+    'oito-west': '大糸',
     'koumi-line': '小海',
 
     // 東海
@@ -106,7 +107,10 @@
     // 近畿・西日本
     'tokaido-west': '東海道',
     'sanyo-main': '山陽',
+    'sanyo-wadamisaki': '山陽',
     'sanin-main': '山陰',
+    'sanin-wadayama': '山陰',
+    'sanin-senzaki': '山陰',
     'osaka-loop': '大阪環',
     'jr-tozai': '東西',
     'fukuchiyama-line': '福知山',
@@ -131,6 +135,7 @@
     'uno-line': '宇野',
     'seto-ohashi-west': '本四備讃',
     'akaho-line': '赤穂',
+    'ako-line': '赤穂',
     'geibi-line': '芸備',
     'fukuen-line': '福塩',
     'kure-line': '呉',
@@ -141,11 +146,13 @@
     'ube-line': '宇部',
     'onoda-line': '小野田',
     'inbi-line': '因美',
+    'imbi-line': '因美',
     'sakai-line': '境',
     'kisuki-line': '木次',
 
     // 四国
     'shikoku-yosan': '予讃',
+    'shikoku-yosan-new': '予讃',
     'shikoku-dosan': '土讃',
     'shikoku-kotoku': '高徳',
     'shikoku-tokushima': '徳島',
@@ -158,7 +165,9 @@
     // 九州
     'kyushu-kagoshima': '鹿児島',
     'kyushu-nippo': '日豊',
+    'kyushu-sanyo': '山陽',
     'kyushu-nagasaki': '長崎',
+    'kyushu-nagasaki-nagayo': '長崎',
     'kyushu-sasebo': '佐世保',
     'kyushu-omura': '大村',
     'kyushu-kyudai': '久大',
@@ -168,6 +177,7 @@
     'kyushu-kitto': '吉都',
     'kyushu-nichinan': '日南',
     'kyushu-miyazaki-kuko': '宮崎空',
+    'kyushu-miyazaki-airport': '宮崎空',
     'kyushu-ibusuki': '指宿枕',
     'kyushu-chikuhi': '筑肥',
     'kyushu-karatsu': '唐津',
@@ -175,11 +185,15 @@
     'kyushu-sasaguri': '篠栗',
     'kyushu-gotoji': '後藤寺',
     'kyushu-kashii': '香椎',
+    'hakataminami-line': '博多南',
 
     // 北海道
     'hokkaido-hakodate': '函館',
+    'hokkaido-hakodate-sawara': '函館',
     'hokkaido-chitose': '千歳',
+    'hokkaido-chitose-airport': '千歳',
     'hokkaido-muroran': '室蘭',
+    'hokkaido-muroran-branch': '室蘭',
     'hokkaido-sekisho': '石勝',
     'hokkaido-nemuro': '根室',
     'hokkaido-furano': '富良野',
@@ -227,7 +241,7 @@
     '三河大塚': 305.2, '三河三谷': 308.3, '蒲郡': 310.6, '三河塩津': 312.9, '三ヶ根': 315.5, '幸田': 318.5, '相見': 321.6,
     '岡崎': 325.9, '西岡崎': 330.1, '安城': 333.7, '三河安城': 336.3, '東刈谷': 338.1, '野田新町': 339.7, '刈谷': 341.6,
     '逢妻': 343.5, '大府': 346.5, '共和': 349.5, '南大高': 351.8, '大高': 353.6, '笠寺': 356.8, '熱田': 360.8,
-    '金山': 363.6, '尾頭橋': 364.5, '名古屋': 366.0, '枇杷島': 370.0, '清洲': 373.8, '稲沢': 377.1, '尾張一宮': 383.1,
+    '金山': 362.7, '尾頭橋': 363.6, '名古屋': 366.0, '枇杷島': 370.0, '清洲': 373.8, '稲沢': 377.1, '尾張一宮': 383.1,
     '木曽川': 388.6, '岐阜': 396.3, '西岐阜': 399.5, '穂積': 402.3, '大垣': 410.0, '垂井': 418.1, '関ヶ原': 423.8,
     '柏原': 430.9, '近江長岡': 435.2, '醒ヶ井': 439.8, '米原': 445.9, '彦根': 451.9, '南彦根': 455.2, '河瀬': 458.0,
     '稲枝': 462.0, '能登川': 467.4, '安土': 472.8, '近江八幡': 477.4, '篠原': 481.4, '野洲': 487.0, '守山': 490.1,
@@ -307,16 +321,7 @@
 
     // 優先度 1: 路線データ (build-data.js の JR_LINES) に直接定義された営業キロプロパティ
     if (line) {
-      // 1-a: stationKilos (駅ごとの累計営業キロテーブル: { 'tokyo': 0.0, 'mitaka': 24.1, ... })
-      if (line.stationKilos) {
-        const kU = (uId && line.stationKilos[uId] !== undefined) ? line.stationKilos[uId] : line.stationKilos[stU.name];
-        const kV = (vId && line.stationKilos[vId] !== undefined) ? line.stationKilos[vId] : line.stationKilos[stV.name];
-        if (kU !== undefined && kV !== undefined) {
-          const d = Math.abs(kV - kU);
-          return { dist: Math.round(d * 10) / 10, isEstimated: false };
-        }
-      }
-      // 1-b: edgeDistances (隣接駅間の営業キロマップ: { 'st1-st2': 1.3, ... })
+      // 1-a: edgeDistances (隣接駅間の営業キロマップ: { 'st1-st2': 1.3, ... }) - 例外区間・環状線終端優先
       if (line.edgeDistances) {
         const k1 = `${uId}-${vId}`;
         const k2 = `${vId}-${uId}`;
@@ -325,6 +330,15 @@
         const d = line.edgeDistances[k1] ?? line.edgeDistances[k2] ??
                   line.edgeDistances[kName1] ?? line.edgeDistances[kName2];
         if (d !== undefined && d !== null) {
+          return { dist: Math.round(d * 10) / 10, isEstimated: false };
+        }
+      }
+      // 1-b: stationKilos (駅ごとの累計営業キロテーブル: { 'tokyo': 0.0, 'mitaka': 24.1, ... })
+      if (line.stationKilos) {
+        const kU = (uId && line.stationKilos[uId] !== undefined) ? line.stationKilos[uId] : line.stationKilos[stU.name];
+        const kV = (vId && line.stationKilos[vId] !== undefined) ? line.stationKilos[vId] : line.stationKilos[stV.name];
+        if (kU !== undefined && kV !== undefined) {
+          const d = Math.abs(kV - kU);
           return { dist: Math.round(d * 10) / 10, isEstimated: false };
         }
       }
@@ -421,6 +435,44 @@
           });
         }
       });
+
+      // 環状線（isLoop: true）の終端と先頭の接続（物理的近接時）
+      if (line.isLoop && line.stations && line.stations.length >= 3) {
+        const u = line.stations[line.stations.length - 1];
+        const v = line.stations[0];
+        const stU = stations[u];
+        const stV = stations[v];
+        if (stU && stV && calcDistKm(stU, stV) < 5.0) {
+          const edgeDistInfo = getEdgeDistance(line, stU, stV, u, v);
+          const dist = (typeof edgeDistInfo === 'object') ? edgeDistInfo.dist : edgeDistInfo;
+          const isEstimated = (typeof edgeDistInfo === 'object') ? !!edgeDistInfo.isEstimated : false;
+
+          if (!adj.has(u)) adj.set(u, []);
+          if (!adj.has(v)) adj.set(v, []);
+
+          adj.get(u).push({
+            to: v,
+            lineId: line.id,
+            lineName: line.name,
+            marsName: marsName,
+            color: line.color || '#0070c0',
+            isShinkansen: isShinkansen,
+            dist: dist,
+            isEstimated: isEstimated
+          });
+
+          adj.get(v).push({
+            to: u,
+            lineId: line.id,
+            lineName: line.name,
+            marsName: marsName,
+            color: line.color || '#0070c0',
+            isShinkansen: isShinkansen,
+            dist: dist,
+            isEstimated: isEstimated
+          });
+        }
+      }
     });
 
     cachedGraph = adj;
@@ -683,6 +735,12 @@
 
       leg.forEach(seg => {
         fullSegments.push(seg);
+        if (seg.from !== destination) {
+          visitedStations.add(seg.from);
+        }
+        if (seg.to !== destination) {
+          visitedStations.add(seg.to);
+        }
       });
     }
 

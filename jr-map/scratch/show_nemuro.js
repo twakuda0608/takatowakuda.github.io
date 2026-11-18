@@ -1,0 +1,11 @@
+const fs = require('fs');
+const code = fs.readFileSync('./jr-map/data/build-data.js', 'utf8');
+const target = '"id": "hokkaido-nemuro"';
+const idx = code.indexOf(target);
+const nextLine = code.indexOf('{\n    "id":', idx);
+console.log(code.substring(idx - 10, idx + 300));
+console.log('--- around furano ---');
+const idxFurano = code.indexOf('"st-e311n"', idx);
+console.log(code.substring(idxFurano - 100, idxFurano + 200));
+console.log('--- end ---');
+console.log(code.substring(nextLine - 150, nextLine));

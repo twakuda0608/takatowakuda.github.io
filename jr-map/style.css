@@ -638,6 +638,8 @@ body.theme-light .station-pref {
   margin-top: 16px;
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 .btn-primary {
   border: none;

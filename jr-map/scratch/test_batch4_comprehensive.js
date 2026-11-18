@@ -5,7 +5,7 @@ const sandbox = { window: {}, console, require, module: { exports: {} } };
 vm.createContext(sandbox);
 
 vm.runInContext(fs.readFileSync('jr-map/data/build-data.js', 'utf8'), sandbox);
-vm.runInContext(fs.readFileSync('C:/Users/Takato Wakuda/.gemini/antigravity-cli/brain/0fed1d73-5ea9-469b-b408-e44b39e3be6d/scratch/official_kilos_final_complete.js', 'utf8'), sandbox);
+vm.runInContext(fs.readFileSync('jr-map/data/official-kilos.js', 'utf8'), sandbox);
 vm.runInContext(fs.readFileSync('jr-map/route-engine.js', 'utf8'), sandbox);
 
 const RouteEngine = sandbox.window.JR_ROUTE_ENGINE;
@@ -139,13 +139,13 @@ const tests = [
     goal: getStationId("北海道医療大学", "hokkaido-sassho"),
     expectedKm: 28.9
   },
-  // 15. 博多 → 鹿児島中央 (九州新幹線) 256.8 km
+  // 15. 博多 → 鹿児島中央 (九州新幹線) 288.9 km
   {
     name: "博多 → 鹿児島中央 (九州新幹線全通)",
     start: getStationId("博多", "shinkansen-kyushu"),
     vias: [getStationId("熊本", "shinkansen-kyushu"), getStationId("新八代", "shinkansen-kyushu")],
     goal: getStationId("鹿児島中央", "shinkansen-kyushu"),
-    expectedKm: 256.8
+    expectedKm: 288.9
   },
   // 16. 門司港 → 八代 (鹿児島本線北部在来線全通) 232.3 km
   {

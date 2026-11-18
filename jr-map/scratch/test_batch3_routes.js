@@ -150,7 +150,7 @@ const tests = [
     start: "姫路",
     vias: ["津山"],
     goal: "新見",
-    expectedKm: 168.1
+    expectedKm: 158.1
   }
 ];
 
