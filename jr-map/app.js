@@ -3009,9 +3009,21 @@
     const resultContainer = document.getElementById('route-result-container');
     if (resultContainer) resultContainer.style.display = 'none';
 
+    // 新幹線区間指定と手動入力のリセット
     ROUTE_STATE.searchMode = 'shortest';
     ROUTE_STATE.shinkansenSegments = [];
+    const shFromInput = document.getElementById('shinkansen-from-input');
+    const shToInput = document.getElementById('shinkansen-to-input');
+    if (shFromInput) {
+      shFromInput.value = '';
+      shFromInput.removeAttribute('data-id');
+    }
+    if (shToInput) {
+      shToInput.value = '';
+      shToInput.removeAttribute('data-id');
+    }
     renderShinkansenSegmentsList();
+    updateShinkansenCandidateChips();
 
     document.querySelectorAll('.route-mode-btn').forEach(b => {
       if (b.getAttribute('data-mode') === 'shortest') {
@@ -3022,7 +3034,6 @@
     });
 
     clearRouteMapLayers();
-    ROUTE_STATE.lastResult = null;
     setSearchButtonEnabled(true);
   }
 
@@ -3062,19 +3073,37 @@
 
   function clearRouteMapLayers() {
     ROUTE_STATE.lastResult = null;
-    resetAllMapStyles();
-    updateStationVisibility();
-    updateLabelsVisibility();
 
-    ROUTE_STATE.activeRouteLayers.forEach(layer => {
-      map.removeLayer(layer);
-    });
+    // 経路ハイライトポリライン（通常・新幹線・重複区間）を確実に削除
+    if (ROUTE_STATE.activeRouteLayers && ROUTE_STATE.activeRouteLayers.length > 0) {
+      ROUTE_STATE.activeRouteLayers.forEach(layer => {
+        try {
+          map.removeLayer(layer);
+        } catch (e) {
+          console.warn('Failed to remove route layer:', e);
+        }
+      });
+    }
     ROUTE_STATE.activeRouteLayers = [];
 
-    ROUTE_STATE.activePinLayers.forEach(layer => {
-      map.removeLayer(layer);
-    });
+    // 発・経由・着ピンマーカーを確実に削除
+    if (ROUTE_STATE.activePinLayers && ROUTE_STATE.activePinLayers.length > 0) {
+      ROUTE_STATE.activePinLayers.forEach(layer => {
+        try {
+          map.removeLayer(layer);
+        } catch (e) {
+          console.warn('Failed to remove pin layer:', e);
+        }
+      });
+    }
     ROUTE_STATE.activePinLayers = [];
+
+    // 地図の通常スタイルおよびラベルを復元
+    resetAllMapStyles();
+    updateLineWeights();
+    updateStationMarkerSizes();
+    updateLabelsVisibility();
+    updateLineLabelsVisibility();
   }
 
   // 重複区間への自動フォーカス (ズーム & パン)
