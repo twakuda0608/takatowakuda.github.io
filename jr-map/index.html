@@ -165,7 +165,7 @@
           <!-- 探索モード切り替え -->
           <div class="route-mode-group" id="route-mode-selector">
             <button type="button" class="route-mode-btn active" data-mode="shortest" id="btn-mode-shortest">最短経路</button>
-            <button type="button" class="route-mode-btn" data-mode="oneway" id="btn-mode-oneway">※重複区間なし</button>
+            <button type="button" class="route-mode-btn" data-mode="oneway" id="btn-mode-oneway">重複区間なし</button>
           </div>
 
           <div class="route-options">
@@ -173,6 +173,39 @@
               <input type="checkbox" id="chk-use-shinkansen" checked>
               <span>新幹線利用</span>
             </label>
+            <button type="button" id="btn-toggle-shinkansen-segments" class="btn-text-action">特定区間新幹線指定 ▼</button>
+          </div>
+
+          <!-- 特定区間新幹線指定パネル -->
+          <div id="shinkansen-segments-panel" class="shinkansen-segments-panel" style="display: none;">
+            <div class="shinkansen-segments-header">
+              <span class="shinkansen-panel-label">新幹線乗車区間 (タップで指定/解除)</span>
+            </div>
+            <!-- ルート連動の候補チップ一覧 -->
+            <div id="shinkansen-candidate-container" class="shinkansen-candidate-container">
+              <div id="shinkansen-candidate-chips" class="shinkansen-candidate-chips">
+                <!-- 動的に生成される候補チップ -->
+              </div>
+            </div>
+            <div id="shinkansen-segments-list" class="shinkansen-segments-list" style="display: none;">
+              <!-- 追加済み新幹線区間バッジ -->
+            </div>
+            <!-- 手動追加用アコーディオン -->
+            <details class="shinkansen-custom-details">
+              <summary class="shinkansen-custom-summary">その他の区間を手動指定</summary>
+              <div class="shinkansen-add-row">
+                <div class="shinkansen-input-wrapper">
+                  <input type="text" id="shinkansen-from-input" class="route-station-input" placeholder="乗車駅" autocomplete="off">
+                  <div class="route-suggest-dropdown" id="shinkansen-from-suggest" style="display:none;"></div>
+                </div>
+                <button type="button" id="btn-swap-shinkansen-inputs" class="btn-swap-shinkansen" title="乗車駅と降車駅を入れ替え" aria-label="乗車駅と降車駅を入れ替え">⇄</button>
+                <div class="shinkansen-input-wrapper">
+                  <input type="text" id="shinkansen-to-input" class="route-station-input" placeholder="降車駅" autocomplete="off">
+                  <div class="route-suggest-dropdown" id="shinkansen-to-suggest" style="display:none;"></div>
+                </div>
+                <button type="button" id="btn-add-shinkansen-seg" class="btn-secondary btn-sm">追加</button>
+              </div>
+            </details>
           </div>
         </div>
 
@@ -187,7 +220,7 @@
           <!-- マルス券面風カード -->
           <div class="mars-ticket-card">
             <div class="ticket-header">
-              <span class="ticket-type">普通乗車券</span>
+              <span class="ticket-type" id="ticket-type-label">普通乗車券</span>
               <span class="ticket-status-badge" id="route-validity-badge">一筆書き成立</span>
             </div>
             <div class="ticket-stations-row">
@@ -199,6 +232,21 @@
               <div class="ticket-via-label">経由</div>
               <div class="ticket-via-text" id="ticket-via-text">中央東</div>
             </div>
+
+            <!-- 運賃ブロック -->
+            <div class="ticket-fare-block" id="ticket-fare-block">
+              <span class="fare-label">運賃:</span>
+              <span class="fare-value" id="ticket-base-fare">260円</span>
+            </div>
+
+            <!-- 旅規ルール (有効期間・途中下車) ブロック -->
+            <div class="ticket-rules-block">
+              <div class="rule-badge-row">
+                <span class="rule-badge" id="ticket-validity-badge">2日間有効</span>
+                <span class="rule-badge" id="ticket-stopover-badge">途中下車可能</span>
+              </div>
+            </div>
+
             <div class="ticket-footer-row">
               <span class="ticket-kilo" id="ticket-total-kilo">営業キロ: 10.3 km</span>
               <span class="ticket-kilo-warning" id="ticket-kilo-warning" style="display: none;"></span>
@@ -249,6 +297,8 @@
   <script src="data/tracks.js"></script>
   <!-- 共通スクリプト (戻るボタン等) -->
   <script src="/common.js"></script>
+  <!-- JR旅客営業規則 & 運賃計算エンジン -->
+  <script src="fare-engine.js"></script>
   <!-- マルス経路探索エンジン -->
   <script src="route-engine.js"></script>
   <!-- メインロジック -->

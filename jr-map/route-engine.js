@@ -509,14 +509,17 @@
       const neighbors = graph.get(curr.id) || [];
       for (const edge of neighbors) {
         if (!allowShinkansen && edge.isShinkansen) continue;
+        if (options.forceShinkansen && !edge.isShinkansen) continue;
         if (forbiddenStations.has(edge.to) && edge.to !== endId) continue;
 
         let transferPenalty = 0;
         if (curr.marsName && (curr.marsName !== edge.marsName)) {
           if (curr.isShinkansen !== edge.isShinkansen) {
-            transferPenalty = 40.0; // 新幹線と在来線の乗降ペナルティ
+            transferPenalty = options.forceShinkansen ? 0 : 40.0;
           } else {
-            transferPenalty = 10.0; // 同一種別間の路線乗り換えペナルティ
+            // 営業キロ計算は最短で行うため、ペナルティで遠回りルート（神田経由51.8km等）を選ばないよう
+            // 同一距離の場合にのみ乗り換えの少ない方を選ぶ微小タイブレーカー (0.01) とする
+            transferPenalty = 0.01;
           }
         }
 
@@ -658,6 +661,56 @@
     return resultCoords;
   }
 
+  /**
+   * 新幹線指定区間を経由駅リスト (stops) に自動統合・展開する
+   */
+  function expandStopsWithShinkansen(stops, shinkansenSegs, stations) {
+    if (!shinkansenSegs || shinkansenSegs.length === 0 || !stops || stops.length < 2) return stops;
+    let result = [...stops];
+
+    for (const seg of shinkansenSegs) {
+      const fromSt = stations[seg.fromId] || Object.values(stations).find(s => s.name === seg.from || s.name === seg.fromName);
+      const toSt = stations[seg.toId] || Object.values(stations).find(s => s.name === seg.to || s.name === seg.toName);
+      if (!fromSt || !toSt) continue;
+
+      const id1 = fromSt.id;
+      const id2 = toSt.id;
+
+      // 既に id1 と id2 が連続して含まれているかチェック
+      let alreadyPaired = false;
+      for (let i = 0; i < result.length - 1; i++) {
+        if ((result[i] === id1 && result[i + 1] === id2) || (result[i] === id2 && result[i + 1] === id1)) {
+          alreadyPaired = true;
+          break;
+        }
+      }
+      if (alreadyPaired) continue;
+
+      const idx1 = result.indexOf(id1);
+      const idx2 = result.indexOf(id2);
+
+      if (idx1 >= 0 && idx2 === -1) {
+        if (idx1 < result.length - 1) {
+          result.splice(idx1 + 1, 0, id2);
+        } else {
+          result.splice(idx1, 0, id2);
+        }
+      } else if (idx2 >= 0 && idx1 === -1) {
+        if (idx2 > 0) {
+          result.splice(idx2, 0, id1);
+        } else {
+          result.splice(idx2 + 1, 0, id1);
+        }
+      } else if (idx1 === -1 && idx2 === -1) {
+        if (result.length >= 2) {
+          result.splice(1, 0, id1, id2);
+        }
+      }
+    }
+
+    return result;
+  }
+
   // マルチストップルート探索メインAPI
   function searchMarsRoute(...args) {
     let graph, tracks, stations, stops, options;
@@ -691,6 +744,15 @@
       return { success: false, error: '発駅と着駅を指定してください。' };
     }
 
+    const rawStops = [...stops];
+
+    // 新幹線特定区間の探索設定
+    const shinkansenSegs = options.shinkansenSegments || [];
+    const forceShinkansenOnly = !!options.forceShinkansenOnlyInSegments;
+
+    // 新幹線指定区間を stops に自動統合
+    stops = expandStopsWithShinkansen(stops, shinkansenSegs, stations);
+
     const searchMode = options.searchMode || options.mode || 'shortest';
     const requireOneWay = (searchMode === 'oneway');
 
@@ -698,17 +760,57 @@
     const visitedStations = new Set();
     let hasDuplicate = false;
 
+    // 一周ルート (発着同一駅) の判定
+    const isLoopRoute = (stops.length >= 2 && stops[0] === stops[stops.length - 1]);
+
     for (let i = 0; i < stops.length - 1; i++) {
       const origin = stops[i];
       const destination = stops[i + 1];
+
+      // このレグが新幹線指定区間かどうか判定 (順方向・逆方向両対応)
+      const oSt = stations[origin];
+      const dSt = stations[destination];
+      const oName = oSt ? oSt.name : origin;
+      const dName = dSt ? dSt.name : destination;
+
+      const isThisLegShinkansen = shinkansenSegs.some(seg => {
+        const fromSt = stations[seg.fromId] || Object.values(stations).find(s => s.name === seg.from || s.name === seg.fromName);
+        const toSt = stations[seg.toId] || Object.values(stations).find(s => s.name === seg.to || s.name === seg.toName);
+        const fId = fromSt ? fromSt.id : seg.fromId;
+        const tId = toSt ? toSt.id : seg.toId;
+        const fName = fromSt ? fromSt.name : (seg.fromName || seg.from);
+        const tName = toSt ? toSt.name : (seg.toName || seg.to);
+
+        const matchForward = (origin === fId || oName === fName) && (destination === tId || dName === tName);
+        const matchReverse = (origin === tId || oName === tName) && (destination === fId || dName === fName);
+        return matchForward || matchReverse;
+      });
+
+      let legAllowShinkansen = (options.useShinkansen !== undefined) ? options.useShinkansen : (options.allowShinkansen !== false);
+      let legForceShinkansen = false;
+
+      if (isThisLegShinkansen) {
+        legAllowShinkansen = true;
+        legForceShinkansen = true;
+      } else if (forceShinkansenOnly) {
+        legAllowShinkansen = false;
+      }
 
       let leg = null;
       if (requireOneWay) {
         // 重複区間なし（一筆書き）モード: 訪問済み駅を禁止して探索
         leg = findLeg(graph, origin, destination, {
-          allowShinkansen: (options.useShinkansen !== undefined) ? options.useShinkansen : (options.allowShinkansen !== false),
+          allowShinkansen: legAllowShinkansen,
+          forceShinkansen: legForceShinkansen,
           forbiddenStations: visitedStations
         });
+        if (!leg && legForceShinkansen) {
+          // 新幹線強制で見つからない場合のフォールバック (在来線含め再探索)
+          leg = findLeg(graph, origin, destination, {
+            allowShinkansen: true,
+            forbiddenStations: visitedStations
+          });
+        }
         if (!leg) {
           const originName = (stations[origin] && stations[origin].name) || origin;
           const destName = (stations[destination] && stations[destination].name) || destination;
@@ -718,11 +820,18 @@
           };
         }
       } else {
-        // 最短経路モード: 禁止ノードなしで常に最短経路を探索
+        // 最短経路モード: 禁止ノードなしで探索
         leg = findLeg(graph, origin, destination, {
-          allowShinkansen: (options.useShinkansen !== undefined) ? options.useShinkansen : (options.allowShinkansen !== false),
+          allowShinkansen: legAllowShinkansen,
+          forceShinkansen: legForceShinkansen,
           forbiddenStations: new Set()
         });
+        if (!leg && legForceShinkansen) {
+          leg = findLeg(graph, origin, destination, {
+            allowShinkansen: true,
+            forbiddenStations: new Set()
+          });
+        }
         if (!leg) {
           const originName = (stations[origin] && stations[origin].name) || origin;
           const destName = (stations[destination] && stations[destination].name) || destination;
@@ -789,13 +898,19 @@
       arrivalCount.set(seg.to, (arrivalCount.get(seg.to) || 0) + 1);
     });
 
-    // 始点駅が途中で再訪問された場合も検知
+    // 始点駅が途中で再訪問された場合も検知 (一周ルートの場合は最後のゴール到着を除外)
     const originId = stops[0];
-    const originVisitedAgain = fullSegments.slice(1).some(s => s.from === originId || s.to === originId);
+    const intermediateSegments = isLoopRoute ? fullSegments.slice(1, -1) : fullSegments.slice(1);
+    const originVisitedAgain = intermediateSegments.some(s => s.from === originId || s.to === originId);
 
     const duplicateStationIds = [];
     arrivalCount.forEach((cnt, id) => {
-      if (cnt > 1) duplicateStationIds.push(id);
+      if (isLoopRoute && id === originId) {
+        // 一周ルートの終点としての1回到着は正常
+        if (cnt > 1) duplicateStationIds.push(id);
+      } else {
+        if (cnt > 1) duplicateStationIds.push(id);
+      }
     });
     if (originVisitedAgain && !duplicateStationIds.includes(originId)) {
       duplicateStationIds.push(originId);
@@ -845,27 +960,49 @@
     });
     const unregisteredLines = Array.from(unregisteredLinesSet);
 
-    // マルス経由線表記の生成 (例: 東海道・山手・中央東)
+    // マルス経由線表記の生成 (例: 東海道・山手・中央東 / 新幹線区間は「上野・新幹線・大宮」等)
     const marsNamesList = [];
-    lineRuns.forEach(r => {
-      if (marsNamesList.length === 0 || marsNamesList[marsNamesList.length - 1] !== r.marsName) {
-        marsNamesList.push(r.marsName);
+    for (let i = 0; i < lineRuns.length; i++) {
+      const r = lineRuns[i];
+      const deptSt = (stations[r.from] && stations[r.from].name) || r.from;
+      const destSt = (stations[r.to] && stations[r.to].name) || r.to;
+
+      if (r.isShinkansen) {
+        // 新幹線区間: 直前がその乗車駅でなければ乗換駅を追加し、「新幹線」、降車駅を表記
+        if (marsNamesList.length === 0 || marsNamesList[marsNamesList.length - 1] !== deptSt) {
+          marsNamesList.push(deptSt);
+        }
+        marsNamesList.push('新幹線');
+        marsNamesList.push(destSt);
+      } else {
+        // 在来線区間
+        if (marsNamesList.length === 0 || marsNamesList[marsNamesList.length - 1] !== r.marsName) {
+          marsNamesList.push(r.marsName);
+        }
       }
-    });
+    }
     const marsFormatString = marsNamesList.join('・');
 
     // 総距離 (0.1km単位の整数で合算してから10で割ることで浮動小数点誤差を完全防止)
     const totalDistTenths = fullSegments.reduce((sum, s) => sum + Math.round(s.dist * 10), 0);
     const totalDist = totalDistTenths / 10;
 
-    // 線路ジオメトリの抽出 (連続する通常区間・重複区間をそれぞれ1本の長い連続Polylineに連結)
+    // 線路ジオメトリの抽出 (連続する通常区間・新幹線区間・重複区間をそれぞれ1本の長い連続Polylineに連結)
     const geometryLatlngs = [];
     const normalPolylines = [];    // 通常通過区間の連続座標群 (青色用)
+    const shinkansenPolylines = []; // 新幹線通過区間の連続座標群 (新幹線専用ハイライト用)
     const duplicatePolylines = []; // 重複通過区間の連続座標群 (赤色用)
+
+    function pushPolylineChain(type, chain) {
+      if (!chain || chain.length === 0) return;
+      if (type === 'duplicate') duplicatePolylines.push(chain);
+      else if (type === 'shinkansen') shinkansenPolylines.push(chain);
+      else normalPolylines.push(chain);
+    }
 
     if (tracks) {
       let currentChain = [];
-      let currentIsDup = null;
+      let currentType = null;
 
       for (let s = 0; s < fullSegments.length; s++) {
         const seg = fullSegments[s];
@@ -879,12 +1016,12 @@
           geometryLatlngs.push(...coords);
         }
 
-        const isDup = !!seg.isDuplicate;
+        const segType = seg.isDuplicate ? 'duplicate' : (seg.isShinkansen ? 'shinkansen' : 'normal');
 
-        if (currentIsDup === null) {
-          currentIsDup = isDup;
+        if (currentType === null) {
+          currentType = segType;
           currentChain = [...coords];
-        } else if (currentIsDup === isDup) {
+        } else if (currentType === segType) {
           // 同一状態が連続: 駅ごとに分けないで1本の長いチェーンに連結！
           if (coords.length > 1) {
             currentChain.push(...coords.slice(1));
@@ -892,26 +1029,14 @@
             currentChain.push(...coords);
           }
         } else {
-          // 通常/重複の状態が切り替わったところで1本のPolylineとして確定
-          if (currentChain.length > 0) {
-            if (currentIsDup) {
-              duplicatePolylines.push(currentChain);
-            } else {
-              normalPolylines.push(currentChain);
-            }
-          }
-          currentIsDup = isDup;
+          // 通常/新幹線/重複の状態が切り替わったところで1本のPolylineとして確定
+          pushPolylineChain(currentType, currentChain);
+          currentType = segType;
           currentChain = [...coords];
         }
       }
 
-      if (currentChain.length > 0) {
-        if (currentIsDup) {
-          duplicatePolylines.push(currentChain);
-        } else {
-          normalPolylines.push(currentChain);
-        }
-      }
+      pushPolylineChain(currentType, currentChain);
     }
 
     // フォールバック: tracks がない、またはジオメトリ抽出できなかった場合は駅間座標を連続連結
@@ -922,7 +1047,7 @@
       });
 
       let currentChain = [];
-      let currentIsDup = null;
+      let currentType = null;
 
       for (let s = 0; s < fullSegments.length; s++) {
         const seg = fullSegments[s];
@@ -931,27 +1056,21 @@
         if (!st1 || !st2) continue;
 
         const coords = [[st1.lat, st1.lng], [st2.lat, st2.lng]];
-        const isDup = !!seg.isDuplicate;
+        const segType = seg.isDuplicate ? 'duplicate' : (seg.isShinkansen ? 'shinkansen' : 'normal');
 
-        if (currentIsDup === null) {
-          currentIsDup = isDup;
+        if (currentType === null) {
+          currentType = segType;
           currentChain = [...coords];
-        } else if (currentIsDup === isDup) {
+        } else if (currentType === segType) {
           currentChain.push(coords[1]);
         } else {
-          if (currentChain.length > 0) {
-            if (currentIsDup) duplicatePolylines.push(currentChain);
-            else normalPolylines.push(currentChain);
-          }
-          currentIsDup = isDup;
+          pushPolylineChain(currentType, currentChain);
+          currentType = segType;
           currentChain = [...coords];
         }
       }
 
-      if (currentChain.length > 0) {
-        if (currentIsDup) duplicatePolylines.push(currentChain);
-        else normalPolylines.push(currentChain);
-      }
+      pushPolylineChain(currentType, currentChain);
     }
 
     // UI用セクション一覧
@@ -978,6 +1097,81 @@
     // 通過するユニークな路線IDのリスト
     const passedLineIds = Array.from(new Set(fullSegments.map(s => s.lineId)));
 
+    // 山手線内特定区間 (旅規第70条) の最短営業キロ適用
+    let effectiveTotalKm = Math.round(totalDist * 10) / 10;
+    const isInternalCheck = !!options._isInternalCheck;
+
+    if (!isInternalCheck && shinkansenSegs && shinkansenSegs.length > 0) {
+      // 山手線内特定区間駅 (第70条対象駅) を通過しているか判定
+      const yamanoteCoreStations = new Set([
+        '東京', '有楽町', '新橋', '浜松町', '田町', '品川', '大崎', '五反田', '目黒', '恵比寿',
+        '渋谷', '原宿', '代々木', '新宿', '新大久保', '高田馬場', '目白', '池袋', '大塚', '巣鴨',
+        '駒込', '田端', '西日暮里', '日暮里', '鶯谷', '上野', '御徒町', '秋葉原', '神田',
+        '御茶ノ水', '赤羽', '十条', '板橋'
+      ]);
+
+      const passesYamanote = allStationIds.some(id => {
+        const st = stations[id];
+        return st && yamanoteCoreStations.has(st.name);
+      });
+
+      if (passesYamanote) {
+        try {
+          const shortestRoute = searchMarsRoute(graph, null, stations, rawStops, {
+            useShinkansen: false,
+            searchMode: 'shortest',
+            _isInternalCheck: true
+          });
+          if (shortestRoute && shortestRoute.success && shortestRoute.totalKm < effectiveTotalKm) {
+            effectiveTotalKm = shortestRoute.totalKm;
+          }
+        } catch (e) {
+          console.warn('Shortest route check failed:', e);
+        }
+      }
+    }
+
+    // 発着駅間の直接最短営業キロ (大都市近郊区間の運賃計算特例用)
+    let directShortestKm = effectiveTotalKm;
+    if (deptId === destId) {
+      directShortestKm = 0.0;
+    } else {
+      try {
+        const directLeg = findLeg(graph, deptId, destId, {
+          allowShinkansen: false,
+          useShinkansen: false
+        });
+        if (directLeg && directLeg.length > 0) {
+          const directTenths = directLeg.reduce((sum, seg) => sum + Math.round(seg.dist * 10), 0);
+          directShortestKm = directTenths / 10;
+        }
+      } catch (e) {
+        console.warn('Direct leg calculation failed:', e);
+      }
+    }
+
+    // 運賃・途中下車・有効期間等のJR旅客営業規則判定
+    let fareRules = null;
+    let fareMod = null;
+    if (typeof window !== 'undefined' && window.JR_FARE_ENGINE) {
+      fareMod = window.JR_FARE_ENGINE;
+    } else if (typeof require !== 'undefined') {
+      try {
+        fareMod = require('./fare-engine.js');
+      } catch (e) {}
+    }
+    if (fareMod && fareMod.evaluateRouteFareAndRules) {
+      fareRules = fareMod.evaluateRouteFareAndRules({
+        totalKm: effectiveTotalKm,
+        directShortestKm: directShortestKm,
+        sections: sections,
+        deptId: deptId,
+        destId: destId,
+        allStationIds: allStationIds,
+        success: true
+      }, stations, cachedLines || [], options);
+    }
+
     return {
       success: true,
       deptId: deptId,
@@ -986,13 +1180,18 @@
       destName: destName,
       viaIds: viaIds,
       marsString: marsFormatString,
-      totalKm: Math.round(totalDist * 10) / 10,
+      totalKm: effectiveTotalKm,
+      directShortestKm: directShortestKm,
+      actualKm: Math.round(totalDist * 10) / 10,
       hasEstimatedDistance: hasEstimatedDistance,
       unregisteredLines: unregisteredLines,
       isOneWayTrip: !hasDuplicate,
+      isLoopRoute: isLoopRoute,
+      fareRules: fareRules,
       sections: sections,
       geometryLatlngs: geometryLatlngs,
       normalPolylines: normalPolylines,
+      shinkansenPolylines: shinkansenPolylines,
       duplicatePolylines: duplicatePolylines,
       passedLineIds: passedLineIds,
 
@@ -1001,7 +1200,7 @@
       stops: stops,
       marsFormat: marsFormatString,
       marsNamesList: marsNamesList,
-      totalDist: Math.round(totalDist * 10) / 10,
+      totalDist: effectiveTotalKm,
       lineRuns: lineRuns,
       allStationIds: allStationIds,
       duplicateStationIds: duplicateStationIds

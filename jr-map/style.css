@@ -1315,6 +1315,17 @@ body.theme-light .station-pref {
   background: #0369a1;
   transform: translateY(-1px);
 }
+.btn-search-route:disabled {
+  background: #cbd5e1;
+  color: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.btn-search-route:disabled:hover {
+  background: #cbd5e1;
+  transform: none;
+}
 .btn-clear-route {
   flex: 1;
   background: #f1f5f9;
@@ -1623,6 +1634,21 @@ body.theme-light .station-pref {
   stroke-linejoin: round;
 }
 
+/* 新幹線区間ハイライト線 (濃紺ロイヤルブルー + 白高速ストライプ破線) */
+.route-shinkansen-glow {
+  filter: drop-shadow(0 0 9px rgba(37, 99, 235, 0.85));
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.route-shinkansen-core {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.route-shinkansen-stripe {
+  stroke-linecap: butt;
+  stroke-linejoin: round;
+}
+
 /* ルート探索用マップピンマーカー */
 .route-map-pin {
   display: flex;
@@ -1669,4 +1695,255 @@ body.theme-light .station-pref {
     max-width: none;
     max-height: calc(100dvh - 80px);
   }
+}
+
+/* マルス券面 運賃・料金ブロック */
+.ticket-fare-block {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.fare-label {
+  font-size: 13px;
+  color: #166534;
+  font-weight: 700;
+}
+.fare-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: #15803d;
+  font-feature-settings: "tnum";
+}
+
+/* 旅規ルール (有効日数・途中下車) ブロック */
+.ticket-rules-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.rule-badge-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.rule-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
+}
+.rule-badge.badge-success {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+.rule-badge.badge-neutral {
+  background: #e2e8f0;
+  color: #475569;
+}
+.rule-badge.badge-shinkansen {
+  background: #e0f2fe;
+  color: #0284c7;
+  border: 1px solid #7dd3fc;
+}
+
+/* 特定区間新幹線指定パネル */
+.shinkansen-segments-panel {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+.shinkansen-segments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.shinkansen-panel-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0369a1;
+}
+.shinkansen-segments-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+/* 新幹線候補区間チップ */
+.shinkansen-candidate-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.shinkansen-candidate-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.shinkansen-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 2px 4px 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #334155;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.shinkansen-chip:hover {
+  background: #f0f9ff;
+  border-color: #7dd3fc;
+  color: #0369a1;
+}
+.shinkansen-chip.is-active {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.35);
+}
+.shinkansen-chip-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 1px 2px;
+}
+.shinkansen-chip-swap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  padding: 1px 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: inherit;
+  cursor: pointer;
+  margin-left: 2px;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+.shinkansen-chip-swap:hover {
+  background: rgba(0, 0, 0, 0.15);
+  transform: scale(1.1);
+}
+.shinkansen-chip.is-active .shinkansen-chip-swap {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+.shinkansen-chip.is-active .shinkansen-chip-swap:hover {
+  background: rgba(255, 255, 255, 0.45);
+}
+.shinkansen-chip-sub {
+  font-size: 10px;
+  opacity: 0.85;
+}
+.shinkansen-custom-details {
+  margin-top: 4px;
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 4px;
+}
+.shinkansen-custom-summary {
+  font-size: 11px;
+  color: #64748b;
+  cursor: pointer;
+  margin-bottom: 4px;
+  user-select: none;
+}
+.shinkansen-custom-summary:hover {
+  color: #0284c7;
+}
+.shinkansen-seg-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  border-radius: 14px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0284c7;
+}
+.btn-swap-seg {
+  background: none;
+  border: none;
+  color: #0284c7;
+  cursor: pointer;
+  padding: 0 3px;
+  font-size: 11px;
+  font-weight: bold;
+  transition: transform 0.15s ease;
+  line-height: 1;
+}
+.btn-swap-seg:hover {
+  color: #0369a1;
+  transform: scale(1.15);
+}
+.btn-del-seg {
+  background: none;
+  border: none;
+  color: #0284c7;
+  cursor: pointer;
+  padding: 0 2px;
+  font-weight: bold;
+}
+.btn-del-seg:hover {
+  color: #dc2626;
+}
+.shinkansen-add-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.shinkansen-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+.shinkansen-input-wrapper .route-station-input {
+  width: 100%;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+.btn-swap-shinkansen {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.btn-swap-shinkansen:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+  border-color: #94a3b8;
+  transform: scale(1.05);
 }
