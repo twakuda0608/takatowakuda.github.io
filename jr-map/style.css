@@ -1538,12 +1538,6 @@ body.theme-light .station-pref {
   align-items: center;
   gap: 6px;
 }
-.company-symbol-badge {
-  font-size: 13px;
-  font-weight: 900;
-  color: #1b4332;
-  letter-spacing: 0.5px;
-}
 .ticket-title {
   font-size: 14px;
   font-weight: 900;

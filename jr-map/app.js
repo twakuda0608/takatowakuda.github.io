@@ -133,6 +133,7 @@
 
     prepareStationSearchIndex();
     normalizeStationPrefectures();
+    initDuplicateStations();
     precomputeStationScores();
     initMap();
     initLabelPool();
@@ -153,6 +154,82 @@
       st._kanaLower = (st.kana || '').toLowerCase();
       st._enLower = (st.en || '').toLowerCase();
     }
+  }
+
+  // =======================================================
+  // 同名駅の自動検出・UI表記（都道府県併記）・マルス表記マスタ
+  // =======================================================
+  const DUPLICATE_STATION_NAMES = new Set();
+  const DUPLICATE_STATION_IDS = new Map(); // id -> { name, pref, prefAbbr, uiName, marsName }
+
+  function getPrefAbbr(pref) {
+    if (!pref) return '';
+    if (pref === '北海道') return '北海道';
+    return pref.replace(/[都府県]$/, '');
+  }
+
+  function initDuplicateStations() {
+    if (!STATIONS) return;
+    const nameMap = {};
+    for (const id in STATIONS) {
+      const st = STATIONS[id];
+      if (!nameMap[st.name]) nameMap[st.name] = [];
+      nameMap[st.name].push({ id, ...st });
+    }
+    const marsMap = (window.JR_ROUTE_ENGINE && window.JR_ROUTE_ENGINE.MARS_DUPLICATE_STATION_MAP) || {};
+
+    for (const name in nameMap) {
+      const list = nameMap[name];
+      if (list.length > 1) {
+        DUPLICATE_STATION_NAMES.add(name);
+        for (const st of list) {
+          const prefAbbr = getPrefAbbr(st.pref);
+          const uiName = `${st.name}（${prefAbbr}）`;
+          const marsName = marsMap[st.id] || st.name;
+          const info = {
+            id: st.id,
+            name: st.name,
+            pref: st.pref,
+            prefAbbr,
+            uiName,
+            marsName
+          };
+          DUPLICATE_STATION_IDS.set(st.id, info);
+          if (STATIONS[st.id]) {
+            STATIONS[st.id]._uiName = uiName;
+            STATIONS[st.id]._marsName = marsName;
+            STATIONS[st.id]._isDuplicate = true;
+          }
+        }
+      }
+    }
+  }
+
+  function getStationUiName(stOrId) {
+    if (!stOrId) return '';
+    const id = typeof stOrId === 'string' ? stOrId : stOrId.id;
+    if (DUPLICATE_STATION_IDS.has(id)) {
+      return DUPLICATE_STATION_IDS.get(id).uiName;
+    }
+    const st = STATIONS[id] || (typeof stOrId === 'object' ? stOrId : null);
+    if (!st) return typeof stOrId === 'string' ? stOrId : '';
+    if (DUPLICATE_STATION_NAMES.has(st.name)) {
+      const prefAbbr = getPrefAbbr(st.pref);
+      return `${st.name}（${prefAbbr}）`;
+    }
+    return st.name;
+  }
+
+  function getStationMarsName(stOrId) {
+    if (!stOrId) return '';
+    const id = typeof stOrId === 'string' ? stOrId : stOrId.id;
+    if (DUPLICATE_STATION_IDS.has(id)) {
+      return DUPLICATE_STATION_IDS.get(id).marsName;
+    }
+    const marsMap = (window.JR_ROUTE_ENGINE && window.JR_ROUTE_ENGINE.MARS_DUPLICATE_STATION_MAP) || {};
+    if (marsMap[id]) return marsMap[id];
+    const st = STATIONS[id] || (typeof stOrId === 'object' ? stOrId : null);
+    return st ? st.name : (typeof stOrId === 'string' ? stOrId : '');
   }
 
   // 駅の優先度スコア・局所孤立度（過疎地域判定）の事前計算 (起動時に1回のみ高速実行)
@@ -1606,7 +1683,7 @@
     document.getElementById('sheet-pref').textContent = st.pref;
     document.getElementById('sheet-kana').textContent = st.kana;
     document.getElementById('sheet-en').textContent = st.en;
-    document.getElementById('sheet-name').textContent = st.name;
+    document.getElementById('sheet-name').textContent = getStationUiName(st);
 
     const linesContainer = document.getElementById('sheet-lines');
     linesContainer.innerHTML = '';
@@ -1641,12 +1718,12 @@
       hasAdj = true;
 
       const prevHtml = prevList
-        .map(id => STATIONS[id] ? `<span class="adj-link" data-id="${id}">${STATIONS[id].name}</span>` : '')
+        .map(id => STATIONS[id] ? `<span class="adj-link" data-id="${id}">${getStationUiName(STATIONS[id])}</span>` : '')
         .filter(Boolean)
         .join('・');
 
       const nextHtml = nextList
-        .map(id => STATIONS[id] ? `<span class="adj-link" data-id="${id}">${STATIONS[id].name}</span>` : '')
+        .map(id => STATIONS[id] ? `<span class="adj-link" data-id="${id}">${getStationUiName(STATIONS[id])}</span>` : '')
         .filter(Boolean)
         .join('・');
 
@@ -1709,8 +1786,15 @@
   // =======================================================
   function searchStations(query, limit = 8, referenceStation = null) {
     if (!query) return [];
-    const q = query.trim().toLowerCase();
+    let q = query.trim().toLowerCase();
     if (!q) return [];
+
+    let targetPrefFilter = null;
+    const parenM = q.match(/^(.+?)[（\(](.*?)[）\)]?$/);
+    if (parenM) {
+      q = parenM[1].trim();
+      targetPrefFilter = parenM[2].trim().replace(/[都府県]$/, '');
+    }
 
     const scored = [];
     for (const id in STATIONS) {
@@ -1745,6 +1829,15 @@
       }
 
       if (score > 0) {
+        // 都道府県フィルタがある場合のボーナス
+        if (targetPrefFilter) {
+          const prefAbbr = getPrefAbbr(st.pref).toLowerCase();
+          if (prefAbbr === targetPrefFilter || prefAbbr.startsWith(targetPrefFilter)) {
+            score += 20000;
+          } else if (prefAbbr.includes(targetPrefFilter)) {
+            score += 10000;
+          }
+        }
         // 路線数による加点 (ターミナル駅・乗換駅を優先)
         const lineCount = (st.lines && Array.isArray(st.lines)) ? st.lines.length : 1;
         score += lineCount * 5;
@@ -1809,13 +1902,13 @@
         item.className = `search-item ${idx === 0 ? 'active' : ''}`;
         item.innerHTML = `
           <div class="search-item-info">
-            <span class="search-item-name">${st.name}</span>
+            <span class="search-item-name">${getStationUiName(st)}</span>
             <span class="search-item-kana">${st.kana} (${st.en})</span>
           </div>
           <span class="search-item-pref">${st.pref}</span>
         `;
         item.addEventListener('click', () => {
-          input.value = st.name;
+          input.value = getStationUiName(st);
           results.style.display = 'none';
           selectStation(st.id);
         });
@@ -2114,7 +2207,9 @@
             const sA = stIds[i], sB = stIds[i + 1];
             const nA = STATIONS[sA] ? STATIONS[sA].name : sA;
             const nB = STATIONS[sB] ? STATIONS[sB].name : sB;
-            const d = line.edgeDistances[`${sA}--${sB}`] ?? line.edgeDistances[`${sB}--${sA}`] ??
+            const d = line.edgeDistances[`${sA}-${sB}`] ?? line.edgeDistances[`${sB}-${sA}`] ??
+                      line.edgeDistances[`${sA}--${sB}`] ?? line.edgeDistances[`${sB}--${sA}`] ??
+                      line.edgeDistances[`${nA}-${nB}`] ?? line.edgeDistances[`${nB}-${nA}`] ??
                       line.edgeDistances[`${nA}--${nB}`] ?? line.edgeDistances[`${nB}--${nA}`];
             if (d !== undefined && d > 0) {
               sumKm += d;
@@ -2412,16 +2507,16 @@
       const isSelected = activeIdx >= 0;
 
       // 指定中の場合は、指定されている実際の向きをチップの表示に反映
-      let displayFrom = effPair.from;
-      let displayTo = effPair.to;
       let displayFromId = effPair.fromId;
       let displayToId = effPair.toId;
+      let displayFrom = getStationUiName(displayFromId || effPair.from);
+      let displayTo = getStationUiName(displayToId || effPair.to);
 
       if (isSelected) {
-        displayFrom = activeSegs[activeIdx].fromName;
-        displayTo = activeSegs[activeIdx].toName;
         displayFromId = activeSegs[activeIdx].fromId;
         displayToId = activeSegs[activeIdx].toId;
+        displayFrom = getStationUiName(displayFromId || activeSegs[activeIdx].fromName);
+        displayTo = getStationUiName(displayToId || activeSegs[activeIdx].toName);
       }
 
       const chip = document.createElement('div');
@@ -2530,7 +2625,7 @@
     const deptInput = document.getElementById('route-dept-input');
     const deptSuggest = document.getElementById('route-dept-suggest');
     setupStationSuggest(deptInput, deptSuggest, (st) => {
-      deptInput.value = st.name;
+      deptInput.value = getStationUiName(st);
       deptInput.setAttribute('data-id', st.id);
       updateShinkansenCandidateChips();
       markInputChanged();
@@ -2540,7 +2635,7 @@
     const destInput = document.getElementById('route-dest-input');
     const destSuggest = document.getElementById('route-dest-suggest');
     setupStationSuggest(destInput, destSuggest, (st) => {
-      destInput.value = st.name;
+      destInput.value = getStationUiName(st);
       destInput.setAttribute('data-id', st.id);
       updateShinkansenCandidateChips();
       markInputChanged();
@@ -2640,14 +2735,14 @@
     const shToSuggest = document.getElementById('shinkansen-to-suggest');
     if (shFromInput && shFromSuggest) {
       setupStationSuggest(shFromInput, shFromSuggest, (st) => {
-        shFromInput.value = st.name;
+        shFromInput.value = getStationUiName(st);
         shFromInput.setAttribute('data-id', st.id);
         markInputChanged();
       }, () => getDeptStation());
     }
     if (shToInput && shToSuggest) {
       setupStationSuggest(shToInput, shToSuggest, (st) => {
-        shToInput.value = st.name;
+        shToInput.value = getStationUiName(st);
         shToInput.setAttribute('data-id', st.id);
         markInputChanged();
       }, () => getDeptStation());
@@ -2780,7 +2875,7 @@
         if (!STATE.selectedStationId) return;
         const st = STATIONS[STATE.selectedStationId];
         if (!st) return;
-        deptInput.value = st.name;
+        deptInput.value = getStationUiName(st);
         deptInput.setAttribute('data-id', st.id);
         markInputChanged();
         toggleRoutePanel(true);
@@ -2805,7 +2900,7 @@
         if (!STATE.selectedStationId) return;
         const st = STATIONS[STATE.selectedStationId];
         if (!st) return;
-        destInput.value = st.name;
+        destInput.value = getStationUiName(st);
         destInput.setAttribute('data-id', st.id);
         markInputChanged();
         toggleRoutePanel(true);
@@ -2849,11 +2944,15 @@
       displayFare = (isStudentEligible && fr.studentFare !== undefined) ? fr.studentFare : (fr.adultFare || fr.baseFare || 0);
     }
 
-    const deptPrint = fr.displayDeptName || result.deptName;
-    const destPrint = fr.displayDestName || result.destName;
-    const hasDeptSub = fr.deptZoneApplied && deptPrint !== result.deptName;
-    const hasDestSub = fr.destZoneApplied && destPrint !== result.destName;
-    const subRouteStr = (hasDeptSub || hasDestSub) ? `（実乗車：${result.deptName} → ${result.destName}）\n` : '';
+    const deptMars = getStationMarsName(result.deptId || result.deptName);
+    const destMars = getStationMarsName(result.destId || result.destName);
+    const deptPrint = fr.deptZoneApplied ? fr.displayDeptName : deptMars;
+    const destPrint = fr.destZoneApplied ? fr.displayDestName : destMars;
+    const deptUi = getStationUiName(result.deptId || result.deptName);
+    const destUi = getStationUiName(result.destId || result.destName);
+    const hasDeptSub = fr.deptZoneApplied && deptPrint !== deptUi;
+    const hasDestSub = fr.destZoneApplied && destPrint !== destUi;
+    const subRouteStr = (hasDeptSub || hasDestSub) ? `（実乗車：${deptUi} → ${destUi}）\n` : '';
 
     const act = (result.actualKm !== undefined ? result.actualKm : result.totalKm);
     const effectiveKm = (result.totalKm !== undefined ? result.totalKm : act);
@@ -2891,54 +2990,13 @@
     ].filter(Boolean).join('\n');
   }
 
-  // 会社記号の解決
-  function getCompanySymbol(result) {
-    let comp = null;
-    if (result.deptId && STATIONS[result.deptId] && STATIONS[result.deptId].company) {
-      comp = STATIONS[result.deptId].company;
-    }
-    if (!comp && result.sections && result.sections.length > 0) {
-      const firstSec = result.sections[0];
-      if (window.JR_FARE_ENGINE && window.JR_FARE_ENGINE.getLineCompany) {
-        comp = window.JR_FARE_ENGINE.getLineCompany(
-          firstSec.lineId,
-          firstSec.lineName,
-          firstSec.from || firstSec.deptId,
-          firstSec.to || firstSec.destId,
-          STATIONS
-        );
-      }
-    }
-    if (!comp && result.fareRules) {
-      comp = result.fareRules.primaryCompany;
-    }
-    const symbols = {
-      east: '[東]',
-      central: '[海]',
-      west: '[西]',
-      hokkaido: '[北]',
-      shikoku: '[四]',
-      kyushu: '[九]'
-    };
-    return (comp && symbols[comp]) || '[東]';
-  }
-  if (typeof window !== 'undefined') {
-    window.getCompanySymbol = getCompanySymbol;
-  }
-
   // 本格マルス券面 & 内訳カードの描画
   function renderMarsTicket(result) {
     if (!result) return;
     const fr = result.fareRules || {};
     const fareType = ROUTE_STATE.currentFareType || 'adult';
 
-    // 1. 会社記号
-    const compSymbolEl = document.getElementById('ticket-company-symbol');
-    if (compSymbolEl) {
-      compSymbolEl.textContent = getCompanySymbol(result);
-    }
-
-    // 2. 券タイトル
+    // 1. 券タイトル
     const typeLabel = document.getElementById('ticket-type-label');
     if (typeLabel) {
       if (fr && !fr.isAvailable) {
@@ -2950,21 +3008,24 @@
       }
     }
 
-    // 3. 発着駅表示（特定都区市内・山手線内）
+    // 2. 発着駅表示（特定都区市内・山手線内ゾーン名優先、それ以外はマルス正式略号）
     const deptNameEl = document.getElementById('ticket-dept-name');
     const deptSubEl = document.getElementById('ticket-dept-sub');
     const destNameEl = document.getElementById('ticket-dest-name');
     const destSubEl = document.getElementById('ticket-dest-sub');
 
-    const displayDept = fr.displayDeptName || result.deptName;
-    const displayDest = fr.displayDestName || result.destName;
+    const displayDept = fr.deptZoneApplied ? fr.displayDeptName : getStationMarsName(result.deptId || result.deptName);
+    const displayDest = fr.destZoneApplied ? fr.displayDestName : getStationMarsName(result.destId || result.destName);
 
     if (deptNameEl) deptNameEl.textContent = displayDept;
     if (destNameEl) destNameEl.textContent = displayDest;
 
+    const deptUi = getStationUiName(result.deptId || result.deptName);
+    const destUi = getStationUiName(result.destId || result.destName);
+
     if (deptSubEl) {
-      if (fr.deptZoneApplied && displayDept !== result.deptName) {
-        deptSubEl.textContent = `実乗車: ${result.deptName}`;
+      if (fr.deptZoneApplied && displayDept !== deptUi) {
+        deptSubEl.textContent = `実乗車: ${deptUi}`;
         deptSubEl.style.display = 'block';
       } else {
         deptSubEl.textContent = '';
@@ -2973,8 +3034,8 @@
     }
 
     if (destSubEl) {
-      if (fr.destZoneApplied && displayDest !== result.destName) {
-        destSubEl.textContent = `実乗車: ${result.destName}`;
+      if (fr.destZoneApplied && displayDest !== destUi) {
+        destSubEl.textContent = `実乗車: ${destUi}`;
         destSubEl.style.display = 'block';
       } else {
         destSubEl.textContent = '';
@@ -3317,7 +3378,7 @@
         const item = document.createElement('div');
         item.className = 'suggest-item' + (idx === 0 ? ' selected' : '');
         item.innerHTML = `
-          <span class="suggest-st-name">${st.name}</span>
+          <span class="suggest-st-name">${getStationUiName(st)}</span>
           <span class="suggest-st-meta">${st.pref}・${st.kana}</span>
         `;
         item.addEventListener('click', (e) => {
@@ -3564,14 +3625,14 @@
     });
 
     setupStationSuggest(input, dropdown, (st) => {
-      input.value = st.name;
+      input.value = getStationUiName(st);
       input.setAttribute('data-id', st.id);
       updateShinkansenCandidateChips();
       markInputChanged();
     }, () => getDeptStation());
 
     if (initialStation) {
-      input.value = initialStation.name;
+      input.value = getStationUiName(initialStation);
       input.setAttribute('data-id', initialStation.id);
     }
 
@@ -3597,6 +3658,40 @@
 
   function findStationByName(query, refSt = null) {
     if (!query) return null;
+    const q = query.trim();
+
+    // 1. 括弧付き表記からの逆引き (例: "郡山（福島）", "郡山(福島)", "郡山（福島県）")
+    const parenMatch = q.match(/^(.+?)[（\(](.+?)[）\)]$/);
+    if (parenMatch) {
+      const namePart = parenMatch[1].trim();
+      const prefPart = parenMatch[2].trim().replace(/[都府県]$/, '');
+      for (const id in STATIONS) {
+        const st = STATIONS[id];
+        if (st.name === namePart) {
+          const stPrefAbbr = getPrefAbbr(st.pref);
+          if (stPrefAbbr === prefPart || st.pref.includes(prefPart) || prefPart.includes(stPrefAbbr)) {
+            return st;
+          }
+        }
+      }
+    }
+
+    // 2. STATIONSの完全一致（駅名そのもの）
+    const exactMatches = Object.values(STATIONS).filter(s => s.name === q);
+    if (exactMatches.length === 1) {
+      return exactMatches[0];
+    } else if (exactMatches.length > 1) {
+      if (refSt && refSt.lat != null && refSt.lng != null) {
+        exactMatches.sort((a, b) => {
+          const dA = Math.hypot(a.lat - refSt.lat, a.lng - refSt.lng);
+          const dB = Math.hypot(b.lat - refSt.lat, b.lng - refSt.lng);
+          return dA - dB;
+        });
+      }
+      return exactMatches[0];
+    }
+
+    // 3. searchStations によるスコア検索
     const matches = searchStations(query, 1, refSt);
     return matches.length > 0 ? matches[0] : null;
   }
@@ -3688,7 +3783,7 @@
             <span>${sec.lineName}</span>
             <span class="mars-pill ${isDup ? 'pill-duplicate' : ''}">${isDup ? '重複' : sec.marsName}</span>
           </div>
-          <div class="route-section-stations">${sec.deptName} → ${sec.destName} (${sec.stationCount}駅)</div>
+          <div class="route-section-stations">${getStationUiName(sec.from || sec.deptName)} → ${getStationUiName(sec.to || sec.destName)} (${sec.stationCount}駅)</div>
         </div>
         <div class="route-section-kilo" style="${isDup ? 'color:#dc2626;font-weight:800;' : ''}">${sec.km.toFixed(1)} km</div>
       `;

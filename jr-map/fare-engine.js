@@ -763,17 +763,29 @@
     const zones = FareRulesData.SPECIFIC_CITY_ZONES;
     const yamanoteZone = zones.yamanote;
 
+    // 同名駅の他都道府県誤判定を防ぐためのゾーン所属チェック (中心駅との近接判定)
+    function isStationInZone(stId, stName, zone) {
+      if (!zone || !zone.stationNames.has(stName)) return false;
+      if (!stId || !stations || !stations[stId]) return true;
+      const st = stations[stId];
+      const centerSt = stations[zone.centerId];
+      if (!centerSt || st.lat == null || centerSt.lat == null) return true;
+      const dLat = Math.abs(st.lat - centerSt.lat);
+      const dLng = Math.abs(st.lng - centerSt.lng);
+      return (dLat < 0.8 && dLng < 0.8);
+    }
+
     // 1. 発駅・着駅が属する特定都区市内ゾーン（tokyo, osaka, etc.）
     let deptCityZone = null;
     let destCityZone = null;
     for (const [key, z] of Object.entries(zones)) {
       if (key === 'yamanote') continue;
-      if (z.stationNames.has(deptStationName)) deptCityZone = z;
-      if (z.stationNames.has(destStationName)) destCityZone = z;
+      if (isStationInZone(deptId, deptStationName, z)) deptCityZone = z;
+      if (isStationInZone(destId, destStationName, z)) destCityZone = z;
     }
 
-    const isDeptYamanote = yamanoteZone.stationNames.has(deptStationName);
-    const isDestYamanote = yamanoteZone.stationNames.has(destStationName);
+    const isDeptYamanote = isStationInZone(deptId, deptStationName, yamanoteZone);
+    const isDestYamanote = isStationInZone(destId, destStationName, yamanoteZone);
 
     // 同一都市圏内相互発着の除外（単駅扱い）
     if (deptCityZone && destCityZone && deptCityZone.id === destCityZone.id) {
@@ -809,8 +821,8 @@
     function checkReentry(zone) {
       if (!zone) return false;
       let state = 0; // 0: 初期(未進入), 1: ゾーン内, 2: ゾーン外離脱
-      for (const name of passedNames) {
-        const inZone = zone.stationNames.has(name);
+      for (const seg of segments) {
+        const inZone = isStationInZone(seg.to, stations[seg.to]?.name, zone);
         if (state === 0 && inZone) state = 1;
         else if (state === 1 && !inZone) state = 2;
         else if (state === 2 && inZone) return true; // 再進入検出

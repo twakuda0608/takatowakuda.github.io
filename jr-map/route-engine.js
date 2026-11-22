@@ -3,7 +3,7 @@
  * マルス経由線名算出 & 一筆書き・最短経路探索エンジン
  */
 (function() {
-  // 1. マルス路線名辞書 (JR旅客営業規則・マルス経由線略称)
+  // 1. マルス路線名辞書 (JR旅客営業規則・マルス経由線略称・kiha54500準拠)
   const MARS_LINE_NAMES = {
     // 新幹線
     'shinkansen-tokaido': '東海新',
@@ -15,47 +15,47 @@
     'shinkansen-nishi-kyushu': '西九州新',
     'shinkansen-hokkaido': '北海新',
     'shinkansen-yamagata': '奥羽',
-    'shinkansen-akita': '田沢湖',
+    'shinkansen-akita': '田沢湖線',
 
     // 関東・東日本主要幹線
     'yamanote': '山手',
     'tokaido': '東海道',
     'chuo-main': '中央東',
-    'chuo-tatsuno': '辰野',
+    'chuo-tatsuno': '中央２',
     'tokai-chuo': '中央西',
     'sobu-main': '総武',
     'tohoku-main': '東北',
     'joban': '常磐',
-    'takasaki-line': '高崎',
+    'takasaki-line': '高崎線',
     'joetsu-line': '上越',
     'shinetsu-line': '信越',
     'shinetsu-takasaki': '信越',
-    'shinonoi-line': '篠ノ井',
-    'negishi-line': '根岸',
-    'yokohama-line': '横浜',
+    'shinonoi-line': '篠ノ井線',
+    'negishi-line': '根岸線',
+    'yokohama-line': '横浜線',
     'nambu': '南武',
-    'tsurumi-line': '鶴見',
+    'tsurumi-line': '鶴見線',
     'musashino': '武蔵野',
     'keiyo': '京葉',
-    'akabane-line': '赤羽',
-    'yokosuka-line': '横須賀',
+    'akabane-line': '赤羽線',
+    'yokosuka-line': '横須賀線',
     'sagami': '相模',
-    'ito-line': '伊東',
-    'ome-line': '青梅',
-    'itsukaichi-line': '五日市',
+    'ito-line': '伊東線',
+    'ome-line': '青梅線',
+    'itsukaichi-line': '五日市線',
     'hachiko-line': '八高',
-    'kawagoe-line': '川越',
+    'kawagoe-line': '川越線',
     'ryomo-line': '両毛',
-    'mito-line': '水戸',
-    'nikko-line': '日光',
-    'karasuyama-line': '烏山',
+    'mito-line': '水戸線',
+    'nikko-line': '日光線',
+    'karasuyama-line': '烏山線',
     'agatsuma-line': '吾妻',
     'uchibo-line': '内房',
     'sotobo-line': '外房',
-    'narita-line': '成田',
+    'narita-line': '成田線',
     'kashima-line': '鹿島',
-    'kururi-line': '久留里',
-    'togane-line': '東金',
+    'kururi-line': '久留里線',
+    'togane-line': '東金線',
     'suigun-line': '水郡',
 
     // 東北・甲信越
@@ -65,41 +65,41 @@
     'uetsu-main': '羽越',
     'senzan-line': '仙山',
     'senseki-line': '仙石',
-    'ishinomaki-line': '石巻',
-    'ofunato-line': '大船渡',
-    'kamaishi-line': '釜石',
+    'ishinomaki-line': '石巻線',
+    'ofunato-line': '大船渡線',
+    'kamaishi-line': '釜石線',
     'yamada-line': '山田',
-    'hachinohe-line': '八戸',
+    'hachinohe-line': '八戸線',
     'hanawa-line': '花輪',
-    'kitakami-line': '北上',
-    'tazawako-line': '田沢湖',
+    'kitakami-line': '北上線',
+    'tazawako-line': '田沢湖線',
     'tsugaru-line': '津軽',
-    'ominato-line': '大湊',
+    'ominato-line': '大湊線',
     'gonou-line': '五能',
-    'oga-line': '男鹿',
+    'oga-line': '男鹿線',
     'rikuuto-line': '陸羽東',
     'rikuusai-line': '陸羽西',
     'yonesaka-line': '米坂',
-    'aterazawa-line': '左沢',
-    'tadami-line': '只見',
+    'aterazawa-line': '左沢線',
+    'tadami-line': '只見線',
     'echigo-line': '越後',
-    'yahiko-line': '弥彦',
+    'yahiko-line': '弥彦線',
     'hakushin-line': '白新',
-    'iiyama-line': '飯山',
+    'iiyama-line': '飯山線',
     'oito-line': '大糸',
     'oito-west': '大糸',
-    'koumi-line': '小海',
+    'koumi-line': '小海線',
 
     // 東海
     'tokai-tokaido': '東海道',
-    'tokai-minoakasaka': '赤坂',
+    'tokai-minoakasaka': '東海道',
     'tokai-kansai': '関西',
     'tokai-kisei': '紀勢',
-    'tokai-takayama': '高山',
-    'tokai-iida': '飯田',
-    'tokai-minobu': '身延',
-    'tokai-gotemba': '御殿場',
-    'tokai-taketoyo': '武豊',
+    'tokai-takayama': '高山線',
+    'tokai-iida': '飯田線',
+    'tokai-minobu': '身延線',
+    'tokai-gotemba': '御殿場線',
+    'tokai-taketoyo': '武豊線',
     'tokai-taita': '太多',
     'tokai-sangu': '参宮',
     'tokai-meisho': '名松',
@@ -111,100 +111,290 @@
     'sanin-main': '山陰',
     'sanin-wadayama': '山陰',
     'sanin-senzaki': '山陰',
-    'osaka-loop': '大阪環',
-    'jr-tozai': '東西',
-    'fukuchiyama-line': '福知山',
+    'osaka-loop': '大阪環状',
+    'jr-tozai': 'ＪＲ東西',
+    'fukuchiyama-line': '福知山線',
     'hanwa-line': '阪和',
     'kansai-west': '関西',
-    'nara-line': '奈良',
+    'nara-line': '奈良線',
     'hokuriku-main': '北陸',
     'kosei-line': '湖西',
-    'kusatsu-line': '草津',
+    'kusatsu-line': '草津線',
     'kisei-west': '紀勢',
-    'wakayama-line': '和歌山',
-    'sakurai-line': '桜井',
-    'kanku-line': '関空',
-    'katamachi-line': '片町',
+    'wakayama-line': '和歌山線',
+    'sakurai-line': '桜井線',
+    'kanku-line': '関西空港線',
+    'katamachi-line': '片町線',
     'osaka-higashi': 'おおさか東',
     'bantan-line': '播但',
     'maizuru-line': '舞鶴',
     'hakubi-line': '伯備',
     'kishin-line': '姫新',
-    'tsuyama-line': '津山',
+    'tsuyama-line': '津山線',
     'kibi-line': '吉備',
-    'uno-line': '宇野',
+    'uno-line': '宇野線',
     'seto-ohashi-west': '本四備讃',
     'akaho-line': '赤穂',
     'ako-line': '赤穂',
     'geibi-line': '芸備',
     'fukuen-line': '福塩',
-    'kure-line': '呉',
-    'kabe-line': '可部',
-    'gantoku-line': '岩徳',
-    'yamaguchi-line': '山口',
-    'mine-line': '美祢',
-    'ube-line': '宇部',
-    'onoda-line': '小野田',
+    'kure-line': '呉線',
+    'kabe-line': '可部線',
+    'gantoku-line': '岩徳線',
+    'yamaguchi-line': '山口線',
+    'mine-line': '美祢線',
+    'ube-line': '宇部線',
+    'onoda-line': '小野田線',
     'inbi-line': '因美',
     'imbi-line': '因美',
     'sakai-line': '境',
-    'kisuki-line': '木次',
+    'kisuki-line': '木次線',
+    'kakogawa-line': '加古川線',
+    'etsumihoku-line': '越美北',
+    'obama-line': '小浜線',
+    'nanao-line': '七尾線',
+    'johana-line': '城端線',
+    'himi-line': '氷見線',
+    'sakurajima-line': '桜島線',
 
     // 四国
     'shikoku-yosan': '予讃',
     'shikoku-yosan-new': '予讃',
     'shikoku-dosan': '土讃',
     'shikoku-kotoku': '高徳',
-    'shikoku-tokushima': '徳島',
-    'shikoku-naruto': '鳴門',
-    'shikoku-mugi': '牟岐',
+    'shikoku-tokushima': '徳島線',
+    'shikoku-naruto': '鳴門線',
+    'shikoku-mugi': '牟岐線',
     'shikoku-yodo': '予土',
-    'shikoku-uchiko': '内子',
+    'shikoku-uchiko': '内子線',
     'shikoku-seto-ohashi': '本四備讃',
 
     // 九州
-    'kyushu-kagoshima': '鹿児島',
+    'kyushu-kagoshima': '鹿児島線',
     'kyushu-nippo': '日豊',
     'kyushu-sanyo': '山陽',
-    'kyushu-nagasaki': '長崎',
-    'kyushu-nagasaki-nagayo': '長崎',
-    'kyushu-sasebo': '佐世保',
-    'kyushu-omura': '大村',
+    'kyushu-nagasaki': '長崎線',
+    'kyushu-nagasaki-nagayo': '長崎線',
+    'kyushu-sasebo': '佐世保線',
+    'kyushu-omura': '大村線',
     'kyushu-kyudai': '久大',
     'kyushu-hohi': '豊肥',
-    'kyushu-misumi': '三角',
+    'kyushu-misumi': '三角線',
     'kyushu-hisatsu': '肥薩',
     'kyushu-kitto': '吉都',
     'kyushu-nichinan': '日南',
-    'kyushu-miyazaki-kuko': '宮崎空',
-    'kyushu-miyazaki-airport': '宮崎空',
-    'kyushu-ibusuki': '指宿枕',
+    'kyushu-miyazaki-kuko': '宮崎空港線',
+    'kyushu-miyazaki-airport': '宮崎空港線',
+    'kyushu-ibusuki': '指宿枕崎',
     'kyushu-chikuhi': '筑肥',
-    'kyushu-karatsu': '唐津',
+    'kyushu-karatsu': '唐津線',
     'kyushu-chikuho': '筑豊',
-    'kyushu-sasaguri': '篠栗',
-    'kyushu-gotoji': '後藤寺',
-    'kyushu-kashii': '香椎',
-    'hakataminami-line': '博多南',
+    'kyushu-sasaguri': '篠栗線',
+    'kyushu-gotoji': '後藤寺線',
+    'kyushu-kashii': '香椎線',
+    'kyushu-hitahikosan': '日田彦山',
+    'hakataminami-line': '博多南線',
 
     // 北海道
-    'hokkaido-hakodate': '函館',
-    'hokkaido-hakodate-sawara': '函館',
-    'hokkaido-chitose': '千歳',
-    'hokkaido-chitose-airport': '千歳',
-    'hokkaido-muroran': '室蘭',
-    'hokkaido-muroran-branch': '室蘭',
+    'hokkaido-hakodate': '函館線',
+    'hokkaido-hakodate-sawara': '函館線',
+    'hokkaido-chitose': '千歳線',
+    'hokkaido-chitose-airport': '千歳線',
+    'hokkaido-muroran': '室蘭線',
+    'hokkaido-muroran-branch': '室蘭線',
     'hokkaido-sekisho': '石勝',
-    'hokkaido-nemuro': '根室',
-    'hokkaido-furano': '富良野',
+    'hokkaido-nemuro': '根室線',
+    'hokkaido-furano': '富良野線',
     'hokkaido-soya': '宗谷',
     'hokkaido-sekihoku': '石北',
     'hokkaido-senmo': '釧網',
     'hokkaido-sassho': '札沼',
-    'hokkaido-rumoi': '留萌',
+    'hokkaido-rumoi': '留萌線',
     'hokkaido-hidaka': '日高',
     'hokkaido-kaikyo': '海峡'
   };
+
+  // 1-2. マルス券面・同名駅正式略号マスタ (全国JR全同名駅対応)
+  const MARS_DUPLICATE_STATION_MAP = {
+    // 旭
+    'st-k4t': '(総)旭',
+    'st-k4t-1': '(土)旭',
+    // 入野
+    'st-en7t-1': '(陽)入野',
+    'st-en7t': '(指)入野',
+    // 追分
+    'oiwake': '(奥)追分',
+    'st-oxwp': '(室)追分',
+    // 大久保
+    'okubo': '(中)大久保',
+    'st-dfulb': '(陽)大久保',
+    'st-dfulb-1': '(奥)大久保',
+    // 大河原
+    'st-dl1o3': '(北)大河原',
+    'st-dl1o3-1': '(関)大河原',
+    // 大沢
+    'st-frdn': '(奥)大沢',
+    'st-frdn-1': '(上)大沢',
+    // 大町
+    'st-ft2r': '(佐世)大町',
+    'st-ft2r-1': '(可)大町',
+    // 小野
+    'st-ggin': '(中)小野',
+    'st-ggin-1': '(湖)小野',
+    // 柏原
+    'st-i46o': '(関)柏原',
+    'st-i46o-1': '(福)柏原',
+    'st-i46o-2': '(東)柏原',
+    // 桂川
+    'st-i8yj-1': '(東)桂川',
+    'st-i8yj': '(筑)桂川',
+    // 加茂
+    'st-ertu': '(信)加茂',
+    'st-ertu-1': '(関)加茂',
+    // 川内
+    'st-gevc': '(山)川内',
+    'st-gevc-1': '(鹿)川内',
+    // 神代
+    'st-l2rp': '(田沢)神代',
+    'st-l2rp-1': '(陽)神代',
+    // 黒井
+    'st-rg1v': '(信)黒井',
+    'st-rg1v-1': '(福)黒井',
+    // 国分
+    'st-f8vd-1': '(讃)国分',
+    'st-f8vd': '(豊)国分',
+    // 小林
+    'st-g86g': '(成)小林',
+    'st-g86g-1': '(吉)小林',
+    // 郡山
+    'koriyama': '(北)郡山',
+    'st-p5f4': '(関)郡山',
+    'p5f4': '(関)郡山',
+    // 西条
+    'st-nyde': '(篠)西条',
+    'st-nyde-1': '(陽)西条',
+    // 三川
+    'st-dsdw': '(磐)三川',
+    'st-dsdw-1': '(室)三川',
+    // 三郷
+    'misato': '(武蔵)三郷',
+    'st-e2ha': '(関)三郷',
+    // 島田
+    'st-gge2-1': '(東)島田',
+    'st-gge2': '(陽)島田',
+    // 下松
+    'st-duc3': '(阪)下松',
+    'st-duc3-1': '(陽)下松',
+    // 白石
+    'st-kt92': '(北)白石',
+    'st-kt92-2': '(函)白石',
+    'st-kt92-1': '(肥)白石',
+    // 白沢
+    'st-kr0l': '(奥)白沢',
+    'st-kr0l-1': '(指)白沢',
+    // 新田
+    'st-hxts': '(北)新田',
+    'st-hxts-1': '(奈)新田',
+    // 新富士
+    'shin-fuji': '(東)新富士',
+    'st-fcaq7': '(根)新富士',
+    // 新野
+    'st-i3ha-1': '(播)新野',
+    'st-i3ha': '(牟)新野',
+    // 住吉
+    'st-dy8q-1': '(東)住吉',
+    'st-dy8q': '(三)住吉',
+    // 瀬田
+    'st-jq10-1': '(東)瀬田',
+    'st-jq10': '(豊肥)瀬田',
+    // 草野
+    'st-n4px': '(常)草野',
+    'st-n4px-1': '(福)草野',
+    // 高田
+    'st-qzbs-1': '(和)高田',
+    'st-qzbs': '(長)高田',
+    // 高瀬
+    'st-qyc4': '(仙山)高瀬',
+    'st-qyc4-1': '(讃)高瀬',
+    // 高松
+    'st-qwme-1': '(七)高松',
+    'st-qwme': '(讃)高松',
+    // 滝
+    'st-lwd': '(烏)滝',
+    'st-lwd-1': '(加)滝',
+    // 千歳
+    'st-er2o': '(房)千歳',
+    'st-er2o-1': '(千)千歳',
+    // 中田
+    'st-dxur': '(能)中田',
+    'st-dxur-1': '(牟)中田',
+    // 戸田
+    'toda': '(北)戸田',
+    'st-hcl4': '(陽)戸田',
+    // 富田
+    'st-g99g': '(両)富田',
+    'st-g99g-1': '(関)富田',
+    // 富浦
+    'st-g7q2': '(房)富浦',
+    'st-g7q2-1': '(室)富浦',
+    // 仁井田
+    'st-bx9z0': '(烏)仁井田',
+    'st-bx9z0-1': '(土)仁井田',
+    // 日進
+    'nisshin': '(川)日進',
+    'st-i4fh': '(宗)日進',
+    // 根岸
+    'negishi': '(岸)根岸',
+    'st-i8in': '(只)根岸',
+    // 野崎
+    'st-pb7k': '(北)野崎',
+    'st-pb7k-1': '(片)野崎',
+    // 橋本
+    'hashimoto': '(横)橋本',
+    'st-in9d': '(和)橋本',
+    // 広野
+    'st-gvjf': '(常)広野',
+    'st-gvjf-1': '(福)広野',
+    // 福島
+    'fukushima': '(北)福島',
+    'st-l6pz': '(環)福島',
+    // 府中
+    'st-gis1-1': '(塩)府中',
+    'st-gis1': '(徳)府中',
+    // 船岡
+    'st-mnpk': '(北)船岡',
+    'st-mnpk-1': '(陰)船岡',
+    // 上道
+    'st-e2dl-1': '(陽)上道',
+    'st-e2dl': '(境)上道',
+    // 柳原
+    'st-i51o': '(北上)柳原',
+    'st-i51o-1': '(讃)柳原',
+    // 山崎
+    'st-g8fx': '(東)山崎',
+    'st-g8fx-1': '(函)山崎',
+    // 横川
+    'st-ikmr': '(信)横川',
+    'st-ikmr-1': '(陽)横川',
+    // 吉富
+    'st-espv': '(豊)吉富',
+    'st-espv-1': '(陰)吉富',
+    // 荒尾
+    'st-mucs-1': '(東)荒尾',
+    'mucs-1': '(東)荒尾',
+    'st-mucs': '(鹿)荒尾',
+    'mucs': '(鹿)荒尾'
+  };
+
+  function getMarsStationName(stOrId, stations) {
+    if (!stOrId) return '';
+    const id = typeof stOrId === 'string' ? stOrId : stOrId.id;
+    if (id && MARS_DUPLICATE_STATION_MAP[id]) {
+      return MARS_DUPLICATE_STATION_MAP[id];
+    }
+    const st = (stations && stations[id]) || (typeof stOrId === 'object' ? stOrId : null);
+    return st ? st.name : id;
+  }
 
   function getMarsLineName(line) {
     if (!line) return '';
@@ -1111,8 +1301,8 @@
     const marsNamesList = [];
     for (let i = 0; i < lineRuns.length; i++) {
       const r = lineRuns[i];
-      const deptSt = (stations[r.from] && stations[r.from].name) || r.from;
-      const destSt = (stations[r.to] && stations[r.to].name) || r.to;
+      const deptSt = getMarsStationName(r.from, stations);
+      const destSt = getMarsStationName(r.to, stations);
 
       if (r.isShinkansen) {
         // 新幹線区間: 直前がその乗車駅でなければ乗換駅を追加し、「新幹線」、降車駅を表記
@@ -1468,7 +1658,9 @@
   // グローバルエクスポート
   const RouteEngine = {
     MARS_LINE_NAMES,
+    MARS_DUPLICATE_STATION_MAP,
     getMarsLineName,
+    getMarsStationName,
     buildGraph,
     findLeg,
     getSegmentCoords,
