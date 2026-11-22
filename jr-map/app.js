@@ -2554,7 +2554,7 @@
     return null;
   }
 
-  // ルートから関連する新幹線候補ペアを動的に抽出 (第三セクター並行在来線区間・全主要ハブ網羅)
+  // ルートから関連する新幹線候補ペアを動的に抽出 (第三セクター並行在来線区間・ルート文脈ハブ厳選)
   function getRelevantShinkansenPairs(explicitDeptSt, explicitDestSt) {
     const isShinkansenStation = (id) => {
       if (!id || !STATIONS[id]) return false;
@@ -2565,7 +2565,7 @@
     const candidates = [];
     const seenPairs = new Set();
 
-    const addCandidatePair = (fromId, toId) => {
+    const addCandidatePair = (fromId, toId, priority = 0) => {
       if (!fromId || !toId || fromId === toId) return;
       const pairKey = [fromId, toId].sort().join('--');
       if (seenPairs.has(pairKey)) return;
@@ -2580,34 +2580,12 @@
           toId: toId,
           km: shDist.km,
           line: shDist.line,
-          lineId: shDist.lineId
+          lineId: shDist.lineId,
+          priority: priority
         });
       }
     };
 
-    // 1. 探索後: lastResult のルート通過駅（allStationIds）
-    if (ROUTE_STATE.lastResult && ROUTE_STATE.lastResult.allStationIds) {
-      const routeStationIds = ROUTE_STATE.lastResult.allStationIds;
-      const shInRoute = [];
-      const seenSh = new Set();
-
-      routeStationIds.forEach(id => {
-        if (isShinkansenStation(id) && !seenSh.has(id)) {
-          seenSh.add(id);
-          shInRoute.push(id);
-        }
-      });
-
-      for (let i = 0; i < shInRoute.length; i++) {
-        for (let j = i + 1; j < shInRoute.length; j++) {
-          addCandidatePair(shInRoute[i], shInRoute[j]);
-          if (candidates.length >= 8) break;
-        }
-        if (candidates.length >= 8) break;
-      }
-    }
-
-    // 2. 探索前 (入力中) またはルート通過新幹線駅が少ない場合の補強
     const deptInput = document.getElementById('route-dept-input');
     const destInput = document.getElementById('route-dest-input');
 
@@ -2624,115 +2602,156 @@
     const inputChain = [deptSt, ...viaSts, destSt].filter(Boolean);
 
     // 全国主要新幹線接続ハブ
-    const MAJOR_SHINKANSEN_HUBS = [
-      'tokyo', 'shinagawa', 'shin-yokohama', 'shizuoka', 'nagoya', 'kyoto', 'shin-osaka', 'shin-kobe', 'okayama', 'hiroshima', 'kokura', 'hakata',
+    const MAJOR_SHINKANSEN_HUBS = new Set([
+      'tokyo', 'shinagawa', 'shin-yokohama', 'shizuoka', 'hamamatsu', 'nagoya', 'kyoto', 'shin-osaka', 'shin-kobe', 'okayama', 'hiroshima', 'kokura', 'hakata',
       'ueno', 'omiya', 'utsunomiya', 'koriyama', 'fukushima', 'sendai', 'morioka', 'hachinohe', 'shin-aomori', 'shin-hakodate-hokuto',
       'takasaki', 'echigo-yuzawa', 'nagaoka', 'niigata', 'karuizawa', 'nagano', 'toyama', 'kanazawa', 'fukui', 'tsuruga',
       'yamagata', 'shinjo', 'akita', 'kumamoto', 'kagoshima-chuo', 'takeo-onsen', 'nagasaki'
-    ];
+    ]);
 
     if (inputChain.length >= 2) {
-      const passedShIds = [];
-      const seenPassedSh = new Set();
+      // 1. ルート文脈 (発着・経由および探索経路) 上に存在する新幹線駅を順序通り抽出
+      const routeShIds = [];
+      const seenSh = new Set();
 
+      const addShStation = (id) => {
+        if (id && isShinkansenStation(id) && !seenSh.has(id)) {
+          seenSh.add(id);
+          routeShIds.push(id);
+        }
+      };
+
+      // lastResult があればその通過駅を採用
+      if (ROUTE_STATE.lastResult && ROUTE_STATE.lastResult.allStationIds) {
+        ROUTE_STATE.lastResult.allStationIds.forEach(addShStation);
+      }
+
+      // inputChain の各区間を新幹線許可探索して直接的な新幹線駅経路を取得
       for (let k = 0; k < inputChain.length - 1; k++) {
         const u = inputChain[k];
         const v = inputChain[k + 1];
 
-        if (isShinkansenStation(u.id) && !seenPassedSh.has(u.id)) {
-          seenPassedSh.add(u.id);
-          passedShIds.push(u.id);
-        }
+        if (isShinkansenStation(u.id)) addShStation(u.id);
 
         if (window.JR_ROUTE_ENGINE && ROUTE_ENGINE_GRAPH && u.id !== v.id) {
-          // 在来線探索と新幹線許可探索の両方から新幹線駅を収集 (並行在来線第三セクター化区間にも対応)
-          [false, true].forEach(allowSh => {
-            try {
-              const leg = window.JR_ROUTE_ENGINE.findLeg(
-                ROUTE_ENGINE_GRAPH,
-                u.id,
-                v.id,
-                { allowShinkansen: allowSh }
-              );
-              if (leg && Array.isArray(leg)) {
-                leg.forEach(step => {
-                  if (step && step.to && isShinkansenStation(step.to) && !seenPassedSh.has(step.to)) {
-                    seenPassedSh.add(step.to);
-                    passedShIds.push(step.to);
-                  }
-                });
-              }
-            } catch (e) {}
-          });
+          try {
+            const leg = window.JR_ROUTE_ENGINE.findLeg(
+              ROUTE_ENGINE_GRAPH,
+              u.id,
+              v.id,
+              { allowShinkansen: true }
+            );
+            if (leg && Array.isArray(leg)) {
+              leg.forEach(step => {
+                if (step && step.to) addShStation(step.to);
+              });
+            }
+          } catch (e) {}
         }
 
-        if (isShinkansenStation(v.id) && !seenPassedSh.has(v.id)) {
-          seenPassedSh.add(v.id);
-          passedShIds.push(v.id);
-        }
-
-        // 発駅または着駅が新幹線駅の場合、所属新幹線路線上の主要ハブとのペアを追加
-        if (isShinkansenStation(u.id)) {
-          const myLines = LINES.filter(l => l.category === 'shinkansen' && l.stations.includes(u.id));
-          myLines.forEach(line => {
-            line.stations.forEach(stId => {
-              if (MAJOR_SHINKANSEN_HUBS.includes(stId)) {
-                addCandidatePair(u.id, stId);
-              }
-            });
-          });
-        }
-        if (isShinkansenStation(v.id)) {
-          const myLines = LINES.filter(l => l.category === 'shinkansen' && l.stations.includes(v.id));
-          myLines.forEach(line => {
-            line.stations.forEach(stId => {
-              if (MAJOR_SHINKANSEN_HUBS.includes(stId)) {
-                addCandidatePair(stId, v.id);
-              }
-            });
-          });
-        }
+        if (isShinkansenStation(v.id)) addShStation(v.id);
       }
 
-      for (let i = 0; i < passedShIds.length; i++) {
-        for (let j = i + 1; j < passedShIds.length; j++) {
-          addCandidatePair(passedShIds[i], passedShIds[j]);
-          if (candidates.length >= 8) break;
+      // 発駅・着駅自身が新幹線駅の場合は、端点位置を明確に一致させる
+      let firstSh = routeShIds[0];
+      let lastSh = routeShIds[routeShIds.length - 1];
+
+      if (deptSt && isShinkansenStation(deptSt.id)) {
+        firstSh = deptSt.id;
+      }
+      if (destSt && isShinkansenStation(destSt.id)) {
+        lastSh = destSt.id;
+      }
+
+      // 2. 収集した新幹線駅から、優先度付きで候補ペアを生成
+      if (firstSh && lastSh && firstSh !== lastSh) {
+        // 優先度 1: 発駅側新幹線駅 〜 着駅側新幹線駅 (最優先)
+        addCandidatePair(firstSh, lastSh, 1000);
+
+        // 発駅が新幹線駅でない場合、経路上の各主要乗換駅 〜 着駅側新幹線駅 (最優先候補に追加)
+        if (deptSt && !isShinkansenStation(deptSt.id)) {
+          for (let i = 0; i < routeShIds.length; i++) {
+            const entry = routeShIds[i];
+            if (entry !== lastSh && MAJOR_SHINKANSEN_HUBS.has(entry)) {
+              addCandidatePair(entry, lastSh, 950 - i);
+            }
+          }
         }
-        if (candidates.length >= 8) break;
+
+        // 優先度 2: 発駅側新幹線駅 〜 経路上の主要ハブ駅
+        for (let i = routeShIds.length - 1; i >= 0; i--) {
+          const mid = routeShIds[i];
+          if (mid !== firstSh && mid !== lastSh && MAJOR_SHINKANSEN_HUBS.has(mid)) {
+            addCandidatePair(firstSh, mid, 800 + i);
+          }
+        }
+
+        // 優先度 3: 経路上の主要ハブ駅 〜 着駅側新幹線駅
+        for (let i = 0; i < routeShIds.length; i++) {
+          const mid = routeShIds[i];
+          if (mid !== firstSh && mid !== lastSh && MAJOR_SHINKANSEN_HUBS.has(mid)) {
+            addCandidatePair(mid, lastSh, 600 - i);
+          }
+        }
+
+        // 優先度 4: 経路上の主要ハブ駅同士
+        for (let i = 0; i < routeShIds.length; i++) {
+          for (let j = i + 1; j < routeShIds.length; j++) {
+            const mid1 = routeShIds[i];
+            const mid2 = routeShIds[j];
+            if (mid1 !== firstSh && mid2 !== lastSh && MAJOR_SHINKANSEN_HUBS.has(mid1) && MAJOR_SHINKANSEN_HUBS.has(mid2)) {
+              addCandidatePair(mid1, mid2, 400);
+            }
+          }
+        }
+
+        // 優先度 5: 発駅からの近隣新幹線区間
+        for (let i = 0; i < routeShIds.length; i++) {
+          if (routeShIds[i] !== firstSh) {
+            addCandidatePair(firstSh, routeShIds[i], 200 - i);
+          }
+        }
       }
     } else if (inputChain.length === 1) {
+      // 発駅のみ入力時は、その駅が所属する新幹線路線の主要ハブを提示
       const singleSt = inputChain[0];
       if (isShinkansenStation(singleSt.id)) {
-        const hubs = ['tokyo', 'shin-osaka', 'sendai', 'kanazawa', 'hakata', 'nagoya', 'hiroshima', 'morioka', 'takasaki'];
-        for (const hubId of hubs) {
-          if (hubId === singleSt.id || !STATIONS[hubId]) continue;
-          addCandidatePair(singleSt.id, hubId);
-          if (candidates.length >= 4) break;
-        }
+        const myLines = LINES.filter(l => l.category === 'shinkansen' && l.stations.includes(singleSt.id));
+        myLines.forEach(line => {
+          line.stations.forEach(stId => {
+            if (stId !== singleSt.id && MAJOR_SHINKANSEN_HUBS.has(stId)) {
+              addCandidatePair(singleSt.id, stId, 100);
+            }
+          });
+        });
       }
     }
 
-    // 選択中セグメントの解除用保持 (候補にない場合も先頭に追加)
+    // 優先度順にソートして上位10件に絞り込み
+    candidates.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+    const resultCandidates = candidates.slice(0, 10);
+
+    // 選択中セグメントの保持 (候補に含まれていない場合も先頭に追加して解除可能に)
     if (ROUTE_STATE.shinkansenSegments && ROUTE_STATE.shinkansenSegments.length > 0) {
       ROUTE_STATE.shinkansenSegments.forEach(seg => {
         const pairKey = [seg.fromId, seg.toId].sort().join('--');
-        if (!seenPairs.has(pairKey)) {
-          seenPairs.add(pairKey);
-          candidates.unshift({
+        const exists = resultCandidates.some(c => [c.fromId, c.toId].sort().join('--') === pairKey);
+        if (!exists) {
+          resultCandidates.unshift({
             from: seg.fromName || (STATIONS[seg.fromId] ? STATIONS[seg.fromId].name : seg.fromId),
             to: seg.toName || (STATIONS[seg.toId] ? STATIONS[seg.toId].name : seg.toId),
             fromId: seg.fromId,
             toId: seg.toId,
             km: seg.km || 0,
             line: seg.line,
-            lineId: seg.lineId
+            lineId: seg.lineId,
+            priority: 9999
           });
         }
       });
     }
 
-    return candidates.length > 0 ? candidates : DEFAULT_SHINKANSEN_PAIRS;
+    return resultCandidates.length > 0 ? resultCandidates : DEFAULT_SHINKANSEN_PAIRS;
   }
 
   // ルート連動の新幹線候補チップを描画 (向き反転ボタン ⇄ 完備)

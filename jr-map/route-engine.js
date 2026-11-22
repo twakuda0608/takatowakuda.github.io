@@ -1070,10 +1070,21 @@
           const fName = fromSt ? fromSt.name : (seg.fromName || seg.from);
           const tName = toSt ? toSt.name : (seg.toName || seg.to);
 
-          const isForward = (origin === fId || oName === fName) && (destination === tId || dName === tName);
-          const isReverse = (origin === tId || oName === tName) && (destination === fId || dName === fName);
-          return isForward || isReverse;
+          return (origin === fId || oName === fName) && (destination === tId || dName === tName);
         });
+
+        // 順方向がない場合のみ単一レグで逆方向も許容
+        if (!isThisLegShinkansen && stops.length === 2) {
+          isThisLegShinkansen = shinkansenSegs.some(seg => {
+            const fromSt = resolveStation(seg.fromId, seg.from || seg.fromName, stops, stations);
+            const toSt = resolveStation(seg.toId, seg.to || seg.toName, stops, stations);
+            const fId = fromSt ? fromSt.id : seg.fromId;
+            const tId = toSt ? toSt.id : seg.toId;
+            const fName = fromSt ? fromSt.name : (seg.fromName || seg.from);
+            const tName = toSt ? toSt.name : (seg.toName || seg.to);
+            return (origin === tId || oName === tName) && (destination === fId || dName === fName);
+          });
+        }
       }
 
       let legAllowShinkansen = (options.useShinkansen !== undefined) ? options.useShinkansen : (options.allowShinkansen !== false);
