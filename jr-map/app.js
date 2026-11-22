@@ -4276,9 +4276,9 @@
     }
 
     // 2. 選択経路の通常区間: 極太ハイライト (幅広グロー + コアライン + 芯線)
-    const normalCoordsList = (result.normalPolylines && result.normalPolylines.length > 0)
+    const normalCoordsList = result.normalPolylines
       ? result.normalPolylines
-      : (result.geometryLatlngs.length > 0 ? [result.geometryLatlngs] : []);
+      : (result.geometryLatlngs && result.geometryLatlngs.length > 0 ? [result.geometryLatlngs] : []);
 
     normalCoordsList.forEach(coords => {
       // 外側ワイド発光グロー (太さ 16px、シアン発光)

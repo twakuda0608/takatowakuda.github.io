@@ -700,31 +700,23 @@
     return minIdx;
   }
 
-  // セグメント線路座標の抽出 (駅間エッジ対応・候補路線フォールバック・確実な端点スナップ)
+  // セグメント線路座標の抽出 (指定路線最優先・駅間エッジ対応・候補路線フォールバック・確実な端点スナップ)
   function getSegmentCoords(tracks, stations, lineId, fromStId, toStId) {
     const st1 = stations[fromStId];
     const st2 = stations[toStId];
-    if (!st1 || !st2) return [];
+    if (!st1 || !st2 || !tracks) return [];
 
-    // 候補路線リスト: 指定路線を最優先、次に駅同士の共通路線
-    const candidateLineIds = [lineId];
-    if (st1.lines && st2.lines) {
-      st1.lines.forEach(lid => {
-        if (st2.lines.includes(lid) && !candidateLineIds.includes(lid)) {
-          candidateLineIds.push(lid);
-        }
-      });
-    }
-
-    let bestChain = null;
-    let bestIdx1 = -1;
-    let bestIdx2 = -1;
-    let bestDistSum = Infinity;
-
-    candidateLineIds.forEach(lid => {
+    // 特定路線内の最適チェーン探索 (区間として2点以上跨ぐものを最優先し、端点距離和を最小化)
+    function findBestInLine(lid) {
       const rawChains = tracks[lid] || [];
-      rawChains.forEach(rawChain => {
-        // [lat, lng] への確実な正規化
+      let bestChain = null;
+      let bestIdx1 = -1;
+      let bestIdx2 = -1;
+      let bestDistSum = Infinity;
+      let bestIsSpan = false;
+
+      for (let c = 0; c < rawChains.length; c++) {
+        const rawChain = rawChains[c];
         const chain = rawChain.map(pt => pt[0] > 90 ? [pt[1], pt[0]] : pt);
         let i1 = -1, minD1 = Infinity;
         let i2 = -1, minD2 = Infinity;
@@ -739,28 +731,56 @@
 
         if (i1 >= 0 && i2 >= 0) {
           const dSum = minD1 + minD2;
-          if (dSum < bestDistSum) {
+          const isSpan = (i1 !== i2);
+          // 区間として2点以上跨ぐもの (isSpan) を優先、同一優先度なら端点距離和が小さい方を選択
+          if (!bestChain || (isSpan && !bestIsSpan) || (isSpan === bestIsSpan && dSum < bestDistSum)) {
             bestDistSum = dSum;
             bestChain = chain;
             bestIdx1 = i1;
             bestIdx2 = i2;
+            bestIsSpan = isSpan;
           }
         }
-      });
-    });
+      }
 
-    // 閾値チェック (約15km以内)
-    if (!bestChain || bestDistSum > 0.15) {
+      // 閾値判定 (約15km以内)
+      if (bestChain && bestDistSum <= 0.15) {
+        return { bestChain, bestIdx1, bestIdx2, bestDistSum };
+      }
+      return null;
+    }
+
+    // 1. 指定路線 (lineId) の線路を最優先で探索 (新幹線指定時は並行在来線等に引っ張られず確実に新幹線軌道を採用)
+    let match = null;
+    if (lineId && tracks[lineId]) {
+      match = findBestInLine(lineId);
+    }
+
+    // 2. 指定路線で線路が見つからない場合のみ、駅共通の他路線をフォールバック探索
+    if (!match && st1.lines && st2.lines) {
+      const otherLines = st1.lines.filter(lid => lid !== lineId && st2.lines.includes(lid));
+      let bestOther = null;
+      for (const lid of otherLines) {
+        const res = findBestInLine(lid);
+        if (res && (!bestOther || res.bestDistSum < bestOther.bestDistSum)) {
+          bestOther = res;
+        }
+      }
+      match = bestOther;
+    }
+
+    // 3. 線路が見つからなかった場合は両駅間の直線フォールバック
+    if (!match) {
       return [[st1.lat, st1.lng], [st2.lat, st2.lng]];
     }
 
     let rawSlice = [];
-    if (bestIdx1 === bestIdx2) {
-      rawSlice = [bestChain[bestIdx1]];
-    } else if (bestIdx1 < bestIdx2) {
-      rawSlice = bestChain.slice(bestIdx1, bestIdx2 + 1);
+    if (match.bestIdx1 === match.bestIdx2) {
+      rawSlice = [match.bestChain[match.bestIdx1]];
+    } else if (match.bestIdx1 < match.bestIdx2) {
+      rawSlice = match.bestChain.slice(match.bestIdx1, match.bestIdx2 + 1);
     } else {
-      rawSlice = bestChain.slice(bestIdx2, bestIdx1 + 1).reverse();
+      rawSlice = match.bestChain.slice(match.bestIdx2, match.bestIdx1 + 1).reverse();
     }
 
     // 端点を st1 と st2 に確実にスナップ接続 (駅マーカーと線路の隙間をゼロに)
@@ -995,7 +1015,7 @@
       }
       graph = cachedGraph;
       stations = cachedStations || options.stations || (typeof window !== 'undefined' ? window.JR_STATIONS : {}) || {};
-      tracks = (typeof window !== 'undefined' ? window.JR_TRACKS : null);
+      tracks = options.tracks || (typeof window !== 'undefined' ? window.JR_TRACKS : null);
     } else {
       graph = args[0];
       tracks = args[1];
@@ -1034,7 +1054,7 @@
       const origin = stops[i];
       const destination = stops[i + 1];
 
-      // このレグが新幹線指定区間かどうか判定 (順方向一致を優先)
+      // このレグが新幹線指定区間かどうか判定 (順方向・逆方向双方に対応)
       const oSt = stations[origin];
       const dSt = stations[destination];
       const oName = oSt ? oSt.name : origin;
@@ -1050,21 +1070,10 @@
           const fName = fromSt ? fromSt.name : (seg.fromName || seg.from);
           const tName = toSt ? toSt.name : (seg.toName || seg.to);
 
-          return (origin === fId || oName === fName) && (destination === tId || dName === tName);
+          const isForward = (origin === fId || oName === fName) && (destination === tId || dName === tName);
+          const isReverse = (origin === tId || oName === tName) && (destination === fId || dName === fName);
+          return isForward || isReverse;
         });
-
-        // 順方向がない場合のみ単一レグで逆方向も許容
-        if (!isThisLegShinkansen && stops.length === 2) {
-          isThisLegShinkansen = shinkansenSegs.some(seg => {
-            const fromSt = resolveStation(seg.fromId, seg.from || seg.fromName, stops, stations);
-            const toSt = resolveStation(seg.toId, seg.to || seg.toName, stops, stations);
-            const fId = fromSt ? fromSt.id : seg.fromId;
-            const tId = toSt ? toSt.id : seg.toId;
-            const fName = fromSt ? fromSt.name : (seg.fromName || seg.from);
-            const tName = toSt ? toSt.name : (seg.toName || seg.to);
-            return (origin === tId || oName === tName) && (destination === fId || dName === fName);
-          });
-        }
       }
 
       let legAllowShinkansen = (options.useShinkansen !== undefined) ? options.useShinkansen : (options.allowShinkansen !== false);
