@@ -251,9 +251,10 @@
     linesLayerGroup = L.layerGroup().addTo(map);
     lineLabelsLayerGroup = L.layerGroup().addTo(map);
 
-    // 経路探索ハイライト専用 Pane (通常路線 400 より上でマーカー 600 より前面)
+    // 経路探索ハイライト専用 Pane (通常路線 400 より上でマーカー 600 より前面、クリックイベントを遮断しないよう pointerEvents は none)
     const routePane = map.createPane('routePane');
     routePane.style.zIndex = '620';
+    routePane.style.pointerEvents = 'none';
     const pinPane = map.createPane('routePinPane');
     pinPane.style.zIndex = '650';
 
@@ -3806,10 +3807,13 @@
       }
     });
 
-    // 駅マーカーのスタイルを元通りに復元
+    // 駅マーカーと路線ウェイトのキャッシュをリセットして元通りに復元
     lastMarkerZoom = null;
     lastLineWeightZoom = null;
+    lastMarkerRouteActive = null;
+    lastLineWeightRouteActive = null;
     updateStationMarkerSizes();
+    updateLineWeights();
   }
 
   function clearRouteMapLayers() {
@@ -3839,10 +3843,16 @@
     }
     ROUTE_STATE.activePinLayers = [];
 
+    // 駅マーカーレイヤーグループを復元
+    const zoom = map.getZoom();
+    if (zoom >= 10 || STATE.selectedStationId) {
+      if (!map.hasLayer(stationsLayerGroup)) {
+        map.addLayer(stationsLayerGroup);
+      }
+    }
+
     // 地図の通常スタイルおよびラベルを復元
     resetAllMapStyles();
-    updateLineWeights();
-    updateStationMarkerSizes();
     updateLabelsVisibility();
     updateLineLabelsVisibility();
   }
@@ -3881,6 +3891,10 @@
     ROUTE_STATE.activePinLayers = [];
 
     if (!result || !result.geometryLatlngs || result.geometryLatlngs.length === 0) return;
+
+    if (routeCanvasRenderer && routeCanvasRenderer._container) {
+      routeCanvasRenderer._container.style.pointerEvents = 'none';
+    }
 
     // ★重要: ルート探索結果を状態に保持 (ズーム時や移動時にハイライトが消えないようにする)
     ROUTE_STATE.lastResult = result;

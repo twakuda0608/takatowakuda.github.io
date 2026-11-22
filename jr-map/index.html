@@ -87,9 +87,11 @@
         <div class="station-meta">
           <span class="station-pref" id="sheet-pref">東京都</span>
           <span class="station-kana" id="sheet-kana">とうきょう</span>
+        </div>
+        <div class="station-title-row">
+          <h2 class="station-name" id="sheet-name">東京</h2>
           <span class="station-en" id="sheet-en">Tokyo</span>
         </div>
-        <h2 class="station-name" id="sheet-name">東京</h2>
       </div>
 
       <div class="sheet-body">
@@ -203,7 +205,7 @@
                   <input type="text" id="shinkansen-from-input" class="route-station-input" placeholder="乗車駅" autocomplete="off">
                   <div class="route-suggest-dropdown" id="shinkansen-from-suggest" style="display:none;"></div>
                 </div>
-                <button type="button" id="btn-swap-shinkansen-inputs" class="btn-swap-shinkansen" title="乗車駅と降車駅を入れ替え" aria-label="乗車駅と降車駅を入れ替え">⇄</button>
+                <button type="button" id="btn-swap-shinkansen-inputs" class="btn-swap-shinkansen" title="乗車駅と降車駅を入れ替え" aria-label="乗車駅と降車駅を入れ替え" tabindex="-1">⇄</button>
                 <div class="shinkansen-input-wrapper">
                   <input type="text" id="shinkansen-to-input" class="route-station-input" placeholder="降車駅" autocomplete="off">
                   <div class="route-suggest-dropdown" id="shinkansen-to-suggest" style="display:none;"></div>

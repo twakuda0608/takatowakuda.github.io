@@ -270,7 +270,29 @@
       prependPoint(id, 0, [35.68093, 139.76667]);
     });
     prependPoint('sobu-main', 0, [35.68093, 139.76667]);
-    prependPoint('nikko-line', 0, [36.55944, 139.89865]); // 宇都宮
+
+    // 日光線（宇都宮駅付近の重複逆走ループ除去）
+    if (tracks['nikko-line'] && tracks['nikko-line'][0]) {
+      const origNikko = tracks['nikko-line'][0];
+      // 生データの先頭13点は鶴田から宇都宮へ逆走する重複データのためスキップし、宇都宮駅から日光方面へ直結
+      tracks['nikko-line'] = [
+        [
+          [36.55944, 139.89865], // 宇都宮
+          ...origNikko.slice(13)
+        ]
+      ];
+    }
+
+    // 水郡線（本線と常陸太田支線の分離）
+    if (tracks['suigun-line'] && tracks['suigun-line'][0]) {
+      const rawSuigun = tracks['suigun-line'][0];
+      // 本線: 水戸〜上菅谷 (0〜44) + 上菅谷〜安積永盛 (388〜1135)
+      const mainChain = [...rawSuigun.slice(0, 45), ...rawSuigun.slice(388)];
+      // 支線: 上菅谷〜常陸太田 (278〜330)
+      const branchChain = rawSuigun.slice(278, 331);
+      tracks['suigun-line'] = [ mainChain, branchChain ];
+    }
+
     prependPoint('shinetsu-takasaki', 0, [36.32245, 139.01232]); // 高崎
     prependPoint('joetsu-line', 0, [36.32245, 139.01232]); // 高崎
     appendPoint('shinkansen-tokaido', 0, [34.73348, 135.5001]); // 新大阪

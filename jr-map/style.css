@@ -576,11 +576,26 @@ body.theme-light .station-pref {
   background: rgba(0, 0, 0, 0.08);
 }
 
+.station-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.station-title-row .station-name,
 .station-name {
   font-size: 26px;
   font-weight: 800;
   color: var(--text-main);
   letter-spacing: 0.5px;
+}
+
+.station-title-row .station-en {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
 }
 
 .section-title {
@@ -2355,4 +2370,10 @@ body.theme-light .station-pref {
   color: #0f172a;
   border-color: #94a3b8;
   transform: scale(1.05);
+}
+
+/* ルート描画専用 Pane (前面にあってもマウス操作を一切妨げない) */
+.leaflet-routePane-pane,
+.leaflet-pane.leaflet-routePane-pane {
+  pointer-events: none !important;
 }
