@@ -565,49 +565,139 @@ body.theme-light .view-presets {
   color: var(--text-main);
 }
 
-.sheet-header {
-  margin-bottom: 16px;
-  padding-right: 30px;
+/* 駅名標（JR駅看板スタイル） */
+.sheet-header.jr-station-sign {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 12px 14px 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 14px;
 }
 
-.station-meta {
+body.theme-dark .sheet-header.jr-station-sign {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.jr-sign-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  padding-right: 24px; /* 閉じるボタンと干渉しない余白 */
+}
+
+.jr-sign-top .station-pref {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  background: #e2e8f0;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.sheet-zone-badges {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+}
+
+.zone-mark-yamanote {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 19px;
+  height: 19px;
+  background: #ffffff;
+  border: 1.5px solid #0f172a;
+  color: #0f172a;
   font-size: 11px;
-  color: var(--text-muted);
-  margin-bottom: 4px;
-}
-.station-pref {
-  background: rgba(255, 255, 255, 0.12);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 600;
-}
-body.theme-light .station-pref {
-  background: rgba(0, 0, 0, 0.08);
+  font-weight: 900;
+  border-radius: 2px;
+  line-height: 1;
+  box-sizing: border-box;
+  user-select: none;
 }
 
-.station-title-row {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  flex-wrap: wrap;
+.zone-mark-city {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 19px;
+  height: 19px;
+  background: #0f172a;
+  border: 1.5px solid #0f172a;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+  border-radius: 2px;
+  line-height: 1;
+  box-sizing: border-box;
+  user-select: none;
 }
 
-.station-title-row .station-name,
+.jr-sign-main {
+  text-align: center;
+  margin: 4px 0 6px;
+}
+
 .station-name {
   font-size: 26px;
-  font-weight: 800;
-  color: var(--text-main);
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: 2px;
+  line-height: 1.15;
+  margin: 0;
+  text-align: center;
+  word-break: break-all;
+}
+
+.station-name.name-long {
+  font-size: 20px;
+  letter-spacing: 1px;
+}
+
+.station-name.name-xlong {
+  font-size: 16px;
   letter-spacing: 0.5px;
 }
 
-.station-title-row .station-en {
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--text-muted);
-  letter-spacing: 0.3px;
+.station-kana {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 1.5px;
+  margin-top: 3px;
+  text-align: center;
+}
+
+.jr-sign-band {
+  height: 7px;
+  width: 100%;
+  border-radius: 4px;
+  background: #008c44;
+  margin: 6px 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.jr-sign-band-center {
+  height: 100%;
+  width: 28px;
+  background: transparent;
+}
+
+.station-en {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 0.5px;
+  margin-top: 1px;
 }
 
 .section-title {

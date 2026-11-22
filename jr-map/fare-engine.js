@@ -738,6 +738,80 @@
     };
   }
 
+  // 特定都区市内・山手線内 マーク定義
+  const ZONE_MARK_MAP = {
+    yamanote: { char: '山', type: 'yamanote', title: '東京山手線内' },
+    tokyo: { char: '区', type: 'city', title: '東京都区内' },
+    sapporo: { char: '札', type: 'city', title: '札幌市内' },
+    sendai: { char: '仙', type: 'city', title: '仙台市内' },
+    yokohama: { char: '浜', type: 'city', title: '横浜市内' },
+    nagoya: { char: '名', type: 'city', title: '名古屋市内' },
+    kyoto: { char: '京', type: 'city', title: '京都市内' },
+    osaka: { char: '阪', type: 'city', title: '大阪市内' },
+    kobe: { char: '神', type: 'city', title: '神戸市内' },
+    hiroshima: { char: '広', type: 'city', title: '広島市内' },
+    kitakyushu: { char: '九', type: 'city', title: '北九州市内' },
+    fukuoka: { char: '福', type: 'city', title: '福岡市内' }
+  };
+
+  /**
+   * 同名駅の他都道府県誤判定を防ぐためのゾーン所属チェック (中心駅との近接判定)
+   */
+  function isStationInZone(stId, stName, zone, stationsMap) {
+    if (!zone || !zone.stationNames || !zone.stationNames.has(stName)) return false;
+    if (!stId || !stationsMap || !stationsMap[stId]) return true;
+    const st = stationsMap[stId];
+    const centerSt = stationsMap[zone.centerId];
+    if (!centerSt || st.lat == null || centerSt.lat == null) return true;
+    const dLat = Math.abs(st.lat - centerSt.lat);
+    const dLng = Math.abs(st.lng - centerSt.lng);
+    return (dLat < 0.8 && dLng < 0.8);
+  }
+
+  /**
+   * 駅の所属ゾーンマーク一覧を取得（[山]、[区]など）
+   * @param {string|object} stOrId - 駅オブジェクトまたは駅ID
+   * @param {object} stationsMap - 駅辞書 (STATIONS)
+   * @returns {Array<{char: string, type: string, title: string, zoneId: string}>}
+   */
+  function getStationZoneMarks(stOrId, stationsMap) {
+    if (!FareRulesData || !FareRulesData.SPECIFIC_CITY_ZONES) return [];
+    const zones = FareRulesData.SPECIFIC_CITY_ZONES;
+    const st = typeof stOrId === 'object' && stOrId ? stOrId : (stationsMap ? stationsMap[stOrId] : null);
+    const stId = st ? st.id : (typeof stOrId === 'string' ? stOrId : null);
+    const stName = st ? st.name : (stId && stationsMap && stationsMap[stId] ? stationsMap[stId].name : null);
+    if (!stName) return [];
+
+    const marks = [];
+
+    // 1. 東京山手線内チェック（存在する場合は左端に [山] を配置）
+    if (zones.yamanote && isStationInZone(stId, stName, zones.yamanote, stationsMap)) {
+      marks.push({
+        zoneId: 'yamanote',
+        char: ZONE_MARK_MAP.yamanote.char,
+        type: ZONE_MARK_MAP.yamanote.type,
+        title: ZONE_MARK_MAP.yamanote.title
+      });
+    }
+
+    // 2. 11大特定都区市内チェック（[区]、[札]、[仙]、[浜]、[名]、[京]、[阪]、[神]、[広]、[九]、[福]）
+    for (const [key, z] of Object.entries(zones)) {
+      if (key === 'yamanote') continue;
+      if (isStationInZone(stId, stName, z, stationsMap)) {
+        const info = ZONE_MARK_MAP[key] || { char: z.displayName ? z.displayName.charAt(0) : '区', type: 'city', title: z.name };
+        marks.push({
+          zoneId: key,
+          char: info.char,
+          type: info.type,
+          title: info.title
+        });
+        break; // 特定都区市内は最大1つ
+      }
+    }
+
+    return marks;
+  }
+
   /**
    * 特定都区市内 (旅規第86条) & 東京山手線内 (旅規第87条) の判定・適用
    */
@@ -764,15 +838,8 @@
     const yamanoteZone = zones.yamanote;
 
     // 同名駅の他都道府県誤判定を防ぐためのゾーン所属チェック (中心駅との近接判定)
-    function isStationInZone(stId, stName, zone) {
-      if (!zone || !zone.stationNames.has(stName)) return false;
-      if (!stId || !stations || !stations[stId]) return true;
-      const st = stations[stId];
-      const centerSt = stations[zone.centerId];
-      if (!centerSt || st.lat == null || centerSt.lat == null) return true;
-      const dLat = Math.abs(st.lat - centerSt.lat);
-      const dLng = Math.abs(st.lng - centerSt.lng);
-      return (dLat < 0.8 && dLng < 0.8);
+    function isStationInZoneLocal(stId, stName, zone) {
+      return isStationInZone(stId, stName, zone, stations);
     }
 
     // 1. 発駅・着駅が属する特定都区市内ゾーン（tokyo, osaka, etc.）
@@ -780,12 +847,12 @@
     let destCityZone = null;
     for (const [key, z] of Object.entries(zones)) {
       if (key === 'yamanote') continue;
-      if (isStationInZone(deptId, deptStationName, z)) deptCityZone = z;
-      if (isStationInZone(destId, destStationName, z)) destCityZone = z;
+      if (isStationInZoneLocal(deptId, deptStationName, z)) deptCityZone = z;
+      if (isStationInZoneLocal(destId, destStationName, z)) destCityZone = z;
     }
 
-    const isDeptYamanote = isStationInZone(deptId, deptStationName, yamanoteZone);
-    const isDestYamanote = isStationInZone(destId, destStationName, yamanoteZone);
+    const isDeptYamanote = isStationInZoneLocal(deptId, deptStationName, yamanoteZone);
+    const isDestYamanote = isStationInZoneLocal(destId, destStationName, yamanoteZone);
 
     // 同一都市圏内相互発着の除外（単駅扱い）
     if (deptCityZone && destCityZone && deptCityZone.id === destCityZone.id) {
@@ -825,14 +892,14 @@
       // 発駅（segments[0].from）から順に全ノードを走査
       const firstFromId = segments[0].from;
       const firstFromName = stations[firstFromId] ? stations[firstFromId].name : firstFromId;
-      if (isStationInZone(firstFromId, firstFromName, zone)) {
+      if (isStationInZoneLocal(firstFromId, firstFromName, zone)) {
         state = 1;
       }
 
       for (let i = 0; i < segments.length; i++) {
         const toId = segments[i].to;
         const toName = stations[toId] ? stations[toId].name : toId;
-        const inZone = isStationInZone(toId, toName, zone);
+        const inZone = isStationInZoneLocal(toId, toName, zone);
         if (state === 0 && inZone) state = 1;
         else if (state === 1 && !inZone) state = 2;
         else if (state === 2 && inZone) return true; // 再進入検出
@@ -881,8 +948,8 @@
           const fName = stations[seg.from] ? stations[seg.from].name : seg.from;
           const tName = stations[seg.to] ? stations[seg.to].name : seg.to;
 
-          const isFromInZone = isStationInZone(seg.from, fName, candidateDestZone);
-          const isToInZone = isStationInZone(seg.to, tName, candidateDestZone);
+          const isFromInZone = isStationInZoneLocal(seg.from, fName, candidateDestZone);
+          const isToInZone = isStationInZoneLocal(seg.to, tName, candidateDestZone);
 
           if (!isFromInZone && isToInZone) {
             destBorderStationId = seg.to;
@@ -941,8 +1008,8 @@
           const fName = stations[seg.from] ? stations[seg.from].name : seg.from;
           const tName = stations[seg.to] ? stations[seg.to].name : seg.to;
 
-          const isFromInZone = isStationInZone(seg.from, fName, candidateDeptZone);
-          const isToInZone = isStationInZone(seg.to, tName, candidateDeptZone);
+          const isFromInZone = isStationInZoneLocal(seg.from, fName, candidateDeptZone);
+          const isToInZone = isStationInZoneLocal(seg.to, tName, candidateDeptZone);
           const isShinkansen = seg.isShinkansen || (seg.lineId && seg.lineId.startsWith('shinkansen-'));
 
           // 在来線ゾーン内から新幹線に乗車する場合、新幹線の乗車駅がゾーン境界（中心駅接続）となる
@@ -1489,6 +1556,9 @@
     calculateBaseFare,
     evaluateSuburbanArea,
     calculateValidityDays,
+    ZONE_MARK_MAP,
+    isStationInZone,
+    getStationZoneMarks,
     evaluateStopover,
     evaluateRouteFareAndRules
   };

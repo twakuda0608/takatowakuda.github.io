@@ -2014,6 +2014,84 @@
     selectLine(null);
   }
 
+  // JR各社コーポレートカラー
+  const JR_COMPANY_COLORS = {
+    east: '#008c44',      // JR東日本 (緑)
+    central: '#f97316',   // JR東海 (オレンジ)
+    west: '#0072bc',      // JR西日本 (青)
+    hokkaido: '#84cc16',  // JR北海道 (萌黄/ライトグリーン)
+    shikoku: '#0ea5e9',   // JR四国 (水色)
+    kyushu: '#dc2626'     // JR九州 (赤)
+  };
+
+  // 会社境界駅オーバーライド (駅名標の管轄会社カラー優先)
+  const STATION_COMPANY_OVERRIDE = {
+    'tokyo': 'east',
+    'shinagawa': 'east',
+    'ueno': 'east',
+    'shinjuku': 'east',
+    'nagoya': 'central',
+    'kyoto': 'west',
+    'osaka': 'west',
+    'st-fzkz': 'west',
+    'shin-osaka': 'west',
+    'shin-kobe': 'west',
+    'shinkobe': 'west',
+    'hiroshima': 'west',
+    'kokura': 'kyushu',
+    'hakata': 'kyushu',
+    'sapporo': 'hokkaido',
+    'takamatsu': 'shikoku',
+    'st-qwme': 'shikoku'
+  };
+
+  // 都道府県別所轄JR会社マップ
+  const PREF_COMPANY_MAP = {
+    '北海道': 'hokkaido',
+    '青森県': 'east', '岩手県': 'east', '宮城県': 'east', '秋田県': 'east', '山形県': 'east', '福島県': 'east',
+    '茨城県': 'east', '栃木県': 'east', '群馬県': 'east', '埼玉県': 'east', '千葉県': 'east', '東京都': 'east', '神奈川県': 'east',
+    '新潟県': 'east', '山梨県': 'east', '長野県': 'east',
+    '静岡県': 'central', '愛知県': 'central', '岐阜県': 'central', '三重県': 'central',
+    '富山県': 'west', '石川県': 'west', '福井県': 'west', '滋賀県': 'west', '京都府': 'west', '大阪府': 'west',
+    '兵庫県': 'west', '奈良県': 'west', '和歌山県': 'west', '鳥取県': 'west', '島根県': 'west', '岡山県': 'west',
+    '広島県': 'west', '山口県': 'west',
+    '徳島県': 'shikoku', '香川県': 'shikoku', '愛媛県': 'shikoku', '高知県': 'shikoku',
+    '福岡県': 'kyushu', '佐賀県': 'kyushu', '長崎県': 'kyushu', '熊本県': 'kyushu', '大分県': 'kyushu', '宮崎県': 'kyushu', '鹿児島県': 'kyushu', '沖縄県': 'kyushu'
+  };
+
+  function getStationCompanyKey(st) {
+    if (!st) return 'east';
+    if (STATION_COMPANY_OVERRIDE[st.id]) {
+      return STATION_COMPANY_OVERRIDE[st.id];
+    }
+    if (st.pref && PREF_COMPANY_MAP[st.pref]) {
+      return PREF_COMPANY_MAP[st.pref];
+    }
+    // 路線からフォールバック
+    if (st.lines && st.lines.length > 0 && window.JR_FARE_ENGINE && window.JR_FARE_ENGINE.getLineCompany) {
+      for (const lId of st.lines) {
+        if (lId === 'hakataminami-line') continue; // 西日本だが福岡
+        const comp = window.JR_FARE_ENGINE.getLineCompany(lId, st.name, st.name);
+        if (comp) return comp;
+      }
+    }
+    return 'east';
+  }
+
+  function getStationCompanyColor(st) {
+    const compKey = getStationCompanyKey(st);
+    return JR_COMPANY_COLORS[compKey] || JR_COMPANY_COLORS.east;
+  }
+
+  function getStationRepresentativeLineColor(st, companyColor) {
+    if (!st || !st.lines || st.lines.length === 0) return 'transparent';
+    const regularLineId = st.lines.find(lId => !lId.startsWith('shinkansen-')) || st.lines[0];
+    const line = LINES.find(l => l.id === regularLineId);
+    if (!line || !line.color) return 'transparent';
+    if (line.color.toLowerCase() === companyColor.toLowerCase()) return 'transparent';
+    return line.color;
+  }
+
   // =======================================================
   // 7. 駅詳細選択 & ボトムシート
   // =======================================================
@@ -2029,10 +2107,53 @@
     }
 
     const sheet = document.getElementById('station-sheet');
-    document.getElementById('sheet-pref').textContent = st.pref;
-    document.getElementById('sheet-kana').textContent = st.kana || '';
-    document.getElementById('sheet-en').textContent = getStationEnName(st);
-    document.getElementById('sheet-name').textContent = getStationUiName(st);
+    const prefEl = document.getElementById('sheet-pref');
+    const kanaEl = document.getElementById('sheet-kana');
+    const enEl = document.getElementById('sheet-en');
+    const nameEl = document.getElementById('sheet-name');
+    const badgesContainer = document.getElementById('sheet-zone-badges');
+    const signBand = document.getElementById('sheet-sign-band');
+    const signCenter = document.getElementById('sheet-sign-center');
+
+    if (prefEl) prefEl.textContent = st.pref || '';
+    if (kanaEl) kanaEl.textContent = st.kana || '';
+    if (enEl) enEl.textContent = getStationEnName(st);
+
+    const uiName = getStationUiName(st);
+    if (nameEl) {
+      nameEl.textContent = uiName;
+      nameEl.classList.remove('name-long', 'name-xlong');
+      if (uiName.length >= 8) {
+        nameEl.classList.add('name-xlong');
+      } else if (uiName.length >= 6) {
+        nameEl.classList.add('name-long');
+      }
+    }
+
+    // ゾーンマーク（[山], [区], [京], [阪] 等）の動的描画
+    if (badgesContainer) {
+      badgesContainer.innerHTML = '';
+      if (window.JR_FARE_ENGINE && typeof window.JR_FARE_ENGINE.getStationZoneMarks === 'function') {
+        const zoneMarks = window.JR_FARE_ENGINE.getStationZoneMarks(st, STATIONS);
+        zoneMarks.forEach(zm => {
+          const badge = document.createElement('span');
+          badge.className = zm.type === 'yamanote' ? 'zone-mark-yamanote' : 'zone-mark-city';
+          badge.textContent = zm.char;
+          badge.title = zm.title || '';
+          badgesContainer.appendChild(badge);
+        });
+      }
+    }
+
+    // 会社カラー帯と代表路線アクセント色
+    const compColor = getStationCompanyColor(st);
+    if (signBand) {
+      signBand.style.backgroundColor = compColor;
+    }
+    if (signCenter) {
+      const repColor = getStationRepresentativeLineColor(st, compColor);
+      signCenter.style.backgroundColor = repColor;
+    }
 
     const linesContainer = document.getElementById('sheet-lines');
     linesContainer.innerHTML = '';
