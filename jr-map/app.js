@@ -85,6 +85,17 @@
     'annaka', 'yokokawa', 'naoetsu', 'kashiwazaki', 'niitsu', 'shibata', 'echizen-takefu', 'awara-onsen', 'ureshino-onsen', 'shin-omura', 'isahaya'
   ]);
 
+  function isMajorStation(stOrId) {
+    if (!stOrId) return false;
+    const id = typeof stOrId === 'string' ? stOrId : stOrId.id;
+    const st = typeof stOrId === 'string' ? STATIONS[stOrId] : stOrId;
+    const name = st ? st.name : '';
+    return TIER1_MEGA_HUBS.has(id) ||
+           TIER1_STATION_NAMES.has(name) ||
+           TIER2_MAJOR_HUBS.has(id) ||
+           TIER2_STATION_NAMES.has(name);
+  }
+
   let map = null;
   let bordersLayerGroup = null;
   let linesLayerGroup = null;
@@ -1077,30 +1088,28 @@
     }
 
     // ----------------------------------------------------
-    // 第4段階: 駅マーカー (◯) の確定 (ズーム別 minDist 空間グリッド判定)
+    // 第4段階: 主要駅マーカー (◯) の確定 (超広域ズームでのみ minDist 空間グリッド判定)
     // ----------------------------------------------------
-    const placedCircleSet = new Set();
-    let minDist = 0;
-    if (intZoom <= 6) minDist = 20;
-    else if (intZoom === 7) minDist = 17;
-    else if (intZoom === 8) minDist = 14;
-    else if (intZoom === 9) minDist = 12;
-    else if (intZoom === 10) minDist = 10;
-    else if (intZoom === 11) minDist = 8;
-    else if (intZoom === 12) minDist = 6;
-    else minDist = 0; // intZoom >= 13: 全駅表示
+    const placedMajorCircleSet = new Set();
+    let majorMinDist = 0;
+    if (intZoom <= 5) majorMinDist = 20;
+    else if (intZoom === 6) majorMinDist = 16;
+    else if (intZoom === 7) majorMinDist = 12;
+    else majorMinDist = 0; // intZoom >= 8: 主要駅は全表示
 
-    if (minDist === 0) {
-      for (let i = 0; i < stations.length; i++) {
-        placedCircleSet.add(stations[i].id);
+    const majorStations = stations.filter(st => isMajorStation(st));
+
+    if (majorMinDist === 0) {
+      for (let i = 0; i < majorStations.length; i++) {
+        placedMajorCircleSet.add(majorStations[i].id);
       }
     } else {
       const circleGrid = new Map();
-      const circleCellSize = Math.max(14, minDist);
-      const minDistSq = minDist * minDist;
+      const circleCellSize = Math.max(16, majorMinDist);
+      const minDistSq = majorMinDist * majorMinDist;
 
-      for (let i = 0; i < stations.length; i++) {
-        const st = stations[i];
+      for (let i = 0; i < majorStations.length; i++) {
+        const st = majorStations[i];
         const pt = map.project([st.lat, st.lng], intZoom);
         const gx = Math.floor(pt.x / circleCellSize);
         const gy = Math.floor(pt.y / circleCellSize);
@@ -1124,7 +1133,7 @@
         }
 
         if (!tooClose) {
-          placedCircleSet.add(st.id);
+          placedMajorCircleSet.add(st.id);
           const key = `${gx},${gy}`;
           let cell = circleGrid.get(key);
           if (!cell) {
@@ -1140,11 +1149,15 @@
       placedStationList,
       placedStationSet,
       placedLineSlots,
-      placedCircleSet
+      placedMajorCircleSet,
+      placedCircleSet: placedMajorCircleSet
     };
   }
 
-  // ズームレベルに応じた駅マーカーの表示・サイズ動的調整 (キャッシュ反映 & 非表示マーカー radius=0 誤爆防止)
+  // 直近の canShowAllCircles 判定結果 (デバッグ・検証用)
+  let lastCanShowAllCircles = false;
+
+  // ズームレベルに応じた駅マーカーの表示・サイズ動的調整 (2モード切替 & 非表示マーカー radius=0 誤爆防止)
   function updateStationMarkerSizes() {
     if (!map) return;
     const zoom = map.getZoom();
@@ -1164,38 +1177,124 @@
     }
 
     const layout = getZoomLayout(zoom);
-    const circleSet = layout.placedCircleSet;
+    const majorCircleSet = layout.placedMajorCircleSet || layout.placedCircleSet;
 
-    const mapSize = map.getSize();
-    const minX = -50;
-    const maxX = mapSize.x + 50;
-    const minY = -50;
-    const maxY = mapSize.y + 50;
-
+    // 現在の表示範囲 (map.getBounds())
     const bounds = map.getBounds();
-    const latSpan = bounds.getNorth() - bounds.getSouth();
-    const lngSpan = bounds.getEast() - bounds.getWest();
-    const minLat = bounds.getSouth() - latSpan * 0.25;
-    const maxLat = bounds.getNorth() + latSpan * 0.25;
-    const minLng = bounds.getWest() - lngSpan * 0.25;
-    const maxLng = bounds.getEast() + lngSpan * 0.25;
+    const minLat = bounds.getSouth();
+    const maxLat = bounds.getNorth();
+    const minLng = bounds.getWest();
+    const maxLng = bounds.getEast();
+
+    // 画面内駅の抽出
+    const visibleStations = [];
+    const allStationList = Object.values(STATIONS);
+    for (let i = 0; i < allStationList.length; i++) {
+      const st = allStationList[i];
+      if (st.lat >= minLat && st.lat <= maxLat && st.lng >= minLng && st.lng <= maxLng) {
+        visibleStations.push(st);
+      }
+    }
+
+    // 1. canShowAllCircles (全駅表示可能判定)
+    let canShowAllCircles = false;
+    if (zoom >= 13) {
+      canShowAllCircles = true;
+    } else {
+      // 空間グリッドで画面内全駅ペアの距離が最小閾値 (10px) をすべて満たしているか高速判定
+      const MIN_DIST = 10; // 10px (マーカー直径 + わずかな余白)
+      const MIN_DIST_SQ = MIN_DIST * MIN_DIST;
+      const cellSize = MIN_DIST;
+      const grid = new Map();
+      let hasOverlap = false;
+
+      for (let i = 0; i < visibleStations.length; i++) {
+        const st = visibleStations[i];
+        const pt = map.latLngToContainerPoint ? map.latLngToContainerPoint([st.lat, st.lng]) : map.project([st.lat, st.lng], zoom);
+        const gx = Math.floor(pt.x / cellSize);
+        const gy = Math.floor(pt.y / cellSize);
+
+        // 周囲3x3セルを検査
+        for (let dx = -1; dx <= 1 && !hasOverlap; dx++) {
+          for (let dy = -1; dy <= 1 && !hasOverlap; dy++) {
+            const key = `${gx + dx},${gy + dy}`;
+            const cell = grid.get(key);
+            if (cell) {
+              for (let c = 0; c < cell.length; c++) {
+                const opt = cell[c];
+                // 同一座標（完全同一駅の重複レコード）はスキップ
+                if (Math.abs(pt.x - opt.x) < 0.001 && Math.abs(pt.y - opt.y) < 0.001) {
+                  continue;
+                }
+                const distSq = (pt.x - opt.x) * (pt.x - opt.x) + (pt.y - opt.y) * (pt.y - opt.y);
+                if (distSq < MIN_DIST_SQ) {
+                  hasOverlap = true;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        if (hasOverlap) break;
+
+        const key = `${gx},${gy}`;
+        let cell = grid.get(key);
+        if (!cell) {
+          cell = [];
+          grid.set(key, cell);
+        }
+        cell.push(pt);
+      }
+
+      canShowAllCircles = !hasOverlap;
+    }
+
+    lastCanShowAllCircles = canShowAllCircles;
+
+    // 画面外バッファ (コンテナ座標)
+    const mapSize = map.getSize();
+    const minX = -30;
+    const maxX = mapSize.x + 30;
+    const minY = -30;
+    const maxY = mapSize.y + 30;
+
+    // 緯度経度による高速事前刈り込み (マージン 10% 拡大)
+    const latSpan = maxLat - minLat;
+    const lngSpan = maxLng - minLng;
+    const bufMinLat = minLat - latSpan * 0.1;
+    const bufMaxLat = maxLat + latSpan * 0.1;
+    const bufMinLng = minLng - lngSpan * 0.1;
+    const bufMaxLng = maxLng + lngSpan * 0.1;
 
     stationMarkers.forEach((marker, stId) => {
       const st = STATIONS[stId];
       if (!st) return;
 
       const isSelected = STATE.selectedStationId === stId;
-      const isCachedCircle = circleSet.has(stId);
+      const isMega = TIER1_MEGA_HUBS.has(stId) || TIER1_STATION_NAMES.has(st.name);
+      const isMajor = isMega || TIER2_MAJOR_HUBS.has(stId) || TIER2_STATION_NAMES.has(st.name);
 
-      // キャッシュに含まれない駅は非表示 (radius=0 でホバー・クリック誤爆完全防止)
-      if (!isSelected && !isCachedCircle) {
+      // 表示可否判定
+      let shouldShow = false;
+      if (isSelected) {
+        shouldShow = true;
+      } else if (canShowAllCircles) {
+        shouldShow = true;
+      } else {
+        // 主要駅のみモード
+        shouldShow = isMajor && majorCircleSet.has(stId);
+      }
+
+      // 表示対象外の駅は非表示 (radius=0 でホバー・クリック誤爆完全防止)
+      if (!shouldShow) {
         marker.setRadius(0);
         marker.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
         return;
       }
 
       // 画面外の駅も非表示 (radius=0 でホバー・クリック誤爆完全防止)
-      if (st.lat < minLat || st.lat > maxLat || st.lng < minLng || st.lng > maxLng) {
+      if (st.lat < bufMinLat || st.lat > bufMaxLat || st.lng < bufMinLng || st.lng > bufMaxLng) {
         marker.setRadius(0);
         marker.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
         return;
@@ -1207,9 +1306,6 @@
         marker.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
         return;
       }
-
-      const isMega = TIER1_MEGA_HUBS.has(stId) || TIER1_STATION_NAMES.has(st.name);
-      const isMajor = TIER2_MAJOR_HUBS.has(stId) || TIER2_STATION_NAMES.has(st.name);
 
       let radius = 3.2;
       let weight = 1.4;
@@ -4740,7 +4836,9 @@
       updateLabelsVisibility,
       updateLineLabelsVisibility,
       getZoomLayout,
-      getZoomLayoutCache: () => zoomLayoutCache
+      getZoomLayoutCache: () => zoomLayoutCache,
+      getCanShowAllCircles: () => lastCanShowAllCircles,
+      isMajorStation
     };
   }
 })();
