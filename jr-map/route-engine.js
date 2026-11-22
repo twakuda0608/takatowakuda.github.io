@@ -1265,6 +1265,7 @@
     // 発着駅が太線区間外にあり、区間内を通過する場合、太線区間内の営業キロを在来線最短経路で計算
     let effectiveTotalKm = Math.round(totalDist * 10) / 10;
     let isArticle70Applied = false;
+    let article70ShortenKm = 0;
     const isInternalCheck = !!options._isInternalCheck;
 
     if (!isInternalCheck && deptName && destName) {
@@ -1273,84 +1274,106 @@
 
       // 発着駅がどちらも第70条太線区間外にある場合のみ適用
       if (!deptInRule70 && !destInRule70) {
-        const allNames = allStationIds.map(id => stations[id] ? stations[id].name : id);
-        let firstIdx = -1;
-        let lastIdx = -1;
-        for (let i = 0; i < allNames.length; i++) {
-          if (RULE_70_STATION_NAMES.has(allNames[i])) {
-            if (firstIdx === -1) firstIdx = i;
-            lastIdx = i;
+        const akabaneSt = Object.values(stations).find(s => s && s.name === '赤羽');
+        const inZoneMoves = [];
+
+        for (let s = 0; s < fullSegments.length; s++) {
+          const seg = fullSegments[s];
+          const sFrom = stations[seg.from] ? stations[seg.from].name : seg.from;
+          const sTo = stations[seg.to] ? stations[seg.to].name : seg.to;
+
+          // 東海道新幹線（shinkansen-tokaido）は旅規第70条注記により太線区間から完全に除外
+          if (seg.lineId === 'shinkansen-tokaido' || seg.lineName === '東海道新幹線') {
+            continue;
+          }
+
+          if (seg.isShinkansen || (seg.lineId && seg.lineId.startsWith('shinkansen-'))) {
+            // 東北・上越・北陸新幹線
+            // 東京〜大宮, 上野〜大宮の赤羽境界補正
+            if (akabaneSt) {
+              if (sFrom === '大宮' && sTo === '東京') {
+                inZoneMoves.push({ fromId: akabaneSt.id, toId: seg.to, fromName: '赤羽', toName: '東京', km: 13.2 });
+              } else if (sFrom === '東京' && sTo === '大宮') {
+                inZoneMoves.push({ fromId: seg.from, toId: akabaneSt.id, fromName: '東京', toName: '赤羽', km: 13.2 });
+              } else if (sFrom === '大宮' && sTo === '上野') {
+                inZoneMoves.push({ fromId: akabaneSt.id, toId: seg.to, fromName: '赤羽', toName: '上野', km: 9.6 });
+              } else if (sFrom === '上野' && sTo === '大宮') {
+                inZoneMoves.push({ fromId: seg.from, toId: akabaneSt.id, fromName: '上野', toName: '赤羽', km: 9.6 });
+              } else if (RULE_70_STATION_NAMES.has(sFrom) && RULE_70_STATION_NAMES.has(sTo)) {
+                inZoneMoves.push({ fromId: seg.from, toId: seg.to, fromName: sFrom, toName: sTo, km: seg.dist });
+              }
+            } else if (RULE_70_STATION_NAMES.has(sFrom) && RULE_70_STATION_NAMES.has(sTo)) {
+              inZoneMoves.push({ fromId: seg.from, toId: seg.to, fromName: sFrom, toName: sTo, km: seg.dist });
+            }
+          } else {
+            // 在来線セグメント: 両端が太線区間内の駅であるもの
+            if (RULE_70_STATION_NAMES.has(sFrom) && RULE_70_STATION_NAMES.has(sTo)) {
+              inZoneMoves.push({ fromId: seg.from, toId: seg.to, fromName: sFrom, toName: sTo, km: seg.dist });
+            }
           }
         }
 
-        if (firstIdx !== -1 && lastIdx !== -1 && firstIdx !== lastIdx) {
-          let entryStId = allStationIds[firstIdx];
-          let exitStId = allStationIds[lastIdx];
+        // 連続する太線区間走行をブロックにまとめる
+        const blocks = [];
+        let currentBlock = null;
 
-          // 東北・上越新幹線通過時（大宮 ↔ 上野/東京）の赤羽境界補正
-          // 東海道新幹線（shinkansen-tokaido）は旅規第70条注記により太線区間から除外されるため補正しない
-          const akabaneSt = Object.values(stations).find(s => s && s.name === '赤羽');
-          const akabaneId = akabaneSt ? akabaneSt.id : null;
+        for (const move of inZoneMoves) {
+          if (!currentBlock) {
+            currentBlock = {
+              entryStId: move.fromId,
+              entryStName: move.fromName,
+              exitStId: move.toId,
+              exitStName: move.toName,
+              actualKm: move.km
+            };
+          } else if (currentBlock.exitStId === move.fromId) {
+            currentBlock.exitStId = move.toId;
+            currentBlock.exitStName = move.toName;
+            currentBlock.actualKm = Math.round((currentBlock.actualKm + move.km) * 10) / 10;
+          } else {
+            blocks.push(currentBlock);
+            currentBlock = {
+              entryStId: move.fromId,
+              entryStName: move.fromName,
+              exitStId: move.toId,
+              exitStName: move.toName,
+              actualKm: move.km
+            };
+          }
+        }
+        if (currentBlock) {
+          blocks.push(currentBlock);
+        }
 
-          if (akabaneId) {
-            if (firstIdx > 0 && allNames[firstIdx - 1] === '大宮') {
-              entryStId = akabaneId;
+        let totalShortenKm = 0;
+        for (const block of blocks) {
+          if (block.entryStId === block.exitStId) continue;
+
+          let shortestKm = 0;
+          try {
+            const shortestLeg = findLeg(graph, block.entryStId, block.exitStId, {
+              allowShinkansen: false,
+              useShinkansen: false
+            });
+            if (shortestLeg && shortestLeg.length > 0) {
+              const sTenths = shortestLeg.reduce((sum, seg) => sum + Math.round(seg.dist * 10), 0);
+              shortestKm = sTenths / 10;
             }
-            if (lastIdx < allNames.length - 1 && allNames[lastIdx + 1] === '大宮') {
-              exitStId = akabaneId;
-            }
+          } catch (e) {
+            console.warn('Rule 70 dynamic shortest calculation failed for block:', e);
           }
 
-          if (entryStId !== exitStId) {
-            // entryStId 〜 exitStId 間を findLeg で動的に在来線最短計算
-            let shortestKm = 0;
-            try {
-              const shortestLeg = findLeg(graph, entryStId, exitStId, { allowShinkansen: false, useShinkansen: false });
-              if (shortestLeg && shortestLeg.length > 0) {
-                const sTenths = shortestLeg.reduce((sum, seg) => sum + Math.round(seg.dist * 10), 0);
-                shortestKm = sTenths / 10;
-              }
-            } catch (e) {
-              console.warn('Rule 70 dynamic shortest calculation failed:', e);
-            }
-
-            if (shortestKm > 0) {
-              // 太線区間内の実際の乗車キロを集計 (東海道新幹線は旅規第70条注記により除外)
-              let actualInZoneTenths = 0;
-              for (let s = 0; s < fullSegments.length; s++) {
-                const seg = fullSegments[s];
-                const sFrom = stations[seg.from] ? stations[seg.from].name : seg.from;
-                const sTo = stations[seg.to] ? stations[seg.to].name : seg.to;
-
-                // 東海道新幹線（shinkansen-tokaido）は第70条対象外
-                if (seg.lineId === 'shinkansen-tokaido' || seg.lineName === '東海道新幹線') {
-                  continue;
-                }
-
-                if (seg.isShinkansen) {
-                  // 東北・上越新幹線の場合: 東京〜大宮は赤羽までの13.2km、上野〜大宮は赤羽までの9.6kmを区間内とする
-                  if ((sFrom === '東京' && sTo === '大宮') || (sFrom === '大宮' && sTo === '東京')) {
-                    actualInZoneTenths += 132; // 東京〜赤羽 13.2km
-                  } else if ((sFrom === '上野' && sTo === '大宮') || (sFrom === '大宮' && sTo === '上野')) {
-                    actualInZoneTenths += 96;  // 上野〜赤羽 9.6km
-                  } else if (RULE_70_STATION_NAMES.has(sFrom) && RULE_70_STATION_NAMES.has(sTo)) {
-                    actualInZoneTenths += Math.round(seg.dist * 10);
-                  }
-                } else {
-                  if (RULE_70_STATION_NAMES.has(sFrom) && RULE_70_STATION_NAMES.has(sTo)) {
-                    actualInZoneTenths += Math.round(seg.dist * 10);
-                  }
-                }
-              }
-
-              const actualInZoneKm = actualInZoneTenths / 10;
-              if (shortestKm < actualInZoneKm) {
-                const diffKm = Math.round((actualInZoneKm - shortestKm) * 10) / 10;
-                effectiveTotalKm = Math.round((totalDist - diffKm) * 10) / 10;
-                isArticle70Applied = true;
-              }
-            }
+          const actualKm = Math.round(block.actualKm * 10) / 10;
+          if (shortestKm > 0 && shortestKm < actualKm) {
+            const diffKm = Math.round((actualKm - shortestKm) * 10) / 10;
+            totalShortenKm = Math.round((totalShortenKm + diffKm) * 10) / 10;
           }
+        }
+
+        if (totalShortenKm > 0) {
+          effectiveTotalKm = Math.round((totalDist - totalShortenKm) * 10) / 10;
+          isArticle70Applied = true;
+          article70ShortenKm = totalShortenKm;
         }
       }
     }
@@ -1399,6 +1422,7 @@
         stops: stops,
         graph: graph,
         article70Applied: isArticle70Applied,
+        article70ShortenKm: article70ShortenKm,
         success: true
       }, stations, cachedLines || [], options);
     }
@@ -1419,6 +1443,7 @@
       isOneWayTrip: !hasDuplicate,
       isLoopRoute: isLoopRoute,
       article70Applied: isArticle70Applied,
+      article70ShortenKm: article70ShortenKm,
       fareRules: fareRules,
       sections: sections,
       fullSegments: fullSegments,

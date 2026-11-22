@@ -1144,6 +1144,15 @@
     const art69Result = evaluateArticle69Rules(fullSegments, sections, stations);
     let effectiveTrunkKm = trunkKm + art69Result.trunkDelta;
     let effectiveLocalKm = localKm + art69Result.localDelta;
+
+    // 旅規第70条 (東京付近特定区間短縮)
+    // 第70条太線区間はすべてJR東日本の幹線であるため、幹線キロおよびJR東日本営業キロから短縮差分を控除
+    const article70ShortenKm = routeResult.article70ShortenKm || 0;
+    if (article70ShortenKm > 0) {
+      effectiveTrunkKm = Math.max(0, Math.round((effectiveTrunkKm - article70ShortenKm) * 10) / 10);
+      eastKm = Math.max(0, Math.round((eastKm - article70ShortenKm) * 10) / 10);
+    }
+
     if (effectiveTrunkKm < 0) effectiveTrunkKm = 0;
     if (effectiveLocalKm < 0) effectiveLocalKm = 0;
 
@@ -1416,6 +1425,7 @@
       article69Applied: art69Result.appliedCorridors.length > 0,
       article69Details: art69Result.appliedCorridors,
       article70Applied: !!routeResult.article70Applied,
+      article70ShortenKm: article70ShortenKm,
 
       marsRouteCount: marsRouteCount,
       isMarsIssuable: isMarsIssuable,

@@ -2771,7 +2771,9 @@
     const hasDestSub = fr.destZoneApplied && destPrint !== result.destName;
     const subRouteStr = (hasDeptSub || hasDestSub) ? `（実乗車：${result.deptName} → ${result.destName}）\n` : '';
 
-    const actualKm = (result.actualKm !== undefined ? result.actualKm : result.totalKm).toFixed(1);
+    const act = (result.actualKm !== undefined ? result.actualKm : result.totalKm);
+    const effectiveKm = (result.totalKm !== undefined ? result.totalKm : act);
+    const actualKmStr = (act > effectiveKm) ? `${effectiveKm.toFixed(1)} km (実乗 ${act.toFixed(1)} km)` : `${act.toFixed(1)} km`;
     const fareKm = (fr.fareKm !== undefined ? fr.fareKm : result.totalKm).toFixed(1);
     const marsCount = fr.marsRouteCount || (result.sections ? result.sections.length : 1);
     const isMars = fr.isMarsIssuable !== false && marsCount <= 16;
@@ -2797,7 +2799,7 @@
       `区間：${deptPrint} → ${destPrint}`,
       subRouteStr ? subRouteStr.trim() : null,
       `経由：${result.marsString || '(直通)'}`,
-      `営業キロ：${actualKm} km（運賃計算キロ：${fareKm} km）`,
+      `営業キロ：${actualKmStr}（運賃計算キロ：${fareKm} km）`,
       `有効期間：${validityStr}（${stopoverStr}）`,
       `運賃：￥${displayFare.toLocaleString()}（${fareTypeName}）`,
       `経路数：${marsCount} / 16経路（${isMars ? 'マルス発券可' : '出札補充券'}）`,
@@ -3070,7 +3072,12 @@
     const actualKmEl = document.getElementById('spec-actual-km');
     if (actualKmEl) {
       const act = result.actualKm !== undefined ? result.actualKm : result.totalKm;
-      actualKmEl.textContent = `${act.toFixed(1)} km`;
+      const effectiveKm = result.totalKm !== undefined ? result.totalKm : act;
+      if (act > effectiveKm) {
+        actualKmEl.textContent = `${effectiveKm.toFixed(1)} km (実乗 ${act.toFixed(1)} km)`;
+      } else {
+        actualKmEl.textContent = `${act.toFixed(1)} km`;
+      }
     }
 
     const fareKm = fr.fareKm !== undefined ? fr.fareKm : result.totalKm;
