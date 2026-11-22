@@ -719,6 +719,7 @@
     if (!rawChains || rawChains.length === 0) return null;
 
     const nodes = [];
+    const nodeChain = [];
     const chainRanges = [];
 
     for (let c = 0; c < rawChains.length; c++) {
@@ -728,6 +729,7 @@
         const pt = rawChain[i];
         const normPt = pt[0] > 90 ? [pt[1], pt[0]] : [pt[0], pt[1]];
         nodes.push(normPt);
+        nodeChain.push(c);
       }
       chainRanges.push({ startIdx, length: rawChain.length });
     }
@@ -784,7 +786,8 @@
 
           for (const j of cell) {
             if (j <= i) continue;
-            if (Math.abs(i - j) === 1) continue;
+            // 同一チェーン内の隣接頂点は既にチェーン内隣接エッジとして接続済みなのでスキップ
+            if (nodeChain[i] === nodeChain[j] && Math.abs(i - j) === 1) continue;
 
             const p2 = nodes[j];
             const d = calcDistKm({ lat: p1[0], lng: p1[1] }, { lat: p2[0], lng: p2[1] });
@@ -992,8 +995,14 @@
     }
 
     // 2. 指定路線で線路が見つからない場合のみ、駅共通の他路線をフォールバック探索
+    // (新幹線なら新幹線のみ、在来線なら在来線のみを候補とし、軌道の混入を防止)
     if (!path && st1.lines && st2.lines) {
-      const otherLines = st1.lines.filter(lid => lid !== lineId && st2.lines.includes(lid));
+      const isShinkansen = !!(lineId && lineId.startsWith('shinkansen-'));
+      const otherLines = st1.lines.filter(lid => {
+        if (lid === lineId || !st2.lines.includes(lid)) return false;
+        const otherIsShinkansen = lid.startsWith('shinkansen-');
+        return isShinkansen ? otherIsShinkansen : !otherIsShinkansen;
+      });
       for (const lid of otherLines) {
         path = tryLineCoords(lid);
         if (path) break;
