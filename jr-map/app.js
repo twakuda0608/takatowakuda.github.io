@@ -137,8 +137,6 @@
     initMap();
     initLabelPool();
     buildAdjacentStationsIndex();
-    renderCategoryTabs();
-    renderLineChips();
     setupEventHandlers();
     initRouteEngineUI();
     drawBorders();
@@ -1542,72 +1540,10 @@
   }
 
   // =======================================================
-  // 6. カテゴリー & 路線フィルター
+  // 6. 路線ハイライト選択
   // =======================================================
-  function renderCategoryTabs() {
-    const container = document.getElementById('category-tabs');
-    if (!container) return;
-    container.innerHTML = '';
-
-    CATEGORIES.forEach(cat => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = `cat-tab ${cat.id === STATE.currentCategory ? 'active' : ''}`;
-      btn.innerHTML = `${cat.icon ? `<span>${cat.icon}</span> ` : ''}<span>${cat.name}</span>`;
-      btn.addEventListener('click', () => {
-        setCategory(cat.id);
-      });
-      container.appendChild(btn);
-    });
-  }
-
-  function renderLineChips() {
-    const container = document.getElementById('line-chips');
-    if (!container) return;
-    container.innerHTML = '';
-
-    const linesToDisplay = STATE.currentCategory === 'all'
-      ? LINES
-      : LINES.filter(l => l.category === STATE.currentCategory);
-
-    if (STATE.selectedLineId) {
-      const clearBtn = document.createElement('button');
-      clearBtn.type = 'button';
-      clearBtn.className = 'line-chip active';
-      clearBtn.innerHTML = `<span>✕ 選択解除</span>`;
-      clearBtn.addEventListener('click', () => {
-        selectLine(null);
-      });
-      container.appendChild(clearBtn);
-    }
-
-    linesToDisplay.forEach(line => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = `line-chip ${line.id === STATE.selectedLineId ? 'active' : ''}`;
-      btn.style.setProperty('--chip-color', line.color);
-      btn.innerHTML = `<span class="line-color-dot" style="background:${line.color}"></span> <span>${line.name}</span>`;
-      btn.addEventListener('click', () => {
-        if (STATE.selectedLineId === line.id) {
-          selectLine(null);
-        } else {
-          selectLine(line.id);
-        }
-      });
-      container.appendChild(btn);
-    });
-  }
-
-  function setCategory(catId) {
-    STATE.currentCategory = catId;
-    renderCategoryTabs();
-    renderLineChips();
-  }
-
-  // 路線ハイライト選択
   function selectLine(lineId) {
     STATE.selectedLineId = lineId;
-    renderLineChips();
 
     const banner = document.getElementById('line-banner');
 
@@ -1918,18 +1854,6 @@
   // =======================================================
   function setupEventHandlers() {
     setupSearch();
-
-    document.querySelectorAll('.btn-preset').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const viewKey = btn.getAttribute('data-view');
-        if (PRESETS[viewKey]) {
-          STATE.currentPreset = viewKey;
-          map.flyTo(PRESETS[viewKey].center, PRESETS[viewKey].zoom, { duration: 0.8 });
-        }
-      });
-    });
 
     document.getElementById('btn-zoom-in').addEventListener('click', () => {
       map.zoomIn();
