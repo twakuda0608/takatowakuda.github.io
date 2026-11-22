@@ -387,23 +387,28 @@
           }
         }
 
-        // 近郊区間に属する支線 branches の取り込み
+        // 近郊区間に属する支線 branches の取り込み (特定代表駅による安全な判定)
         if (l.branches && Array.isArray(l.branches)) {
-          if (lineId === 'tohoku-main') {
-            if (areaKey === 'tokyo' && l.branches[0]) {
-              // 赤羽〜武蔵浦和〜大宮 (埼京線支線)
-              l.branches[0].forEach(id => stationSet.add(id));
-            } else if (areaKey === 'sendai' && l.branches[1]) {
-              // 岩切〜利府 (利府支線)
-              l.branches[1].forEach(id => stationSet.add(id));
+          l.branches.forEach(b => {
+            if (!Array.isArray(b)) return;
+            const branchHasStation = (stationName) => b.some(id => targetStations[id] && targetStations[id].name === stationName);
+
+            if (lineId === 'tohoku-main') {
+              if (areaKey === 'tokyo' && branchHasStation('武蔵浦和')) {
+                // 赤羽〜武蔵浦和〜大宮 (埼京線支線)
+                b.forEach(id => stationSet.add(id));
+              } else if (areaKey === 'sendai' && branchHasStation('利府')) {
+                // 岩切〜利府 (利府支線)
+                b.forEach(id => stationSet.add(id));
+              }
+            } else if (lineId === 'suigun-line' && areaKey === 'tokyo' && branchHasStation('常陸太田')) {
+              // 上菅谷〜常陸太田
+              b.forEach(id => stationSet.add(id));
+            } else if (lineId === 'hanwa-line' && areaKey === 'osaka' && branchHasStation('東羽衣')) {
+              // 鳳〜東羽衣
+              b.forEach(id => stationSet.add(id));
             }
-          } else if (lineId === 'suigun-line' && areaKey === 'tokyo' && l.branches[0]) {
-            // 上菅谷〜常陸太田
-            l.branches[0].forEach(id => stationSet.add(id));
-          } else if (lineId === 'hanwa-line' && areaKey === 'osaka' && l.branches[0]) {
-            // 鳳〜東羽衣
-            l.branches[0].forEach(id => stationSet.add(id));
-          }
+          });
         }
       }
 
@@ -582,9 +587,25 @@
       }
     });
 
-    const otherKm = centralKm + westKm + hokkaidoKm + shikokuKm + kyushuKm;
-    const isInterCompany = (eastKm > 0 && otherKm > 0);
-    const primaryCompany = (eastKm >= centralKm && eastKm >= westKm) ? 'east' : (centralKm >= westKm ? 'central' : 'west');
+    const kmMap = {
+      east: eastKm,
+      central: centralKm,
+      west: westKm,
+      hokkaido: hokkaidoKm,
+      shikoku: shikokuKm,
+      kyushu: kyushuKm
+    };
+    let primaryCompany = 'east';
+    let maxKm = -1;
+    for (const [comp, km] of Object.entries(kmMap)) {
+      if (km > maxKm) {
+        maxKm = km;
+        primaryCompany = comp;
+      }
+    }
+
+    const activeCompanies = Object.entries(kmMap).filter(([_, km]) => km > 0).map(([c]) => c);
+    const isInterCompany = activeCompanies.length > 1;
 
     // 運賃計算キロ (fareKm) の算出:
     // 大都市近郊区間内のみご利用の場合 (旅規第157条第2項): 最短経路で運賃計算
@@ -645,10 +666,14 @@
       isAvailable: isAvailable,
       baseFare: baseFare,       // 普通乗車券（片道マルス券）運賃
       isEast2026Revision: true, // 2026年3月14日改定適用フラグ
+      primaryCompany: primaryCompany,
       isInterCompany: isInterCompany,
       eastKm: Math.round(eastKm * 10) / 10,
       centralKm: Math.round(centralKm * 10) / 10,
       westKm: Math.round(westKm * 10) / 10,
+      hokkaidoKm: Math.round(hokkaidoKm * 10) / 10,
+      shikokuKm: Math.round(shikokuKm * 10) / 10,
+      kyushuKm: Math.round(kyushuKm * 10) / 10,
       hasShinkansen: suburbanInfo.hasShinkansen,
       hasTokaidoShinkansen: hasTokaidoShinkansen,
       isSuburbanOnly: suburbanInfo.isSuburbanOnly,

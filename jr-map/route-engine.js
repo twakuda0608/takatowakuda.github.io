@@ -273,8 +273,25 @@
       lines = arg2;
       stations = arg1 || (typeof window !== 'undefined' ? window.JR_STATIONS : {}) || {};
     } else {
-      stations = (typeof window !== 'undefined' ? window.JR_STATIONS : {}) || {};
-      lines = (typeof window !== 'undefined' ? window.JR_LINES : []) || [];
+      if (typeof window !== 'undefined') {
+        stations = window.JR_STATIONS || window.STATIONS || {};
+        lines = window.JR_LINES || [];
+      } else if (typeof require !== 'undefined') {
+        try {
+          const bd = require('./data/build-data.js');
+          stations = bd.JR_STATIONS;
+          lines = bd.JR_LINES;
+        } catch(e) {
+          try {
+            const bd = require('./jr-map/data/build-data.js');
+            stations = bd.JR_STATIONS;
+            lines = bd.JR_LINES;
+          } catch(e2) {
+            stations = {};
+            lines = [];
+          }
+        }
+      }
     }
 
     // 公式キロ程データ (official-kilos.js) の適用
@@ -286,7 +303,14 @@
         if (kilosMod && kilosMod.applyOfficialKilos) {
           kilosMod.applyOfficialKilos(lines);
         }
-      } catch (e) {}
+      } catch (e) {
+        try {
+          const kilosMod = require('./jr-map/data/official-kilos.js');
+          if (kilosMod && kilosMod.applyOfficialKilos) {
+            kilosMod.applyOfficialKilos(lines);
+          }
+        } catch(e2) {}
+      }
     }
 
     const adj = new Map(); // stationId -> Array of edges
@@ -563,6 +587,28 @@
   }
 
   /**
+   * 駅名または駅IDから正確な駅オブジェクトを解決する
+   * 同名異駅（例：大阪環状線「福島」と東北新幹線「福島」）の誤マッチを防止するため、
+   * 1. stops に含まれる駅IDを最優先
+   * 2. 新幹線路線を有する駅を優先
+   * 3. 全体から検索
+   */
+  function resolveStation(stId, stName, stops, stations) {
+    if (stId && stations[stId]) return stations[stId];
+    if (!stName) return null;
+    if (stops && Array.isArray(stops)) {
+      for (const id of stops) {
+        if (stations[id] && stations[id].name === stName) {
+          return stations[id];
+        }
+      }
+    }
+    const shinkansenMatch = Object.values(stations).find(s => s.name === stName && s.lines && s.lines.some(l => l.startsWith('shinkansen-')));
+    if (shinkansenMatch) return shinkansenMatch;
+    return Object.values(stations).find(s => s.name === stName);
+  }
+
+  /**
    * 新幹線指定区間を経由駅リスト (stops) に自動統合・展開する
    */
   function expandStopsWithShinkansen(stops, shinkansenSegs, stations) {
@@ -570,8 +616,8 @@
     let result = [...stops];
 
     for (const seg of shinkansenSegs) {
-      const fromSt = stations[seg.fromId] || Object.values(stations).find(s => s.name === seg.from || s.name === seg.fromName);
-      const toSt = stations[seg.toId] || Object.values(stations).find(s => s.name === seg.to || s.name === seg.toName);
+      const fromSt = resolveStation(seg.fromId, seg.from || seg.fromName, stops, stations);
+      const toSt = resolveStation(seg.toId, seg.to || seg.toName, stops, stations);
       if (!fromSt || !toSt) continue;
 
       const id1 = fromSt.id;
@@ -612,6 +658,125 @@
     return result;
   }
 
+  // 旅規第16条の2 同一線扱い新幹線・並行在来線区間 (Corridor) ビルダー
+  // ※東海道新幹線 (東京〜新大阪) は2026年3月改定により東海道本線と別線扱いのため含めない
+  let CACHED_PARALLEL_CORRIDORS = null;
+  function getSameLineParallelCorridors(stations, lines) {
+    if (CACHED_PARALLEL_CORRIDORS) return CACHED_PARALLEL_CORRIDORS;
+
+    let targetLines = lines || cachedLines;
+    if (!targetLines || targetLines.length === 0) {
+      if (typeof window !== 'undefined' && window.JR_LINES) targetLines = window.JR_LINES;
+      else if (typeof require !== 'undefined') {
+        try { targetLines = require('./data/build-data.js').JR_LINES; } catch(e) {
+          try { targetLines = require('./jr-map/data/build-data.js').JR_LINES; } catch(e2) {}
+        }
+      }
+    }
+
+    let targetStations = stations || cachedStations;
+    if (!targetStations || Object.keys(targetStations).length === 0) {
+      if (typeof window !== 'undefined' && (window.STATIONS || window.JR_STATIONS)) targetStations = window.STATIONS || window.JR_STATIONS;
+      else if (typeof require !== 'undefined') {
+        try { targetStations = require('./data/build-data.js').JR_STATIONS; } catch(e) {
+          try { targetStations = require('./jr-map/data/build-data.js').JR_STATIONS; } catch(e2) {}
+        }
+      }
+    }
+
+    if (!targetLines || !targetStations) return [];
+
+    const lineMap = {};
+    targetLines.forEach(l => lineMap[l.id] = l);
+
+    function getStationNames(lineId, fromName, toName) {
+      const l = lineMap[lineId];
+      if (!l) return [];
+      const names = l.stations.map(id => targetStations[id]?.name).filter(Boolean);
+      const i1 = names.indexOf(fromName);
+      const i2 = names.indexOf(toName);
+      if (i1 === -1 || i2 === -1) return [];
+      const s = Math.min(i1, i2);
+      const e = Math.max(i1, i2);
+      return names.slice(s, e + 1);
+    }
+
+    const corridorDefs = [
+      // 東北新幹線 (東京〜盛岡)
+      { id: 'same-line::tohoku::tokyo-ueno', sLine: 'shinkansen-tohoku', sSts: ['東京', '上野'], cLines: ['tohoku-main'], cSts: ['東京', '上野'] },
+      {
+        id: 'same-line::tohoku::ueno-omiya',
+        sLine: 'shinkansen-tohoku',
+        sSts: ['上野', '大宮'],
+        cLines: ['tohoku-main', 'akabane-line'],
+        cSts: [
+          '上野', '日暮里', '西日暮里', '田端', '尾久', '赤羽', '川口', '西川口', '蕨',
+          '南浦和', '浦和', '北浦和', '与野', 'さいたま新都心', '大宮',
+          '北赤羽', '浮間舟渡', '戸田公園', '戸田', '北戸田', '武蔵浦和', '中浦和', '南与野', '与野本町', '北与野'
+        ]
+      },
+      { id: 'same-line::tohoku::omiya-oyama', sLine: 'shinkansen-tohoku', sSts: ['大宮', '小山'], cLines: ['tohoku-main'], cSts: getStationNames('tohoku-main', '大宮', '小山') },
+      { id: 'same-line::tohoku::oyama-utsunomiya', sLine: 'shinkansen-tohoku', sSts: ['小山', '宇都宮'], cLines: ['tohoku-main'], cSts: getStationNames('tohoku-main', '小山', '宇都宮') },
+      { id: 'same-line::tohoku::utsunomiya-nasushiobara', sLine: 'shinkansen-tohoku', sSts: ['宇都宮', '那須塩原'], cLines: ['tohoku-main'], cSts: getStationNames('tohoku-main', '宇都宮', '那須塩原') },
+      { id: 'same-line::tohoku::nasushiobara-shinshirakawa', sLine: 'shinkansen-tohoku', sSts: ['那須塩原', '新白河'], cLines: ['tohoku-main'], cSts: getStationNames('tohoku-main', '那須塩原', '新白河') },
+      { id: 'same-line::tohoku::shinshirakawa-koriyama', sLine: 'shinkansen-tohoku', sSts: ['新白河', '郡山'], cLines: ['tohoku-main'], cSts: getStationNames('tohoku-main', '新白河', '郡山') },
+      { id: 'same-line::tohoku::koriyama-fukushima', sLine: 'shinkansen-tohoku', sSts: ['郡山', '福島'], cLines: ['tohoku-main'], cSts: getStationNames('tohoku-main', '郡山', '福島') },
+      { id: 'same-line::tohoku::fukushima-sendai', sLine: 'shinkansen-tohoku', sSts: ['福島', '白石蔵王', '仙台'], cLines: ['tohoku-main'], cSts: getStationNames('tohoku-main', '福島', '仙台') },
+      { id: 'same-line::tohoku::sendai-ichinoseki', sLine: 'shinkansen-tohoku', sSts: ['仙台', '古川', 'くりこま高原', '一ノ関'], cLines: ['tohoku-main'], cSts: getStationNames('tohoku-main', '仙台', '一ノ関') },
+      { id: 'same-line::tohoku::ichinoseki-kitakami', sLine: 'shinkansen-tohoku', sSts: ['一ノ関', '水沢江刺', '北上'], cLines: ['tohoku-main'], cSts: getStationNames('tohoku-main', '一ノ関', '北上') },
+      { id: 'same-line::tohoku::kitakami-morioka', sLine: 'shinkansen-tohoku', sSts: ['北上', '新花巻', '盛岡'], cLines: ['tohoku-main'], cSts: getStationNames('tohoku-main', '北上', '盛岡') },
+
+      // 上越新幹線 (大宮〜新潟)
+      { id: 'same-line::joetsu::omiya-takasaki', sLine: 'shinkansen-joetsu', sSts: ['大宮', '熊谷', '本庄早稲田', '高崎'], cLines: ['takasaki-line'], cSts: getStationNames('takasaki-line', '大宮', '高崎') },
+      { id: 'same-line::joetsu::takasaki-echigoyuzawa', sLine: 'shinkansen-joetsu', sSts: ['高崎', '上毛高原', '越後湯沢'], cLines: ['joetsu-line'], cSts: getStationNames('joetsu-line', '高崎', '越後湯沢') },
+      { id: 'same-line::joetsu::echigoyuzawa-urasa', sLine: 'shinkansen-joetsu', sSts: ['越後湯沢', '浦佐'], cLines: ['joetsu-line'], cSts: getStationNames('joetsu-line', '越後湯沢', '浦佐') },
+      { id: 'same-line::joetsu::urasa-nagaoka', sLine: 'shinkansen-joetsu', sSts: ['浦佐', '長岡'], cLines: ['joetsu-line', 'shinetsu-line'], cSts: [...getStationNames('joetsu-line', '浦佐', '宮内'), ...getStationNames('shinetsu-line', '宮内', '長岡')] },
+      { id: 'same-line::joetsu::nagaoka-niigata', sLine: 'shinkansen-joetsu', sSts: ['長岡', '燕三条', '新潟'], cLines: ['shinetsu-line'], cSts: getStationNames('shinetsu-line', '長岡', '新潟') },
+
+      // 山陽新幹線 (新大阪〜博多)
+      { id: 'same-line::sanyo::shinosaka-nishiakashi', sLine: 'shinkansen-sanyo', sSts: ['新大阪', '新神戸', '西明石'], cLines: ['tokaido-west', 'sanyo-main'], cSts: [...getStationNames('tokaido-west', '新大阪', '神戸'), ...getStationNames('sanyo-main', '神戸', '西明石')] },
+      { id: 'same-line::sanyo::nishiakashi-himeji', sLine: 'shinkansen-sanyo', sSts: ['西明石', '姫路'], cLines: ['sanyo-main'], cSts: getStationNames('sanyo-main', '西明石', '姫路') },
+      { id: 'same-line::sanyo::himeji-aioi', sLine: 'shinkansen-sanyo', sSts: ['姫路', '相生'], cLines: ['sanyo-main'], cSts: getStationNames('sanyo-main', '姫路', '相生') },
+      { id: 'same-line::sanyo::aioi-okayama', sLine: 'shinkansen-sanyo', sSts: ['相生', '岡山'], cLines: ['sanyo-main'], cSts: getStationNames('sanyo-main', '相生', '岡山') },
+      { id: 'same-line::sanyo::okayama-shinkurashiki', sLine: 'shinkansen-sanyo', sSts: ['岡山', '新倉敷'], cLines: ['sanyo-main'], cSts: getStationNames('sanyo-main', '岡山', '新倉敷') },
+      { id: 'same-line::sanyo::shinkurashiki-fukuyama', sLine: 'shinkansen-sanyo', sSts: ['新倉敷', '福山'], cLines: ['sanyo-main'], cSts: getStationNames('sanyo-main', '新倉敷', '福山') },
+      { id: 'same-line::sanyo::fukuyama-mihara', sLine: 'shinkansen-sanyo', sSts: ['福山', '新尾道', '三原'], cLines: ['sanyo-main'], cSts: getStationNames('sanyo-main', '福山', '三原') },
+      { id: 'same-line::sanyo::mihara-hiroshima', sLine: 'shinkansen-sanyo', sSts: ['三原', '東広島', '広島'], cLines: ['sanyo-main'], cSts: getStationNames('sanyo-main', '三原', '広島') },
+      { id: 'same-line::sanyo::hiroshima-tokuyama', sLine: 'shinkansen-sanyo', sSts: ['広島', '新岩国', '徳山'], cLines: ['sanyo-main'], cSts: getStationNames('sanyo-main', '広島', '徳山') },
+      { id: 'same-line::sanyo::tokuyama-shinyamaguchi', sLine: 'shinkansen-sanyo', sSts: ['徳山', '新山口'], cLines: ['sanyo-main'], cSts: getStationNames('sanyo-main', '徳山', '新山口') },
+      { id: 'same-line::sanyo::shinyamaguchi-asa', sLine: 'shinkansen-sanyo', sSts: ['新山口', '厚狭'], cLines: ['sanyo-main'], cSts: getStationNames('sanyo-main', '新山口', '厚狭') },
+      { id: 'same-line::sanyo::asa-shinshimonoseki', sLine: 'shinkansen-sanyo', sSts: ['厚狭', '新下関'], cLines: ['sanyo-main'], cSts: getStationNames('sanyo-main', '厚狭', '新下関') },
+      {
+        id: 'same-line::sanyo::shinshimonoseki-kokura',
+        sLine: 'shinkansen-sanyo',
+        sSts: ['新下関', '小倉'],
+        cLines: ['sanyo-main', 'kyushu-sanyo', 'kyushu-kagoshima'],
+        cSts: [
+          ...getStationNames('sanyo-main', '新下関', '下関'),
+          ...getStationNames('kyushu-sanyo', '下関', '門司'),
+          ...getStationNames('kyushu-kagoshima', '門司', '小倉')
+        ]
+      },
+      { id: 'same-line::sanyo::kokura-hakata', sLine: 'shinkansen-sanyo', sSts: ['小倉', '博多'], cLines: ['kyushu-kagoshima'], cSts: getStationNames('kyushu-kagoshima', '小倉', '博多') },
+
+      // 九州新幹線 (博多〜新八代)
+      { id: 'same-line::kyushu::hakata-kurume', sLine: 'shinkansen-kyushu', sSts: ['博多', '新鳥栖', '久留米'], cLines: ['kyushu-kagoshima'], cSts: getStationNames('kyushu-kagoshima', '博多', '久留米') },
+      { id: 'same-line::kyushu::kurume-chikugofunagoya', sLine: 'shinkansen-kyushu', sSts: ['久留米', '筑後船小屋'], cLines: ['kyushu-kagoshima'], cSts: getStationNames('kyushu-kagoshima', '久留米', '筑後船小屋') },
+      { id: 'same-line::kyushu::chikugofunagoya-kumamoto', sLine: 'shinkansen-kyushu', sSts: ['筑後船小屋', '新大牟田', '新玉名', '熊本'], cLines: ['kyushu-kagoshima'], cSts: getStationNames('kyushu-kagoshima', '筑後船小屋', '熊本') },
+      { id: 'same-line::kyushu::kumamoto-shinyatsushiro', sLine: 'shinkansen-kyushu', sSts: ['熊本', '新八代'], cLines: ['kyushu-kagoshima'], cSts: getStationNames('kyushu-kagoshima', '熊本', '新八代') }
+    ];
+
+    CACHED_PARALLEL_CORRIDORS = corridorDefs.map(def => ({
+      id: def.id,
+      shinkansenLine: def.sLine,
+      shinkansenStations: new Set(def.sSts),
+      conventionalLines: new Set(def.cLines),
+      conventionalStations: new Set(def.cSts)
+    }));
+
+    return CACHED_PARALLEL_CORRIDORS;
+  }
+
   // マルチストップルート探索メインAPI
   function searchMarsRoute(...args) {
     let graph, tracks, stations, stops, options;
@@ -624,11 +789,13 @@
       options = args[3] || {};
       stops = [deptId, ...viaIds, destId];
 
-      if (!cachedGraph) {
+      if (options.stations && options.lines) {
+        buildGraph(options.stations, options.lines);
+      } else if (!cachedGraph) {
         buildGraph();
       }
       graph = cachedGraph;
-      stations = cachedStations || (typeof window !== 'undefined' ? window.JR_STATIONS : {}) || {};
+      stations = cachedStations || options.stations || (typeof window !== 'undefined' ? window.JR_STATIONS : {}) || {};
       tracks = (typeof window !== 'undefined' ? window.JR_TRACKS : null);
     } else {
       graph = args[0];
@@ -677,8 +844,8 @@
       let isThisLegShinkansen = false;
       if (shinkansenSegs && shinkansenSegs.length > 0) {
         isThisLegShinkansen = shinkansenSegs.some(seg => {
-          const fromSt = stations[seg.fromId] || Object.values(stations).find(s => s.name === seg.from || s.name === seg.fromName);
-          const toSt = stations[seg.toId] || Object.values(stations).find(s => s.name === seg.to || s.name === seg.toName);
+          const fromSt = resolveStation(seg.fromId, seg.from || seg.fromName, stops, stations);
+          const toSt = resolveStation(seg.toId, seg.to || seg.toName, stops, stations);
           const fId = fromSt ? fromSt.id : seg.fromId;
           const tId = toSt ? toSt.id : seg.toId;
           const fName = fromSt ? fromSt.name : (seg.fromName || seg.from);
@@ -690,8 +857,8 @@
         // 順方向がない場合のみ単一レグで逆方向も許容
         if (!isThisLegShinkansen && stops.length === 2) {
           isThisLegShinkansen = shinkansenSegs.some(seg => {
-            const fromSt = stations[seg.fromId] || Object.values(stations).find(s => s.name === seg.from || s.name === seg.fromName);
-            const toSt = stations[seg.toId] || Object.values(stations).find(s => s.name === seg.to || s.name === seg.toName);
+            const fromSt = resolveStation(seg.fromId, seg.from || seg.fromName, stops, stations);
+            const toSt = resolveStation(seg.toId, seg.to || seg.toName, stops, stations);
             const fId = fromSt ? fromSt.id : seg.fromId;
             const tId = toSt ? toSt.id : seg.toId;
             const fName = fromSt ? fromSt.name : (seg.fromName || seg.from);
@@ -785,54 +952,7 @@
 
     // 旅規第16条の2 同一線扱い新幹線・並行在来線区間 Corridor 定義
     // ※東海道新幹線 (東京〜新大阪) は2026年3月改定により東海道本線と別線扱いのため含めない
-    const SAME_LINE_PARALLEL_CORRIDORS = [
-      {
-        id: 'same-line::tohoku::tokyo-ueno',
-        shinkansenLine: 'shinkansen-tohoku',
-        shinkansenStations: new Set(['東京', '上野']),
-        conventionalLines: new Set(['tohoku-main']),
-        conventionalStations: new Set(['東京', '上野'])
-      },
-      {
-        id: 'same-line::tohoku::ueno-omiya',
-        shinkansenLine: 'shinkansen-tohoku',
-        shinkansenStations: new Set(['上野', '大宮']),
-        conventionalLines: new Set(['tohoku-main', 'akabane-line']),
-        conventionalStations: new Set([
-          '上野', '日暮里', '西日暮里', '田端', '尾久', '赤羽', '川口', '西川口', '蕨',
-          '南浦和', '浦和', '北浦和', '与野', 'さいたま新都心', '大宮',
-          '北赤羽', '浮間舟渡', '戸田公園', '戸田', '北戸田', '武蔵浦和', '中浦和', '南与野', '与野本町', '北与野'
-        ])
-      },
-      {
-        id: 'same-line::tohoku::omiya-oyama',
-        shinkansenLine: 'shinkansen-tohoku',
-        shinkansenStations: new Set(['大宮', '小山']),
-        conventionalLines: new Set(['tohoku-main']),
-        conventionalStations: new Set([
-          '大宮', '土呂', '東大宮', '蓮田', '白岡', '新白岡', '久喜', '東鷲宮', '栗橋', '古河', '野木', '間々田', '小山'
-        ])
-      },
-      {
-        id: 'same-line::tohoku::oyama-utsunomiya',
-        shinkansenLine: 'shinkansen-tohoku',
-        shinkansenStations: new Set(['小山', '宇都宮']),
-        conventionalLines: new Set(['tohoku-main']),
-        conventionalStations: new Set([
-          '小山', '小金井', '自治医大', '石橋', '雀宮', '宇都宮'
-        ])
-      },
-      {
-        id: 'same-line::joetsu::omiya-takasaki',
-        shinkansenLine: 'shinkansen-joetsu',
-        shinkansenStations: new Set(['大宮', '熊谷', '本庄早稲田', '高崎']),
-        conventionalLines: new Set(['takasaki-line']),
-        conventionalStations: new Set([
-          '大宮', '宮原', '上尾', '北上尾', '桶川', '北本', '鴻巣', '北鴻巣', '吹上', '行田', '熊谷',
-          '籠原', '深谷', '岡部', '本庄', '神保原', '新町', '倉賀野', '高崎'
-        ])
-      }
-    ];
+    const SAME_LINE_PARALLEL_CORRIDORS = getSameLineParallelCorridors(stations, cachedLines);
 
     // エッジごとの通過回数集計 (無向エッジとして同一区間の往復または重複通過を検出)
     // 2026年3月改定対応:
@@ -909,17 +1029,13 @@
     // 通過全駅IDリスト
     const allStationIds = [fullSegments[0].from, ...fullSegments.map(s => s.to)];
 
-    // 各駅の到達・訪問回数集計 (線路系統 trackType 別のカウント)
-    // 2026年3月改定対応: 東海道新幹線と東海道本線は別線扱いのため、別線相互の乗り分けによる通過駅は同一駅重複としない
-    const arrivalByTrack = new Map();
+    // 各駅の到着回数集計
+    // 旅規第68条: 片道乗車券は環状線一周となるものを除き、折り返し又は同一駅を2度以上通過しないこと
+    // 東海道新幹線と東海道本線は別線扱いですが、品川・小田原等の接続駅は同一駅であるため、
+    // 途中で同一駅を2度通過する経路（8の字等）は重複あり（成立不可）となります。
+    const arrivalCount = new Map();
     fullSegments.forEach(seg => {
-      const isTkShinkansen = (seg.lineId === 'shinkansen-tokaido');
-      const trackType = isTkShinkansen ? 'tokaido-shinkansen' : 'standard';
-      if (!arrivalByTrack.has(seg.to)) {
-        arrivalByTrack.set(seg.to, new Map());
-      }
-      const trackMap = arrivalByTrack.get(seg.to);
-      trackMap.set(trackType, (trackMap.get(trackType) || 0) + 1);
+      arrivalCount.set(seg.to, (arrivalCount.get(seg.to) || 0) + 1);
     });
 
     // 始点駅が途中で再訪問された場合も検知 (一周ルートの場合は最後のゴール到着を除外)
@@ -928,31 +1044,11 @@
     const originVisitedAgain = intermediateSegments.some(s => s.from === originId || s.to === originId);
 
     const duplicateStationIds = [];
-    arrivalByTrack.forEach((trackMap, id) => {
-      let hasTrackDup = false;
-      let totalArrivals = 0;
-      trackMap.forEach((cnt, track) => {
-        totalArrivals += cnt;
-        if (isLoopRoute && id === originId) {
-          // 一周ルートの終点としての1回到着は正常
-          if (cnt > 1) hasTrackDup = true;
-        } else {
-          if (cnt > 1) hasTrackDup = true;
-        }
-      });
-
-      if (hasTrackDup) {
-        duplicateStationIds.push(id);
-      } else if (totalArrivals > 1) {
-        // 異なる系統 (東海道新幹線と在来線) で到達した場合
-        // 東海道新幹線別線化により、在来線と新幹線で1回ずつの通過駅 (小田原、品川等) は別線乗り分けとして許可
-        const hasTkShinkansenArrival = (trackMap.get('tokaido-shinkansen') || 0) > 0;
-        const hasStandardArrival = (trackMap.get('standard') || 0) > 0;
-        if (hasTkShinkansenArrival && hasStandardArrival && totalArrivals === 2) {
-          // 別線乗り分け区間の通過駅は許可
-        } else {
-          duplicateStationIds.push(id);
-        }
+    arrivalCount.forEach((cnt, id) => {
+      if (isLoopRoute && id === originId) {
+        if (cnt > 1) duplicateStationIds.push(id);
+      } else {
+        if (cnt > 1) duplicateStationIds.push(id);
       }
     });
     if (originVisitedAgain && !duplicateStationIds.includes(originId)) {
