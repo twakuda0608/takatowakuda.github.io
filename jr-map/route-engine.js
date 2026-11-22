@@ -438,18 +438,21 @@
 
         let transferPenalty = 0;
         if (curr.marsName && (curr.marsName !== edge.marsName)) {
-          if (curr.isShinkansen !== edge.isShinkansen) {
-            // 在来線 ↔ 新幹線の乗換ペナルティ (8.0: 早期乗換を促進)
-            transferPenalty = options.forceShinkansen ? 0 : 8.0;
+          if (curr.isShinkansen && !edge.isShinkansen) {
+            // 新幹線乗車中から在来線への乗換は途中下車ショートカットを防ぐためペナルティ (8.0)
+            transferPenalty = 8.0;
+          } else if (!curr.isShinkansen && edge.isShinkansen) {
+            // 在来線から新幹線への乗換はペナルティなし (0.0)
+            transferPenalty = 0.0;
           } else {
-            // 営業キロ計算は最短で行うため、ペナルティで遠回りルートを選ばないよう
-            // 同一距離の場合にのみ乗り換えの少ない方を選ぶ微小タイブレーカー (0.01) とする
+            // 同一距離の場合に乗り換えの少ない方を選ぶ微小タイブレーカー (0.01)
             transferPenalty = 0.01;
           }
         }
 
-        // 純粋な営業キロベースで探索 (新幹線優遇速達バイアス dist * 0.55 を撤廃)
-        const edgeWeight = edge.dist;
+        // 純粋な営業キロベースで探索 (useShinkansen時は同距離での新幹線優先タイブレーカー -0.001 を適用)
+        const shinkansenBias = (allowShinkansen && edge.isShinkansen) ? -0.001 : 0;
+        const edgeWeight = edge.dist + shinkansenBias;
         const nextD = curr.d + edgeWeight + transferPenalty;
         const nextKey = edge.to + '::' + edge.marsName;
 
@@ -1382,7 +1385,12 @@
         fullSegments: fullSegments,
         deptId: deptId,
         destId: destId,
+        deptName: deptName,
+        destName: destName,
         allStationIds: allStationIds,
+        lineRuns: lineRuns,
+        stops: stops,
+        graph: graph,
         success: true
       }, stations, cachedLines || [], options);
     }
