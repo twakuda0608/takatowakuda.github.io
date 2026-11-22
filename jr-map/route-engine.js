@@ -1264,6 +1264,7 @@
     // 山手線内特定区間 (旅規第70条) の最短営業キロ適用
     // 発着駅が太線区間外にあり、区間内を通過する場合、太線区間内の営業キロを在来線最短経路で計算
     let effectiveTotalKm = Math.round(totalDist * 10) / 10;
+    let isArticle70Applied = false;
     const isInternalCheck = !!options._isInternalCheck;
 
     if (!isInternalCheck && deptName && destName) {
@@ -1346,6 +1347,7 @@
               if (shortestKm < actualInZoneKm) {
                 const diffKm = Math.round((actualInZoneKm - shortestKm) * 10) / 10;
                 effectiveTotalKm = Math.round((totalDist - diffKm) * 10) / 10;
+                isArticle70Applied = true;
               }
             }
           }
@@ -1396,6 +1398,7 @@
         lineRuns: lineRuns,
         stops: stops,
         graph: graph,
+        article70Applied: isArticle70Applied,
         success: true
       }, stations, cachedLines || [], options);
     }
@@ -1415,6 +1418,7 @@
       unregisteredLines: unregisteredLines,
       isOneWayTrip: !hasDuplicate,
       isLoopRoute: isLoopRoute,
+      article70Applied: isArticle70Applied,
       fareRules: fareRules,
       sections: sections,
       fullSegments: fullSegments,

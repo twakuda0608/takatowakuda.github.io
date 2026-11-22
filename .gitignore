@@ -7,4 +7,5 @@ AGENTS.md
 .agents/
 jr-map/test-browser.js
 scratch/
+jr-map/scratch_test.js
 .gitignore

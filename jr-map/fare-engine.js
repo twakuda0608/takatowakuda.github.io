@@ -1192,7 +1192,17 @@
           break;
         }
       }
-      const deptComp = ZONE_COMPANY_MAP[zoneResult.deptZone.id] || 'east';
+      let deptComp = ZONE_COMPANY_MAP[zoneResult.deptZone.id] || 'east';
+      // 特例: 東京都区内・山手線内で境界駅が「品川」かつ東海道新幹線へ接続する場合、中心駅(東京)〜品川はJR東海(central)に帰属
+      if ((zoneResult.deptZone.id === 'tokyo' || zoneResult.deptZone.id === 'yamanote') && (borderStName === '品川' || borderStId === 'shinagawa')) {
+        const hasTokaidoShinkansenFromShinagawa = fullSegments.some(s =>
+          (s.from === 'shinagawa' || (stations[s.from] && stations[s.from].name === '品川')) &&
+          (s.lineId === 'shinkansen-tokaido' || s.lineName === '東海道新幹線')
+        );
+        if (hasTokaidoShinkansenFromShinagawa) {
+          deptComp = 'central';
+        }
+      }
       const addKm = zoneResult.deptBorderToCenter || 0;
       if (deptComp === 'east') eastKm += addKm;
       else if (deptComp === 'central') centralKm += addKm;
@@ -1226,7 +1236,17 @@
           break;
         }
       }
-      const destComp = ZONE_COMPANY_MAP[zoneResult.destZone.id] || 'west';
+      let destComp = ZONE_COMPANY_MAP[zoneResult.destZone.id] || 'west';
+      // 特例: 東京都区内・山手線内で境界駅が「品川」かつ東海道新幹線から接続する場合、品川〜中心駅(東京)はJR東海(central)に帰属
+      if ((zoneResult.destZone.id === 'tokyo' || zoneResult.destZone.id === 'yamanote') && (borderStName === '品川' || borderStId === 'shinagawa')) {
+        const hasTokaidoShinkansenToShinagawa = fullSegments.some(s =>
+          (s.to === 'shinagawa' || (stations[s.to] && stations[s.to].name === '品川')) &&
+          (s.lineId === 'shinkansen-tokaido' || s.lineName === '東海道新幹線')
+        );
+        if (hasTokaidoShinkansenToShinagawa) {
+          destComp = 'central';
+        }
+      }
       const addKm = zoneResult.destBorderToCenter || 0;
       if (destComp === 'east') eastKm += addKm;
       else if (destComp === 'central') centralKm += addKm;
@@ -1324,10 +1344,11 @@
     }
     const childFare = Math.floor(adultFare / 2 / 10) * 10;
 
-    // 学割運賃 (旅規第28条: 判定キロが101km以上で2割引・10円未満端数切捨)
+    // 学割運賃 (旅規第28条: 判定営業キロが100km超過で2割引・10円未満端数切捨)
     const evalBasisKm = (zoneResult.deptApplied || zoneResult.destApplied) ? zoneResult.fareBasisKm : totalKm;
+    const isStudentEligible = evalBasisKm > 100.0;
     let studentFare = adultFare;
-    if (evalBasisKm >= 101) {
+    if (isStudentEligible) {
       studentFare = Math.floor((adultFare * 0.8) / 10) * 10;
     }
 
@@ -1380,6 +1401,7 @@
       adultFare: adultFare,
       childFare: childFare,
       studentFare: studentFare,
+      isStudentEligible: isStudentEligible,
 
       isEast2026Revision: true,
       primaryCompany: primaryCompany,
@@ -1393,6 +1415,7 @@
 
       article69Applied: art69Result.appliedCorridors.length > 0,
       article69Details: art69Result.appliedCorridors,
+      article70Applied: !!routeResult.article70Applied,
 
       marsRouteCount: marsRouteCount,
       isMarsIssuable: isMarsIssuable,
