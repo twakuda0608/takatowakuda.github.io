@@ -2071,12 +2071,11 @@
   // キャッシュされた経路探索グラフ
   let ROUTE_ENGINE_GRAPH = null;
 
-  // 新幹線駅ペアの高速営業キロ算出 (LINESとofficial-kilosからO(1)で直接計算)
-  function calcShinkansenDistance(fromId, toId) {
+  // 同一新幹線路線上の営業キロ算出 (完全非再帰・O(1))
+  function calcDirectShinkansenDistance(fromId, toId) {
     if (!fromId || !toId || fromId === toId || !LINES) return null;
     const shLines = LINES.filter(l => l.category === 'shinkansen');
 
-    // 1. 同一新幹線路線上にある場合
     for (const line of shLines) {
       const stIds = line.stations || [];
       const idx1 = stIds.indexOf(fromId);
@@ -2090,18 +2089,30 @@
         }
       }
     }
+    return null;
+  }
 
-    // 2. 接続する主要新幹線路線跨ぎ (東海道〜山陽: 新大阪、山陽〜九州: 博多、東北〜北海道: 新青森)
+  // 新幹線駅ペアの高速営業キロ算出 (LINESとofficial-kilosからO(1)で直接計算・非再帰)
+  function calcShinkansenDistance(fromId, toId) {
+    if (!fromId || !toId || fromId === toId || !LINES) return null;
+
+    // 1. 同一新幹線路線上にある場合 (直通)
+    const direct = calcDirectShinkansenDistance(fromId, toId);
+    if (direct) return direct;
+
+    // 2. 接続する主要新幹線路線跨ぎ (東海道〜山陽: 新大阪、山陽〜九州: 博多、東北〜北海道: 新青森、東海道〜東北: 東京)
+    // 乗り継ぎハブを介して双方が同一路線上にある場合のみ合算 (非再帰)
     const throughBridges = [
       { hub: 'shin-osaka', name: '東海道・山陽新幹線', lineId: 'shinkansen-tokaido' },
       { hub: 'hakata', name: '山陽・九州新幹線', lineId: 'shinkansen-sanyo' },
-      { hub: 'shin-aomori', name: '東北・北海道新幹線', lineId: 'shinkansen-tohoku' }
+      { hub: 'shin-aomori', name: '東北・北海道新幹線', lineId: 'shinkansen-tohoku' },
+      { hub: 'tokyo', name: '東海道・東北新幹線', lineId: 'shinkansen-tokaido' }
     ];
 
     for (const b of throughBridges) {
       if (fromId !== b.hub && toId !== b.hub) {
-        const leg1 = calcShinkansenDistance(fromId, b.hub);
-        const leg2 = calcShinkansenDistance(b.hub, toId);
+        const leg1 = calcDirectShinkansenDistance(fromId, b.hub);
+        const leg2 = calcDirectShinkansenDistance(b.hub, toId);
         if (leg1 && leg2 && leg1.km > 0 && leg2.km > 0) {
           return {
             km: Math.round((leg1.km + leg2.km) * 10) / 10,
@@ -2112,17 +2123,43 @@
       }
     }
 
-    // 3. フォールバック: キャッシュ済みグラフでの探索 (buildGraph再呼び出しは行わない)
+    // 3. 2回乗り継ぎ (東海道〜山陽〜九州: 新大阪と博多経由)
+    const legSanyo = calcDirectShinkansenDistance('shin-osaka', 'hakata');
+    if (legSanyo) {
+      const legTokaido = calcDirectShinkansenDistance(fromId, 'shin-osaka');
+      const legKyushu = calcDirectShinkansenDistance('hakata', toId);
+      if (legTokaido && legKyushu) {
+        return {
+          km: Math.round((legTokaido.km + legSanyo.km + legKyushu.km) * 10) / 10,
+          line: '東海道・山陽・九州新幹線',
+          lineId: 'shinkansen-tokaido'
+        };
+      }
+      const legKyushuRev = calcDirectShinkansenDistance(fromId, 'hakata');
+      const legTokaidoRev = calcDirectShinkansenDistance('shin-osaka', toId);
+      if (legKyushuRev && legTokaidoRev) {
+        return {
+          km: Math.round((legKyushuRev.km + legSanyo.km + legTokaidoRev.km) * 10) / 10,
+          line: '山陽・九州・東海道新幹線',
+          lineId: 'shinkansen-tokaido'
+        };
+      }
+    }
+
+    // 4. フォールバック: キャッシュ済みグラフでの探索 (buildGraph再呼び出しは行わない)
     if (ROUTE_ENGINE_GRAPH && window.JR_ROUTE_ENGINE && window.JR_ROUTE_ENGINE.findLeg) {
       try {
         const leg = window.JR_ROUTE_ENGINE.findLeg(ROUTE_ENGINE_GRAPH, fromId, toId, { allowShinkansen: true, forceShinkansen: true });
         if (leg && leg.length > 0) {
-          const kmTenths = leg.reduce((sum, s) => sum + Math.round((s.dist || s.km) * 10), 0);
-          return {
-            km: kmTenths / 10,
-            line: leg[0].lineName || '新幹線',
-            lineId: leg[0].lineId
-          };
+          const allShinkansen = leg.every(s => (s.lineCategory === 'shinkansen' || (s.lineName && s.lineName.includes('新幹線'))));
+          if (allShinkansen) {
+            const kmTenths = leg.reduce((sum, s) => sum + Math.round((s.dist || s.km) * 10), 0);
+            return {
+              km: kmTenths / 10,
+              line: leg[0].lineName || '新幹線',
+              lineId: leg[0].lineId
+            };
+          }
         }
       } catch (e) {}
     }
@@ -3036,6 +3073,7 @@
       actualKmEl.textContent = `${act.toFixed(1)} km`;
     }
 
+    const fareKm = fr.fareKm !== undefined ? fr.fareKm : result.totalKm;
     const fareKmEl = document.getElementById('spec-fare-km');
     if (fareKmEl) {
       fareKmEl.textContent = `${fareKm.toFixed(1)} km`;
