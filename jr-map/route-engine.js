@@ -630,20 +630,26 @@
         let transferPenalty = 0;
         if (curr.marsName && (curr.marsName !== edge.marsName)) {
           if (curr.isShinkansen && !edge.isShinkansen) {
-            // 新幹線乗車中から在来線への乗換は途中下車ショートカットを防ぐためペナルティ (8.0)
-            transferPenalty = 8.0;
+            // 新幹線→在来線の乗換ペナルティ (5.0km相当)
+            // 岩徳線（広島〜徳山間で新幹線より24.5km短い短絡線）や関門トンネル在来線（7.2km短い）への途中離脱を防止しつつ、
+            // 新大阪→大阪等の最終接続では新幹線から確実に乗り継ぐ
+            transferPenalty = 5.0;
           } else if (!curr.isShinkansen && edge.isShinkansen) {
-            // 在来線から新幹線への乗換はペナルティなし (0.0)
-            transferPenalty = 0.0;
+            // 在来線→新幹線の乗車ペナルティ (5.0km相当)
+            // 東京〜品川のような1駅だけの新幹線チョイ乗り（東京〜横浜での無駄な新幹線迂回）を抑止
+            transferPenalty = 5.0;
           } else {
             // 同一距離の場合に乗り換えの少ない方を選ぶ微小タイブレーカー (0.01)
             transferPenalty = 0.01;
           }
         }
 
-        // 純粋な営業キロベースで探索 (useShinkansen時は同距離での新幹線優先タイブレーカー -0.001 を適用)
-        const shinkansenBias = (allowShinkansen && edge.isShinkansen) ? -0.001 : 0;
-        const edgeWeight = edge.dist + shinkansenBias;
+        // 純粋な営業キロベースで探索 (useShinkansen時は同距離・並行在来線に対して新幹線を優遇し、最も長い新幹線区間を選択)
+        // 岩徳線（短絡差24.5km）や草津線等の在来線短絡ルートに惑わされず新幹線を通しで利用し、
+        // かつ東京〜松本で長野経由大迂回を抑止し中央本線直通（235.4km）を維持するため 0.76 倍
+        const edgeWeight = (allowShinkansen && !options.forceShinkansen && edge.isShinkansen)
+          ? edge.dist * 0.76
+          : edge.dist;
         const nextD = curr.d + edgeWeight + transferPenalty;
         const nextKey = edge.to + '::' + edge.marsName;
 
@@ -1318,10 +1324,21 @@
     });
     const unregisteredLines = Array.from(unregisteredLinesSet);
 
-    // マルス経由線表記の生成 (例: 東海道・山手・中央東 / 新幹線区間は「上野・新幹線・大宮」等)
-    const marsNamesList = [];
+    // マルス経由線表記の生成 (例: 東海道・山手・中央東 / 新幹線区間は「東京・新幹線・博多」等)
+    // 連続する新幹線区間 (東海道新幹線〜山陽新幹線、東北新幹線〜北海道新幹線等) は1つの新幹線乗車区間に統合
+    const mergedMarsRuns = [];
     for (let i = 0; i < lineRuns.length; i++) {
       const r = lineRuns[i];
+      if (r.isShinkansen && mergedMarsRuns.length > 0 && mergedMarsRuns[mergedMarsRuns.length - 1].isShinkansen && mergedMarsRuns[mergedMarsRuns.length - 1].to === r.from) {
+        mergedMarsRuns[mergedMarsRuns.length - 1].to = r.to;
+      } else {
+        mergedMarsRuns.push({ ...r });
+      }
+    }
+
+    const marsNamesList = [];
+    for (let i = 0; i < mergedMarsRuns.length; i++) {
+      const r = mergedMarsRuns[i];
       const deptSt = getMarsStationName(r.from, stations);
       const destSt = getMarsStationName(r.to, stations);
 

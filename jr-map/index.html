@@ -186,12 +186,27 @@
           <!-- 特定区間新幹線指定パネル -->
           <div id="shinkansen-segments-panel" class="shinkansen-segments-panel" style="display: none;">
             <div class="shinkansen-segments-header">
-              <span class="shinkansen-panel-label">新幹線乗車区間 (タップで指定/解除)</span>
+              <span class="shinkansen-panel-label">新幹線乗車区間の指定</span>
             </div>
-            <!-- ルート連動の候補チップ一覧 -->
-            <div id="shinkansen-candidate-container" class="shinkansen-candidate-container">
-              <div id="shinkansen-candidate-chips" class="shinkansen-candidate-chips">
-                <!-- 動的に生成される候補チップ -->
+            <!-- ルート連動の新幹線区間セレクタUI -->
+            <div class="shinkansen-selector-container">
+              <div class="shinkansen-select-row">
+                <div class="shinkansen-select-group">
+                  <span class="shinkansen-select-label">乗車駅</span>
+                  <select id="shinkansen-from-select" class="shinkansen-select" aria-label="新幹線乗車駅"></select>
+                </div>
+                <button type="button" id="btn-swap-shinkansen-select" class="btn-swap-shinkansen" title="乗車駅と降車駅を入れ替え" aria-label="乗車駅と降車駅を入れ替え">⇄</button>
+                <div class="shinkansen-select-group">
+                  <span class="shinkansen-select-label">降車駅</span>
+                  <select id="shinkansen-to-select" class="shinkansen-select" aria-label="新幹線降車駅"></select>
+                </div>
+              </div>
+              <div class="shinkansen-select-bottom-row">
+                <div class="shinkansen-select-dist-wrap">
+                  <span id="shinkansen-select-dist" class="shinkansen-select-dist">0.0km</span>
+                  <span id="shinkansen-select-line" class="shinkansen-select-line"></span>
+                </div>
+                <button type="button" id="btn-add-shinkansen-select" class="btn-secondary btn-sm">追加</button>
               </div>
             </div>
             <div id="shinkansen-segments-list" class="shinkansen-segments-list" style="display: none;">

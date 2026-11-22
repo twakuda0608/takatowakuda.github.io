@@ -2210,80 +2210,122 @@ body.theme-light .station-pref {
   flex-wrap: wrap;
   gap: 6px;
 }
-/* 新幹線候補区間チップ */
-.shinkansen-candidate-container {
+/* 新幹線乗車・降車駅セレクタUI */
+.shinkansen-selector-container {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-.shinkansen-candidate-chips {
-  display: flex;
-  flex-wrap: wrap;
   gap: 6px;
-}
-.shinkansen-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
   background: #ffffff;
   border: 1px solid #cbd5e1;
-  border-radius: 14px;
-  padding: 2px 4px 2px 8px;
-  font-size: 11px;
+  border-radius: 6px;
+  padding: 8px;
+}
+.shinkansen-select-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+.shinkansen-select-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 3px;
+}
+.shinkansen-select-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  line-height: 1;
+}
+.shinkansen-select {
+  width: 100%;
+  height: 28px;
+  padding: 3px 6px;
+  font-size: 12px;
   font-weight: 600;
-  color: #334155;
-  transition: all 0.15s ease;
-  user-select: none;
-}
-.shinkansen-chip:hover {
-  background: #f0f9ff;
-  border-color: #7dd3fc;
-  color: #0369a1;
-}
-.shinkansen-chip.is-active {
-  background: #0284c7;
-  border-color: #0284c7;
-  color: #ffffff;
-  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.35);
-}
-.shinkansen-chip-main {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  color: #1e293b;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  outline: none;
   cursor: pointer;
-  padding: 1px 2px;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.shinkansen-chip-swap {
+.shinkansen-select:focus {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+}
+.shinkansen-select-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 2px;
+}
+.shinkansen-select-dist-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+.shinkansen-select-dist {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0284c7;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  border-radius: 4px;
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+.shinkansen-select-line {
+  font-size: 11px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#btn-add-shinkansen-select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
-  padding: 1px 5px;
-  font-size: 11px;
-  font-weight: 700;
-  color: inherit;
-  cursor: pointer;
-  margin-left: 2px;
-  transition: all 0.15s ease;
-  line-height: 1.2;
-}
-.shinkansen-chip-swap:hover {
-  background: rgba(0, 0, 0, 0.15);
-  transform: scale(1.1);
-}
-.shinkansen-chip.is-active .shinkansen-chip-swap {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.4);
+  height: 26px;
+  padding: 0 12px;
+  background: #0284c7;
   color: #ffffff;
+  border: 1px solid #0284c7;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.25);
 }
-.shinkansen-chip.is-active .shinkansen-chip-swap:hover {
-  background: rgba(255, 255, 255, 0.45);
+#btn-add-shinkansen-select:hover:not(:disabled) {
+  background: #0369a1;
+  border-color: #0369a1;
+  box-shadow: 0 2px 5px rgba(2, 132, 199, 0.35);
+  transform: translateY(-1px);
 }
-.shinkansen-chip-sub {
-  font-size: 10px;
-  opacity: 0.85;
+#btn-add-shinkansen-select:active:not(:disabled) {
+  background: #075985;
+  border-color: #075985;
+  transform: translateY(0);
+  box-shadow: none;
+}
+#btn-add-shinkansen-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 .shinkansen-custom-details {
   margin-top: 4px;
