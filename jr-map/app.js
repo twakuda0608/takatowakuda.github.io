@@ -2047,11 +2047,15 @@
     if (!ROUTE_STATE.shinkansenSegments) ROUTE_STATE.shinkansenSegments = [];
     const exists = ROUTE_STATE.shinkansenSegments.some(s => s.fromId === fromSt.id && s.toId === toSt.id);
     if (!exists) {
+      const distInfo = calcShinkansenDistance(fromSt.id, toSt.id);
       ROUTE_STATE.shinkansenSegments.push({
         fromId: fromSt.id,
         toId: toSt.id,
         fromName: fromSt.name,
-        toName: toSt.name
+        toName: toSt.name,
+        km: distInfo ? distInfo.km : 0,
+        line: distInfo ? distInfo.line : '新幹線',
+        lineId: distInfo ? distInfo.lineId : 'shinkansen'
       });
       renderShinkansenSegmentsList();
       updateShinkansenCandidateChips();
@@ -2071,42 +2075,81 @@
   // キャッシュされた経路探索グラフ
   let ROUTE_ENGINE_GRAPH = null;
 
-  // 同一新幹線路線上の営業キロ算出 (完全非再帰・O(1))
+  // 同一新幹線路線上の営業キロ算出 (完全非再帰・O(1)・駅ID/駅名両対応・edgeDistances積算フォールバック)
   function calcDirectShinkansenDistance(fromId, toId) {
     if (!fromId || !toId || fromId === toId || !LINES) return null;
+    const st1 = STATIONS[fromId] || Object.values(STATIONS).find(s => s.name === fromId);
+    const st2 = STATIONS[toId] || Object.values(STATIONS).find(s => s.name === toId);
+    const id1 = st1 ? st1.id : fromId;
+    const id2 = st2 ? st2.id : toId;
+    const name1 = st1 ? st1.name : fromId;
+    const name2 = st2 ? st2.name : toId;
+
     const shLines = LINES.filter(l => l.category === 'shinkansen');
 
     for (const line of shLines) {
       const stIds = line.stations || [];
-      const idx1 = stIds.indexOf(fromId);
-      const idx2 = stIds.indexOf(toId);
+      let idx1 = stIds.indexOf(id1);
+      let idx2 = stIds.indexOf(id2);
+      if (idx1 < 0 && st1) idx1 = stIds.findIndex(sid => STATIONS[sid] && STATIONS[sid].name === name1);
+      if (idx2 < 0 && st2) idx2 = stIds.findIndex(sid => STATIONS[sid] && STATIONS[sid].name === name2);
+
       if (idx1 >= 0 && idx2 >= 0) {
-        if (line.stationKilos && line.stationKilos[fromId] !== undefined && line.stationKilos[toId] !== undefined) {
-          const k1 = line.stationKilos[fromId];
-          const k2 = line.stationKilos[toId];
-          const dist = Math.abs(Math.round((k2 - k1) * 10) / 10);
-          return { km: dist, line: line.name, lineId: line.id };
+        // A. stationKilos による計算 (駅IDキーまたは駅名キーの両方に対応)
+        if (line.stationKilos) {
+          const k1 = line.stationKilos[id1] !== undefined ? line.stationKilos[id1] : line.stationKilos[name1];
+          const k2 = line.stationKilos[id2] !== undefined ? line.stationKilos[id2] : line.stationKilos[name2];
+          if (k1 !== undefined && k2 !== undefined) {
+            const dist = Math.abs(Math.round((k2 - k1) * 10) / 10);
+            return { km: dist, line: line.name, lineId: line.id };
+          }
+        }
+
+        // B. edgeDistances による累積加算フォールバック
+        if (line.edgeDistances) {
+          const startIdx = Math.min(idx1, idx2);
+          const endIdx = Math.max(idx1, idx2);
+          let sumKm = 0, ok = true;
+          for (let i = startIdx; i < endIdx; i++) {
+            const sA = stIds[i], sB = stIds[i + 1];
+            const nA = STATIONS[sA] ? STATIONS[sA].name : sA;
+            const nB = STATIONS[sB] ? STATIONS[sB].name : sB;
+            const d = line.edgeDistances[`${sA}--${sB}`] ?? line.edgeDistances[`${sB}--${sA}`] ??
+                      line.edgeDistances[`${nA}--${nB}`] ?? line.edgeDistances[`${nB}--${nA}`];
+            if (d !== undefined && d > 0) {
+              sumKm += d;
+            } else {
+              ok = false;
+              break;
+            }
+          }
+          if (ok && sumKm > 0) {
+            return { km: Math.round(sumKm * 10) / 10, line: line.name, lineId: line.id };
+          }
         }
       }
     }
     return null;
   }
 
-  // 新幹線駅ペアの高速営業キロ算出 (LINESとofficial-kilosからO(1)で直接計算・非再帰)
-  function calcShinkansenDistance(fromId, toId) {
-    if (!fromId || !toId || fromId === toId || !LINES) return null;
+  // 新幹線駅ペアの高速営業キロ算出 (LINESとofficial-kilosからO(1)で直接計算・非再帰・全主要新幹線ハブ網羅)
+  function calcShinkansenDistance(fromId, toId, depth = 0) {
+    if (!fromId || !toId || fromId === toId || !LINES || depth > 2) return null;
 
     // 1. 同一新幹線路線上にある場合 (直通)
     const direct = calcDirectShinkansenDistance(fromId, toId);
     if (direct) return direct;
 
-    // 2. 接続する主要新幹線路線跨ぎ (東海道〜山陽: 新大阪、山陽〜九州: 博多、東北〜北海道: 新青森、東海道〜東北: 東京)
-    // 乗り継ぎハブを介して双方が同一路線上にある場合のみ合算 (非再帰)
+    // 2. 接続する主要新幹線路線跨ぎ (東海道〜山陽: 新大阪、山陽〜九州: 博多、東北〜北海道: 新青森、東海道〜東北: 東京、上越〜北陸: 高崎、東北〜上越・北陸: 大宮、東北〜山形: 福島、東北〜秋田: 盛岡)
     const throughBridges = [
       { hub: 'shin-osaka', name: '東海道・山陽新幹線', lineId: 'shinkansen-tokaido' },
       { hub: 'hakata', name: '山陽・九州新幹線', lineId: 'shinkansen-sanyo' },
       { hub: 'shin-aomori', name: '東北・北海道新幹線', lineId: 'shinkansen-tohoku' },
-      { hub: 'tokyo', name: '東海道・東北新幹線', lineId: 'shinkansen-tokaido' }
+      { hub: 'tokyo', name: '東海道・東北新幹線', lineId: 'shinkansen-tokaido' },
+      { hub: 'omiya', name: '東北・上越・北陸新幹線', lineId: 'shinkansen-tohoku' },
+      { hub: 'takasaki', name: '上越・北陸新幹線', lineId: 'shinkansen-joetsu' },
+      { hub: 'fukushima', name: '東北・山形新幹線', lineId: 'shinkansen-tohoku' },
+      { hub: 'morioka', name: '東北・秋田新幹線', lineId: 'shinkansen-tohoku' }
     ];
 
     for (const b of throughBridges) {
@@ -2167,7 +2210,7 @@
     return null;
   }
 
-  // ルートから関連する新幹線候補ペアを動的に抽出 (ルート外駅の混入を完全防止)
+  // ルートから関連する新幹線候補ペアを動的に抽出 (第三セクター並行在来線区間・全主要ハブ網羅)
   function getRelevantShinkansenPairs(explicitDeptSt, explicitDestSt) {
     const isShinkansenStation = (id) => {
       if (!id || !STATIONS[id]) return false;
@@ -2178,7 +2221,27 @@
     const candidates = [];
     const seenPairs = new Set();
 
-    // 1. 探索後: lastResult のルート通過駅（allStationIds）のみを対象とする
+    const addCandidatePair = (fromId, toId) => {
+      if (!fromId || !toId || fromId === toId) return;
+      const pairKey = [fromId, toId].sort().join('--');
+      if (seenPairs.has(pairKey)) return;
+
+      const shDist = calcShinkansenDistance(fromId, toId);
+      if (shDist && shDist.km > 0) {
+        seenPairs.add(pairKey);
+        candidates.push({
+          from: STATIONS[fromId].name,
+          to: STATIONS[toId].name,
+          fromId: fromId,
+          toId: toId,
+          km: shDist.km,
+          line: shDist.line,
+          lineId: shDist.lineId
+        });
+      }
+    };
+
+    // 1. 探索後: lastResult のルート通過駅（allStationIds）
     if (ROUTE_STATE.lastResult && ROUTE_STATE.lastResult.allStationIds) {
       const routeStationIds = ROUTE_STATE.lastResult.allStationIds;
       const shInRoute = [];
@@ -2191,55 +2254,16 @@
         }
       });
 
-      // ルート出現順序 (i < j) で新幹線区間をペア化
       for (let i = 0; i < shInRoute.length; i++) {
         for (let j = i + 1; j < shInRoute.length; j++) {
-          const fromId = shInRoute[i];
-          const toId = shInRoute[j];
-          const pairKey = [fromId, toId].sort().join('--');
-          if (seenPairs.has(pairKey)) continue;
-
-          const shDist = calcShinkansenDistance(fromId, toId);
-          if (shDist && shDist.km > 0) {
-            seenPairs.add(pairKey);
-            candidates.push({
-              from: STATIONS[fromId].name,
-              to: STATIONS[toId].name,
-              fromId: fromId,
-              toId: toId,
-              km: shDist.km,
-              line: shDist.line,
-              lineId: shDist.lineId
-            });
-            if (candidates.length >= 8) break;
-          }
+          addCandidatePair(shInRoute[i], shInRoute[j]);
+          if (candidates.length >= 8) break;
         }
         if (candidates.length >= 8) break;
       }
-
-      // 選択中セグメントの解除用保持 (候補にない場合も追加)
-      if (ROUTE_STATE.shinkansenSegments && ROUTE_STATE.shinkansenSegments.length > 0) {
-        ROUTE_STATE.shinkansenSegments.forEach(seg => {
-          const pairKey = [seg.fromId, seg.toId].sort().join('--');
-          if (!seenPairs.has(pairKey)) {
-            seenPairs.add(pairKey);
-            candidates.unshift({
-              from: seg.fromName || (STATIONS[seg.fromId] ? STATIONS[seg.fromId].name : seg.fromId),
-              to: seg.toName || (STATIONS[seg.toId] ? STATIONS[seg.toId].name : seg.toId),
-              fromId: seg.fromId,
-              toId: seg.toId,
-              km: seg.km || 0,
-              line: seg.line,
-              lineId: seg.lineId
-            });
-          }
-        });
-      }
-
-      return candidates;
     }
 
-    // 2. 探索前 (入力中): 発着・経由駅の在来線最短経路上の新幹線停車駅のみを抽出
+    // 2. 探索前 (入力中) またはルート通過新幹線駅が少ない場合の補強
     const deptInput = document.getElementById('route-dept-input');
     const destInput = document.getElementById('route-dest-input');
 
@@ -2255,103 +2279,97 @@
 
     const inputChain = [deptSt, ...viaSts, destSt].filter(Boolean);
 
-    // 未入力時はデフォルト候補
-    if (inputChain.length === 0) {
-      return DEFAULT_SHINKANSEN_PAIRS;
-    }
+    // 全国主要新幹線接続ハブ
+    const MAJOR_SHINKANSEN_HUBS = [
+      'tokyo', 'shinagawa', 'shin-yokohama', 'shizuoka', 'nagoya', 'kyoto', 'shin-osaka', 'shin-kobe', 'okayama', 'hiroshima', 'kokura', 'hakata',
+      'ueno', 'omiya', 'utsunomiya', 'koriyama', 'fukushima', 'sendai', 'morioka', 'hachinohe', 'shin-aomori', 'shin-hakodate-hokuto',
+      'takasaki', 'echigo-yuzawa', 'nagaoka', 'niigata', 'karuizawa', 'nagano', 'toyama', 'kanazawa', 'fukui', 'tsuruga',
+      'yamagata', 'shinjo', 'akita', 'kumamoto', 'kagoshima-chuo', 'takeo-onsen', 'nagasaki'
+    ];
 
-    // 1駅のみ新幹線駅が入力されている場合 (例: 発駅が東京)
-    if (inputChain.length === 1) {
-      const singleSt = inputChain[0];
-      if (isShinkansenStation(singleSt.id)) {
-        const hubs = ['tokyo', 'shin-osaka', 'sendai', 'kanazawa', 'hakata', 'nagoya', 'hiroshima', 'morioka'];
-        for (const hubId of hubs) {
-          if (hubId === singleSt.id || !STATIONS[hubId]) continue;
-          const pairKey = [singleSt.id, hubId].sort().join('--');
-          if (seenPairs.has(pairKey)) continue;
-          const shDist = calcShinkansenDistance(singleSt.id, hubId);
-          if (shDist && shDist.km > 0) {
-            seenPairs.add(pairKey);
-            candidates.push({
-              from: singleSt.name,
-              to: STATIONS[hubId].name,
-              fromId: singleSt.id,
-              toId: hubId,
-              km: shDist.km,
-              line: shDist.line,
-              lineId: shDist.lineId
-            });
-            if (candidates.length >= 4) break;
-          }
+    if (inputChain.length >= 2) {
+      const passedShIds = [];
+      const seenPassedSh = new Set();
+
+      for (let k = 0; k < inputChain.length - 1; k++) {
+        const u = inputChain[k];
+        const v = inputChain[k + 1];
+
+        if (isShinkansenStation(u.id) && !seenPassedSh.has(u.id)) {
+          seenPassedSh.add(u.id);
+          passedShIds.push(u.id);
         }
-      }
-      return candidates.length > 0 ? candidates : DEFAULT_SHINKANSEN_PAIRS;
-    }
 
-    // 2駅以上入力されている場合: 各レグの在来線最短経路を調べて通過する新幹線駅のみを収集
-    const passedShIds = [];
-    const seenPassedSh = new Set();
+        if (window.JR_ROUTE_ENGINE && ROUTE_ENGINE_GRAPH && u.id !== v.id) {
+          // 在来線探索と新幹線許可探索の両方から新幹線駅を収集 (並行在来線第三セクター化区間にも対応)
+          [false, true].forEach(allowSh => {
+            try {
+              const leg = window.JR_ROUTE_ENGINE.findLeg(
+                ROUTE_ENGINE_GRAPH,
+                u.id,
+                v.id,
+                { allowShinkansen: allowSh }
+              );
+              if (leg && Array.isArray(leg)) {
+                leg.forEach(step => {
+                  if (step && step.to && isShinkansenStation(step.to) && !seenPassedSh.has(step.to)) {
+                    seenPassedSh.add(step.to);
+                    passedShIds.push(step.to);
+                  }
+                });
+              }
+            } catch (e) {}
+          });
+        }
 
-    for (let k = 0; k < inputChain.length - 1; k++) {
-      const u = inputChain[k];
-      const v = inputChain[k + 1];
+        if (isShinkansenStation(v.id) && !seenPassedSh.has(v.id)) {
+          seenPassedSh.add(v.id);
+          passedShIds.push(v.id);
+        }
 
-      if (isShinkansenStation(u.id) && !seenPassedSh.has(u.id)) {
-        seenPassedSh.add(u.id);
-        passedShIds.push(u.id);
-      }
-
-      if (window.JR_ROUTE_ENGINE && ROUTE_ENGINE_GRAPH && u.id !== v.id) {
-        try {
-          const leg = window.JR_ROUTE_ENGINE.findLeg(
-            ROUTE_ENGINE_GRAPH,
-            u.id,
-            v.id,
-            { allowShinkansen: false }
-          );
-          if (leg && Array.isArray(leg)) {
-            leg.forEach(step => {
-              if (step && step.to && isShinkansenStation(step.to) && !seenPassedSh.has(step.to)) {
-                seenPassedSh.add(step.to);
-                passedShIds.push(step.to);
+        // 発駅または着駅が新幹線駅の場合、所属新幹線路線上の主要ハブとのペアを追加
+        if (isShinkansenStation(u.id)) {
+          const myLines = LINES.filter(l => l.category === 'shinkansen' && l.stations.includes(u.id));
+          myLines.forEach(line => {
+            line.stations.forEach(stId => {
+              if (MAJOR_SHINKANSEN_HUBS.includes(stId)) {
+                addCandidatePair(u.id, stId);
               }
             });
-          }
-        } catch (e) {}
-      }
-
-      if (isShinkansenStation(v.id) && !seenPassedSh.has(v.id)) {
-        seenPassedSh.add(v.id);
-        passedShIds.push(v.id);
-      }
-    }
-
-    for (let i = 0; i < passedShIds.length; i++) {
-      for (let j = i + 1; j < passedShIds.length; j++) {
-        const fromId = passedShIds[i];
-        const toId = passedShIds[j];
-        const pairKey = [fromId, toId].sort().join('--');
-        if (seenPairs.has(pairKey)) continue;
-
-        const shDist = calcShinkansenDistance(fromId, toId);
-        if (shDist && shDist.km > 0) {
-          seenPairs.add(pairKey);
-          candidates.push({
-            from: STATIONS[fromId].name,
-            to: STATIONS[toId].name,
-            fromId: fromId,
-            toId: toId,
-            km: shDist.km,
-            line: shDist.line,
-            lineId: shDist.lineId
           });
-          if (candidates.length >= 8) break;
+        }
+        if (isShinkansenStation(v.id)) {
+          const myLines = LINES.filter(l => l.category === 'shinkansen' && l.stations.includes(v.id));
+          myLines.forEach(line => {
+            line.stations.forEach(stId => {
+              if (MAJOR_SHINKANSEN_HUBS.includes(stId)) {
+                addCandidatePair(stId, v.id);
+              }
+            });
+          });
         }
       }
-      if (candidates.length >= 8) break;
+
+      for (let i = 0; i < passedShIds.length; i++) {
+        for (let j = i + 1; j < passedShIds.length; j++) {
+          addCandidatePair(passedShIds[i], passedShIds[j]);
+          if (candidates.length >= 8) break;
+        }
+        if (candidates.length >= 8) break;
+      }
+    } else if (inputChain.length === 1) {
+      const singleSt = inputChain[0];
+      if (isShinkansenStation(singleSt.id)) {
+        const hubs = ['tokyo', 'shin-osaka', 'sendai', 'kanazawa', 'hakata', 'nagoya', 'hiroshima', 'morioka', 'takasaki'];
+        for (const hubId of hubs) {
+          if (hubId === singleSt.id || !STATIONS[hubId]) continue;
+          addCandidatePair(singleSt.id, hubId);
+          if (candidates.length >= 4) break;
+        }
+      }
     }
 
-    // 選択中セグメントの解除用保持
+    // 選択中セグメントの解除用保持 (候補にない場合も先頭に追加)
     if (ROUTE_STATE.shinkansenSegments && ROUTE_STATE.shinkansenSegments.length > 0) {
       ROUTE_STATE.shinkansenSegments.forEach(seg => {
         const pairKey = [seg.fromId, seg.toId].sort().join('--');
@@ -2370,7 +2388,7 @@
       });
     }
 
-    return candidates;
+    return candidates.length > 0 ? candidates : DEFAULT_SHINKANSEN_PAIRS;
   }
 
   // ルート連動の新幹線候補チップを描画 (向き反転ボタン ⇄ 完備)
@@ -4123,5 +4141,15 @@
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
+  }
+
+  if (typeof window !== 'undefined') {
+    window.JR_APP = {
+      calcDirectShinkansenDistance,
+      calcShinkansenDistance,
+      getRelevantShinkansenPairs,
+      addShinkansenSegment,
+      getRouteState: () => ROUTE_STATE
+    };
   }
 })();
