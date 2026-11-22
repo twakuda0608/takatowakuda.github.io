@@ -123,8 +123,6 @@
       const stTo = stations[toId];
       const nFrom = stFrom ? stFrom.name : fromId;
       const nTo = stTo ? stTo.name : toId;
-      // 名寄以北の駅を含む区間は地方交通線
-      // 旭川〜名寄間の駅名
       const soyaMainStationNames = new Set([
         '旭川', '旭川四条', '新旭川', '永山', '北永山', '比布', '蘭留',
         '塩狩', '和寒', '剣淵', '士別', '多寄', '瑞穂', '風連', '名寄高校', '名寄'
@@ -156,27 +154,42 @@
 
   // 2. 運賃表 (Fare Tables) 定義
 
-  // A. JR東日本 B表 (地方交通線単独・2026年3月改定きっぷ運賃)
-  const JREAST_B_FARE_TABLE = [
-    { maxKm: 3, ticket: 160 }, { maxKm: 6, ticket: 200 }, { maxKm: 10, ticket: 220 },
-    { maxKm: 15, ticket: 260 }, { maxKm: 20, ticket: 340 }, { maxKm: 25, ticket: 430 },
-    { maxKm: 30, ticket: 520 }, { maxKm: 35, ticket: 610 }, { maxKm: 40, ticket: 700 },
-    { maxKm: 45, ticket: 790 }, { maxKm: 50, ticket: 880 }, { maxKm: 60, ticket: 1020 },
-    { maxKm: 70, ticket: 1200 }, { maxKm: 80, ticket: 1380 }, { maxKm: 90, ticket: 1560 },
-    { maxKm: 100, ticket: 1730 }, { maxKm: 110, ticket: 1930 }, { maxKm: 128, ticket: 2130 }
-  ];
+  // A. 各社 地方交通線 10km以下初乗り運賃テーブル (旅規第84条第1項第2号準拠)
+  // ※11km以上は換算キロ（Math.ceil(localKm * 1.1)）で各社幹線運賃表を参照
+  const LOCAL_UNDER_10KM_TABLES = {
+    east: [
+      { maxKm: 3, ticket: 160 },
+      { maxKm: 6, ticket: 200 },
+      { maxKm: 10, ticket: 220 }
+    ],
+    central: [
+      { maxKm: 3, ticket: 150 },
+      { maxKm: 6, ticket: 190 },
+      { maxKm: 10, ticket: 210 }
+    ],
+    west: [
+      { maxKm: 3, ticket: 150 },
+      { maxKm: 6, ticket: 190 },
+      { maxKm: 10, ticket: 210 }
+    ],
+    hokkaido: [
+      { maxKm: 3, ticket: 200 },
+      { maxKm: 6, ticket: 250 },
+      { maxKm: 10, ticket: 300 }
+    ],
+    shikoku: [
+      { maxKm: 3, ticket: 190 },
+      { maxKm: 6, ticket: 240 },
+      { maxKm: 10, ticket: 280 }
+    ],
+    kyushu: [
+      { maxKm: 3, ticket: 170 },
+      { maxKm: 6, ticket: 210 },
+      { maxKm: 10, ticket: 230 }
+    ]
+  };
 
-  // B. 本州3社 (JR東海・JR西日本) 地方交通線単独運賃表
-  const CENTRAL_WEST_LOCAL_FARE_TABLE = [
-    { maxKm: 3, ticket: 150 }, { maxKm: 6, ticket: 190 }, { maxKm: 10, ticket: 210 },
-    { maxKm: 15, ticket: 240 }, { maxKm: 20, ticket: 330 }, { maxKm: 25, ticket: 420 },
-    { maxKm: 30, ticket: 510 }, { maxKm: 35, ticket: 590 }, { maxKm: 40, ticket: 680 },
-    { maxKm: 45, ticket: 770 }, { maxKm: 50, ticket: 860 }, { maxKm: 60, ticket: 990 },
-    { maxKm: 70, ticket: 1170 }, { maxKm: 80, ticket: 1340 }, { maxKm: 90, ticket: 1520 },
-    { maxKm: 100, ticket: 1690 }, { maxKm: 110, ticket: 1880 }, { maxKm: 128, ticket: 2080 }
-  ];
-
-  // C. JR西日本 電車特定区間 (C表)
+  // B. JR西日本 電車特定区間 (C表)
   const WEST_DENSHA_TOKUTEI_TABLE = [
     { maxKm: 3, ticket: 140 }, { maxKm: 6, ticket: 170 }, { maxKm: 10, ticket: 190 },
     { maxKm: 15, ticket: 230 }, { maxKm: 20, ticket: 320 }, { maxKm: 25, ticket: 410 },
@@ -186,13 +199,13 @@
     { maxKm: 100, ticket: 1630 }
   ];
 
-  // D. JR西日本 大阪環状線内 (D表)
+  // C. JR西日本 大阪環状線内 (D表)
   const WEST_OSAKA_LOOP_TABLE = [
     { maxKm: 3, ticket: 140 }, { maxKm: 6, ticket: 170 }, { maxKm: 10, ticket: 190 },
     { maxKm: 15, ticket: 220 }, { maxKm: 20, ticket: 250 }, { maxKm: 25, ticket: 280 }
   ];
 
-  // E. JR北海道 幹線単独運賃表
+  // D. JR北海道 幹線単独運賃表 (1000kmまで完備)
   const HOKKAIDO_MAIN_FARE_TABLE = [
     { maxKm: 3, ticket: 200 }, { maxKm: 6, ticket: 250 }, { maxKm: 10, ticket: 290 },
     { maxKm: 15, ticket: 340 }, { maxKm: 20, ticket: 440 }, { maxKm: 25, ticket: 540 },
@@ -207,20 +220,14 @@
     { maxKm: 400, ticket: 7700 }, { maxKm: 420, ticket: 8030 }, { maxKm: 440, ticket: 8360 },
     { maxKm: 460, ticket: 8690 }, { maxKm: 480, ticket: 9020 }, { maxKm: 500, ticket: 9350 },
     { maxKm: 520, ticket: 9680 }, { maxKm: 540, ticket: 10010 }, { maxKm: 560, ticket: 10340 },
-    { maxKm: 580, ticket: 10670 }, { maxKm: 600, ticket: 11000 }
+    { maxKm: 580, ticket: 10670 }, { maxKm: 600, ticket: 11000 },
+    { maxKm: 640, ticket: 11440 }, { maxKm: 680, ticket: 11770 }, { maxKm: 720, ticket: 12210 },
+    { maxKm: 760, ticket: 12540 }, { maxKm: 800, ticket: 12980 }, { maxKm: 840, ticket: 13310 },
+    { maxKm: 880, ticket: 13640 }, { maxKm: 920, ticket: 14080 }, { maxKm: 960, ticket: 14410 },
+    { maxKm: 1000, ticket: 14740 }
   ];
 
-  // F. JR北海道 地方交通線単独運賃表
-  const HOKKAIDO_LOCAL_FARE_TABLE = [
-    { maxKm: 3, ticket: 200 }, { maxKm: 6, ticket: 250 }, { maxKm: 10, ticket: 300 },
-    { maxKm: 15, ticket: 360 }, { maxKm: 20, ticket: 460 }, { maxKm: 25, ticket: 580 },
-    { maxKm: 30, ticket: 680 }, { maxKm: 35, ticket: 800 }, { maxKm: 40, ticket: 910 },
-    { maxKm: 45, ticket: 1020 }, { maxKm: 50, ticket: 1140 }, { maxKm: 60, ticket: 1350 },
-    { maxKm: 70, ticket: 1560 }, { maxKm: 80, ticket: 1770 }, { maxKm: 90, ticket: 1980 },
-    { maxKm: 100, ticket: 2210 }, { maxKm: 110, ticket: 2470 }, { maxKm: 128, ticket: 2730 }
-  ];
-
-  // G. JR四国 幹線単独運賃表
+  // E. JR四国 幹線単独運賃表 (400kmまで完備)
   const SHIKOKU_MAIN_FARE_TABLE = [
     { maxKm: 3, ticket: 190 }, { maxKm: 6, ticket: 240 }, { maxKm: 10, ticket: 260 },
     { maxKm: 15, ticket: 300 }, { maxKm: 20, ticket: 400 }, { maxKm: 25, ticket: 500 },
@@ -230,20 +237,12 @@
     { maxKm: 100, ticket: 1910 }, { maxKm: 120, ticket: 2240 }, { maxKm: 140, ticket: 2570 },
     { maxKm: 160, ticket: 2900 }, { maxKm: 180, ticket: 3240 }, { maxKm: 200, ticket: 3570 },
     { maxKm: 220, ticket: 3840 }, { maxKm: 240, ticket: 4160 }, { maxKm: 260, ticket: 4440 },
-    { maxKm: 280, ticket: 4760 }, { maxKm: 300, ticket: 5040 }
+    { maxKm: 280, ticket: 4760 }, { maxKm: 300, ticket: 5040 },
+    { maxKm: 320, ticket: 5360 }, { maxKm: 340, ticket: 5590 }, { maxKm: 360, ticket: 5910 },
+    { maxKm: 380, ticket: 6230 }, { maxKm: 400, ticket: 6450 }
   ];
 
-  // H. JR四国 地方交通線単独運賃表
-  const SHIKOKU_LOCAL_FARE_TABLE = [
-    { maxKm: 3, ticket: 190 }, { maxKm: 6, ticket: 240 }, { maxKm: 10, ticket: 280 },
-    { maxKm: 15, ticket: 320 }, { maxKm: 20, ticket: 420 }, { maxKm: 25, ticket: 530 },
-    { maxKm: 30, ticket: 630 }, { maxKm: 35, ticket: 740 }, { maxKm: 40, ticket: 840 },
-    { maxKm: 45, ticket: 940 }, { maxKm: 50, ticket: 1060 }, { maxKm: 60, ticket: 1240 },
-    { maxKm: 70, ticket: 1440 }, { maxKm: 80, ticket: 1640 }, { maxKm: 90, ticket: 1840 },
-    { maxKm: 100, ticket: 2050 }, { maxKm: 110, ticket: 2270 }, { maxKm: 128, ticket: 2510 }
-  ];
-
-  // I. JR九州 幹線単独運賃表
+  // F. JR九州 幹線単独運賃表 (600kmまで完備・公式準拠)
   const KYUSHU_MAIN_FARE_TABLE = [
     { maxKm: 3, ticket: 170 }, { maxKm: 6, ticket: 210 }, { maxKm: 10, ticket: 230 },
     { maxKm: 15, ticket: 280 }, { maxKm: 20, ticket: 380 }, { maxKm: 25, ticket: 480 },
@@ -253,20 +252,15 @@
     { maxKm: 100, ticket: 1850 }, { maxKm: 120, ticket: 2170 }, { maxKm: 140, ticket: 2530 },
     { maxKm: 160, ticket: 2860 }, { maxKm: 180, ticket: 3200 }, { maxKm: 200, ticket: 3520 },
     { maxKm: 220, ticket: 3790 }, { maxKm: 240, ticket: 4110 }, { maxKm: 260, ticket: 4370 },
-    { maxKm: 280, ticket: 4700 }, { maxKm: 300, ticket: 4960 }, { maxKm: 320, ticket: 5290 }
+    { maxKm: 280, ticket: 4700 }, { maxKm: 300, ticket: 4960 }, { maxKm: 320, ticket: 5290 },
+    { maxKm: 340, ticket: 5610 }, { maxKm: 360, ticket: 5940 }, { maxKm: 380, ticket: 6270 },
+    { maxKm: 400, ticket: 6490 }, { maxKm: 420, ticket: 6820 }, { maxKm: 440, ticket: 7040 },
+    { maxKm: 460, ticket: 7370 }, { maxKm: 480, ticket: 7590 }, { maxKm: 500, ticket: 7920 },
+    { maxKm: 520, ticket: 8250 }, { maxKm: 540, ticket: 8470 }, { maxKm: 560, ticket: 8800 },
+    { maxKm: 580, ticket: 9020 }, { maxKm: 600, ticket: 9350 }
   ];
 
-  // J. JR九州 地方交通線単独運賃表
-  const KYUSHU_LOCAL_FARE_TABLE = [
-    { maxKm: 3, ticket: 170 }, { maxKm: 6, ticket: 210 }, { maxKm: 10, ticket: 230 },
-    { maxKm: 15, ticket: 280 }, { maxKm: 20, ticket: 380 }, { maxKm: 25, ticket: 480 },
-    { maxKm: 30, ticket: 580 }, { maxKm: 35, ticket: 670 }, { maxKm: 40, ticket: 780 },
-    { maxKm: 45, ticket: 880 }, { maxKm: 50, ticket: 980 }, { maxKm: 60, ticket: 1160 },
-    { maxKm: 70, ticket: 1350 }, { maxKm: 80, ticket: 1540 }, { maxKm: 90, ticket: 1730 },
-    { maxKm: 100, ticket: 1930 }, { maxKm: 110, ticket: 2140 }, { maxKm: 128, ticket: 2360 }
-  ];
-
-  // K. 三島会社 跨線加算額表 (本州3社と跨る場合、三島会社区間の営業キロに応じて加算)
+  // G. 三島会社 跨線加算額表 (本州3社と跨る場合、三島会社区間の営業キロに応じて加算)
   const HOKKAIDO_ADDON_TABLE = [
     { maxKm: 25, addOn: 110 }, { maxKm: 50, addOn: 150 }, { maxKm: 75, addOn: 200 },
     { maxKm: 100, addOn: 240 }, { maxKm: 150, addOn: 290 }, { maxKm: 99999, addOn: 330 }
@@ -282,7 +276,54 @@
     { maxKm: 100, addOn: 170 }, { maxKm: 150, addOn: 200 }, { maxKm: 99999, addOn: 220 }
   ];
 
-  // 3. 特定都区市内 (旅規第86条) & 東京山手線内 (旅規第87条) 定義
+  // 3. JR西日本 電車特定区間 対象駅セット (旅規第78条第1項第2号準拠)
+  const WEST_DENSHA_TOKUTEI_STATIONS = new Set([
+    // 東海道・山陽本線: 京都〜西明石
+    '京都', '西大路', '桂川', '向日町', '長岡京', '山崎', '島本', '高槻', '摂津富田', 'JR総持寺',
+    '茨木', '千里丘', '岸辺', '吹田', '東淀川', '新大阪', '大阪', '塚本', '尼崎', '立花',
+    '甲子園口', '西宮', 'さくら夙川', '芦屋', '甲南山手', '摂津本山', '住吉', '六甲道', '摩耶', '灘',
+    '三ノ宮', '元町', '神戸', '兵庫', '新長田', '鷹取', '須磨海浜公園', '須磨', '塩屋', '垂水',
+    '舞子', '朝霧', '明石', '西明石',
+
+    // 大阪環状線
+    '福島', '野田', '西九条', '弁天町', '大正', '芦原橋', '今宮', '新今宮', '天王寺',
+    '寺田町', '桃谷', '鶴橋', '玉造', '森ノ宮', '大阪城公園', '京橋', '桜ノ宮', '天満',
+
+    // 桜島線 (JRゆめ咲線)
+    '安治川口', 'ユニバーサルシティ', '桜島',
+
+    // JR東西線
+    '大阪城北詰', '大阪天満宮', '北新地', '新福島', '海老江', '御幣島', '加島',
+
+    // 片町線 (学研都市線: 京橋〜木津)
+    '鴫野', '放出', '徳庵', '鴻池新田', '住道', '野崎', '四条畷', '忍ケ丘', '東寝屋川', '寝屋川公園',
+    '星田', '河内磐船', '津田', '藤阪', '長尾', '松井山手', '大住', '京田辺', '同志社前', 'JR三山木',
+    '下狛', '祝園', '西木津', '木津',
+
+    // おおさか東線
+    '南吹田', 'JR淡路', '城北公園通', 'JR野江', '鴫野', '放出', '高井田中央', 'JR河内永和',
+    'JR俊徳道', 'JR長瀬', '衣摺加美北', '新加美', '久宝寺',
+
+    // 関西本線 (大和路線: JR難波〜奈良)
+    'JR難波', '今宮', '新今宮', '天王寺', '東部市場前', '平野', '加美', '久宝寺', '八尾', '志紀',
+    '柏原', '高井田', '河内堅上', '三郷', '王寺', '法隆寺', '大和小泉', '郡山', '奈良',
+
+    // 阪和線 (天王寺〜鳳、鳳〜東羽衣)
+    '美章園', '南田辺', '鶴ヶ丘', '長居', '我孫子町', '杉本町', '浅香', '堺市', '三国ヶ丘',
+    '百舌鳥', '上野芝', '津久野', '鳳', '東羽衣',
+
+    // 福知山線 (JR宝塚線: 尼崎〜新三田)
+    '塚口', '猪名寺', '伊丹', '北伊丹', '川西池田', '中山寺', '宝塚', '生瀬', '西宮名塩',
+    '武田尾', '道場', '三田', '新三田',
+
+    // 和歌山線 (王寺〜高田)
+    '畠田', '志都美', '香芝', 'JR五位堂', '高田',
+
+    // 桜井線 (万葉まほろば線: 奈良〜高田)
+    '京終', '帯解', '櫟本', '天理', '長柄', '柳本', '巻向', '三輪', '桜井', '香久山', '畝傍', '金橋'
+  ]);
+
+  // 4. 特定都区市内 (旅規第86条) & 東京山手線内 (旅規第87条) 定義
   const SPECIFIC_CITY_ZONES = {
     // A. 東京山手線内 (中心駅: 東京) - 片道101〜200kmで適用
     yamanote: {
@@ -477,37 +518,72 @@
     }
   };
 
-  // 4. 旅規第69条 (特定区間通過の最短営業キロ計算) 区間定義
+  // 5. 旅規第69条 (特定区間通過の最短営業キロ計算) 区間定義
   const ARTICLE_69_CORRIDORS = [
     {
       id: 'art69::mihara-kaitaichi',
       name: '三原〜海田市（呉線迂回）',
-      // 両端駅
       endStationNames: ['三原', '海田市'],
-      // 迂回対象路線
       detourLineIds: new Set(['kure-line']),
-      // 短縮置き換え幹線路線
       shortcutLineId: 'sanyo-main',
-      shortcutKm: 71.4, // 山陽本線経由の営業キロ
-      detourKm: 87.0    // 呉線経由の実営業キロ
+      shortcutKm: 71.4,
+      detourKm: 87.0
     },
     {
       id: 'art69::akabane-omiya',
       name: '赤羽〜大宮（埼京線迂回）',
       endStationNames: ['赤羽', '大宮'],
-      detourLineIds: new Set(['tohoku-main']), // 武蔵浦和経由の支線
+      detourLineIds: new Set(['tohoku-main']),
+      detourStationNames: new Set(['武蔵浦和']),
       shortcutLineId: 'tohoku-main',
-      shortcutKm: 17.1, // 浦和経由
-      detourKm: 18.0    // 武蔵浦和経由
+      shortcutKm: 17.1,
+      detourKm: 18.0
     },
     {
       id: 'art69::iwakuni-kushigahama',
       name: '岩国〜櫛ケ浜（山陽本線柳井迂回）',
       endStationNames: ['岩国', '櫛ケ浜'],
       detourLineIds: new Set(['sanyo-main']),
+      detourStationNames: new Set(['柳井']),
       shortcutLineId: 'gantoku-line',
-      shortcutKm: 43.7, // 岩徳線経由
-      detourKm: 65.4    // 山陽本線（柳井）経由
+      shortcutKm: 43.7,
+      detourKm: 65.4
+    },
+    {
+      id: 'art69::shinosaka-amagasaki',
+      name: '新大阪〜尼崎（東西線・おおさか東線迂回）',
+      endStationNames: ['新大阪', '尼崎'],
+      detourLineIds: new Set(['osaka-higashi', 'jr-tozai', 'katamachi-line']),
+      shortcutLineId: 'tokaido-west',
+      shortcutKm: 7.7, // 東海道本線経由
+      detourKm: 16.0   // おおさか東線・東西線鴫野・北新地経由概算
+    },
+    {
+      id: 'art69::kashii-hakata',
+      name: '香椎〜博多（香椎線・篠栗線迂回）',
+      endStationNames: ['香椎', '博多'],
+      detourLineIds: new Set(['kyushu-kashii', 'kyushu-sasaguri']),
+      shortcutLineId: 'kyushu-kagoshima',
+      shortcutKm: 8.4,
+      detourKm: 14.9
+    },
+    {
+      id: 'art69::kusatsu-tsuge',
+      name: '草津〜柘植（米原・名古屋迂回）',
+      endStationNames: ['草津', '柘植'],
+      detourLineIds: new Set(['tokaido-west', 'tokai-tokaido', 'tokai-kansai', 'kansai-west']),
+      shortcutLineId: 'kusatsu-line',
+      shortcutKm: 36.7, // 草津線経由（地方交通線）
+      detourKm: 215.0   // 米原・名古屋迂回概算
+    },
+    {
+      id: 'art69::nippori-akabane',
+      name: '日暮里〜赤羽（尾久経由・田端経由同一扱い）',
+      endStationNames: ['日暮里', '赤羽'],
+      detourLineIds: new Set(['tohoku-main', 'yamanote', 'keihin-tohoku']),
+      shortcutLineId: 'tohoku-main',
+      shortcutKm: 7.4,
+      detourKm: 7.4
     }
   ];
 
@@ -515,18 +591,15 @@
   const FareRulesData = {
     LOCAL_LINE_IDS,
     isLocalLineSegment,
-    JREAST_B_FARE_TABLE,
-    CENTRAL_WEST_LOCAL_FARE_TABLE,
+    LOCAL_UNDER_10KM_TABLES,
     WEST_DENSHA_TOKUTEI_TABLE,
     WEST_OSAKA_LOOP_TABLE,
+    WEST_DENSHA_TOKUTEI_STATIONS,
     HOKKAIDO_MAIN_FARE_TABLE,
-    HOKKAIDO_LOCAL_FARE_TABLE,
     HOKKAIDO_ADDON_TABLE,
     SHIKOKU_MAIN_FARE_TABLE,
-    SHIKOKU_LOCAL_FARE_TABLE,
     SHIKOKU_ADDON_TABLE,
     KYUSHU_MAIN_FARE_TABLE,
-    KYUSHU_LOCAL_FARE_TABLE,
     KYUSHU_ADDON_TABLE,
     SPECIFIC_CITY_ZONES,
     ARTICLE_69_CORRIDORS
