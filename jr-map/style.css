@@ -285,6 +285,7 @@ body.theme-light .search-box {
   cursor: pointer;
   border-bottom: 1px solid var(--panel-border);
   transition: background 0.1s ease;
+  gap: 8px;
 }
 .search-item:last-child {
   border-bottom: none;
@@ -295,15 +296,24 @@ body.theme-light .search-box {
 .search-item-info {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 .search-item-name {
   font-weight: 700;
   font-size: 14px;
   color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .search-item-kana {
   font-size: 11px;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .search-item-pref {
   font-size: 11px;
@@ -311,6 +321,8 @@ body.theme-light .search-box {
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.1);
   color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 body.theme-light .search-item-pref {
   background: rgba(0, 0, 0, 0.08);
@@ -622,11 +634,8 @@ body.theme-light .station-pref {
   border-radius: 6px;
   font-size: 12px;
   font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.1s ease;
-}
-.line-badge-item:hover {
-  transform: scale(1.04);
+  cursor: default;
+  user-select: none;
 }
 .line-badge-code {
   background: rgba(0,0,0,0.25);
@@ -902,17 +911,9 @@ body.theme-light .station-pref {
   stroke-linejoin: round;
   stroke-linecap: round;
   paint-order: stroke fill;
-  pointer-events: auto;
-  cursor: pointer;
+  pointer-events: none;
   opacity: 0.85;
   user-select: none;
-  transition: opacity 0.2s ease, fill 0.2s ease;
-}
-
-.svg-line-text:hover {
-  opacity: 1;
-  fill: #0f172a;
-  stroke-width: 4px;
 }
 
 .svg-line-text.shinkansen-text {
@@ -1257,6 +1258,7 @@ body.theme-light .station-pref {
   border-bottom: 1px solid #f1f5f9;
   font-size: 13px;
   transition: background 0.1s ease;
+  gap: 8px;
 }
 .suggest-item:last-child {
   border-bottom: none;
@@ -1273,6 +1275,11 @@ body.theme-light .station-pref {
 .suggest-st-name {
   font-weight: 700;
   color: #0f172a;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .suggest-st-meta {
   font-size: 11px;
@@ -1280,6 +1287,8 @@ body.theme-light .station-pref {
   display: flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* オプション */

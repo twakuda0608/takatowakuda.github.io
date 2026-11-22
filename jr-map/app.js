@@ -99,7 +99,7 @@
   let routeCanvasRenderer = null;
 
   // 駅名ラベルプール (DOMノード数を最小限に抑え60fpsを維持)
-  const LABEL_POOL_SIZE = 160;
+  const LABEL_POOL_SIZE = 240;
   const labelPool = [];
 
   // キャッシュ・更新抑制用フラグ
@@ -419,7 +419,10 @@
 
     // 高速 Canvas レンダラーの初期化
     canvasRenderer = L.canvas({ padding: 0.5 });
-    svgRenderer = L.svg({ padding: 0.5 });
+    svgRenderer = L.svg({ padding: 0.5 }).addTo(map);
+    if (svgRenderer._container) {
+      svgRenderer._container.style.pointerEvents = 'none';
+    }
 
     // レイヤーグループを下の層から順に追加
     bordersLayerGroup = L.layerGroup().addTo(map);
@@ -805,27 +808,8 @@
         lineCap: 'round',
         lineJoin: 'round',
         dashArray: isShinkansen ? '8, 6' : null,
-        className: `line-path line-${line.id}`
-      });
-
-      polyline.on('click', (e) => {
-        L.DomEvent.stopPropagation(e);
-        e.originalEvent._handledByElement = true;
-        selectLine(line.id);
-      });
-
-      polyline.on('mouseover', () => {
-        if (ROUTE_STATE && ROUTE_STATE.lastResult) return;
-        if (!STATE.selectedLineId) {
-          polyline.setStyle({ weight: defaultWeight + 2, opacity: 1 });
-        }
-      });
-
-      polyline.on('mouseout', () => {
-        if (ROUTE_STATE && ROUTE_STATE.lastResult) return;
-        if (!STATE.selectedLineId) {
-          polyline.setStyle({ weight: defaultWeight, opacity: 0.9 });
-        }
+        className: `line-path line-${line.id}`,
+        interactive: false
       });
 
       polyline.addTo(linesLayerGroup);
@@ -879,22 +863,11 @@
     });
   }
 
-  // ズームレベルに応じた駅マーカーの表示・サイズ動的調整 (ズームアウト時の描画スキップ & 差分更新)
+  // ズームレベルに応じた駅マーカーの表示・サイズ動的調整 (画面密度・非重複ベース表示)
   function updateStationMarkerSizes() {
+    if (!map) return;
     const zoom = map.getZoom();
     const routeActive = !!(ROUTE_STATE && ROUTE_STATE.lastResult);
-
-    // 状態が前回と変わっていなければ完全スキップ
-    if (lastMarkerZoom === zoom &&
-        lastSelectedStationId === STATE.selectedStationId &&
-        lastSelectedLineId === STATE.selectedLineId &&
-        lastMarkerRouteActive === routeActive) {
-      return;
-    }
-    lastMarkerZoom = zoom;
-    lastSelectedStationId = STATE.selectedStationId;
-    lastSelectedLineId = STATE.selectedLineId;
-    lastMarkerRouteActive = routeActive;
 
     // ルート探索結果が表示されている場合は、駅マーカーをレイヤーごと非表示
     if (routeActive) {
@@ -904,59 +877,143 @@
       return;
     }
 
-    // ズームアウト時 (全国・地方広域 zoom <= 9): 駅の◯は完全非表示 (レイヤーごと外して0コスト化)
-    if (zoom <= 9 && !STATE.selectedStationId) {
-      if (map.hasLayer(stationsLayerGroup)) {
-        map.removeLayer(stationsLayerGroup);
-      }
-      return;
-    }
-
-    // zoom >= 10 または駅選択中の場合は表示
+    // 駅マーカーレイヤーを確実に表示
     if (!map.hasLayer(stationsLayerGroup)) {
       map.addLayer(stationsLayerGroup);
     }
 
+    // 画面外バッファ（画面ピクセル + 80px）
+    const mapSize = map.getSize();
+    const minX = -80;
+    const maxX = mapSize.x + 80;
+    const minY = -80;
+    const maxY = mapSize.y + 80;
+
+    // 緯度経度による高速画面外刈り込み (マージン 30% 拡大)
+    const bounds = map.getBounds();
+    const latSpan = bounds.getNorth() - bounds.getSouth();
+    const lngSpan = bounds.getEast() - bounds.getWest();
+    const minLat = bounds.getSouth() - latSpan * 0.3;
+    const maxLat = bounds.getNorth() + latSpan * 0.3;
+    const minLng = bounds.getWest() - lngSpan * 0.3;
+    const maxLng = bounds.getEast() + lngSpan * 0.3;
+
+    // ズームに応じた駅◯同士の最小ピクセル距離 (過密防止 & 地方ではしっかり表示)
+    let minDist = 0;
+    if (zoom <= 6) minDist = 20;
+    else if (zoom === 7) minDist = 17;
+    else if (zoom === 8) minDist = 14;
+    else if (zoom === 9) minDist = 12;
+    else if (zoom === 10) minDist = 10;
+    else if (zoom === 11) minDist = 8;
+    else if (zoom === 12) minDist = 6;
+    else minDist = 0; // zoom >= 13: 重なり判定なしで全駅表示
+
+    // 画面内にある駅候補を収集
+    const visibleCandidates = [];
     stationMarkers.forEach((marker, stId) => {
       const st = STATIONS[stId];
-      const isSelected = STATE.selectedStationId === stId;
-      const isMega = TIER1_MEGA_HUBS.has(stId) || (st && TIER1_STATION_NAMES.has(st.name));
-      const isMajor = TIER2_MAJOR_HUBS.has(stId) || (st && TIER2_STATION_NAMES.has(st.name));
-      const belongsToSelectedLine = STATE.selectedLineId && st && st.lines.includes(STATE.selectedLineId);
-
-      let visible = false;
-      let radius = 3.5;
-      let opacity = 1;
-
-      if (isSelected) {
-        visible = true;
-        radius = 5.5;
-      } else if (zoom <= 9) {
-        visible = false;
-      } else if (zoom <= 11) {
-        if (isMega || (zoom >= 11 && (isMajor || belongsToSelectedLine))) {
-          visible = true;
-          radius = isMega ? 4.5 : 3.5;
-        }
-      } else if (zoom <= 12) {
-        if (isMega || isMajor || belongsToSelectedLine || (st && st.lines && st.lines.length >= 2)) {
-          visible = true;
-          radius = isMega ? 5.5 : 4;
-        }
-      } else {
-        visible = true;
-        radius = isMega ? 6.5 : (isMajor ? 5 : 3.8);
+      if (!st) return;
+      if (st.lat < minLat || st.lat > maxLat || st.lng < minLng || st.lng > maxLng) {
+        marker.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
+        return;
+      }
+      const pt = map.latLngToContainerPoint([st.lat, st.lng]);
+      if (pt.x < minX || pt.x > maxX || pt.y < minY || pt.y > maxY) {
+        marker.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
+        return;
       }
 
-      if (visible) {
-        marker.setRadius(radius);
-        marker.setStyle({
-          fillOpacity: opacity,
-          opacity: opacity,
-          weight: isMega ? 2.5 : 1.5
+      const isSelected = STATE.selectedStationId === stId;
+      const belongsToSelectedLine = !!(STATE.selectedLineId && st.lines && st.lines.includes(STATE.selectedLineId));
+      let score = st._baseScore || 0;
+      if (isSelected) score += 1000000;
+      else if (belongsToSelectedLine) score += 100000;
+
+      visibleCandidates.push({
+        stId,
+        st,
+        marker,
+        pt,
+        score,
+        isSelected,
+        belongsToSelectedLine
+      });
+    });
+
+    // 優先度スコア順にソート
+    visibleCandidates.sort((a, b) => b.score - a.score || a.stId.localeCompare(b.stId));
+
+    // 空間距離チェック用グリッド (O(1) 近接探索)
+    const cellSize = Math.max(14, minDist);
+    const grid = new Map(); // "gx,gy" -> [pt]
+
+    visibleCandidates.forEach(cand => {
+      const isMega = TIER1_MEGA_HUBS.has(cand.stId) || (cand.st && TIER1_STATION_NAMES.has(cand.st.name));
+      const isMajor = TIER2_MAJOR_HUBS.has(cand.stId) || (cand.st && TIER2_STATION_NAMES.has(cand.st.name));
+
+      let shouldShow = false;
+      if (cand.isSelected || cand.belongsToSelectedLine || minDist === 0) {
+        shouldShow = true;
+      } else {
+        const gx = Math.floor(cand.pt.x / cellSize);
+        const gy = Math.floor(cand.pt.y / cellSize);
+        let tooClose = false;
+
+        for (let dx = -1; dx <= 1 && !tooClose; dx++) {
+          for (let dy = -1; dy <= 1 && !tooClose; dy++) {
+            const key = `${gx + dx},${gy + dy}`;
+            const existingPts = grid.get(key);
+            if (existingPts) {
+              for (let i = 0; i < existingPts.length; i++) {
+                const ep = existingPts[i];
+                const distSq = (cand.pt.x - ep.x) * (cand.pt.x - ep.x) + (cand.pt.y - ep.y) * (cand.pt.y - ep.y);
+                if (distSq < minDist * minDist) {
+                  tooClose = true;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        if (!tooClose) {
+          shouldShow = true;
+        }
+      }
+
+      if (shouldShow) {
+        // グリッドに登録
+        const gx = Math.floor(cand.pt.x / cellSize);
+        const gy = Math.floor(cand.pt.y / cellSize);
+        const key = `${gx},${gy}`;
+        if (!grid.has(key)) grid.set(key, []);
+        grid.get(key).push(cand.pt);
+
+        let radius = 3.2;
+        let weight = 1.4;
+        if (cand.isSelected) {
+          radius = 6;
+          weight = 3;
+        } else if (isMega) {
+          radius = zoom <= 7 ? 4.5 : (zoom <= 9 ? 5 : (zoom <= 11 ? 5.5 : 6.5));
+          weight = 2.5;
+        } else if (isMajor) {
+          radius = zoom <= 7 ? 3.5 : (zoom <= 9 ? 4 : (zoom <= 11 ? 4.2 : 5));
+          weight = 1.8;
+        } else {
+          radius = zoom <= 7 ? 2.5 : (zoom <= 9 ? 2.8 : (zoom <= 11 ? 3.2 : 3.8));
+          weight = 1.4;
+        }
+
+        cand.marker.setRadius(radius);
+        cand.marker.setStyle({
+          fillOpacity: 1,
+          opacity: 1,
+          weight
         });
       } else {
-        marker.setStyle({
+        cand.marker.setStyle({
           fillOpacity: 0,
           opacity: 0,
           weight: 0
@@ -965,7 +1022,7 @@
     });
   }
 
-  // ズームレベル & 確定スコアに応じた動的駅名ラベル表示 (過疎地優遇 & 完全重なり防止 - 高速プール反映)
+  // ズームレベル & 確定スコアに応じた動的駅名ラベル表示 (画面密度・非重複ベース - 高速プール反映)
   // 地図ドラッグ時にもスコアや順序が一切変動しない決定論的アーキテクチャにより、
   // 同一ズーム度におけるチラつき・消去・遅延を完全排除
   function updateLabelsVisibility() {
@@ -977,8 +1034,6 @@
     const height = mapSize.y;
 
     // 画面外バッファ (-250px 〜 width + 250px, -200px 〜 height + 200px)
-    // 左右にドラッグした際にも、新しく画面内に入る駅名が既に配置されているため、
-    // ドラッグ時の駅名表示遅延ゼロ & 滑らかな操作感を実現
     const bufferX = 250;
     const bufferY = 200;
     const minX = -bufferX;
@@ -998,7 +1053,7 @@
     const routeActive = !!(ROUTE_STATE && ROUTE_STATE.lastResult && ROUTE_STATE.lastResult.allStationIds);
     const routeStationIds = routeActive ? new Set(ROUTE_STATE.lastResult.allStationIds) : null;
 
-    // 1. ズームレベル & 確定的な優先度による候補判定と座標取得
+    // 1. 画面内候補の収集 (厳しい固定スコア閾値を撤廃し、画面内の空きスペースに自然と表示)
     const candidates = [];
     for (const stId in STATIONS) {
       const st = STATIONS[stId];
@@ -1010,23 +1065,14 @@
       const belongsToSelectedLine = !!(STATE.selectedLineId && st.lines && st.lines.includes(STATE.selectedLineId));
       const isRouteStation = !!(routeStationIds && routeStationIds.has(stId));
 
-      // ズームレベルに応じた確定的な候補判定:
-      // ドラッグや画面ピクセル位置によってスコアや候補可否が絶対に変動しない安定仕様
+      // 極端な全国ズーム (zoom <= 5) のみ上位駅に絞り、zoom >= 6 では全画面内駅を候補にして衝突判定に委ねる
       let isCandidate = false;
       if (isSelected || belongsToSelectedLine || isRouteStation) {
         isCandidate = true;
-      } else if (currentZoom <= 6) {
-        isCandidate = (st._baseScore || 0) >= 4500;
-      } else if (currentZoom === 7) {
-        isCandidate = (st._baseScore || 0) >= 2600;
-      } else if (currentZoom === 8) {
-        isCandidate = (st._baseScore || 0) >= 1600;
-      } else if (currentZoom <= 10) {
-        isCandidate = (st._baseScore || 0) >= 800;
-      } else if (currentZoom <= 12) {
-        isCandidate = (st._baseScore || 0) >= 400;
+      } else if (currentZoom <= 5) {
+        isCandidate = (st._baseScore || 0) >= 2000;
       } else {
-        isCandidate = true; // zoom >= 13: 全駅が候補
+        isCandidate = true; // zoom >= 6: 画面内にある全駅が候補
       }
 
       if (!isCandidate) continue;
@@ -1056,8 +1102,7 @@
     }
 
     // 2. 確定的なスコア順（主要駅・高優先度順）にソート
-    // タイブレークもIDハッシュで確定しているため、ドラッグで順序が入れ替わることは皆無
-    candidates.sort((a, b) => b.score - a.score);
+    candidates.sort((a, b) => b.score - a.score || a.stId.localeCompare(b.stId));
 
     // 3. 衝突判定 (Greedy Collision Detection)
     const placedBoxes = [];
@@ -1286,21 +1331,28 @@
   // 路線名ラベルの構築 (SVG textPath による完全な曲線追従 & 文字重なり防止 & 局所正立化 & 文字欠け防止)
   function setupLineLabels() {
     if (!lineLabelsLayerGroup || !map) return;
+    if (!map.hasLayer(svgRenderer)) {
+      svgRenderer.addTo(map);
+      if (svgRenderer._container) {
+        svgRenderer._container.style.pointerEvents = 'none';
+      }
+    }
     lineLabelsLayerGroup.clearLayers();
 
     // 既存のSVGテキストグループがあれば破棄
     const oldGroup = document.getElementById('svg-line-labels-group');
     if (oldGroup) oldGroup.remove();
 
-    const overlayPane = map.getPanes().overlayPane;
-    const svg = overlayPane.querySelector('svg');
+    const svg = (svgRenderer && svgRenderer._container) || map.getPanes().overlayPane.querySelector('svg');
     if (!svg) return;
 
     // 線路パスの上に重ねて描画されるよう、SVGの末尾にテキストグループを追加
     const labelsGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     labelsGroup.setAttribute('id', 'svg-line-labels-group');
     labelsGroup.setAttribute('class', 'leaflet-line-labels-container');
-    svg.appendChild(labelsGroup);
+    labelsGroup.style.pointerEvents = 'none';
+    const targetParent = (svgRenderer && svgRenderer._rootGroup) || svg;
+    targetParent.appendChild(labelsGroup);
 
     const TRACKS = window.JR_TRACKS || {};
 
@@ -1341,22 +1393,21 @@
       const totalPts = rawGuidePts.length;
       if (totalPts < 2) return;
 
-      // 長大路線 (新幹線、または200頂点以上、主要幹線) は田舎や広域で複数箇所見えるよう3〜4箇所配置
-      // 中規模路線 (70頂点以上) は2箇所、短い路線は中央1箇所
+      // スロット比率の高密度サンプリング (画面内の空いている場所へ動的に配置できるよう候補を増やす)
       const isSuperLong = isShinkansen || totalPts >= 200 || (isMajorTrunk && totalPts >= 120);
       const isMediumLong = !isSuperLong && totalPts >= 70;
 
-      let candidateRatios = [0.50];
+      let candidateRatios = [0.25, 0.50, 0.75];
       if (isSuperLong) {
-        candidateRatios = [0.20, 0.44, 0.68, 0.88];
+        candidateRatios = [0.10, 0.18, 0.26, 0.34, 0.42, 0.50, 0.58, 0.66, 0.74, 0.82, 0.90];
       } else if (isMediumLong) {
-        candidateRatios = [0.35, 0.68];
+        candidateRatios = [0.15, 0.30, 0.45, 0.60, 0.75, 0.88];
       }
 
       const uniqueRatios = [];
       candidateRatios.forEach(r => {
         const smoothRatio = findSmoothOffsetRatio(rawGuidePts, r);
-        if (!uniqueRatios.some(u => Math.abs(u - smoothRatio) < 0.14)) {
+        if (!uniqueRatios.some(u => Math.abs(u - smoothRatio) < 0.07)) {
           uniqueRatios.push(smoothRatio);
         }
       });
@@ -1461,32 +1512,12 @@
 
         textElem.appendChild(textPathElem);
 
-        // クリックで該当路線を選択・フォーカス
-        textElem.addEventListener('click', (e) => {
-          e.stopPropagation();
-          selectLine(line.id);
-        });
-
-        // ホバーで該当路線の線路を強調
-        textElem.addEventListener('mouseenter', () => {
-          if (!STATE.selectedLineId) {
-            const polyList = linePolylines.get(line.id) || [];
-            polyList.forEach(p => p.setStyle({ weight: 6, opacity: 1 }));
-          }
-        });
-        textElem.addEventListener('mouseleave', () => {
-          if (!STATE.selectedLineId) {
-            updateLineWeights();
-          }
-        });
-
         labelsGroup.appendChild(textElem);
       });
     });
   }
 
-  // ズームレベル & 衝突判定に応じた動的路線名表示
-  // 田舎・過疎エリアは余裕があるため表示を増やし、都会は重なりを回避して空いている場所に表示
+  // ズームレベル & 衝突判定に応じた動的路線名表示 (空きスペースへの高密度・非重複配置)
   function updateLineLabelsVisibility() {
     const labelsGroup = document.getElementById('svg-line-labels-group');
     if (!labelsGroup || !map) return;
@@ -1502,6 +1533,12 @@
     const placedLineBoxes = [];
     const placedLineIds = new Map(); // lineId -> Array of placed centers for distance check
 
+    // すべて一旦リセット
+    textElems.forEach(el => {
+      el.style.display = 'none';
+      el.classList.remove('active-line-text');
+    });
+
     // 表示候補のフィルタリング
     const candidates = [];
 
@@ -1512,35 +1549,31 @@
       const lat = parseFloat(elem.getAttribute('data-lat'));
       const lng = parseFloat(elem.getAttribute('data-lng'));
       const nameLen = parseInt(elem.getAttribute('data-name-len'), 10) || 4;
-
       const slot = parseInt(elem.getAttribute('data-slot'), 10) || 0;
 
-      // ズーム条件の緩和 (田舎の路線をズーム7〜8でも表示可能に)
+      // ズーム条件の大幅緩和 (ローカル線もzoom 7から表示候補に)
       let meetsZoom = false;
       if (isSelected) {
         meetsZoom = true;
       } else if (tier === 1) { // 新幹線
         meetsZoom = (zoom >= 5);
-      } else if (tier === 2) { // 主要幹線 (函館本線・東北本線・東海道本線・山陽本線等)
+      } else if (tier === 2) { // 主要幹線
+        meetsZoom = (zoom >= 6);
+      } else if (tier === 3) { // 地域幹線
         meetsZoom = (zoom >= 7);
-      } else if (tier === 3) { // 地域幹線 (宗谷本線・石北本線・根室本線・羽越本線・高山本線等)
-        meetsZoom = (zoom >= 8);
       } else { // ローカル線
-        meetsZoom = (zoom >= 10);
+        meetsZoom = (zoom >= 7);
       }
 
       if (!meetsZoom || isNaN(lat) || isNaN(lng)) {
-        elem.style.display = 'none';
-        elem.classList.remove('active-line-text');
         return;
       }
 
       // 画面上のピクセル位置
       const pt = map.latLngToContainerPoint([lat, lng]);
 
-      // 画面外マージン (-150px 〜 width + 150px)
-      if (pt.x < -150 || pt.x > width + 150 || pt.y < -100 || pt.y > height + 100) {
-        elem.style.display = 'none';
+      // 画面外マージン (-80px 〜 width + 80px, -60px 〜 height + 60px)
+      if (pt.x < -80 || pt.x > width + 80 || pt.y < -60 || pt.y > height + 60) {
         return;
       }
 
@@ -1563,15 +1596,37 @@
       });
     });
 
-    // 優先度順（選択路線 > 新幹線 > 主要幹線 > 地域幹線 > ローカル線）に確定ソート
+    // 優先度順（選択路線 > 新幹線 > 主要幹線 > 地域幹線 > ローカル線）にソート
     candidates.sort((a, b) => (b.priority - a.priority) || a.lineId.localeCompare(b.lineId) || (a.slot - b.slot));
+
+    // 衝突チェック関数
+    function checkCollision(box) {
+      // 1. 駅名テキストおよび駅マーカーとの衝突
+      for (let i = 0; i < stationBoxes.length; i++) {
+        const sb = stationBoxes[i];
+        if (!(box.x2 < sb.x1 || box.x1 > sb.x2 || box.y2 < sb.y1 || box.y1 > sb.y2)) {
+          return true;
+        }
+      }
+      // 2. 他の配置済み路線名ラベルとの衝突
+      for (let i = 0; i < placedLineBoxes.length; i++) {
+        const lb = placedLineBoxes[i];
+        if (!(box.x2 < lb.x1 || box.x1 > lb.x2 || box.y2 < lb.y1 || box.y1 > lb.y2)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // パス1: 各路線につき最低1つ、空いているスペースが見つかったスロットに路線名を配置
+    // パス2: 画面内に長く見えている長大路線の追加ラベル配置 (同一路線で180px以上離れている箇所)
+    const pendingExtraCandidates = [];
 
     candidates.forEach(cand => {
       const charWidth = cand.tier === 1 ? 13 : 11.5;
       const boxWidth = Math.max(30, cand.nameLen * charWidth + 10);
       const boxHeight = cand.tier === 1 ? 16 : 14;
 
-      // ラベル矩形（中心配置）
       const box = {
         x1: cand.pt.x - boxWidth / 2,
         y1: cand.pt.y - boxHeight / 2,
@@ -1586,48 +1641,32 @@
         return;
       }
 
-      cand.elem.classList.remove('active-line-text');
-
-      // 同一路線の近接スロット重複チェック（同一画面内で120px以内に同じ路線名を表示しない）
-      const existingCenters = placedLineIds.get(cand.lineId) || [];
-      const isTooCloseSameLine = existingCenters.some(cPt => {
-        const dist = Math.hypot(cand.pt.x - cPt.x, cand.pt.y - cPt.y);
-        return dist < 120;
-      });
-      if (isTooCloseSameLine) {
-        cand.elem.style.display = 'none';
+      // この路線がすでに1つ以上配置されている場合は、パス2（追加ラベル）へ回す
+      if (placedLineIds.has(cand.lineId)) {
+        pendingExtraCandidates.push({ cand, box });
         return;
       }
 
-      // 1. 駅名テキストおよび駅マーカーとの衝突判定
-      let collides = false;
-      for (let i = 0; i < stationBoxes.length; i++) {
-        const sb = stationBoxes[i];
-        if (!(box.x2 < sb.x1 || box.x1 > sb.x2 || box.y2 < sb.y1 || box.y1 > sb.y2)) {
-          collides = true;
-          break;
-        }
-      }
-
-      // 2. 他の配置済み路線名ラベルとの衝突判定
-      if (!collides) {
-        for (let i = 0; i < placedLineBoxes.length; i++) {
-          const lb = placedLineBoxes[i];
-          if (!(box.x2 < lb.x1 || box.x1 > lb.x2 || box.y2 < lb.y1 || box.y1 > lb.y2)) {
-            collides = true;
-            break;
-          }
-        }
-      }
-
-      if (!collides) {
+      if (!checkCollision(box)) {
         cand.elem.style.display = '';
         placedLineBoxes.push(box);
-        if (!placedLineIds.has(cand.lineId)) placedLineIds.set(cand.lineId, []);
-        placedLineIds.get(cand.lineId).push(cand.pt);
-      } else {
-        // 重なりあり（都会の密集駅や路線交差部）: 非表示にして可読性を確保
-        cand.elem.style.display = 'none';
+        placedLineIds.set(cand.lineId, [cand.pt]);
+      }
+    });
+
+    // パス2: 追加ラベルの配置 (未表示路線の機会を奪わないよう、パス1の後に実行)
+    pendingExtraCandidates.forEach(({ cand, box }) => {
+      const existingCenters = placedLineIds.get(cand.lineId) || [];
+      const isTooClose = existingCenters.some(cPt => {
+        const dist = Math.hypot(cand.pt.x - cPt.x, cand.pt.y - cPt.y);
+        return dist < 180; // 同一路線は180px以上離す
+      });
+      if (isTooClose) return;
+
+      if (!checkCollision(box)) {
+        cand.elem.style.display = '';
+        placedLineBoxes.push(box);
+        existingCenters.push(cand.pt);
       }
     });
   }
@@ -1793,9 +1832,6 @@
       badge.style.background = line.color;
       badge.style.color = line.textColor || '#fff';
       badge.innerHTML = `${line.code ? `<span class="line-badge-code">${line.code}</span>` : ''} <span>${line.name}</span>`;
-      badge.addEventListener('click', () => {
-        selectLine(line.id);
-      });
       linesContainer.appendChild(badge);
     });
 
@@ -2001,7 +2037,7 @@
         item.innerHTML = `
           <div class="search-item-info">
             <span class="search-item-name">${getStationUiName(st)}</span>
-            <span class="search-item-kana">${st.kana || ''} (${getStationEnName(st)})</span>
+            <span class="search-item-kana">${st.kana || ''}</span>
           </div>
           <span class="search-item-pref">${st.pref}</span>
         `;
@@ -4344,9 +4380,16 @@
       getRelevantShinkansenPairs,
       addShinkansenSegment,
       getRouteState: () => ROUTE_STATE,
+      getState: () => STATE,
       selectStation,
       getStationEnName,
-      getStationUiName
+      getStationUiName,
+      getMap: () => map,
+      getStationMarkers: () => stationMarkers,
+      getLinePolylines: () => linePolylines,
+      updateStationMarkerSizes,
+      updateLabelsVisibility,
+      updateLineLabelsVisibility
     };
   }
 })();
