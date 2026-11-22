@@ -224,104 +224,14 @@
     return Math.sqrt(dLat * dLat + dLng * dLng);
   }
 
-  // 公式営業キロ程テーブル (東海道本線・東海道新幹線・美濃赤坂支線)
-  // 東京起点 (km)
-  const TOKAIDO_KILO = {
-    '東京': 0.0, '有楽町': 0.8, '新橋': 1.9, '浜松町': 3.1, '田町': 4.6, '高輪ゲートウェイ': 5.9, '品川': 6.8,
-    '大井町': 9.2, '大森': 11.4, '蒲田': 14.4, '川崎': 18.2, '鶴見': 21.7, '新子安': 24.8, '東神奈川': 27.2,
-    '横浜': 28.8, '保土ケ谷': 31.8, '東戸塚': 36.7, '戸塚': 40.9, '大船': 46.5, '藤沢': 51.1, '辻堂': 54.8,
-    '茅ヶ崎': 58.6, '平塚': 63.8, '大磯': 67.8, '二宮': 73.1, '国府津': 77.7, '鴨宮': 80.8, '小田原': 83.9,
-    '早川': 86.0, '根府川': 90.4, '真鶴': 95.8, '湯河原': 99.1, '熱海': 104.6, '函南': 114.5, '三島': 120.7,
-    '沼津': 126.2, '片浜': 130.3, '原': 132.8, '東田子の浦': 137.4, '吉原': 141.3, '富士': 146.2, '富士川': 149.7,
-    '新蒲原': 152.5, '蒲原': 154.9, '由比': 158.4, '興津': 164.3, '清水': 169.0, '草薙': 174.2, '東静岡': 177.4,
-    '静岡': 180.2, '安倍川': 184.5, '用宗': 186.6, '焼津': 193.7, '西焼津': 197.0, '藤枝': 200.3, '六合': 204.9,
-    '島田': 207.8, '金谷': 212.9, '菊川': 222.2, '掛川': 229.3, '愛野': 234.6, '袋井': 238.1, '御厨': 242.7,
-    '磐田': 245.9, '豊田町': 248.8, '天竜川': 252.7, '浜松': 257.1, '高塚': 262.4, '舞阪': 267.5, '弁天島': 269.8,
-    '新居町': 272.9, '鷲津': 276.6, '新所原': 282.4, '二川': 286.7, '豊橋': 293.6, '西小坂井': 298.4, '愛知御津': 302.1,
-    '三河大塚': 305.2, '三河三谷': 308.3, '蒲郡': 310.6, '三河塩津': 312.9, '三ヶ根': 315.5, '幸田': 318.5, '相見': 321.6,
-    '岡崎': 325.9, '西岡崎': 330.1, '安城': 333.7, '三河安城': 336.3, '東刈谷': 338.1, '野田新町': 339.7, '刈谷': 341.6,
-    '逢妻': 343.5, '大府': 346.5, '共和': 349.5, '南大高': 351.8, '大高': 353.6, '笠寺': 356.8, '熱田': 360.8,
-    '金山': 362.7, '尾頭橋': 363.6, '名古屋': 366.0, '枇杷島': 370.0, '清洲': 373.8, '稲沢': 377.1, '尾張一宮': 383.1,
-    '木曽川': 388.6, '岐阜': 396.3, '西岐阜': 399.5, '穂積': 402.3, '大垣': 410.0, '垂井': 418.1, '関ヶ原': 423.8,
-    '柏原': 430.9, '近江長岡': 435.2, '醒ヶ井': 439.8, '米原': 445.9, '彦根': 451.9, '南彦根': 455.2, '河瀬': 458.0,
-    '稲枝': 462.0, '能登川': 467.4, '安土': 472.8, '近江八幡': 477.4, '篠原': 481.4, '野洲': 487.0, '守山': 490.1,
-    '栗東': 492.2, '草津': 494.5, '南草津': 497.0, '瀬田': 499.7, '石山': 503.2, '膳所': 505.9, '大津': 507.7,
-    '山科': 511.2, '京都': 513.6, '西大路': 516.1, '桂川': 518.9, '向日町': 520.0, '長岡京': 523.7, '山崎': 527.7,
-    '島本': 529.9, '高槻': 535.2, '摂津富田': 538.5, 'JR総持寺': 540.0, '茨木': 541.5, '千里丘': 544.5, '岸辺': 546.0,
-    '吹田': 548.8, '東淀川': 551.9, '新大阪': 552.6, '大阪': 556.4, '福島': 557.4, '塚本': 560.3, '尼崎': 563.1,
-    '立花': 566.1, '甲子園口': 568.3, '西宮': 570.8, 'さくら夙川': 572.3, '芦屋': 574.7, '甲南山手': 576.1,
-    '摂津本山': 577.6, '住吉': 579.2, '六甲道': 581.1, '摩耶': 582.5, '灘': 583.4, '三ノ宮': 585.8, '元町': 586.6,
-    '神戸': 589.5,
-    // 新幹線駅 (並行在来線対応キロ)
-    '新横浜': 28.8, '新富士': 146.2, '岐阜羽島': 396.3,
-    // 美濃赤坂支線
-    '荒尾': 413.4, '美濃赤坂': 415.0
-  };
-
-  // 中央東線 (東京〜塩尻) 公式営業キロ程 (東京起点 km)
-  const CHUO_EAST_KILO = {
-    '東京': 0.0, '神田': 1.3, '御茶ノ水': 2.6, '水道橋': 3.4, '飯田橋': 4.3, '市ヶ谷': 5.8, '市ケ谷': 5.8,
-    '四ツ谷': 6.6, '信濃町': 7.9, '千駄ヶ谷': 8.6, '千駄ケ谷': 8.6, '代々木': 9.6, '新宿': 10.3,
-    '大久保': 11.7, '東中野': 12.8, '中野': 14.7, '高円寺': 16.1, '阿佐ヶ谷': 17.3, '阿佐ケ谷': 17.3,
-    '荻窪': 18.7, '西荻窪': 20.6, '吉祥寺': 22.5, '三鷹': 24.1, '武蔵境': 25.7, '東小金井': 27.4,
-    '武蔵小金井': 29.1, '国分寺': 31.4, '西国分寺': 32.8, '国立': 34.5, '立川': 37.5, '日野': 40.8,
-    '豊田': 43.1, '八王子': 47.4, '西八王子': 49.8, '高尾': 53.1, '相模湖': 62.6, '藤野': 66.3,
-    '上野原': 69.8, '四方津': 74.0, '梁川': 77.6, '鳥沢': 81.2, '猿橋': 85.3, '大月': 87.8,
-    '初狩': 93.9, '笹子': 100.4, '甲斐大和': 106.5, '勝沼ぶどう郷': 112.5, '塩山': 116.9, '東山梨': 120.1,
-    '山梨市': 122.2, '春日居町': 125.0, '石和温泉': 127.8, '酒折': 131.2, '甲府': 134.1, '竜王': 138.6,
-    '塩崎': 142.7, '韮崎': 147.0, '新府': 151.2, '穴山': 154.7, '日野春': 160.1, '長坂': 166.3,
-    '小淵沢': 173.7, '信濃境': 178.2, '富士見': 182.9, 'すずらんの里': 186.1, '青柳': 188.0, '茅野': 195.2,
-    '上諏訪': 201.9, '下諏訪': 206.3, '岡谷': 210.4, 'みどり湖': 218.2, '塩尻': 222.1
-  };
-
-  // 中央西線 (塩尻〜名古屋) 公式営業キロ程 (塩尻起点 km)
-  const CHUO_WEST_KILO = {
-    '塩尻': 0.0, '洗馬': 4.2, '日出塩': 8.9, '贄川': 14.1, '木曽平沢': 19.3, '奈良井': 21.1,
-    '藪原': 27.7, '宮ノ越': 33.4, '原野': 36.2, '木曽福島': 41.7, '上松': 49.0, '倉本': 55.6,
-    '須原': 60.4, '大桑': 63.7, '野尻': 66.7, '十二兼': 70.4, '南木曽': 75.9, '田立': 82.2,
-    '坂下': 85.0, '落合川': 91.1, '中津川': 94.9, '美乃坂本': 101.3, '恵那': 106.5, '武並': 111.9,
-    '釜戸': 117.3, '瑞浪': 124.7, '土岐市': 131.6, '多治見': 138.6, '古虎渓': 143.2, '定光寺': 146.7,
-    '高蔵寺': 150.8, '神領': 154.0, '春日井': 156.7, '勝川': 159.8, '新守山': 162.5, '大曽根': 165.0,
-    '千種': 167.7, '鶴舞': 169.2, '金山': 171.5, '名古屋': 174.8
-  };
-
-  // 山手線 公式営業キロ程 (品川起点 km)
-  const YAMANOTE_KILO = {
-    '品川': 0.0, '大崎': 2.0, '五反田': 2.9, '目黒': 4.1, '恵比寿': 5.6, '渋谷': 7.2,
-    '原宿': 8.4, '代々木': 9.9, '新宿': 10.6, '新大久保': 11.9, '高田馬場': 13.3,
-    '目白': 14.2, '池袋': 15.4, '大塚': 17.2, '巣鴨': 18.3, '駒込': 19.0, '田端': 20.6
-  };
-
-  const OFFICIAL_LINE_KILOS = {
-    'tokaido': TOKAIDO_KILO,
-    'tokai-tokaido': TOKAIDO_KILO,
-    'tokaido-west': TOKAIDO_KILO,
-    'shinkansen-tokaido': TOKAIDO_KILO,
-    'tokai-minoakasaka': TOKAIDO_KILO,
-    'chuo-main': CHUO_EAST_KILO,
-    'tokai-chuo': CHUO_WEST_KILO,
-    'yamanote': YAMANOTE_KILO
-  };
-
-  // 新幹線と並行在来線の営業キロテーブルマッピング (旅客営業規則第14条・第16条)
-  const SHINKANSEN_PARALLEL_TABLES = {
-    'shinkansen-tokaido': TOKAIDO_KILO
-  };
-
-  /**
-   * 駅間営業キロ（エッジ距離）の取得
-   * 優先順位:
-   * 1. 路線データ自体の stationKilos (駅ID or 駅名での累計キロ) または edgeDistances (駅間キロ)
-   * 2. 内蔵の公式営業キロ程テーブル (OFFICIAL_LINE_KILOS または 新幹線並行在来線テーブル)
-   * 3. 幾何直線距離 (概算フォールバック: isEstimated = true)
-   * ※戻り値は常にオブジェクト { dist: number, isEstimated: boolean }
-   */
+  // 駅間営業キロ（エッジ距離）の取得
+  // official-kilos.js を唯一の参照元 (Single Source of Truth) に一本化
   function getEdgeDistance(line, stU, stV, uId, vId) {
     if (!stU || !stV) return { dist: 0, isEstimated: false };
 
-    // 優先度 1: 路線データ (build-data.js の JR_LINES) に直接定義された営業キロプロパティ
+    // 優先度 1: official-kilos.js により路線データ (JR_LINES) に設定された営業キロプロパティ
     if (line) {
-      // 1-a: edgeDistances (隣接駅間の営業キロマップ: { 'st1-st2': 1.3, ... }) - 例外区間・環状線終端優先
+      // 1-a: edgeDistances (隣接駅間の営業キロマップ: { 'st1-st2': 1.3, ... })
       if (line.edgeDistances) {
         const k1 = `${uId}-${vId}`;
         const k2 = `${vId}-${uId}`;
@@ -344,17 +254,7 @@
       }
     }
 
-    // 優先度 2: エンジン内蔵の公式営業キロ程テーブル (OFFICIAL_LINE_KILOS)
-    let table = line ? OFFICIAL_LINE_KILOS[line.id] : null;
-    if (!table && line && line.category === 'shinkansen' && SHINKANSEN_PARALLEL_TABLES[line.id]) {
-      table = SHINKANSEN_PARALLEL_TABLES[line.id];
-    }
-    if (table && table[stU.name] !== undefined && table[stV.name] !== undefined) {
-      const d = Math.abs(table[stU.name] - table[stV.name]);
-      return { dist: Math.round(d * 10) / 10, isEstimated: false };
-    }
-
-    // 優先度 3: 緯度・経度からの直線距離 (概算フォールバック)
+    // 優先度 2: 緯度・経度からの直線距離 (概算フォールバック: isEstimated = true)
     const estDist = Math.round(calcDistKm(stU, stV) * 10) / 10;
     return { dist: estDist, isEstimated: true };
   }
@@ -515,16 +415,17 @@
         let transferPenalty = 0;
         if (curr.marsName && (curr.marsName !== edge.marsName)) {
           if (curr.isShinkansen !== edge.isShinkansen) {
-            transferPenalty = options.forceShinkansen ? 0 : 40.0;
+            // 在来線 ↔ 新幹線の乗換ペナルティ (8.0: 早期乗換を促進)
+            transferPenalty = options.forceShinkansen ? 0 : 8.0;
           } else {
-            // 営業キロ計算は最短で行うため、ペナルティで遠回りルート（神田経由51.8km等）を選ばないよう
+            // 営業キロ計算は最短で行うため、ペナルティで遠回りルートを選ばないよう
             // 同一距離の場合にのみ乗り換えの少ない方を選ぶ微小タイブレーカー (0.01) とする
             transferPenalty = 0.01;
           }
         }
 
-        // 新幹線優先モード時、新幹線の速達性・直通性を考慮した探索重みを適用 (実際の営業キロ dist は変化なし)
-        const edgeWeight = (allowShinkansen && edge.isShinkansen) ? (edge.dist * 0.85) : edge.dist;
+        // 純粋な営業キロベースで探索 (新幹線優遇速達バイアス dist * 0.55 を撤廃)
+        const edgeWeight = edge.dist;
         const nextD = curr.d + edgeWeight + transferPenalty;
         const nextKey = edge.to + '::' + edge.marsName;
 
@@ -767,24 +668,38 @@
       const origin = stops[i];
       const destination = stops[i + 1];
 
-      // このレグが新幹線指定区間かどうか判定 (順方向・逆方向両対応)
+      // このレグが新幹線指定区間かどうか判定 (順方向一致を優先)
       const oSt = stations[origin];
       const dSt = stations[destination];
       const oName = oSt ? oSt.name : origin;
       const dName = dSt ? dSt.name : destination;
 
-      const isThisLegShinkansen = shinkansenSegs.some(seg => {
-        const fromSt = stations[seg.fromId] || Object.values(stations).find(s => s.name === seg.from || s.name === seg.fromName);
-        const toSt = stations[seg.toId] || Object.values(stations).find(s => s.name === seg.to || s.name === seg.toName);
-        const fId = fromSt ? fromSt.id : seg.fromId;
-        const tId = toSt ? toSt.id : seg.toId;
-        const fName = fromSt ? fromSt.name : (seg.fromName || seg.from);
-        const tName = toSt ? toSt.name : (seg.toName || seg.to);
+      let isThisLegShinkansen = false;
+      if (shinkansenSegs && shinkansenSegs.length > 0) {
+        isThisLegShinkansen = shinkansenSegs.some(seg => {
+          const fromSt = stations[seg.fromId] || Object.values(stations).find(s => s.name === seg.from || s.name === seg.fromName);
+          const toSt = stations[seg.toId] || Object.values(stations).find(s => s.name === seg.to || s.name === seg.toName);
+          const fId = fromSt ? fromSt.id : seg.fromId;
+          const tId = toSt ? toSt.id : seg.toId;
+          const fName = fromSt ? fromSt.name : (seg.fromName || seg.from);
+          const tName = toSt ? toSt.name : (seg.toName || seg.to);
 
-        const matchForward = (origin === fId || oName === fName) && (destination === tId || dName === tName);
-        const matchReverse = (origin === tId || oName === tName) && (destination === fId || dName === fName);
-        return matchForward || matchReverse;
-      });
+          return (origin === fId || oName === fName) && (destination === tId || dName === tName);
+        });
+
+        // 順方向がない場合のみ単一レグで逆方向も許容
+        if (!isThisLegShinkansen && stops.length === 2) {
+          isThisLegShinkansen = shinkansenSegs.some(seg => {
+            const fromSt = stations[seg.fromId] || Object.values(stations).find(s => s.name === seg.from || s.name === seg.fromName);
+            const toSt = stations[seg.toId] || Object.values(stations).find(s => s.name === seg.to || s.name === seg.toName);
+            const fId = fromSt ? fromSt.id : seg.fromId;
+            const tId = toSt ? toSt.id : seg.toId;
+            const fName = fromSt ? fromSt.name : (seg.fromName || seg.from);
+            const tName = toSt ? toSt.name : (seg.toName || seg.to);
+            return (origin === tId || oName === tName) && (destination === fId || dName === fName);
+          });
+        }
+      }
 
       let legAllowShinkansen = (options.useShinkansen !== undefined) ? options.useShinkansen : (options.allowShinkansen !== false);
       let legForceShinkansen = false;
@@ -792,23 +707,34 @@
       if (isThisLegShinkansen) {
         legAllowShinkansen = true;
         legForceShinkansen = true;
+      } else if (shinkansenSegs && shinkansenSegs.length > 0) {
+        // 特定区間のみ新幹線指定されている場合、未指定レグは新幹線を使用しない
+        legAllowShinkansen = false;
       } else if (forceShinkansenOnly) {
         legAllowShinkansen = false;
       }
 
       let leg = null;
+      // 東海道新幹線など別線利用レグの場合、直前の在来線レグの通過駅が新幹線駅探索を阻害しないよう調整
+      const legForbiddenStations = new Set(visitedStations);
+      if (legForceShinkansen) {
+        // 別線新幹線探索時は終点駅および別線接続駅を禁止対象から外す
+        legForbiddenStations.delete(destination);
+        legForbiddenStations.delete(origin);
+      }
+
       if (requireOneWay) {
         // 重複区間なし（一筆書き）モード: 訪問済み駅を禁止して探索
         leg = findLeg(graph, origin, destination, {
           allowShinkansen: legAllowShinkansen,
           forceShinkansen: legForceShinkansen,
-          forbiddenStations: visitedStations
+          forbiddenStations: legForbiddenStations
         });
         if (!leg && legForceShinkansen) {
           // 新幹線強制で見つからない場合のフォールバック (在来線含め再探索)
           leg = findLeg(graph, origin, destination, {
             allowShinkansen: true,
-            forbiddenStations: visitedStations
+            forbiddenStations: legForbiddenStations
           });
         }
         if (!leg) {
@@ -857,10 +783,75 @@
       return { success: false, error: '有効な経路が見つかりませんでした。' };
     }
 
+    // 旅規第16条の2 同一線扱い新幹線・並行在来線区間 Corridor 定義
+    // ※東海道新幹線 (東京〜新大阪) は2026年3月改定により東海道本線と別線扱いのため含めない
+    const SAME_LINE_PARALLEL_CORRIDORS = [
+      {
+        id: 'same-line::tohoku::tokyo-ueno',
+        shinkansenLine: 'shinkansen-tohoku',
+        shinkansenStations: new Set(['東京', '上野']),
+        conventionalLines: new Set(['tohoku-main']),
+        conventionalStations: new Set(['東京', '上野'])
+      },
+      {
+        id: 'same-line::tohoku::ueno-omiya',
+        shinkansenLine: 'shinkansen-tohoku',
+        shinkansenStations: new Set(['上野', '大宮']),
+        conventionalLines: new Set(['tohoku-main', 'akabane-line']),
+        conventionalStations: new Set([
+          '上野', '日暮里', '西日暮里', '田端', '尾久', '赤羽', '川口', '西川口', '蕨',
+          '南浦和', '浦和', '北浦和', '与野', 'さいたま新都心', '大宮',
+          '北赤羽', '浮間舟渡', '戸田公園', '戸田', '北戸田', '武蔵浦和', '中浦和', '南与野', '与野本町', '北与野'
+        ])
+      },
+      {
+        id: 'same-line::tohoku::omiya-oyama',
+        shinkansenLine: 'shinkansen-tohoku',
+        shinkansenStations: new Set(['大宮', '小山']),
+        conventionalLines: new Set(['tohoku-main']),
+        conventionalStations: new Set([
+          '大宮', '土呂', '東大宮', '蓮田', '白岡', '新白岡', '久喜', '東鷲宮', '栗橋', '古河', '野木', '間々田', '小山'
+        ])
+      },
+      {
+        id: 'same-line::tohoku::oyama-utsunomiya',
+        shinkansenLine: 'shinkansen-tohoku',
+        shinkansenStations: new Set(['小山', '宇都宮']),
+        conventionalLines: new Set(['tohoku-main']),
+        conventionalStations: new Set([
+          '小山', '小金井', '自治医大', '石橋', '雀宮', '宇都宮'
+        ])
+      },
+      {
+        id: 'same-line::joetsu::omiya-takasaki',
+        shinkansenLine: 'shinkansen-joetsu',
+        shinkansenStations: new Set(['大宮', '熊谷', '本庄早稲田', '高崎']),
+        conventionalLines: new Set(['takasaki-line']),
+        conventionalStations: new Set([
+          '大宮', '宮原', '上尾', '北上尾', '桶川', '北本', '鴻巣', '北鴻巣', '吹上', '行田', '熊谷',
+          '籠原', '深谷', '岡部', '本庄', '神保原', '新町', '倉賀野', '高崎'
+        ])
+      }
+    ];
+
     // エッジごとの通過回数集計 (無向エッジとして同一区間の往復または重複通過を検出)
+    // 2026年3月改定対応:
+    // - 東海道新幹線と東海道本線は別線扱いのため、乗り分け往復は「重複なし」として許可
+    // - 東北新幹線と東北本線 (上野〜大宮等) は同一線扱いのため、往復時は「重複あり」として弾く
     const edgeCountMap = new Map();
+    const corridorShinkansenMap = new Map();
+    const corridorConventionalMap = new Map();
+
+    const isTokaidoZairaiLine = (lid) => (lid === 'tokaido' || lid === 'tokai-tokaido' || lid === 'tokaido-west' || lid === 'tokai-minoakasaka');
+
     fullSegments.forEach(seg => {
-      const idKey = seg.from < seg.to ? `${seg.from}::${seg.to}` : `${seg.to}::${seg.from}`;
+      const isTkShinkansen = (seg.lineId === 'shinkansen-tokaido');
+      const isTkZairai = isTokaidoZairaiLine(seg.lineId);
+
+      // 1. 通常の物理エッジキー
+      // 東海道新幹線と東海道本線は別線なので trackKey を分ける
+      const trackType = isTkShinkansen ? 'tokaido-shinkansen' : 'standard';
+      const idKey = seg.from < seg.to ? `${trackType}::${seg.from}::${seg.to}` : `${trackType}::${seg.to}::${seg.from}`;
       edgeCountMap.set(idKey, (edgeCountMap.get(idKey) || 0) + 1);
 
       const st1 = stations[seg.from];
@@ -868,34 +859,67 @@
       const n1 = st1 ? st1.name : seg.from;
       const n2 = st2 ? st2.name : seg.to;
       if (n1 !== n2) {
-        const nameKey = n1 < n2 ? `${n1}::${n2}` : `${n2}::${n1}`;
-        edgeCountMap.set(`name::${nameKey}`, (edgeCountMap.get(`name::${nameKey}`) || 0) + 1);
+        // 東海道新幹線と東海道本線は別線なので駅名キーも trackType を考慮
+        const nameKey = n1 < n2 ? `name::${trackType}::${n1}::${n2}` : `name::${trackType}::${n2}::${n1}`;
+        edgeCountMap.set(nameKey, (edgeCountMap.get(nameKey) || 0) + 1);
       }
+
+      // 2. 同一線扱い区間 (Corridor) の集計
+      SAME_LINE_PARALLEL_CORRIDORS.forEach(c => {
+        if (seg.lineId === c.shinkansenLine && c.shinkansenStations.has(n1) && c.shinkansenStations.has(n2)) {
+          corridorShinkansenMap.set(c.id, (corridorShinkansenMap.get(c.id) || 0) + 1);
+        } else if (c.conventionalLines.has(seg.lineId) && c.conventionalStations.has(n1) && c.conventionalStations.has(n2)) {
+          corridorConventionalMap.set(c.id, (corridorConventionalMap.get(c.id) || 0) + 1);
+        }
+      });
     });
 
     let hasDuplicateEdges = false;
     fullSegments.forEach(seg => {
-      const idKey = seg.from < seg.to ? `${seg.from}::${seg.to}` : `${seg.to}::${seg.from}`;
+      const isTkShinkansen = (seg.lineId === 'shinkansen-tokaido');
+      const trackType = isTkShinkansen ? 'tokaido-shinkansen' : 'standard';
+      const idKey = seg.from < seg.to ? `${trackType}::${seg.from}::${seg.to}` : `${trackType}::${seg.to}::${seg.from}`;
       const st1 = stations[seg.from];
       const st2 = stations[seg.to];
       const n1 = st1 ? st1.name : seg.from;
       const n2 = st2 ? st2.name : seg.to;
-      const nameKey = n1 < n2 ? `${n1}::${n2}` : `${n2}::${n1}`;
+      const nameKey = n1 < n2 ? `name::${trackType}::${n1}::${n2}` : `name::${trackType}::${n2}::${n1}`;
 
       const idCount = edgeCountMap.get(idKey) || 0;
-      const nameCount = (n1 !== n2) ? (edgeCountMap.get(`name::${nameKey}`) || 0) : idCount;
+      const nameCount = (n1 !== n2) ? (edgeCountMap.get(nameKey) || 0) : idCount;
 
-      seg.isDuplicate = (idCount > 1 || nameCount > 1);
+      let isCorridorDuplicate = false;
+      SAME_LINE_PARALLEL_CORRIDORS.forEach(c => {
+        const hasShinkansen = (corridorShinkansenMap.get(c.id) || 0) > 0;
+        const hasConventional = (corridorConventionalMap.get(c.id) || 0) > 0;
+        // 同一線新幹線と並行在来線の両方を通過した場合は同一線重複
+        if (hasShinkansen && hasConventional) {
+          if (seg.lineId === c.shinkansenLine && c.shinkansenStations.has(n1) && c.shinkansenStations.has(n2)) {
+            isCorridorDuplicate = true;
+          } else if (c.conventionalLines.has(seg.lineId) && c.conventionalStations.has(n1) && c.conventionalStations.has(n2)) {
+            isCorridorDuplicate = true;
+          }
+        }
+      });
+
+      seg.isDuplicate = (idCount > 1 || nameCount > 1 || isCorridorDuplicate);
       if (seg.isDuplicate) hasDuplicateEdges = true;
     });
 
     // 通過全駅IDリスト
     const allStationIds = [fullSegments[0].from, ...fullSegments.map(s => s.to)];
 
-    // 各駅の到達・訪問回数集計 (到着駅としてのカウント)
-    const arrivalCount = new Map();
+    // 各駅の到達・訪問回数集計 (線路系統 trackType 別のカウント)
+    // 2026年3月改定対応: 東海道新幹線と東海道本線は別線扱いのため、別線相互の乗り分けによる通過駅は同一駅重複としない
+    const arrivalByTrack = new Map();
     fullSegments.forEach(seg => {
-      arrivalCount.set(seg.to, (arrivalCount.get(seg.to) || 0) + 1);
+      const isTkShinkansen = (seg.lineId === 'shinkansen-tokaido');
+      const trackType = isTkShinkansen ? 'tokaido-shinkansen' : 'standard';
+      if (!arrivalByTrack.has(seg.to)) {
+        arrivalByTrack.set(seg.to, new Map());
+      }
+      const trackMap = arrivalByTrack.get(seg.to);
+      trackMap.set(trackType, (trackMap.get(trackType) || 0) + 1);
     });
 
     // 始点駅が途中で再訪問された場合も検知 (一周ルートの場合は最後のゴール到着を除外)
@@ -904,12 +928,31 @@
     const originVisitedAgain = intermediateSegments.some(s => s.from === originId || s.to === originId);
 
     const duplicateStationIds = [];
-    arrivalCount.forEach((cnt, id) => {
-      if (isLoopRoute && id === originId) {
-        // 一周ルートの終点としての1回到着は正常
-        if (cnt > 1) duplicateStationIds.push(id);
-      } else {
-        if (cnt > 1) duplicateStationIds.push(id);
+    arrivalByTrack.forEach((trackMap, id) => {
+      let hasTrackDup = false;
+      let totalArrivals = 0;
+      trackMap.forEach((cnt, track) => {
+        totalArrivals += cnt;
+        if (isLoopRoute && id === originId) {
+          // 一周ルートの終点としての1回到着は正常
+          if (cnt > 1) hasTrackDup = true;
+        } else {
+          if (cnt > 1) hasTrackDup = true;
+        }
+      });
+
+      if (hasTrackDup) {
+        duplicateStationIds.push(id);
+      } else if (totalArrivals > 1) {
+        // 異なる系統 (東海道新幹線と在来線) で到達した場合
+        // 東海道新幹線別線化により、在来線と新幹線で1回ずつの通過駅 (小田原、品川等) は別線乗り分けとして許可
+        const hasTkShinkansenArrival = (trackMap.get('tokaido-shinkansen') || 0) > 0;
+        const hasStandardArrival = (trackMap.get('standard') || 0) > 0;
+        if (hasTkShinkansenArrival && hasStandardArrival && totalArrivals === 2) {
+          // 別線乗り分け区間の通過駅は許可
+        } else {
+          duplicateStationIds.push(id);
+        }
       }
     });
     if (originVisitedAgain && !duplicateStationIds.includes(originId)) {
@@ -1097,36 +1140,111 @@
     // 通過するユニークな路線IDのリスト
     const passedLineIds = Array.from(new Set(fullSegments.map(s => s.lineId)));
 
+    // 旅規第70条特定区間 (東京付近太線区間) の駅セット
+    // 山手線全駅、赤羽線 (池袋〜赤羽)、東北本線 (東京〜赤羽・尾久含む)、中央本線 (神田〜代々木)、総武本線 (御茶ノ水〜錦糸町、東京〜錦糸町)
+    const RULE_70_STATION_NAMES = new Set([
+      // 山手線全駅
+      '東京', '有楽町', '新橋', '浜松町', '田町', '高輪ゲートウェイ', '品川', '大崎', '五反田', '目黒', '恵比寿',
+      '渋谷', '原宿', '代々木', '新宿', '新大久保', '高田馬場', '目白', '池袋', '大塚', '巣鴨', '駒込', '田端',
+      '西日暮里', '日暮里', '鶯谷', '上野', '御徒町', '秋葉原', '神田',
+      // 赤羽線 (埼京線)
+      '板橋', '十条', '赤羽',
+      // 東北本線 (尾久)
+      '尾久',
+      // 中央本線 (神田〜代々木)
+      '御茶ノ水', '水道橋', '飯田橋', '市ケ谷', '市ヶ谷', '四ツ谷', '信濃町', '千駄ケ谷', '千駄ヶ谷',
+      // 総武本線 (御茶ノ水〜錦糸町、東京〜錦糸町)
+      '浅草橋', '両国', '錦糸町', '新日本橋', '馬喰町'
+    ]);
+
     // 山手線内特定区間 (旅規第70条) の最短営業キロ適用
+    // 発着駅が太線区間外にあり、区間内を通過する場合、太線区間内の営業キロを在来線最短経路で計算
     let effectiveTotalKm = Math.round(totalDist * 10) / 10;
     const isInternalCheck = !!options._isInternalCheck;
 
-    if (!isInternalCheck && shinkansenSegs && shinkansenSegs.length > 0) {
-      // 山手線内特定区間駅 (第70条対象駅) を通過しているか判定
-      const yamanoteCoreStations = new Set([
-        '東京', '有楽町', '新橋', '浜松町', '田町', '品川', '大崎', '五反田', '目黒', '恵比寿',
-        '渋谷', '原宿', '代々木', '新宿', '新大久保', '高田馬場', '目白', '池袋', '大塚', '巣鴨',
-        '駒込', '田端', '西日暮里', '日暮里', '鶯谷', '上野', '御徒町', '秋葉原', '神田',
-        '御茶ノ水', '赤羽', '十条', '板橋'
-      ]);
+    if (!isInternalCheck && deptName && destName) {
+      const deptInRule70 = RULE_70_STATION_NAMES.has(deptName);
+      const destInRule70 = RULE_70_STATION_NAMES.has(destName);
 
-      const passesYamanote = allStationIds.some(id => {
-        const st = stations[id];
-        return st && yamanoteCoreStations.has(st.name);
-      });
-
-      if (passesYamanote) {
-        try {
-          const shortestRoute = searchMarsRoute(graph, null, stations, rawStops, {
-            useShinkansen: false,
-            searchMode: 'shortest',
-            _isInternalCheck: true
-          });
-          if (shortestRoute && shortestRoute.success && shortestRoute.totalKm < effectiveTotalKm) {
-            effectiveTotalKm = shortestRoute.totalKm;
+      // 発着駅がどちらも第70条太線区間外にある場合のみ適用
+      if (!deptInRule70 && !destInRule70) {
+        const allNames = allStationIds.map(id => stations[id] ? stations[id].name : id);
+        let firstIdx = -1;
+        let lastIdx = -1;
+        for (let i = 0; i < allNames.length; i++) {
+          if (RULE_70_STATION_NAMES.has(allNames[i])) {
+            if (firstIdx === -1) firstIdx = i;
+            lastIdx = i;
           }
-        } catch (e) {
-          console.warn('Shortest route check failed:', e);
+        }
+
+        if (firstIdx !== -1 && lastIdx !== -1 && firstIdx !== lastIdx) {
+          let entryStId = allStationIds[firstIdx];
+          let exitStId = allStationIds[lastIdx];
+
+          // 東北・上越新幹線通過時（大宮 ↔ 上野/東京）の赤羽境界補正
+          // 東海道新幹線（shinkansen-tokaido）は旅規第70条注記により太線区間から除外されるため補正しない
+          const akabaneSt = Object.values(stations).find(s => s && s.name === '赤羽');
+          const akabaneId = akabaneSt ? akabaneSt.id : null;
+
+          if (akabaneId) {
+            if (firstIdx > 0 && allNames[firstIdx - 1] === '大宮') {
+              entryStId = akabaneId;
+            }
+            if (lastIdx < allNames.length - 1 && allNames[lastIdx + 1] === '大宮') {
+              exitStId = akabaneId;
+            }
+          }
+
+          if (entryStId !== exitStId) {
+            // entryStId 〜 exitStId 間を findLeg で動的に在来線最短計算
+            let shortestKm = 0;
+            try {
+              const shortestLeg = findLeg(graph, entryStId, exitStId, { allowShinkansen: false, useShinkansen: false });
+              if (shortestLeg && shortestLeg.length > 0) {
+                const sTenths = shortestLeg.reduce((sum, seg) => sum + Math.round(seg.dist * 10), 0);
+                shortestKm = sTenths / 10;
+              }
+            } catch (e) {
+              console.warn('Rule 70 dynamic shortest calculation failed:', e);
+            }
+
+            if (shortestKm > 0) {
+              // 太線区間内の実際の乗車キロを集計 (東海道新幹線は旅規第70条注記により除外)
+              let actualInZoneTenths = 0;
+              for (let s = 0; s < fullSegments.length; s++) {
+                const seg = fullSegments[s];
+                const sFrom = stations[seg.from] ? stations[seg.from].name : seg.from;
+                const sTo = stations[seg.to] ? stations[seg.to].name : seg.to;
+
+                // 東海道新幹線（shinkansen-tokaido）は第70条対象外
+                if (seg.lineId === 'shinkansen-tokaido' || seg.lineName === '東海道新幹線') {
+                  continue;
+                }
+
+                if (seg.isShinkansen) {
+                  // 東北・上越新幹線の場合: 東京〜大宮は赤羽までの13.2km、上野〜大宮は赤羽までの9.6kmを区間内とする
+                  if ((sFrom === '東京' && sTo === '大宮') || (sFrom === '大宮' && sTo === '東京')) {
+                    actualInZoneTenths += 132; // 東京〜赤羽 13.2km
+                  } else if ((sFrom === '上野' && sTo === '大宮') || (sFrom === '大宮' && sTo === '上野')) {
+                    actualInZoneTenths += 96;  // 上野〜赤羽 9.6km
+                  } else if (RULE_70_STATION_NAMES.has(sFrom) && RULE_70_STATION_NAMES.has(sTo)) {
+                    actualInZoneTenths += Math.round(seg.dist * 10);
+                  }
+                } else {
+                  if (RULE_70_STATION_NAMES.has(sFrom) && RULE_70_STATION_NAMES.has(sTo)) {
+                    actualInZoneTenths += Math.round(seg.dist * 10);
+                  }
+                }
+              }
+
+              const actualInZoneKm = actualInZoneTenths / 10;
+              if (shortestKm < actualInZoneKm) {
+                const diffKm = Math.round((actualInZoneKm - shortestKm) * 10) / 10;
+                effectiveTotalKm = Math.round((totalDist - diffKm) * 10) / 10;
+              }
+            }
+          }
         }
       }
     }
@@ -1165,6 +1283,7 @@
         totalKm: effectiveTotalKm,
         directShortestKm: directShortestKm,
         sections: sections,
+        fullSegments: fullSegments,
         deptId: deptId,
         destId: destId,
         allStationIds: allStationIds,
@@ -1212,6 +1331,7 @@
     MARS_LINE_NAMES,
     getMarsLineName,
     buildGraph,
+    findLeg,
     getSegmentCoords,
     searchMarsRoute
   };

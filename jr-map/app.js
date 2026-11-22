@@ -3040,9 +3040,11 @@
     document.getElementById('ticket-dest-name').textContent = result.destName;
     document.getElementById('ticket-via-text').textContent = result.marsString || '(直通)';
 
-    // 営業キロ表示: 大都市近郊区間特例で最短キロと実乗車キロが異なる場合は両方を明記
+    // 営業キロ表示: 旅規第70条または近郊区間特例で最短キロと実乗車キロが異なる場合は両方を明記
     const kiloEl = document.getElementById('ticket-total-kilo');
-    if (fr && fr.isSuburbanOnly && fr.fareKm !== undefined && fr.fareKm !== result.totalKm) {
+    if (result.actualKm && result.actualKm !== result.totalKm) {
+      kiloEl.textContent = `営業キロ: ${result.actualKm.toFixed(1)} km (運賃計算: ${result.totalKm.toFixed(1)} km)`;
+    } else if (fr && fr.isSuburbanOnly && fr.fareKm !== undefined && fr.fareKm !== result.totalKm) {
       kiloEl.textContent = `営業キロ: ${result.totalKm.toFixed(1)} km (運賃計算: ${fr.fareKm.toFixed(1)} km)`;
     } else {
       kiloEl.textContent = `営業キロ: ${result.totalKm.toFixed(1)} km`;
@@ -3063,12 +3065,14 @@
       if (valBadge) {
         valBadge.textContent = fr.validityText;
         valBadge.className = 'rule-badge ' + (fr.isSuburbanOnly ? 'badge-neutral' : 'badge-shinkansen');
+        valBadge.title = fr.isSuburbanOnly ? '大都市近郊区間内相互発着のため当日限り有効です' : `営業キロ ${result.totalKm.toFixed(1)} kmに基づく有効日数です (旅規第154条)`;
       }
 
       const stopBadge = document.getElementById('ticket-stopover-badge');
       if (stopBadge) {
         stopBadge.textContent = fr.stopoverAllowed ? '途中下車可能' : '途中下車不可';
         stopBadge.className = 'rule-badge ' + (fr.stopoverAllowed ? 'badge-success' : 'badge-neutral');
+        stopBadge.title = fr.stopoverDetail || (fr.stopoverAllowed ? '有効期間内であれば指定区間内の各駅で後戻りしない限り何度でも途中下車できます' : '途中下車不可（下車前途無効）です');
       }
     }
 

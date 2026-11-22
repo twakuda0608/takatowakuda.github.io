@@ -7523,7 +7523,7 @@
     "en": "京町温泉",
     "lat": 32.04542,
     "lng": 130.76793,
-    "pref": "鹿児島県",
+    "pref": "宮崎県",
     "lines": [
       "kyushu-kitto"
     ]
@@ -7633,7 +7633,7 @@
     "en": "日田",
     "lat": 33.31789,
     "lng": 130.93813,
-    "pref": "福岡県",
+    "pref": "大分県",
     "lines": [
       "kyushu-kyudai"
     ]
@@ -7669,7 +7669,7 @@
     "en": "杉河内",
     "lat": 33.26434,
     "lng": 131.06545,
-    "pref": "福岡県",
+    "pref": "大分県",
     "lines": [
       "kyushu-kyudai"
     ]
@@ -7717,7 +7717,7 @@
     "en": "恵良",
     "lat": 33.25504,
     "lng": 131.17442,
-    "pref": "福岡県",
+    "pref": "大分県",
     "lines": [
       "kyushu-kyudai"
     ]
@@ -7765,7 +7765,7 @@
     "en": "光岡",
     "lat": 33.32761,
     "lng": 130.91992,
-    "pref": "福岡県",
+    "pref": "大分県",
     "lines": [
       "kyushu-kyudai"
     ]
@@ -7801,7 +7801,7 @@
     "en": "豊後中川",
     "lat": 33.28446,
     "lng": 131.00588,
-    "pref": "福岡県",
+    "pref": "大分県",
     "lines": [
       "kyushu-kyudai"
     ]
@@ -7813,7 +7813,7 @@
     "en": "天ヶ瀬",
     "lat": 33.25485,
     "lng": 131.02382,
-    "pref": "福岡県",
+    "pref": "大分県",
     "lines": [
       "kyushu-kyudai"
     ]
@@ -7825,7 +7825,7 @@
     "en": "豊後森",
     "lat": 33.28255,
     "lng": 131.15569,
-    "pref": "福岡県",
+    "pref": "大分県",
     "lines": [
       "kyushu-kyudai"
     ]
@@ -7849,7 +7849,7 @@
     "en": "引治",
     "lat": 33.22899,
     "lng": 131.18398,
-    "pref": "福岡県",
+    "pref": "大分県",
     "lines": [
       "kyushu-kyudai"
     ]
@@ -7885,7 +7885,7 @@
     "en": "豊後三芳",
     "lat": 33.30591,
     "lng": 130.9515,
-    "pref": "福岡県",
+    "pref": "大分県",
     "lines": [
       "kyushu-kyudai"
     ]
@@ -7897,7 +7897,7 @@
     "en": "北山田",
     "lat": 33.28202,
     "lng": 131.10092,
-    "pref": "福岡県",
+    "pref": "大分県",
     "lines": [
       "kyushu-kyudai"
     ]
@@ -7971,7 +7971,7 @@
     "en": "夜明",
     "lat": 33.3196,
     "lng": 130.86621,
-    "pref": "福岡県",
+    "pref": "大分県",
     "lines": [
       "kyushu-kyudai",
       "kyushu-hitahikosan"
@@ -8427,7 +8427,7 @@
     "en": "江北",
     "lat": 33.21911,
     "lng": 130.16111,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki",
       "kyushu-sasebo"
@@ -8440,7 +8440,7 @@
     "en": "高橋",
     "lat": 33.2081,
     "lng": 130.04238,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-sasebo"
     ]
@@ -8452,7 +8452,7 @@
     "en": "北方",
     "lat": 33.21622,
     "lng": 130.08327,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-sasebo"
     ]
@@ -8476,7 +8476,7 @@
     "en": "大町",
     "lat": 33.21245,
     "lng": 130.10648,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-sasebo"
     ]
@@ -8488,7 +8488,7 @@
     "en": "日宇",
     "lat": 33.15742,
     "lng": 129.75831,
-    "pref": "佐賀県",
+    "pref": "長崎県",
     "lines": [
       "kyushu-sasebo"
     ]
@@ -8500,7 +8500,7 @@
     "en": "武雄温泉",
     "lat": 33.19654,
     "lng": 130.02321,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "shinkansen-nishi-kyushu",
       "kyushu-sasebo"
@@ -8513,7 +8513,7 @@
     "en": "三河内",
     "lat": 33.15031,
     "lng": 129.82909,
-    "pref": "佐賀県",
+    "pref": "長崎県",
     "lines": [
       "kyushu-sasebo"
     ]
@@ -8537,7 +8537,7 @@
     "en": "大塔",
     "lat": 33.14922,
     "lng": 129.78205,
-    "pref": "佐賀県",
+    "pref": "長崎県",
     "lines": [
       "kyushu-sasebo"
     ]
@@ -8561,7 +8561,7 @@
     "en": "佐世保",
     "lat": 33.16372,
     "lng": 129.72663,
-    "pref": "佐賀県",
+    "pref": "長崎県",
     "lines": [
       "kyushu-sasebo"
     ]
@@ -8573,7 +8573,7 @@
     "en": "早岐",
     "lat": 33.1339,
     "lng": 129.79931,
-    "pref": "佐賀県",
+    "pref": "長崎県",
     "lines": [
       "kyushu-sasebo",
       "kyushu-omura"
@@ -8586,7 +8586,7 @@
     "en": "三角",
     "lat": 32.60788,
     "lng": 130.46973,
-    "pref": "長崎県",
+    "pref": "熊本県",
     "lines": [
       "kyushu-misumi"
     ]
@@ -8670,7 +8670,7 @@
     "en": "波多浦",
     "lat": 32.61524,
     "lng": 130.48793,
-    "pref": "長崎県",
+    "pref": "熊本県",
     "lines": [
       "kyushu-misumi"
     ]
@@ -8695,7 +8695,7 @@
     "en": "門司",
     "lat": 33.90438,
     "lng": 130.93243,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-kagoshima",
       "kyushu-sanyo"
@@ -9129,7 +9129,7 @@
     "en": "枝光",
     "lat": 33.87919,
     "lng": 130.81286,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-kagoshima"
     ]
@@ -9141,7 +9141,7 @@
     "en": "八幡",
     "lat": 33.86928,
     "lng": 130.79515,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-kagoshima"
     ]
@@ -9153,7 +9153,7 @@
     "en": "折尾",
     "lat": 33.86427,
     "lng": 130.71282,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-kagoshima",
       "kyushu-chikuho"
@@ -9166,7 +9166,7 @@
     "en": "門司港",
     "lat": 33.94406,
     "lng": 130.96051,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-kagoshima"
     ]
@@ -9178,7 +9178,7 @@
     "en": "九州工大前",
     "lat": 33.90046,
     "lng": 130.84016,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-kagoshima"
     ]
@@ -9190,7 +9190,7 @@
     "en": "小倉",
     "lat": 33.88702,
     "lng": 130.88322,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "shinkansen-sanyo",
       "kyushu-kagoshima",
@@ -9204,7 +9204,7 @@
     "en": "黒崎",
     "lat": 33.86692,
     "lng": 130.76656,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-kagoshima"
     ]
@@ -9228,7 +9228,7 @@
     "en": "陣原",
     "lat": 33.86819,
     "lng": 130.74348,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-kagoshima"
     ]
@@ -9240,7 +9240,7 @@
     "en": "小森江",
     "lat": 33.91652,
     "lng": 130.93888,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-kagoshima"
     ]
@@ -9252,7 +9252,7 @@
     "en": "スペースワールド",
     "lat": 33.87124,
     "lng": 130.8062,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-kagoshima"
     ]
@@ -9264,7 +9264,7 @@
     "en": "西小倉",
     "lat": 33.88854,
     "lng": 130.87411,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-kagoshima",
       "kyushu-nippo"
@@ -9277,7 +9277,7 @@
     "en": "戸畑",
     "lat": 33.89742,
     "lng": 130.82092,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-kagoshima"
     ]
@@ -9422,7 +9422,7 @@
     "en": "田代",
     "lat": 33.38453,
     "lng": 130.52486,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-kagoshima"
     ]
@@ -9518,7 +9518,7 @@
     "en": "肥前旭",
     "lat": 33.34977,
     "lng": 130.4961,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-kagoshima"
     ]
@@ -9605,7 +9605,7 @@
     "en": "弥生が丘",
     "lat": 33.40277,
     "lng": 130.52865,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-kagoshima"
     ]
@@ -9629,7 +9629,7 @@
     "en": "けやき台",
     "lat": 33.43412,
     "lng": 130.53336,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-kagoshima"
     ]
@@ -9641,7 +9641,7 @@
     "en": "基山",
     "lat": 33.42128,
     "lng": 130.53233,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-kagoshima"
     ]
@@ -9714,7 +9714,7 @@
     "en": "鳥栖",
     "lat": 33.37421,
     "lng": 130.51987,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-kagoshima",
       "kyushu-nagasaki"
@@ -9751,7 +9751,7 @@
     "en": "荒尾",
     "lat": 32.99452,
     "lng": 130.43472,
-    "pref": "長崎県",
+    "pref": "熊本県",
     "lines": [
       "kyushu-kagoshima"
     ]
@@ -9787,7 +9787,7 @@
     "en": "長洲",
     "lat": 32.93515,
     "lng": 130.45559,
-    "pref": "長崎県",
+    "pref": "熊本県",
     "lines": [
       "kyushu-kagoshima"
     ]
@@ -9885,7 +9885,7 @@
     "en": "南荒尾",
     "lat": 32.96583,
     "lng": 130.43313,
-    "pref": "長崎県",
+    "pref": "熊本県",
     "lines": [
       "kyushu-kagoshima"
     ]
@@ -10236,7 +10236,7 @@
     "en": "川棚",
     "lat": 33.06837,
     "lng": 129.86408,
-    "pref": "佐賀県",
+    "pref": "長崎県",
     "lines": [
       "kyushu-omura"
     ]
@@ -10248,7 +10248,7 @@
     "en": "彼杵",
     "lat": 33.03982,
     "lng": 129.91469,
-    "pref": "佐賀県",
+    "pref": "長崎県",
     "lines": [
       "kyushu-omura"
     ]
@@ -10260,7 +10260,7 @@
     "en": "南風崎",
     "lat": 33.08708,
     "lng": 129.801,
-    "pref": "佐賀県",
+    "pref": "長崎県",
     "lines": [
       "kyushu-omura"
     ]
@@ -10284,7 +10284,7 @@
     "en": "小串郷",
     "lat": 33.06373,
     "lng": 129.83442,
-    "pref": "佐賀県",
+    "pref": "長崎県",
     "lines": [
       "kyushu-omura"
     ]
@@ -10308,7 +10308,7 @@
     "en": "千綿",
     "lat": 33.01307,
     "lng": 129.94561,
-    "pref": "佐賀県",
+    "pref": "長崎県",
     "lines": [
       "kyushu-omura"
     ]
@@ -10332,7 +10332,7 @@
     "en": "ハウステンボス",
     "lat": 33.09223,
     "lng": 129.79629,
-    "pref": "佐賀県",
+    "pref": "長崎県",
     "lines": [
       "kyushu-omura"
     ]
@@ -10514,7 +10514,7 @@
     "en": "虹ノ松原",
     "lat": 33.44099,
     "lng": 130.01633,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-chikuhi"
     ]
@@ -10659,7 +10659,7 @@
     "en": "肥前久保",
     "lat": 33.35572,
     "lng": 130.00015,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-chikuhi"
     ]
@@ -10695,7 +10695,7 @@
     "en": "浜崎",
     "lat": 33.44689,
     "lng": 130.03731,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-chikuhi"
     ]
@@ -10744,7 +10744,7 @@
     "en": "筑前垣生",
     "lat": 33.81844,
     "lng": 130.70237,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-chikuho"
     ]
@@ -10756,7 +10756,7 @@
     "en": "若松",
     "lat": 33.90032,
     "lng": 130.80519,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-chikuho"
     ]
@@ -10768,7 +10768,7 @@
     "en": "本城",
     "lat": 33.87505,
     "lng": 130.72298,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-chikuho"
     ]
@@ -10780,7 +10780,7 @@
     "en": "藤ノ木",
     "lat": 33.89319,
     "lng": 130.78188,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-chikuho"
     ]
@@ -10792,7 +10792,7 @@
     "en": "中間",
     "lat": 33.82776,
     "lng": 130.70935,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-chikuho"
     ]
@@ -10804,7 +10804,7 @@
     "en": "奥洞海",
     "lat": 33.88891,
     "lng": 130.76408,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-chikuho"
     ]
@@ -10816,7 +10816,7 @@
     "en": "東水巻",
     "lat": 33.84014,
     "lng": 130.70816,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-chikuho"
     ]
@@ -10840,7 +10840,7 @@
     "en": "二島",
     "lat": 33.88944,
     "lng": 130.7488,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-chikuho"
     ]
@@ -10864,7 +10864,7 @@
     "en": "勝野",
     "lat": 33.72834,
     "lng": 130.716,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-chikuho"
     ]
@@ -10900,7 +10900,7 @@
     "en": "直方",
     "lat": 33.74863,
     "lng": 130.7245,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-chikuho"
     ]
@@ -10912,7 +10912,7 @@
     "en": "新入",
     "lat": 33.76339,
     "lng": 130.7142,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-chikuho"
     ]
@@ -10924,7 +10924,7 @@
     "en": "筑前植木",
     "lat": 33.77708,
     "lng": 130.70804,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-chikuho"
     ]
@@ -10996,7 +10996,7 @@
     "en": "吉野ヶ里公園",
     "lat": 33.32458,
     "lng": 130.39886,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki"
     ]
@@ -11008,7 +11008,7 @@
     "en": "肥前麓",
     "lat": 33.36582,
     "lng": 130.47752,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki"
     ]
@@ -11020,7 +11020,7 @@
     "en": "中原",
     "lat": 33.34629,
     "lng": 130.44012,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki"
     ]
@@ -11032,7 +11032,7 @@
     "en": "伊賀屋",
     "lat": 33.29026,
     "lng": 130.33684,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki"
     ]
@@ -11044,7 +11044,7 @@
     "en": "神埼",
     "lat": 33.31596,
     "lng": 130.37493,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki"
     ]
@@ -11056,7 +11056,7 @@
     "en": "久保田",
     "lat": 33.25569,
     "lng": 130.22943,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki",
       "kyushu-karatsu"
@@ -11069,7 +11069,7 @@
     "en": "佐賀",
     "lat": 33.26413,
     "lng": 130.29737,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki"
     ]
@@ -11081,7 +11081,7 @@
     "en": "鍋島",
     "lat": 33.25905,
     "lng": 130.2657,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki"
     ]
@@ -11093,7 +11093,7 @@
     "en": "牛津",
     "lat": 33.24783,
     "lng": 130.20133,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki"
     ]
@@ -11105,7 +11105,7 @@
     "en": "肥前竜王",
     "lat": 33.14659,
     "lng": 130.12035,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki"
     ]
@@ -11117,7 +11117,7 @@
     "en": "肥前白石",
     "lat": 33.18693,
     "lng": 130.1359,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki"
     ]
@@ -11142,7 +11142,7 @@
     "en": "肥前七浦",
     "lat": 33.07087,
     "lng": 130.14526,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki"
     ]
@@ -11286,7 +11286,7 @@
     "en": "多良",
     "lat": 33.02521,
     "lng": 130.17611,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki"
     ]
@@ -11310,7 +11310,7 @@
     "en": "肥前飯田",
     "lat": 33.05569,
     "lng": 130.15879,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki"
     ]
@@ -11346,7 +11346,7 @@
     "en": "肥前浜",
     "lat": 33.09541,
     "lng": 130.11679,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki"
     ]
@@ -11358,7 +11358,7 @@
     "en": "肥前鹿島",
     "lat": 33.11339,
     "lng": 130.09805,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki"
     ]
@@ -11394,7 +11394,7 @@
     "en": "肥前大浦",
     "lat": 32.97507,
     "lng": 130.20727,
-    "pref": "長崎県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-nagasaki"
     ]
@@ -11454,7 +11454,7 @@
     "en": "相知",
     "lat": 33.34695,
     "lng": 130.01974,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-karatsu"
     ]
@@ -11466,7 +11466,7 @@
     "en": "岩屋",
     "lat": 33.33081,
     "lng": 130.0385,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-karatsu"
     ]
@@ -11478,7 +11478,7 @@
     "en": "多久",
     "lat": 33.28838,
     "lng": 130.09628,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-karatsu"
     ]
@@ -11490,7 +11490,7 @@
     "en": "小城",
     "lat": 33.2855,
     "lng": 130.19907,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-karatsu"
     ]
@@ -11502,7 +11502,7 @@
     "en": "中多久",
     "lat": 33.28333,
     "lng": 130.11229,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-karatsu"
     ]
@@ -11514,7 +11514,7 @@
     "en": "厳木",
     "lat": 33.3234,
     "lng": 130.0603,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-karatsu"
     ]
@@ -11538,7 +11538,7 @@
     "en": "東多久",
     "lat": 33.28541,
     "lng": 130.14317,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "kyushu-karatsu"
     ]
@@ -11562,7 +11562,7 @@
     "en": "城野",
     "lat": 33.85804,
     "lng": 130.88637,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-nippo",
       "kyushu-hitahikosan"
@@ -11575,7 +11575,7 @@
     "en": "志井",
     "lat": 33.80388,
     "lng": 130.87481,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-hitahikosan"
     ]
@@ -11587,7 +11587,7 @@
     "en": "志井公園",
     "lat": 33.81827,
     "lng": 130.87973,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-hitahikosan"
     ]
@@ -11599,7 +11599,7 @@
     "en": "石田",
     "lat": 33.83218,
     "lng": 130.88914,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-hitahikosan"
     ]
@@ -11623,7 +11623,7 @@
     "en": "採銅所",
     "lat": 33.70735,
     "lng": 130.85314,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-hitahikosan"
     ]
@@ -11647,7 +11647,7 @@
     "en": "大鶴",
     "lat": 33.36698,
     "lng": 130.88548,
-    "pref": "福岡県",
+    "pref": "大分県",
     "lines": [
       "kyushu-hitahikosan"
     ]
@@ -11683,7 +11683,7 @@
     "en": "呼野",
     "lat": 33.75505,
     "lng": 130.86194,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-hitahikosan"
     ]
@@ -11731,7 +11731,7 @@
     "en": "今山",
     "lat": 33.34515,
     "lng": 130.87694,
-    "pref": "福岡県",
+    "pref": "大分県",
     "lines": [
       "kyushu-hitahikosan"
     ]
@@ -11743,7 +11743,7 @@
     "en": "石原町",
     "lat": 33.78467,
     "lng": 130.86601,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-hitahikosan"
     ]
@@ -11960,7 +11960,7 @@
     "en": "大隅夏井",
     "lat": 31.46977,
     "lng": 131.13642,
-    "pref": "宮崎県",
+    "pref": "鹿児島県",
     "lines": [
       "kyushu-nichinan"
     ]
@@ -12116,7 +12116,7 @@
     "en": "志布志",
     "lat": 31.47314,
     "lng": 131.09853,
-    "pref": "宮崎県",
+    "pref": "鹿児島県",
     "lines": [
       "kyushu-nichinan"
     ]
@@ -12224,7 +12224,7 @@
     "en": "下曽根",
     "lat": 33.83214,
     "lng": 130.93492,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-nippo"
     ]
@@ -12236,7 +12236,7 @@
     "en": "南小倉",
     "lat": 33.87008,
     "lng": 130.86478,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-nippo"
     ]
@@ -12248,7 +12248,7 @@
     "en": "朽網",
     "lat": 33.80768,
     "lng": 130.95479,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-nippo"
     ]
@@ -12260,7 +12260,7 @@
     "en": "安部山公園",
     "lat": 33.844,
     "lng": 130.90444,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-nippo"
     ]
@@ -12368,7 +12368,7 @@
     "en": "苅田",
     "lat": 33.78513,
     "lng": 130.97874,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-nippo"
     ]
@@ -12440,7 +12440,7 @@
     "en": "中津",
     "lat": 33.59919,
     "lng": 131.19093,
-    "pref": "福岡県",
+    "pref": "大分県",
     "lines": [
       "kyushu-nippo"
     ]
@@ -12488,7 +12488,7 @@
     "en": "南行橋",
     "lat": 33.71631,
     "lng": 130.98121,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-nippo"
     ]
@@ -12584,7 +12584,7 @@
     "en": "小波瀬西工大前",
     "lat": 33.75287,
     "lng": 130.97182,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-nippo"
     ]
@@ -12644,7 +12644,7 @@
     "en": "行橋",
     "lat": 33.72875,
     "lng": 130.97026,
-    "pref": "山口県",
+    "pref": "福岡県",
     "lines": [
       "kyushu-nippo"
     ]
@@ -12728,7 +12728,7 @@
     "en": "市棚",
     "lat": 32.7283,
     "lng": 131.71021,
-    "pref": "大分県",
+    "pref": "宮崎県",
     "lines": [
       "kyushu-nippo"
     ]
@@ -13124,7 +13124,7 @@
     "en": "北永野田",
     "lat": 31.78208,
     "lng": 130.87456,
-    "pref": "宮崎県",
+    "pref": "鹿児島県",
     "lines": [
       "kyushu-nippo"
     ]
@@ -13136,7 +13136,7 @@
     "en": "財部",
     "lat": 31.72878,
     "lng": 130.99153,
-    "pref": "宮崎県",
+    "pref": "鹿児島県",
     "lines": [
       "kyushu-nippo"
     ]
@@ -13208,7 +13208,7 @@
     "en": "北俣",
     "lat": 31.74498,
     "lng": 130.96003,
-    "pref": "宮崎県",
+    "pref": "鹿児島県",
     "lines": [
       "kyushu-nippo"
     ]
@@ -13232,7 +13232,7 @@
     "en": "霧島神宮",
     "lat": 31.81821,
     "lng": 130.837,
-    "pref": "宮崎県",
+    "pref": "鹿児島県",
     "lines": [
       "kyushu-nippo"
     ]
@@ -13317,7 +13317,7 @@
     "en": "大隅大川原",
     "lat": 31.77279,
     "lng": 130.92428,
-    "pref": "宮崎県",
+    "pref": "鹿児島県",
     "lines": [
       "kyushu-nippo"
     ]
@@ -13437,7 +13437,7 @@
     "en": "真幸",
     "lat": 32.07452,
     "lng": 130.72911,
-    "pref": "鹿児島県",
+    "pref": "宮崎県",
     "lines": [
       "kyushu-hisatsu"
     ]
@@ -13773,7 +13773,7 @@
     "en": "豊後荻",
     "lat": 32.92692,
     "lng": 131.29762,
-    "pref": "熊本県",
+    "pref": "大分県",
     "lines": [
       "kyushu-hohi"
     ]
@@ -14109,7 +14109,7 @@
     "en": "昭和町",
     "lat": 34.34408,
     "lng": 134.03217,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14121,7 +14121,7 @@
     "en": "讃岐牟礼",
     "lat": 34.33636,
     "lng": 134.14771,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14133,7 +14133,7 @@
     "en": "木太町",
     "lat": 34.33192,
     "lng": 134.07995,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14145,7 +14145,7 @@
     "en": "丹生",
     "lat": 34.25471,
     "lng": 134.30176,
-    "pref": "兵庫県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14157,7 +14157,7 @@
     "en": "讃岐津田",
     "lat": 34.28827,
     "lng": 134.24827,
-    "pref": "兵庫県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14169,7 +14169,7 @@
     "en": "讃岐相生",
     "lat": 34.21193,
     "lng": 134.42438,
-    "pref": "兵庫県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14181,7 +14181,7 @@
     "en": "鶴羽",
     "lat": 34.28,
     "lng": 134.27397,
-    "pref": "兵庫県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14205,7 +14205,7 @@
     "en": "栗林",
     "lat": 34.33233,
     "lng": 134.05339,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14217,7 +14217,7 @@
     "en": "三本松",
     "lat": 34.25174,
     "lng": 134.33416,
-    "pref": "兵庫県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14229,7 +14229,7 @@
     "en": "引田",
     "lat": 34.22436,
     "lng": 134.40179,
-    "pref": "兵庫県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14241,7 +14241,7 @@
     "en": "志度",
     "lat": 34.32142,
     "lng": 134.17311,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14253,7 +14253,7 @@
     "en": "讃岐白鳥",
     "lat": 34.24361,
     "lng": 134.36619,
-    "pref": "兵庫県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14265,7 +14265,7 @@
     "en": "オレンジタウン",
     "lat": 34.30235,
     "lng": 134.18072,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14277,7 +14277,7 @@
     "en": "栗林公園北口",
     "lat": 34.33465,
     "lng": 134.04129,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14289,7 +14289,7 @@
     "en": "屋島",
     "lat": 34.33677,
     "lng": 134.10958,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14301,7 +14301,7 @@
     "en": "古高松南",
     "lat": 34.3411,
     "lng": 134.12165,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14313,7 +14313,7 @@
     "en": "神前",
     "lat": 34.28285,
     "lng": 134.20892,
-    "pref": "兵庫県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14325,7 +14325,7 @@
     "en": "八栗口",
     "lat": 34.33907,
     "lng": 134.13681,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14337,7 +14337,7 @@
     "en": "高松",
     "lat": 34.35056,
     "lng": 134.04534,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-yosan",
       "shikoku-kotoku"
@@ -14362,7 +14362,7 @@
     "en": "阿波大宮",
     "lat": 34.17872,
     "lng": 134.44865,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14398,7 +14398,7 @@
     "en": "阿波川端",
     "lat": 34.14889,
     "lng": 134.48375,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14423,7 +14423,7 @@
     "en": "板野",
     "lat": 34.14195,
     "lng": 134.46522,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-kotoku"
     ]
@@ -14498,7 +14498,7 @@
     "en": "阿波川口",
     "lat": 33.96375,
     "lng": 133.75466,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14510,7 +14510,7 @@
     "en": "土佐大津",
     "lat": 33.5766,
     "lng": 133.61199,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14522,7 +14522,7 @@
     "en": "入明",
     "lat": 33.56726,
     "lng": 133.53032,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14534,7 +14534,7 @@
     "en": "佃",
     "lat": 34.03244,
     "lng": 133.85767,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-dosan",
       "shikoku-tokushima"
@@ -14547,7 +14547,7 @@
     "en": "円行寺口",
     "lat": 33.56576,
     "lng": 133.5208,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14559,7 +14559,7 @@
     "en": "三縄",
     "lat": 34.00683,
     "lng": 133.78745,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14571,7 +14571,7 @@
     "en": "高知商業前",
     "lat": 33.55839,
     "lng": 133.49756,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14583,7 +14583,7 @@
     "en": "土佐穴内",
     "lat": 33.77926,
     "lng": 133.69609,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14619,7 +14619,7 @@
     "en": "高知",
     "lat": 33.56692,
     "lng": 133.54326,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14631,7 +14631,7 @@
     "en": "土佐山田",
     "lat": 33.60715,
     "lng": 133.68471,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14679,7 +14679,7 @@
     "en": "朝倉",
     "lat": 33.55158,
     "lng": 133.48564,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14691,7 +14691,7 @@
     "en": "土佐一宮",
     "lat": 33.57899,
     "lng": 133.57723,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14703,7 +14703,7 @@
     "en": "箸蔵",
     "lat": 34.04031,
     "lng": 133.84876,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14715,7 +14715,7 @@
     "en": "薊野",
     "lat": 33.57838,
     "lng": 133.56043,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14727,7 +14727,7 @@
     "en": "角茂谷",
     "lat": 33.69573,
     "lng": 133.69252,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14739,7 +14739,7 @@
     "en": "土佐長岡",
     "lat": 33.59174,
     "lng": 133.66229,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14751,7 +14751,7 @@
     "en": "小歩危",
     "lat": 33.92336,
     "lng": 133.75874,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14763,7 +14763,7 @@
     "en": "坪尻",
     "lat": 34.05387,
     "lng": 133.82388,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14775,7 +14775,7 @@
     "en": "祖谷口",
     "lat": 33.97272,
     "lng": 133.78042,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14787,7 +14787,7 @@
     "en": "旭",
     "lat": 33.55881,
     "lng": 133.50848,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14811,7 +14811,7 @@
     "en": "土佐北川",
     "lat": 33.71477,
     "lng": 133.68632,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14823,7 +14823,7 @@
     "en": "繁藤",
     "lat": 33.68036,
     "lng": 133.69022,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14835,7 +14835,7 @@
     "en": "阿波池田",
     "lat": 34.02685,
     "lng": 133.80472,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14847,7 +14847,7 @@
     "en": "山田西町",
     "lat": 33.60456,
     "lng": 133.67733,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14859,7 +14859,7 @@
     "en": "布師田",
     "lat": 33.57553,
     "lng": 133.59017,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14871,7 +14871,7 @@
     "en": "大歩危",
     "lat": 33.87653,
     "lng": 133.76725,
-    "pref": "高知県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14883,7 +14883,7 @@
     "en": "新改",
     "lat": 33.64965,
     "lng": 133.69581,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14895,7 +14895,7 @@
     "en": "大杉",
     "lat": 33.76095,
     "lng": 133.66442,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14919,7 +14919,7 @@
     "en": "後免",
     "lat": 33.57918,
     "lng": 133.64513,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14931,7 +14931,7 @@
     "en": "土佐加茂",
     "lat": 33.52356,
     "lng": 133.3211,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14943,7 +14943,7 @@
     "en": "六反地",
     "lat": 33.26203,
     "lng": 133.1694,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14955,7 +14955,7 @@
     "en": "岡花",
     "lat": 33.52992,
     "lng": 133.35127,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14967,7 +14967,7 @@
     "en": "枝川",
     "lat": 33.55068,
     "lng": 133.44863,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14979,7 +14979,7 @@
     "en": "西佐川",
     "lat": 33.51264,
     "lng": 133.28667,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -14991,7 +14991,7 @@
     "en": "窪川",
     "lat": 33.21268,
     "lng": 133.13733,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -15003,7 +15003,7 @@
     "en": "佐川",
     "lat": 33.5002,
     "lng": 133.29275,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -15015,7 +15015,7 @@
     "en": "安和",
     "lat": 33.36706,
     "lng": 133.25905,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -15027,7 +15027,7 @@
     "en": "伊野",
     "lat": 33.54744,
     "lng": 133.43041,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -15039,7 +15039,7 @@
     "en": "須崎",
     "lat": 33.39277,
     "lng": 133.29318,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -15051,7 +15051,7 @@
     "en": "影野",
     "lat": 33.27595,
     "lng": 133.17358,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -15063,7 +15063,7 @@
     "en": "仁井田",
     "lat": 33.24512,
     "lng": 133.16124,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -15075,7 +15075,7 @@
     "en": "土佐久礼",
     "lat": 33.32903,
     "lng": 133.22645,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -15087,7 +15087,7 @@
     "en": "大間",
     "lat": 33.407,
     "lng": 133.28775,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -15099,7 +15099,7 @@
     "en": "多ノ郷",
     "lat": 33.41068,
     "lng": 133.29464,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -15111,7 +15111,7 @@
     "en": "吾桑",
     "lat": 33.43028,
     "lng": 133.29566,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -15123,7 +15123,7 @@
     "en": "襟野々",
     "lat": 33.48873,
     "lng": 133.30052,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -15135,7 +15135,7 @@
     "en": "日下",
     "lat": 33.53342,
     "lng": 133.37131,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -15147,7 +15147,7 @@
     "en": "斗賀野",
     "lat": 33.47547,
     "lng": 133.28639,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -15159,7 +15159,7 @@
     "en": "波川",
     "lat": 33.54376,
     "lng": 133.41398,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -15171,7 +15171,7 @@
     "en": "土佐新荘",
     "lat": 33.3864,
     "lng": 133.27804,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -15183,7 +15183,7 @@
     "en": "鴨島",
     "lat": 34.07372,
     "lng": 134.35608,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15195,7 +15195,7 @@
     "en": "川田",
     "lat": 34.06125,
     "lng": 134.2046,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15207,7 +15207,7 @@
     "en": "貞光",
     "lat": 34.03931,
     "lng": 134.05932,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15219,7 +15219,7 @@
     "en": "下浦",
     "lat": 34.06763,
     "lng": 134.4212,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15231,7 +15231,7 @@
     "en": "石井",
     "lat": 34.07039,
     "lng": 134.44434,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15243,7 +15243,7 @@
     "en": "麻植塚",
     "lat": 34.07511,
     "lng": 134.37638,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15255,7 +15255,7 @@
     "en": "府中",
     "lat": 34.07429,
     "lng": 134.48298,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15267,7 +15267,7 @@
     "en": "阿波半田",
     "lat": 34.04099,
     "lng": 134.03625,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15291,7 +15291,7 @@
     "en": "学",
     "lat": 34.05769,
     "lng": 134.28677,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15303,7 +15303,7 @@
     "en": "三加茂",
     "lat": 34.03581,
     "lng": 133.94918,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15315,7 +15315,7 @@
     "en": "西麻植",
     "lat": 34.07255,
     "lng": 134.3365,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15327,7 +15327,7 @@
     "en": "小島",
     "lat": 34.05027,
     "lng": 134.10715,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15339,7 +15339,7 @@
     "en": "阿波加茂",
     "lat": 34.03674,
     "lng": 133.92707,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15363,7 +15363,7 @@
     "en": "穴吹",
     "lat": 34.05582,
     "lng": 134.16397,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15375,7 +15375,7 @@
     "en": "牛島",
     "lat": 34.07666,
     "lng": 134.39729,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15387,7 +15387,7 @@
     "en": "山瀬",
     "lat": 34.06018,
     "lng": 134.25626,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15399,7 +15399,7 @@
     "en": "江口",
     "lat": 34.03714,
     "lng": 133.97368,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15411,7 +15411,7 @@
     "en": "阿波川島",
     "lat": 34.06188,
     "lng": 134.32105,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15423,7 +15423,7 @@
     "en": "辻",
     "lat": 34.02917,
     "lng": 133.87386,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15435,7 +15435,7 @@
     "en": "阿波山川",
     "lat": 34.05522,
     "lng": 134.23455,
-    "pref": "香川県",
+    "pref": "徳島県",
     "lines": [
       "shikoku-tokushima"
     ]
@@ -15499,7 +15499,7 @@
     "en": "宇多津",
     "lat": 34.30632,
     "lng": 133.81375,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-yosan",
       "shikoku-seto-ohashi"
@@ -15933,7 +15933,7 @@
     "en": "鴨川",
     "lat": 34.30691,
     "lng": 133.90526,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -15945,7 +15945,7 @@
     "en": "香西",
     "lat": 34.34136,
     "lng": 134.01001,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -15957,7 +15957,7 @@
     "en": "坂出",
     "lat": 34.31319,
     "lng": 133.85679,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -15969,7 +15969,7 @@
     "en": "端岡",
     "lat": 34.30505,
     "lng": 133.96807,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -15981,7 +15981,7 @@
     "en": "鬼無",
     "lat": 34.3254,
     "lng": 133.99374,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -15993,7 +15993,7 @@
     "en": "八十場",
     "lat": 34.313,
     "lng": 133.88486,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -16017,7 +16017,7 @@
     "en": "国分",
     "lat": 34.30058,
     "lng": 133.94178,
-    "pref": "岡山県",
+    "pref": "香川県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -16089,7 +16089,7 @@
     "en": "川之江",
     "lat": 34.01475,
     "lng": 133.57613,
-    "pref": "香川県",
+    "pref": "愛媛県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -16125,7 +16125,7 @@
     "en": "伊予寒川",
     "lat": 33.96794,
     "lng": 133.5002,
-    "pref": "香川県",
+    "pref": "愛媛県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -16173,7 +16173,7 @@
     "en": "伊予三島",
     "lat": 33.97957,
     "lng": 133.54249,
-    "pref": "香川県",
+    "pref": "愛媛県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -16257,7 +16257,7 @@
     "en": "伊予亀岡",
     "lat": 34.05385,
     "lng": 132.87416,
-    "pref": "広島県",
+    "pref": "愛媛県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -16269,7 +16269,7 @@
     "en": "大西",
     "lat": 34.06602,
     "lng": 132.92912,
-    "pref": "広島県",
+    "pref": "愛媛県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -16317,7 +16317,7 @@
     "en": "伊予富田",
     "lat": 34.03633,
     "lng": 133.00909,
-    "pref": "広島県",
+    "pref": "愛媛県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -16341,7 +16341,7 @@
     "en": "菊間",
     "lat": 34.03338,
     "lng": 132.84108,
-    "pref": "広島県",
+    "pref": "愛媛県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -16389,7 +16389,7 @@
     "en": "大浦",
     "lat": 34.00003,
     "lng": 132.77562,
-    "pref": "広島県",
+    "pref": "愛媛県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -16401,7 +16401,7 @@
     "en": "波止浜",
     "lat": 34.09804,
     "lng": 132.96891,
-    "pref": "広島県",
+    "pref": "愛媛県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -16413,7 +16413,7 @@
     "en": "伊予桜井",
     "lat": 34.01204,
     "lng": 133.03555,
-    "pref": "広島県",
+    "pref": "愛媛県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -16437,7 +16437,7 @@
     "en": "浅海",
     "lat": 34.00997,
     "lng": 132.80304,
-    "pref": "広島県",
+    "pref": "愛媛県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -16509,7 +16509,7 @@
     "en": "波方",
     "lat": 34.09525,
     "lng": 132.94259,
-    "pref": "広島県",
+    "pref": "愛媛県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -16557,7 +16557,7 @@
     "en": "今治",
     "lat": 34.06411,
     "lng": 132.99384,
-    "pref": "広島県",
+    "pref": "愛媛県",
     "lines": [
       "shikoku-yosan"
     ]
@@ -17002,7 +17002,7 @@
     "en": "打井川",
     "lat": 33.1755,
     "lng": 133.02975,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-yodo"
     ]
@@ -17014,7 +17014,7 @@
     "en": "十川",
     "lat": 33.2349,
     "lng": 132.85594,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-yodo"
     ]
@@ -17026,7 +17026,7 @@
     "en": "江川崎",
     "lat": 33.17821,
     "lng": 132.78318,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-yodo"
     ]
@@ -17038,7 +17038,7 @@
     "en": "家地川",
     "lat": 33.16141,
     "lng": 133.07475,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-yodo"
     ]
@@ -17050,7 +17050,7 @@
     "en": "土佐大正",
     "lat": 33.19484,
     "lng": 132.97564,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-yodo"
     ]
@@ -17074,7 +17074,7 @@
     "en": "若井",
     "lat": 33.18805,
     "lng": 133.10584,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-yodo"
     ]
@@ -17086,7 +17086,7 @@
     "en": "半家",
     "lat": 33.20179,
     "lng": 132.79196,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-yodo"
     ]
@@ -17098,7 +17098,7 @@
     "en": "西ヶ方",
     "lat": 33.18745,
     "lng": 132.76716,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-yodo"
     ]
@@ -17110,7 +17110,7 @@
     "en": "土佐昭和",
     "lat": 33.22003,
     "lng": 132.89756,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-yodo"
     ]
@@ -17328,7 +17328,7 @@
     "en": "尼崎",
     "lat": 34.73185,
     "lng": 135.43178,
-    "pref": "大阪府",
+    "pref": "兵庫県",
     "lines": [
       "tokaido-west",
       "jr-tozai",
@@ -17355,7 +17355,7 @@
     "en": "郡家",
     "lat": 35.41281,
     "lng": 134.25084,
-    "pref": "兵庫県",
+    "pref": "鳥取県",
     "lines": [
       "imbi-line"
     ]
@@ -17367,7 +17367,7 @@
     "en": "鳥取",
     "lat": 35.49422,
     "lng": 134.22609,
-    "pref": "兵庫県",
+    "pref": "鳥取県",
     "lines": [
       "sanin-main",
       "imbi-line"
@@ -17380,7 +17380,7 @@
     "en": "国英",
     "lat": 35.37319,
     "lng": 134.21788,
-    "pref": "兵庫県",
+    "pref": "鳥取県",
     "lines": [
       "imbi-line"
     ]
@@ -17392,7 +17392,7 @@
     "en": "用瀬",
     "lat": 35.34314,
     "lng": 134.2046,
-    "pref": "兵庫県",
+    "pref": "鳥取県",
     "lines": [
       "imbi-line"
     ]
@@ -17404,7 +17404,7 @@
     "en": "河原",
     "lat": 35.39754,
     "lng": 134.2231,
-    "pref": "兵庫県",
+    "pref": "鳥取県",
     "lines": [
       "imbi-line"
     ]
@@ -17428,7 +17428,7 @@
     "en": "鷹狩",
     "lat": 35.35437,
     "lng": 134.20658,
-    "pref": "兵庫県",
+    "pref": "鳥取県",
     "lines": [
       "imbi-line"
     ]
@@ -17440,7 +17440,7 @@
     "en": "津ノ井",
     "lat": 35.46115,
     "lng": 134.2486,
-    "pref": "兵庫県",
+    "pref": "鳥取県",
     "lines": [
       "imbi-line"
     ]
@@ -17464,7 +17464,7 @@
     "en": "智頭",
     "lat": 35.26511,
     "lng": 134.22558,
-    "pref": "兵庫県",
+    "pref": "鳥取県",
     "lines": [
       "imbi-line"
     ]
@@ -17476,7 +17476,7 @@
     "en": "美作河井",
     "lat": 35.20541,
     "lng": 134.10712,
-    "pref": "鳥取県",
+    "pref": "岡山県",
     "lines": [
       "imbi-line"
     ]
@@ -17488,7 +17488,7 @@
     "en": "美作滝尾",
     "lat": 35.12359,
     "lng": 134.0714,
-    "pref": "鳥取県",
+    "pref": "岡山県",
     "lines": [
       "imbi-line"
     ]
@@ -17500,7 +17500,7 @@
     "en": "那岐",
     "lat": 35.21378,
     "lng": 134.20989,
-    "pref": "兵庫県",
+    "pref": "鳥取県",
     "lines": [
       "imbi-line"
     ]
@@ -17512,7 +17512,7 @@
     "en": "土師",
     "lat": 35.233,
     "lng": 134.22572,
-    "pref": "兵庫県",
+    "pref": "鳥取県",
     "lines": [
       "imbi-line"
     ]
@@ -17524,7 +17524,7 @@
     "en": "三浦",
     "lat": 35.14211,
     "lng": 134.07808,
-    "pref": "鳥取県",
+    "pref": "岡山県",
     "lines": [
       "imbi-line"
     ]
@@ -17536,7 +17536,7 @@
     "en": "東郡家",
     "lat": 35.42916,
     "lng": 134.25982,
-    "pref": "兵庫県",
+    "pref": "鳥取県",
     "lines": [
       "imbi-line"
     ]
@@ -17548,7 +17548,7 @@
     "en": "知和",
     "lat": 35.19263,
     "lng": 134.07705,
-    "pref": "鳥取県",
+    "pref": "岡山県",
     "lines": [
       "imbi-line"
     ]
@@ -17560,7 +17560,7 @@
     "en": "美作加茂",
     "lat": 35.16947,
     "lng": 134.0622,
-    "pref": "鳥取県",
+    "pref": "岡山県",
     "lines": [
       "imbi-line"
     ]
@@ -17978,7 +17978,7 @@
     "en": "柿ケ島",
     "lat": 35.9725,
     "lng": 136.5709,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -17990,7 +17990,7 @@
     "en": "美山",
     "lat": 35.99848,
     "lng": 136.36505,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18002,7 +18002,7 @@
     "en": "市波",
     "lat": 36.01986,
     "lng": 136.33049,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18014,7 +18014,7 @@
     "en": "越前大野",
     "lat": 35.98324,
     "lng": 136.49695,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18026,7 +18026,7 @@
     "en": "越前富田",
     "lat": 35.99119,
     "lng": 136.54133,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18038,7 +18038,7 @@
     "en": "計石",
     "lat": 35.99752,
     "lng": 136.43457,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18050,7 +18050,7 @@
     "en": "越前田野",
     "lat": 35.98708,
     "lng": 136.52697,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18062,7 +18062,7 @@
     "en": "牛ケ原",
     "lat": 35.99862,
     "lng": 136.4674,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18074,7 +18074,7 @@
     "en": "小和清水",
     "lat": 36.01736,
     "lng": 136.3511,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18086,7 +18086,7 @@
     "en": "越前薬師",
     "lat": 36.0053,
     "lng": 136.38432,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18098,7 +18098,7 @@
     "en": "下唯野",
     "lat": 35.97422,
     "lng": 136.56017,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18110,7 +18110,7 @@
     "en": "北大野",
     "lat": 35.99792,
     "lng": 136.48791,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18122,7 +18122,7 @@
     "en": "越前高田",
     "lat": 36.02479,
     "lng": 136.3187,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18134,7 +18134,7 @@
     "en": "越前大宮",
     "lat": 36.00004,
     "lng": 136.4098,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18146,7 +18146,7 @@
     "en": "勝原",
     "lat": 35.96753,
     "lng": 136.59726,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18158,7 +18158,7 @@
     "en": "一乗谷",
     "lat": 36.01367,
     "lng": 136.29738,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18170,7 +18170,7 @@
     "en": "九頭竜湖",
     "lat": 35.90449,
     "lng": 136.66147,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18182,7 +18182,7 @@
     "en": "越前下山",
     "lat": 35.92047,
     "lng": 136.63488,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18194,7 +18194,7 @@
     "en": "越前東郷",
     "lat": 36.01822,
     "lng": 136.27352,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18206,7 +18206,7 @@
     "en": "六条",
     "lat": 36.02821,
     "lng": 136.23961,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18218,7 +18218,7 @@
     "en": "越前花堂",
     "lat": 36.03916,
     "lng": 136.21848,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18230,7 +18230,7 @@
     "en": "足羽",
     "lat": 36.02082,
     "lng": 136.25356,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "etsumihoku-line"
     ]
@@ -18242,7 +18242,7 @@
     "en": "谷川",
     "lat": 35.08279,
     "lng": 135.0499,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line",
       "kakogawa-line"
@@ -18279,7 +18279,7 @@
     "en": "久下村",
     "lat": 35.07587,
     "lng": 135.03063,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "kakogawa-line"
     ]
@@ -18327,7 +18327,7 @@
     "en": "船町口",
     "lat": 35.06289,
     "lng": 135.00936,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "kakogawa-line"
     ]
@@ -18484,7 +18484,7 @@
     "en": "上八木",
     "lat": 34.49048,
     "lng": 132.5066,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kabe-line"
     ]
@@ -18496,7 +18496,7 @@
     "en": "古市橋",
     "lat": 34.45056,
     "lng": 132.46811,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kabe-line"
     ]
@@ -18508,7 +18508,7 @@
     "en": "梅林",
     "lat": 34.48072,
     "lng": 132.49413,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kabe-line"
     ]
@@ -18520,7 +18520,7 @@
     "en": "大町",
     "lat": 34.46139,
     "lng": 132.47077,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kabe-line"
     ]
@@ -18532,7 +18532,7 @@
     "en": "三滝",
     "lat": 34.41726,
     "lng": 132.44743,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kabe-line"
     ]
@@ -18544,7 +18544,7 @@
     "en": "安芸長束",
     "lat": 34.42839,
     "lng": 132.4561,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kabe-line"
     ]
@@ -18556,7 +18556,7 @@
     "en": "可部",
     "lat": 34.51199,
     "lng": 132.51077,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kabe-line"
     ]
@@ -18568,7 +18568,7 @@
     "en": "下祗園",
     "lat": 34.4394,
     "lng": 132.46229,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kabe-line"
     ]
@@ -18580,7 +18580,7 @@
     "en": "七軒茶屋",
     "lat": 34.47264,
     "lng": 132.48117,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kabe-line"
     ]
@@ -18592,7 +18592,7 @@
     "en": "中島",
     "lat": 34.50034,
     "lng": 132.51316,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kabe-line"
     ]
@@ -18604,7 +18604,7 @@
     "en": "緑井",
     "lat": 34.46747,
     "lng": 132.47584,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kabe-line"
     ]
@@ -18616,7 +18616,7 @@
     "en": "横川",
     "lat": 34.41052,
     "lng": 132.45051,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main",
       "kabe-line"
@@ -18765,7 +18765,7 @@
     "en": "奈良",
     "lat": 34.6805,
     "lng": 135.81885,
-    "pref": "三重県",
+    "pref": "奈良県",
     "lines": [
       "kansai-west",
       "sakurai-line"
@@ -18778,7 +18778,7 @@
     "en": "笠置",
     "lat": 34.75913,
     "lng": 135.93451,
-    "pref": "三重県",
+    "pref": "京都府",
     "lines": [
       "kansai-west"
     ]
@@ -18790,7 +18790,7 @@
     "en": "平城山",
     "lat": 34.71053,
     "lng": 135.81035,
-    "pref": "三重県",
+    "pref": "奈良県",
     "lines": [
       "kansai-west"
     ]
@@ -18802,7 +18802,7 @@
     "en": "加茂",
     "lat": 34.75257,
     "lng": 135.8696,
-    "pref": "三重県",
+    "pref": "京都府",
     "lines": [
       "kansai-west"
     ]
@@ -18814,7 +18814,7 @@
     "en": "月ヶ瀬口",
     "lat": 34.76266,
     "lng": 136.02452,
-    "pref": "三重県",
+    "pref": "京都府",
     "lines": [
       "kansai-west"
     ]
@@ -18826,7 +18826,7 @@
     "en": "大河原",
     "lat": 34.77195,
     "lng": 135.98823,
-    "pref": "三重県",
+    "pref": "京都府",
     "lines": [
       "kansai-west"
     ]
@@ -18838,7 +18838,7 @@
     "en": "木津",
     "lat": 34.7356,
     "lng": 135.82478,
-    "pref": "三重県",
+    "pref": "京都府",
     "lines": [
       "katamachi-line",
       "kansai-west",
@@ -18904,7 +18904,7 @@
     "en": "王寺",
     "lat": 34.59746,
     "lng": 135.70378,
-    "pref": "大阪府",
+    "pref": "奈良県",
     "lines": [
       "kansai-west",
       "wakayama-line"
@@ -18917,7 +18917,7 @@
     "en": "三郷",
     "lat": 34.58888,
     "lng": 135.68753,
-    "pref": "大阪府",
+    "pref": "奈良県",
     "lines": [
       "kansai-west"
     ]
@@ -19002,7 +19002,7 @@
     "en": "法隆寺",
     "lat": 34.60155,
     "lng": 135.7389,
-    "pref": "大阪府",
+    "pref": "奈良県",
     "lines": [
       "kansai-west"
     ]
@@ -19074,7 +19074,7 @@
     "en": "岩国",
     "lat": 34.17178,
     "lng": 132.22561,
-    "pref": "広島県",
+    "pref": "山口県",
     "lines": [
       "sanyo-main",
       "gantoku-line"
@@ -19087,7 +19087,7 @@
     "en": "欽明路",
     "lat": 34.10437,
     "lng": 132.10184,
-    "pref": "広島県",
+    "pref": "山口県",
     "lines": [
       "gantoku-line"
     ]
@@ -19099,7 +19099,7 @@
     "en": "西岩国",
     "lat": 34.16298,
     "lng": 132.19574,
-    "pref": "広島県",
+    "pref": "山口県",
     "lines": [
       "gantoku-line"
     ]
@@ -19111,7 +19111,7 @@
     "en": "周防高森",
     "lat": 34.09065,
     "lng": 132.04558,
-    "pref": "広島県",
+    "pref": "山口県",
     "lines": [
       "gantoku-line"
     ]
@@ -19148,7 +19148,7 @@
     "en": "柱野",
     "lat": 34.14385,
     "lng": 132.15457,
-    "pref": "広島県",
+    "pref": "山口県",
     "lines": [
       "gantoku-line"
     ]
@@ -19184,7 +19184,7 @@
     "en": "米川",
     "lat": 34.07457,
     "lng": 132.01495,
-    "pref": "広島県",
+    "pref": "山口県",
     "lines": [
       "gantoku-line"
     ]
@@ -19208,7 +19208,7 @@
     "en": "川西",
     "lat": 34.15659,
     "lng": 132.17731,
-    "pref": "広島県",
+    "pref": "山口県",
     "lines": [
       "gantoku-line"
     ]
@@ -19244,7 +19244,7 @@
     "en": "玖珂",
     "lat": 34.09713,
     "lng": 132.08187,
-    "pref": "広島県",
+    "pref": "山口県",
     "lines": [
       "gantoku-line"
     ]
@@ -19256,7 +19256,7 @@
     "en": "新宮",
     "lat": 33.72433,
     "lng": 135.99444,
-    "pref": "三重県",
+    "pref": "和歌山県",
     "lines": [
       "tokai-kisei",
       "kisei-west"
@@ -19521,7 +19521,7 @@
     "en": "和歌山",
     "lat": 34.23248,
     "lng": 135.1914,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "hanwa-line",
       "wakayama-line",
@@ -19571,7 +19571,7 @@
     "en": "紀和",
     "lat": 34.24195,
     "lng": 135.18137,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "kisei-west"
     ]
@@ -19667,7 +19667,7 @@
     "en": "宮前",
     "lat": 34.21341,
     "lng": 135.18891,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "kisei-west"
     ]
@@ -19811,7 +19811,7 @@
     "en": "和歌山市",
     "lat": 34.23659,
     "lng": 135.16691,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "kisei-west"
     ]
@@ -20234,7 +20234,7 @@
     "en": "塩町",
     "lat": 34.77424,
     "lng": 132.91344,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line",
       "fukuen-line"
@@ -20247,7 +20247,7 @@
     "en": "三次",
     "lat": 34.8027,
     "lng": 132.85602,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20259,7 +20259,7 @@
     "en": "矢神",
     "lat": 34.9435,
     "lng": 133.33273,
-    "pref": "島根県",
+    "pref": "岡山県",
     "lines": [
       "geibi-line"
     ]
@@ -20271,7 +20271,7 @@
     "en": "吉田口",
     "lat": 34.66409,
     "lng": 132.74585,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20283,7 +20283,7 @@
     "en": "備後八幡",
     "lat": 34.93818,
     "lng": 133.23205,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20295,7 +20295,7 @@
     "en": "備後落合",
     "lat": 35.00114,
     "lng": 133.14832,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line",
       "kisuki-line"
@@ -20308,7 +20308,7 @@
     "en": "神杉",
     "lat": 34.78076,
     "lng": 132.9028,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20320,7 +20320,7 @@
     "en": "上川立",
     "lat": 34.72534,
     "lng": 132.78489,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20332,7 +20332,7 @@
     "en": "東城",
     "lat": 34.90185,
     "lng": 133.27359,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20344,7 +20344,7 @@
     "en": "高",
     "lat": 34.87788,
     "lng": 133.07068,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20356,7 +20356,7 @@
     "en": "備後西城",
     "lat": 34.94039,
     "lng": 133.11978,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20368,7 +20368,7 @@
     "en": "平子",
     "lat": 34.91293,
     "lng": 133.10016,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20380,7 +20380,7 @@
     "en": "山ノ内",
     "lat": 34.82964,
     "lng": 132.9577,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20392,7 +20392,7 @@
     "en": "道後山",
     "lat": 35.01088,
     "lng": 133.17827,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20404,7 +20404,7 @@
     "en": "備後庄原",
     "lat": 34.86236,
     "lng": 133.01621,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20416,7 +20416,7 @@
     "en": "志和地",
     "lat": 34.74049,
     "lng": 132.80393,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20428,7 +20428,7 @@
     "en": "市岡",
     "lat": 34.96625,
     "lng": 133.34659,
-    "pref": "島根県",
+    "pref": "岡山県",
     "lines": [
       "geibi-line"
     ]
@@ -20440,7 +20440,7 @@
     "en": "小奴可",
     "lat": 34.99457,
     "lng": 133.21118,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20452,7 +20452,7 @@
     "en": "向原",
     "lat": 34.61511,
     "lng": 132.72008,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20464,7 +20464,7 @@
     "en": "比婆山",
     "lat": 34.96628,
     "lng": 133.12329,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20476,7 +20476,7 @@
     "en": "野馳",
     "lat": 34.91505,
     "lng": 133.31704,
-    "pref": "島根県",
+    "pref": "岡山県",
     "lines": [
       "geibi-line"
     ]
@@ -20488,7 +20488,7 @@
     "en": "七塚",
     "lat": 34.84438,
     "lng": 132.98588,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20500,7 +20500,7 @@
     "en": "備後三日市",
     "lat": 34.8551,
     "lng": 132.99832,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20512,7 +20512,7 @@
     "en": "内名",
     "lat": 34.96494,
     "lng": 133.23195,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20524,7 +20524,7 @@
     "en": "坂根",
     "lat": 34.97297,
     "lng": 133.37082,
-    "pref": "島根県",
+    "pref": "岡山県",
     "lines": [
       "geibi-line"
     ]
@@ -20536,7 +20536,7 @@
     "en": "西三次",
     "lat": 34.79839,
     "lng": 132.84069,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20548,7 +20548,7 @@
     "en": "八次",
     "lat": 34.80229,
     "lng": 132.87885,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20560,7 +20560,7 @@
     "en": "甲立",
     "lat": 34.69259,
     "lng": 132.76005,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20572,7 +20572,7 @@
     "en": "下和知",
     "lat": 34.79766,
     "lng": 132.92535,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20584,7 +20584,7 @@
     "en": "白木山",
     "lat": 34.50057,
     "lng": 132.58782,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20596,7 +20596,7 @@
     "en": "中三田",
     "lat": 34.51359,
     "lng": 132.60938,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20608,7 +20608,7 @@
     "en": "中深川",
     "lat": 34.48109,
     "lng": 132.53339,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20620,7 +20620,7 @@
     "en": "Hiroshima",
     "lat": 34.39744,
     "lng": 132.47561,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "shinkansen-sanyo",
       "sanyo-main",
@@ -20634,7 +20634,7 @@
     "en": "上三田",
     "lat": 34.53868,
     "lng": 132.64385,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20646,7 +20646,7 @@
     "en": "矢賀",
     "lat": 34.39911,
     "lng": 132.49771,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20658,7 +20658,7 @@
     "en": "戸坂",
     "lat": 34.43851,
     "lng": 132.49122,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20670,7 +20670,7 @@
     "en": "上深川",
     "lat": 34.47592,
     "lng": 132.56262,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20682,7 +20682,7 @@
     "en": "井原市",
     "lat": 34.58501,
     "lng": 132.67562,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20694,7 +20694,7 @@
     "en": "玖村",
     "lat": 34.48202,
     "lng": 132.50804,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20706,7 +20706,7 @@
     "en": "志和口",
     "lat": 34.55437,
     "lng": 132.65815,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20718,7 +20718,7 @@
     "en": "下深川",
     "lat": 34.48871,
     "lng": 132.52467,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20730,7 +20730,7 @@
     "en": "安芸矢口",
     "lat": 34.46356,
     "lng": 132.49505,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20742,7 +20742,7 @@
     "en": "狩留家",
     "lat": 34.48635,
     "lng": 132.57906,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "geibi-line"
     ]
@@ -20754,7 +20754,7 @@
     "en": "山科",
     "lat": 34.9926,
     "lng": 135.81658,
-    "pref": "三重県",
+    "pref": "京都府",
     "lines": [
       "tokaido-west",
       "kosei-line"
@@ -20767,7 +20767,7 @@
     "en": "近江塩津",
     "lat": 35.53971,
     "lng": 136.15139,
-    "pref": "福井県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line",
       "hokuriku-main"
@@ -20780,7 +20780,7 @@
     "en": "近江舞子",
     "lat": 35.23636,
     "lng": 135.95938,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20792,7 +20792,7 @@
     "en": "志賀",
     "lat": 35.20225,
     "lng": 135.9248,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20804,7 +20804,7 @@
     "en": "蓬莱",
     "lat": 35.18253,
     "lng": 135.91512,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20816,7 +20816,7 @@
     "en": "永原",
     "lat": 35.49894,
     "lng": 136.12248,
-    "pref": "福井県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20828,7 +20828,7 @@
     "en": "比良",
     "lat": 35.21996,
     "lng": 135.94407,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20840,7 +20840,7 @@
     "en": "近江高島",
     "lat": 35.29281,
     "lng": 136.01013,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20852,7 +20852,7 @@
     "en": "安曇川",
     "lat": 35.32795,
     "lng": 136.01988,
-    "pref": "福井県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20864,7 +20864,7 @@
     "en": "堅田",
     "lat": 35.12102,
     "lng": 135.9151,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20876,7 +20876,7 @@
     "en": "北小松",
     "lat": 35.25329,
     "lng": 135.97004,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20888,7 +20888,7 @@
     "en": "比叡山坂本",
     "lat": 35.07089,
     "lng": 135.87844,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20900,7 +20900,7 @@
     "en": "新旭",
     "lat": 35.35549,
     "lng": 136.03557,
-    "pref": "福井県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20912,7 +20912,7 @@
     "en": "和邇",
     "lat": 35.16166,
     "lng": 135.92233,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20924,7 +20924,7 @@
     "en": "唐崎",
     "lat": 35.0498,
     "lng": 135.86697,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20936,7 +20936,7 @@
     "en": "マキノ",
     "lat": 35.46103,
     "lng": 136.05927,
-    "pref": "福井県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20948,7 +20948,7 @@
     "en": "近江中庄",
     "lat": 35.44061,
     "lng": 136.03856,
-    "pref": "福井県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20960,7 +20960,7 @@
     "en": "小野",
     "lat": 35.13885,
     "lng": 135.92269,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20972,7 +20972,7 @@
     "en": "おごと温泉",
     "lat": 35.09689,
     "lng": 135.89456,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20984,7 +20984,7 @@
     "en": "大津京",
     "lat": 35.02413,
     "lng": 135.85689,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -20996,7 +20996,7 @@
     "en": "近江今津",
     "lat": 35.3982,
     "lng": 136.03229,
-    "pref": "福井県",
+    "pref": "滋賀県",
     "lines": [
       "kosei-line"
     ]
@@ -21008,7 +21008,7 @@
     "en": "三原",
     "lat": 34.40059,
     "lng": 133.08284,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "shinkansen-sanyo",
       "sanyo-main",
@@ -21022,7 +21022,7 @@
     "en": "吉名",
     "lat": 34.32062,
     "lng": 132.8658,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kure-line"
     ]
@@ -21034,7 +21034,7 @@
     "en": "竹原",
     "lat": 34.33942,
     "lng": 132.911,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kure-line"
     ]
@@ -21046,7 +21046,7 @@
     "en": "忠海",
     "lat": 34.33666,
     "lng": 132.99124,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kure-line"
     ]
@@ -21058,7 +21058,7 @@
     "en": "安芸幸崎",
     "lat": 34.33816,
     "lng": 133.04019,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kure-line"
     ]
@@ -21070,7 +21070,7 @@
     "en": "風早",
     "lat": 34.3031,
     "lng": 132.79581,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kure-line"
     ]
@@ -21082,7 +21082,7 @@
     "en": "須波",
     "lat": 34.37017,
     "lng": 133.08379,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kure-line"
     ]
@@ -21094,7 +21094,7 @@
     "en": "安芸津",
     "lat": 34.31805,
     "lng": 132.81825,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kure-line"
     ]
@@ -21106,7 +21106,7 @@
     "en": "大乗",
     "lat": 34.34063,
     "lng": 132.94523,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kure-line"
     ]
@@ -21142,7 +21142,7 @@
     "en": "安芸長浜",
     "lat": 34.3378,
     "lng": 132.96258,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kure-line"
     ]
@@ -21190,7 +21190,7 @@
     "en": "矢野",
     "lat": 34.35219,
     "lng": 132.53213,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kure-line"
     ]
@@ -21214,7 +21214,7 @@
     "en": "水尻",
     "lat": 34.31985,
     "lng": 132.49901,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kure-line"
     ]
@@ -21226,7 +21226,7 @@
     "en": "坂",
     "lat": 34.33885,
     "lng": 132.51113,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kure-line"
     ]
@@ -21286,7 +21286,7 @@
     "en": "海田市",
     "lat": 34.37188,
     "lng": 132.5307,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main",
       "kure-line"
@@ -21335,7 +21335,7 @@
     "en": "小屋浦",
     "lat": 34.30232,
     "lng": 132.50659,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kure-line"
     ]
@@ -21347,7 +21347,7 @@
     "en": "東八尾",
     "lat": 36.58962,
     "lng": 137.17515,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "takayama-west"
     ]
@@ -21359,7 +21359,7 @@
     "en": "笹津",
     "lat": 36.56141,
     "lng": 137.21158,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "takayama-west"
     ]
@@ -21371,7 +21371,7 @@
     "en": "速星",
     "lat": 36.66405,
     "lng": 137.16043,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "takayama-west"
     ]
@@ -21383,7 +21383,7 @@
     "en": "西富山",
     "lat": 36.69938,
     "lng": 137.17708,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "takayama-west"
     ]
@@ -21395,7 +21395,7 @@
     "en": "楡原",
     "lat": 36.5294,
     "lng": 137.22874,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "takayama-west"
     ]
@@ -21407,7 +21407,7 @@
     "en": "猪谷",
     "lat": 36.47181,
     "lng": 137.23784,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "tokai-takayama",
       "takayama-west"
@@ -21420,7 +21420,7 @@
     "en": "富山",
     "lat": 36.70148,
     "lng": 137.21321,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "shinkansen-hokuriku",
       "takayama-west"
@@ -21433,7 +21433,7 @@
     "en": "越中八尾",
     "lat": 36.5917,
     "lng": 137.13829,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "takayama-west"
     ]
@@ -21445,7 +21445,7 @@
     "en": "千里",
     "lat": 36.63459,
     "lng": 137.13245,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "takayama-west"
     ]
@@ -21637,7 +21637,7 @@
     "en": "紀伊中ノ島",
     "lat": 34.24285,
     "lng": 135.19019,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "hanwa-line"
     ]
@@ -21685,7 +21685,7 @@
     "en": "紀伊",
     "lat": 34.26926,
     "lng": 135.24627,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "hanwa-line"
     ]
@@ -21829,7 +21829,7 @@
     "en": "六十谷",
     "lat": 34.26265,
     "lng": 135.20738,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "hanwa-line"
     ]
@@ -21853,7 +21853,7 @@
     "en": "京終",
     "lat": 34.66996,
     "lng": 135.8286,
-    "pref": "三重県",
+    "pref": "奈良県",
     "lines": [
       "sakurai-line"
     ]
@@ -21865,7 +21865,7 @@
     "en": "高田",
     "lat": 34.51634,
     "lng": 135.74464,
-    "pref": "大阪府",
+    "pref": "奈良県",
     "lines": [
       "wakayama-line",
       "sakurai-line"
@@ -21878,7 +21878,7 @@
     "en": "三輪",
     "lat": 34.52725,
     "lng": 135.8484,
-    "pref": "三重県",
+    "pref": "奈良県",
     "lines": [
       "sakurai-line"
     ]
@@ -21890,7 +21890,7 @@
     "en": "帯解",
     "lat": 34.64322,
     "lng": 135.8262,
-    "pref": "三重県",
+    "pref": "奈良県",
     "lines": [
       "sakurai-line"
     ]
@@ -21914,7 +21914,7 @@
     "en": "香久山",
     "lat": 34.5107,
     "lng": 135.8251,
-    "pref": "三重県",
+    "pref": "奈良県",
     "lines": [
       "sakurai-line"
     ]
@@ -21926,7 +21926,7 @@
     "en": "桜井",
     "lat": 34.51299,
     "lng": 135.84579,
-    "pref": "三重県",
+    "pref": "奈良県",
     "lines": [
       "sakurai-line"
     ]
@@ -21950,7 +21950,7 @@
     "en": "天理",
     "lat": 34.60047,
     "lng": 135.83039,
-    "pref": "三重県",
+    "pref": "奈良県",
     "lines": [
       "sakurai-line"
     ]
@@ -21962,7 +21962,7 @@
     "en": "櫟本",
     "lat": 34.62111,
     "lng": 135.82615,
-    "pref": "三重県",
+    "pref": "奈良県",
     "lines": [
       "sakurai-line"
     ]
@@ -21974,7 +21974,7 @@
     "en": "長柄",
     "lat": 34.57412,
     "lng": 135.83507,
-    "pref": "三重県",
+    "pref": "奈良県",
     "lines": [
       "sakurai-line"
     ]
@@ -21986,7 +21986,7 @@
     "en": "柳本",
     "lat": 34.5592,
     "lng": 135.8386,
-    "pref": "三重県",
+    "pref": "奈良県",
     "lines": [
       "sakurai-line"
     ]
@@ -21998,7 +21998,7 @@
     "en": "巻向",
     "lat": 34.54536,
     "lng": 135.84087,
-    "pref": "三重県",
+    "pref": "奈良県",
     "lines": [
       "sakurai-line"
     ]
@@ -22277,7 +22277,7 @@
     "en": "上夜久野",
     "lat": 35.34183,
     "lng": 134.93173,
-    "pref": "兵庫県",
+    "pref": "京都府",
     "lines": [
       "sanin-main"
     ]
@@ -22545,7 +22545,7 @@
     "en": "下夜久野",
     "lat": 35.31989,
     "lng": 134.99883,
-    "pref": "兵庫県",
+    "pref": "京都府",
     "lines": [
       "sanin-main"
     ]
@@ -22605,7 +22605,7 @@
     "en": "東浜",
     "lat": 35.59951,
     "lng": 134.36235,
-    "pref": "兵庫県",
+    "pref": "鳥取県",
     "lines": [
       "sanin-main"
     ]
@@ -22665,7 +22665,7 @@
     "en": "福部",
     "lat": 35.54558,
     "lng": 134.28731,
-    "pref": "兵庫県",
+    "pref": "鳥取県",
     "lines": [
       "sanin-main"
     ]
@@ -22773,7 +22773,7 @@
     "en": "大岩",
     "lat": 35.56685,
     "lng": 134.30856,
-    "pref": "兵庫県",
+    "pref": "鳥取県",
     "lines": [
       "sanin-main"
     ]
@@ -22785,7 +22785,7 @@
     "en": "岩美",
     "lat": 35.57417,
     "lng": 134.33556,
-    "pref": "兵庫県",
+    "pref": "鳥取県",
     "lines": [
       "sanin-main"
     ]
@@ -22857,7 +22857,7 @@
     "en": "乃木",
     "lat": 35.44595,
     "lng": 133.04872,
-    "pref": "鳥取県",
+    "pref": "島根県",
     "lines": [
       "sanin-main"
     ]
@@ -22881,7 +22881,7 @@
     "en": "松江",
     "lat": 35.46409,
     "lng": 133.06397,
-    "pref": "鳥取県",
+    "pref": "島根県",
     "lines": [
       "sanin-main"
     ]
@@ -22977,7 +22977,7 @@
     "en": "東松江",
     "lat": 35.44549,
     "lng": 133.12848,
-    "pref": "鳥取県",
+    "pref": "島根県",
     "lines": [
       "sanin-main"
     ]
@@ -23001,7 +23001,7 @@
     "en": "安来",
     "lat": 35.42801,
     "lng": 133.25923,
-    "pref": "鳥取県",
+    "pref": "島根県",
     "lines": [
       "sanin-main"
     ]
@@ -23025,7 +23025,7 @@
     "en": "荒島",
     "lat": 35.4318,
     "lng": 133.20743,
-    "pref": "鳥取県",
+    "pref": "島根県",
     "lines": [
       "sanin-main"
     ]
@@ -23050,7 +23050,7 @@
     "en": "玉造温泉",
     "lat": 35.43071,
     "lng": 133.01218,
-    "pref": "鳥取県",
+    "pref": "島根県",
     "lines": [
       "sanin-main"
     ]
@@ -23086,7 +23086,7 @@
     "en": "揖屋",
     "lat": 35.42784,
     "lng": 133.14906,
-    "pref": "鳥取県",
+    "pref": "島根県",
     "lines": [
       "sanin-main"
     ]
@@ -23618,7 +23618,7 @@
     "en": "須佐",
     "lat": 34.62192,
     "lng": 131.60579,
-    "pref": "島根県",
+    "pref": "山口県",
     "lines": [
       "sanin-main"
     ]
@@ -23834,7 +23834,7 @@
     "en": "江崎",
     "lat": 34.63824,
     "lng": 131.66204,
-    "pref": "島根県",
+    "pref": "山口県",
     "lines": [
       "sanin-main"
     ]
@@ -23954,7 +23954,7 @@
     "en": "船平山",
     "lat": 34.42137,
     "lng": 131.73413,
-    "pref": "島根県",
+    "pref": "山口県",
     "lines": [
       "yamaguchi-line"
     ]
@@ -23990,7 +23990,7 @@
     "en": "徳佐",
     "lat": 34.39971,
     "lng": 131.7202,
-    "pref": "島根県",
+    "pref": "山口県",
     "lines": [
       "yamaguchi-line"
     ]
@@ -24110,7 +24110,7 @@
     "en": "鍋倉",
     "lat": 34.37825,
     "lng": 131.69407,
-    "pref": "島根県",
+    "pref": "山口県",
     "lines": [
       "yamaguchi-line"
     ]
@@ -24122,7 +24122,7 @@
     "en": "地福",
     "lat": 34.36276,
     "lng": 131.67421,
-    "pref": "島根県",
+    "pref": "山口県",
     "lines": [
       "yamaguchi-line"
     ]
@@ -24134,7 +24134,7 @@
     "en": "名草",
     "lat": 34.35369,
     "lng": 131.65119,
-    "pref": "島根県",
+    "pref": "山口県",
     "lines": [
       "yamaguchi-line"
     ]
@@ -24218,7 +24218,7 @@
     "en": "渡川",
     "lat": 34.32294,
     "lng": 131.60407,
-    "pref": "島根県",
+    "pref": "山口県",
     "lines": [
       "yamaguchi-line"
     ]
@@ -24230,7 +24230,7 @@
     "en": "三谷",
     "lat": 34.34154,
     "lng": 131.62434,
-    "pref": "島根県",
+    "pref": "山口県",
     "lines": [
       "yamaguchi-line"
     ]
@@ -24335,7 +24335,7 @@
     "en": "新尾道",
     "lat": 34.43009,
     "lng": 133.19021,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "shinkansen-sanyo"
     ]
@@ -24360,7 +24360,7 @@
     "en": "福山",
     "lat": 34.48925,
     "lng": 133.36133,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "shinkansen-sanyo",
       "sanyo-main",
@@ -24374,7 +24374,7 @@
     "en": "東広島",
     "lat": 34.38921,
     "lng": 132.75944,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "shinkansen-sanyo"
     ]
@@ -24399,7 +24399,7 @@
     "en": "新岩国",
     "lat": 34.16484,
     "lng": 132.14971,
-    "pref": "広島県",
+    "pref": "山口県",
     "lines": [
       "shinkansen-sanyo"
     ]
@@ -24691,7 +24691,7 @@
     "en": "三石",
     "lat": 34.80499,
     "lng": 134.2763,
-    "pref": "兵庫県",
+    "pref": "岡山県",
     "lines": [
       "sanyo-main"
     ]
@@ -24715,7 +24715,7 @@
     "en": "吉永",
     "lat": 34.81225,
     "lng": 134.20441,
-    "pref": "兵庫県",
+    "pref": "岡山県",
     "lines": [
       "sanyo-main"
     ]
@@ -24885,7 +24885,7 @@
     "en": "西条",
     "lat": 34.43132,
     "lng": 132.74361,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -24909,7 +24909,7 @@
     "en": "尾道",
     "lat": 34.4048,
     "lng": 133.19302,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -24945,7 +24945,7 @@
     "en": "東福山",
     "lat": 34.49527,
     "lng": 133.40655,
-    "pref": "岡山県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -24957,7 +24957,7 @@
     "en": "東尾道",
     "lat": 34.43503,
     "lng": 133.2332,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -24969,7 +24969,7 @@
     "en": "備後赤坂",
     "lat": 34.47229,
     "lng": 133.30616,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -24993,7 +24993,7 @@
     "en": "松永",
     "lat": 34.45096,
     "lng": 133.25892,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25005,7 +25005,7 @@
     "en": "糸崎",
     "lat": 34.39174,
     "lng": 133.10513,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25017,7 +25017,7 @@
     "en": "入野",
     "lat": 34.46072,
     "lng": 132.85158,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25029,7 +25029,7 @@
     "en": "白市",
     "lat": 34.44321,
     "lng": 132.83196,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25041,7 +25041,7 @@
     "en": "河内",
     "lat": 34.46955,
     "lng": 132.88914,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25053,7 +25053,7 @@
     "en": "西高屋",
     "lat": 34.44623,
     "lng": 132.78822,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25077,7 +25077,7 @@
     "en": "本郷",
     "lat": 34.40961,
     "lng": 132.98747,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25089,7 +25089,7 @@
     "en": "大門",
     "lat": 34.49819,
     "lng": 133.44016,
-    "pref": "岡山県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25101,7 +25101,7 @@
     "en": "廿日市",
     "lat": 34.35788,
     "lng": 132.33543,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25125,7 +25125,7 @@
     "en": "天神川",
     "lat": 34.38975,
     "lng": 132.49747,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25137,7 +25137,7 @@
     "en": "前空",
     "lat": 34.30111,
     "lng": 132.28927,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25149,7 +25149,7 @@
     "en": "向洋",
     "lat": 34.37688,
     "lng": 132.506,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25173,7 +25173,7 @@
     "en": "中野東",
     "lat": 34.40331,
     "lng": 132.57875,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25185,7 +25185,7 @@
     "en": "阿品",
     "lat": 34.32349,
     "lng": 132.31443,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25197,7 +25197,7 @@
     "en": "宮内串戸",
     "lat": 34.34877,
     "lng": 132.32393,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25209,7 +25209,7 @@
     "en": "西広島",
     "lat": 34.39818,
     "lng": 132.42818,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25221,7 +25221,7 @@
     "en": "八本松",
     "lat": 34.44559,
     "lng": 132.68863,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25233,7 +25233,7 @@
     "en": "瀬野",
     "lat": 34.42201,
     "lng": 132.59675,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25245,7 +25245,7 @@
     "en": "宮島口",
     "lat": 34.31211,
     "lng": 132.30272,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25257,7 +25257,7 @@
     "en": "新井口",
     "lat": 34.37527,
     "lng": 132.39124,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25281,7 +25281,7 @@
     "en": "安芸中野",
     "lat": 34.39099,
     "lng": 132.56337,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25293,7 +25293,7 @@
     "en": "五日市",
     "lat": 34.36684,
     "lng": 132.36773,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -25305,7 +25305,7 @@
     "en": "南岩国",
     "lat": 34.13518,
     "lng": 132.20604,
-    "pref": "広島県",
+    "pref": "山口県",
     "lines": [
       "sanyo-main"
     ]
@@ -25329,7 +25329,7 @@
     "en": "由宇",
     "lat": 34.04336,
     "lng": 132.21364,
-    "pref": "広島県",
+    "pref": "山口県",
     "lines": [
       "sanyo-main"
     ]
@@ -25401,7 +25401,7 @@
     "en": "藤生",
     "lat": 34.11263,
     "lng": 132.19854,
-    "pref": "広島県",
+    "pref": "山口県",
     "lines": [
       "sanyo-main"
     ]
@@ -25437,7 +25437,7 @@
     "en": "通津",
     "lat": 34.0681,
     "lng": 132.20495,
-    "pref": "広島県",
+    "pref": "山口県",
     "lines": [
       "sanyo-main"
     ]
@@ -25630,7 +25630,7 @@
     "en": "七尾",
     "lat": 37.04178,
     "lng": 136.96422,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25642,7 +25642,7 @@
     "en": "能登部",
     "lat": 36.96099,
     "lng": 136.86939,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25654,7 +25654,7 @@
     "en": "和倉温泉",
     "lat": 37.0747,
     "lng": 136.92583,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25666,7 +25666,7 @@
     "en": "敷浪",
     "lat": 36.84808,
     "lng": 136.77349,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25678,7 +25678,7 @@
     "en": "羽咋",
     "lat": 36.89706,
     "lng": 136.78338,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25690,7 +25690,7 @@
     "en": "徳田",
     "lat": 37.00749,
     "lng": 136.93028,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25702,7 +25702,7 @@
     "en": "千路",
     "lat": 36.92814,
     "lng": 136.80107,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25714,7 +25714,7 @@
     "en": "宇野気",
     "lat": 36.72264,
     "lng": 136.70297,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25726,7 +25726,7 @@
     "en": "中津幡",
     "lat": 36.67158,
     "lng": 136.74038,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25738,7 +25738,7 @@
     "en": "良川",
     "lat": 36.97667,
     "lng": 136.89468,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25750,7 +25750,7 @@
     "en": "宝達",
     "lat": 36.81966,
     "lng": 136.76229,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25762,7 +25762,7 @@
     "en": "能瀬",
     "lat": 36.6933,
     "lng": 136.71981,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25774,7 +25774,7 @@
     "en": "免田",
     "lat": 36.79562,
     "lng": 136.74747,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25786,7 +25786,7 @@
     "en": "金丸",
     "lat": 36.94337,
     "lng": 136.83589,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25798,7 +25798,7 @@
     "en": "本津幡",
     "lat": 36.6766,
     "lng": 136.73232,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25810,7 +25810,7 @@
     "en": "横山",
     "lat": 36.74757,
     "lng": 136.71676,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25822,7 +25822,7 @@
     "en": "南羽咋",
     "lat": 36.87079,
     "lng": 136.77481,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25834,7 +25834,7 @@
     "en": "能登二宮",
     "lat": 36.98482,
     "lng": 136.91739,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25846,7 +25846,7 @@
     "en": "高松",
     "lat": 36.76849,
     "lng": 136.72898,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -25858,7 +25858,7 @@
     "en": "津幡",
     "lat": 36.65788,
     "lng": 136.73073,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "nanao-line"
     ]
@@ -26016,7 +26016,7 @@
     "en": "松尾寺",
     "lat": 35.48597,
     "lng": 135.45028,
-    "pref": "福井県",
+    "pref": "京都府",
     "lines": [
       "obama-line"
     ]
@@ -26269,7 +26269,7 @@
     "en": "林",
     "lat": 36.70454,
     "lng": 136.99942,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "johana-line"
     ]
@@ -26281,7 +26281,7 @@
     "en": "東野尻",
     "lat": 36.61864,
     "lng": 136.94351,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "johana-line"
     ]
@@ -26293,7 +26293,7 @@
     "en": "二塚",
     "lat": 36.71432,
     "lng": 137.00613,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "johana-line"
     ]
@@ -26305,7 +26305,7 @@
     "en": "戸出",
     "lat": 36.68434,
     "lng": 136.9841,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "johana-line"
     ]
@@ -26317,7 +26317,7 @@
     "en": "砺波",
     "lat": 36.63641,
     "lng": 136.95357,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "johana-line"
     ]
@@ -26329,7 +26329,7 @@
     "en": "油田",
     "lat": 36.65506,
     "lng": 136.9703,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "johana-line"
     ]
@@ -26341,7 +26341,7 @@
     "en": "東石黒",
     "lat": 36.57621,
     "lng": 136.89854,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "johana-line"
     ]
@@ -26353,7 +26353,7 @@
     "en": "福野",
     "lat": 36.58842,
     "lng": 136.92325,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "johana-line"
     ]
@@ -26365,7 +26365,7 @@
     "en": "越中山田",
     "lat": 36.53855,
     "lng": 136.88755,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "johana-line"
     ]
@@ -26377,7 +26377,7 @@
     "en": "城端",
     "lat": 36.52223,
     "lng": 136.90163,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "johana-line"
     ]
@@ -26389,7 +26389,7 @@
     "en": "高儀",
     "lat": 36.60659,
     "lng": 136.9361,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "johana-line"
     ]
@@ -26401,7 +26401,7 @@
     "en": "福光",
     "lat": 36.55835,
     "lng": 136.87865,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "johana-line"
     ]
@@ -26413,7 +26413,7 @@
     "en": "高岡",
     "lat": 36.74078,
     "lng": 137.01494,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "johana-line",
       "himi-line"
@@ -26450,7 +26450,7 @@
     "en": "伊里",
     "lat": 34.74156,
     "lng": 134.22453,
-    "pref": "兵庫県",
+    "pref": "岡山県",
     "lines": [
       "ako-line"
     ]
@@ -26474,7 +26474,7 @@
     "en": "日生",
     "lat": 34.73516,
     "lng": 134.27651,
-    "pref": "兵庫県",
+    "pref": "岡山県",
     "lines": [
       "ako-line"
     ]
@@ -26558,7 +26558,7 @@
     "en": "寒河",
     "lat": 34.74615,
     "lng": 134.29773,
-    "pref": "兵庫県",
+    "pref": "岡山県",
     "lines": [
       "ako-line"
     ]
@@ -26630,7 +26630,7 @@
     "en": "草津",
     "lat": 35.0225,
     "lng": 135.96222,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "tokaido-west",
       "kusatsu-line"
@@ -26643,7 +26643,7 @@
     "en": "三雲",
     "lat": 34.98313,
     "lng": 136.11758,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kusatsu-line"
     ]
@@ -26655,7 +26655,7 @@
     "en": "甲西",
     "lat": 35.00061,
     "lng": 136.08237,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kusatsu-line"
     ]
@@ -26667,7 +26667,7 @@
     "en": "手原",
     "lat": 35.02743,
     "lng": 135.99944,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kusatsu-line"
     ]
@@ -26679,7 +26679,7 @@
     "en": "石部",
     "lat": 35.0177,
     "lng": 136.05307,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kusatsu-line"
     ]
@@ -26691,7 +26691,7 @@
     "en": "貴生川",
     "lat": 34.95196,
     "lng": 136.15416,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kusatsu-line"
     ]
@@ -26703,7 +26703,7 @@
     "en": "甲賀",
     "lat": 34.90129,
     "lng": 136.21276,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kusatsu-line"
     ]
@@ -26715,7 +26715,7 @@
     "en": "甲南",
     "lat": 34.93175,
     "lng": 136.16902,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kusatsu-line"
     ]
@@ -26727,7 +26727,7 @@
     "en": "油日",
     "lat": 34.8897,
     "lng": 136.22959,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kusatsu-line"
     ]
@@ -26739,7 +26739,7 @@
     "en": "寺庄",
     "lat": 34.91909,
     "lng": 136.18585,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "kusatsu-line"
     ]
@@ -26920,7 +26920,7 @@
     "en": "中土",
     "lat": 36.80562,
     "lng": 137.9079,
-    "pref": "新潟県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -26932,7 +26932,7 @@
     "en": "南小谷",
     "lat": 36.7746,
     "lng": 137.90836,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -26944,7 +26944,7 @@
     "en": "北小谷",
     "lat": 36.84257,
     "lng": 137.90645,
-    "pref": "新潟県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -27222,7 +27222,7 @@
     "en": "米原",
     "lat": 35.31448,
     "lng": 136.28973,
-    "pref": "岐阜県",
+    "pref": "滋賀県",
     "lines": [
       "shinkansen-tokaido",
       "tokai-tokaido",
@@ -27237,7 +27237,7 @@
     "en": "大津",
     "lat": 35.00302,
     "lng": 135.86501,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "tokaido-west"
     ]
@@ -27249,7 +27249,7 @@
     "en": "野洲",
     "lat": 35.06844,
     "lng": 136.02239,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "tokaido-west"
     ]
@@ -27261,7 +27261,7 @@
     "en": "河瀬",
     "lat": 35.22539,
     "lng": 136.22532,
-    "pref": "岐阜県",
+    "pref": "滋賀県",
     "lines": [
       "tokaido-west"
     ]
@@ -27273,7 +27273,7 @@
     "en": "稲枝",
     "lat": 35.20332,
     "lng": 136.19446,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "tokaido-west"
     ]
@@ -27285,7 +27285,7 @@
     "en": "安土",
     "lat": 35.14257,
     "lng": 136.1338,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "tokaido-west"
     ]
@@ -27297,7 +27297,7 @@
     "en": "守山",
     "lat": 35.05093,
     "lng": 135.99647,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "tokaido-west"
     ]
@@ -27309,7 +27309,7 @@
     "en": "石山",
     "lat": 34.98006,
     "lng": 135.89879,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "tokaido-west"
     ]
@@ -27321,7 +27321,7 @@
     "en": "近江八幡",
     "lat": 35.12254,
     "lng": 136.10255,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "tokaido-west"
     ]
@@ -27333,7 +27333,7 @@
     "en": "瀬田",
     "lat": 34.98729,
     "lng": 135.92584,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "tokaido-west"
     ]
@@ -27345,7 +27345,7 @@
     "en": "膳所",
     "lat": 34.99914,
     "lng": 135.88092,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "tokaido-west"
     ]
@@ -27357,7 +27357,7 @@
     "en": "彦根",
     "lat": 35.27249,
     "lng": 136.2634,
-    "pref": "岐阜県",
+    "pref": "滋賀県",
     "lines": [
       "tokaido-west"
     ]
@@ -27369,7 +27369,7 @@
     "en": "南草津",
     "lat": 35.00359,
     "lng": 135.94718,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "tokaido-west"
     ]
@@ -27381,7 +27381,7 @@
     "en": "能登川",
     "lat": 35.17995,
     "lng": 136.16601,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "tokaido-west"
     ]
@@ -27393,7 +27393,7 @@
     "en": "南彦根",
     "lat": 35.24608,
     "lng": 136.24802,
-    "pref": "岐阜県",
+    "pref": "滋賀県",
     "lines": [
       "tokaido-west"
     ]
@@ -27405,7 +27405,7 @@
     "en": "篠原",
     "lat": 35.09928,
     "lng": 136.07176,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "tokaido-west"
     ]
@@ -27417,7 +27417,7 @@
     "en": "栗東",
     "lat": 35.03748,
     "lng": 135.9801,
-    "pref": "三重県",
+    "pref": "滋賀県",
     "lines": [
       "tokaido-west"
     ]
@@ -27477,7 +27477,7 @@
     "en": "高槻",
     "lat": 34.85125,
     "lng": 135.61711,
-    "pref": "京都府",
+    "pref": "大阪府",
     "lines": [
       "tokaido-west"
     ]
@@ -27489,7 +27489,7 @@
     "en": "摂津富田",
     "lat": 34.83768,
     "lng": 135.59333,
-    "pref": "京都府",
+    "pref": "大阪府",
     "lines": [
       "tokaido-west"
     ]
@@ -27561,7 +27561,7 @@
     "en": "茨木",
     "lat": 34.81509,
     "lng": 135.56205,
-    "pref": "京都府",
+    "pref": "大阪府",
     "lines": [
       "tokaido-west"
     ]
@@ -27573,7 +27573,7 @@
     "en": "摂津本山",
     "lat": 34.72681,
     "lng": 135.27757,
-    "pref": "大阪府",
+    "pref": "兵庫県",
     "lines": [
       "tokaido-west"
     ]
@@ -27585,7 +27585,7 @@
     "en": "西宮",
     "lat": 34.73901,
     "lng": 135.34878,
-    "pref": "大阪府",
+    "pref": "兵庫県",
     "lines": [
       "tokaido-west"
     ]
@@ -27597,7 +27597,7 @@
     "en": "住吉",
     "lat": 34.71975,
     "lng": 135.26262,
-    "pref": "大阪府",
+    "pref": "兵庫県",
     "lines": [
       "tokaido-west"
     ]
@@ -27609,7 +27609,7 @@
     "en": "甲南山手",
     "lat": 34.73063,
     "lng": 135.2926,
-    "pref": "大阪府",
+    "pref": "兵庫県",
     "lines": [
       "tokaido-west"
     ]
@@ -27621,7 +27621,7 @@
     "en": "立花",
     "lat": 34.73789,
     "lng": 135.3996,
-    "pref": "大阪府",
+    "pref": "兵庫県",
     "lines": [
       "tokaido-west"
     ]
@@ -27633,7 +27633,7 @@
     "en": "芦屋",
     "lat": 34.73426,
     "lng": 135.3074,
-    "pref": "大阪府",
+    "pref": "兵庫県",
     "lines": [
       "tokaido-west"
     ]
@@ -27645,7 +27645,7 @@
     "en": "甲子園口",
     "lat": 34.73906,
     "lng": 135.37439,
-    "pref": "大阪府",
+    "pref": "兵庫県",
     "lines": [
       "tokaido-west"
     ]
@@ -27657,7 +27657,7 @@
     "en": "六甲道",
     "lat": 34.71481,
     "lng": 135.23841,
-    "pref": "大阪府",
+    "pref": "兵庫県",
     "lines": [
       "tokaido-west"
     ]
@@ -27669,7 +27669,7 @@
     "en": "灘",
     "lat": 34.70588,
     "lng": 135.21655,
-    "pref": "大阪府",
+    "pref": "兵庫県",
     "lines": [
       "tokaido-west"
     ]
@@ -27753,7 +27753,7 @@
     "en": "玉水",
     "lat": 34.80068,
     "lng": 135.80698,
-    "pref": "三重県",
+    "pref": "京都府",
     "lines": [
       "nara-line"
     ]
@@ -27789,7 +27789,7 @@
     "en": "上狛",
     "lat": 34.75047,
     "lng": 135.8213,
-    "pref": "三重県",
+    "pref": "京都府",
     "lines": [
       "nara-line"
     ]
@@ -27801,7 +27801,7 @@
     "en": "棚倉",
     "lat": 34.77464,
     "lng": 135.81602,
-    "pref": "三重県",
+    "pref": "京都府",
     "lines": [
       "nara-line"
     ]
@@ -27813,7 +27813,7 @@
     "en": "宇治",
     "lat": 34.89038,
     "lng": 135.80081,
-    "pref": "三重県",
+    "pref": "京都府",
     "lines": [
       "nara-line"
     ]
@@ -27825,7 +27825,7 @@
     "en": "山城多賀",
     "lat": 34.81759,
     "lng": 135.80626,
-    "pref": "三重県",
+    "pref": "京都府",
     "lines": [
       "nara-line"
     ]
@@ -27861,7 +27861,7 @@
     "en": "黄檗",
     "lat": 34.9128,
     "lng": 135.80368,
-    "pref": "三重県",
+    "pref": "京都府",
     "lines": [
       "nara-line"
     ]
@@ -27897,7 +27897,7 @@
     "en": "山城青谷",
     "lat": 34.82814,
     "lng": 135.80016,
-    "pref": "三重県",
+    "pref": "京都府",
     "lines": [
       "nara-line"
     ]
@@ -28126,7 +28126,7 @@
     "en": "足立",
     "lat": 35.0384,
     "lng": 133.38384,
-    "pref": "島根県",
+    "pref": "岡山県",
     "lines": [
       "hakubi-line"
     ]
@@ -28294,7 +28294,7 @@
     "en": "新郷",
     "lat": 35.08211,
     "lng": 133.3678,
-    "pref": "島根県",
+    "pref": "岡山県",
     "lines": [
       "hakubi-line"
     ]
@@ -28606,7 +28606,7 @@
     "en": "美作土居",
     "lat": 34.99518,
     "lng": 134.25995,
-    "pref": "兵庫県",
+    "pref": "岡山県",
     "lines": [
       "kishin-line"
     ]
@@ -28726,7 +28726,7 @@
     "en": "美作江見",
     "lat": 35.01322,
     "lng": 134.21962,
-    "pref": "兵庫県",
+    "pref": "岡山県",
     "lines": [
       "kishin-line"
     ]
@@ -28906,7 +28906,7 @@
     "en": "越中国分",
     "lat": 36.80536,
     "lng": 137.05075,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "himi-line"
     ]
@@ -28918,7 +28918,7 @@
     "en": "氷見",
     "lat": 36.84953,
     "lng": 136.99076,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "himi-line"
     ]
@@ -28930,7 +28930,7 @@
     "en": "越中中川",
     "lat": 36.74985,
     "lng": 137.0279,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "himi-line"
     ]
@@ -28942,7 +28942,7 @@
     "en": "伏木",
     "lat": 36.79225,
     "lng": 137.05851,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "himi-line"
     ]
@@ -28954,7 +28954,7 @@
     "en": "能町",
     "lat": 36.76822,
     "lng": 137.03982,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "himi-line"
     ]
@@ -28966,7 +28966,7 @@
     "en": "島尾",
     "lat": 36.82822,
     "lng": 137.01281,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "himi-line"
     ]
@@ -28978,7 +28978,7 @@
     "en": "雨晴",
     "lat": 36.81657,
     "lng": 137.03739,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "himi-line"
     ]
@@ -29038,7 +29038,7 @@
     "en": "備後安田",
     "lat": 34.74108,
     "lng": 133.0338,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29050,7 +29050,7 @@
     "en": "戸手",
     "lat": 34.54651,
     "lng": 133.30064,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29062,7 +29062,7 @@
     "en": "鵜飼",
     "lat": 34.568,
     "lng": 133.24455,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29074,7 +29074,7 @@
     "en": "新市",
     "lat": 34.55423,
     "lng": 133.26962,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29086,7 +29086,7 @@
     "en": "湯田村",
     "lat": 34.55188,
     "lng": 133.37146,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29098,7 +29098,7 @@
     "en": "道上",
     "lat": 34.55345,
     "lng": 133.36119,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29110,7 +29110,7 @@
     "en": "河佐",
     "lat": 34.58995,
     "lng": 133.16673,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29122,7 +29122,7 @@
     "en": "吉舎",
     "lat": 34.72773,
     "lng": 132.99091,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29134,7 +29134,7 @@
     "en": "府中",
     "lat": 34.57153,
     "lng": 133.23647,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29146,7 +29146,7 @@
     "en": "備後矢野",
     "lat": 34.66474,
     "lng": 133.12607,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29158,7 +29158,7 @@
     "en": "高木",
     "lat": 34.56297,
     "lng": 133.25324,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29170,7 +29170,7 @@
     "en": "下川辺",
     "lat": 34.55434,
     "lng": 133.20526,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29182,7 +29182,7 @@
     "en": "三良坂",
     "lat": 34.7662,
     "lng": 132.95775,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29194,7 +29194,7 @@
     "en": "駅家",
     "lat": 34.54897,
     "lng": 133.32573,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29206,7 +29206,7 @@
     "en": "梶田",
     "lat": 34.71089,
     "lng": 133.05944,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29218,7 +29218,7 @@
     "en": "上下",
     "lat": 34.69467,
     "lng": 133.11776,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29230,7 +29230,7 @@
     "en": "横尾",
     "lat": 34.52149,
     "lng": 133.36331,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29242,7 +29242,7 @@
     "en": "甲奴",
     "lat": 34.70364,
     "lng": 133.08127,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29254,7 +29254,7 @@
     "en": "万能倉",
     "lat": 34.55105,
     "lng": 133.33842,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29266,7 +29266,7 @@
     "en": "近田",
     "lat": 34.54634,
     "lng": 133.31094,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29278,7 +29278,7 @@
     "en": "中畑",
     "lat": 34.58231,
     "lng": 133.19306,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29290,7 +29290,7 @@
     "en": "備後三川",
     "lat": 34.63025,
     "lng": 133.11011,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29302,7 +29302,7 @@
     "en": "備後本庄",
     "lat": 34.49319,
     "lng": 133.34537,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29314,7 +29314,7 @@
     "en": "神辺",
     "lat": 34.53744,
     "lng": 133.37866,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29326,7 +29326,7 @@
     "en": "上戸手",
     "lat": 34.55155,
     "lng": 133.28195,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "fukuen-line"
     ]
@@ -29338,7 +29338,7 @@
     "en": "下滝",
     "lat": 35.08787,
     "lng": 135.09417,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29350,7 +29350,7 @@
     "en": "丹波竹田",
     "lat": 35.24374,
     "lng": 135.1341,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29362,7 +29362,7 @@
     "en": "藍本",
     "lat": 34.97696,
     "lng": 135.15553,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29374,7 +29374,7 @@
     "en": "南矢代",
     "lat": 35.03764,
     "lng": 135.17481,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29386,7 +29386,7 @@
     "en": "柏原",
     "lat": 35.12719,
     "lng": 135.07713,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29398,7 +29398,7 @@
     "en": "草野",
     "lat": 34.99693,
     "lng": 135.15237,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29410,7 +29410,7 @@
     "en": "石生",
     "lat": 35.15275,
     "lng": 135.06375,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29422,7 +29422,7 @@
     "en": "市島",
     "lat": 35.20799,
     "lng": 135.13006,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29434,7 +29434,7 @@
     "en": "黒井",
     "lat": 35.16852,
     "lng": 135.09733,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29446,7 +29446,7 @@
     "en": "古市",
     "lat": 35.02196,
     "lng": 135.15495,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29458,7 +29458,7 @@
     "en": "篠山口",
     "lat": 35.0562,
     "lng": 135.17749,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29470,7 +29470,7 @@
     "en": "丹波大山",
     "lat": 35.0724,
     "lng": 135.16857,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29482,7 +29482,7 @@
     "en": "北伊丹",
     "lat": 34.80115,
     "lng": 135.41949,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29494,7 +29494,7 @@
     "en": "猪名寺",
     "lat": 34.764,
     "lng": 135.42262,
-    "pref": "大阪府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29506,7 +29506,7 @@
     "en": "西宮名塩",
     "lat": 34.82723,
     "lng": 135.30888,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29518,7 +29518,7 @@
     "en": "中山寺",
     "lat": 34.8166,
     "lng": 135.37401,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29530,7 +29530,7 @@
     "en": "生瀬",
     "lat": 34.81934,
     "lng": 135.32533,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29542,7 +29542,7 @@
     "en": "伊丹",
     "lat": 34.78061,
     "lng": 135.42178,
-    "pref": "大阪府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29554,7 +29554,7 @@
     "en": "宝塚",
     "lat": 34.81135,
     "lng": 135.34085,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29566,7 +29566,7 @@
     "en": "武田尾",
     "lat": 34.85551,
     "lng": 135.30572,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29578,7 +29578,7 @@
     "en": "川西池田",
     "lat": 34.82489,
     "lng": 135.40981,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29590,7 +29590,7 @@
     "en": "塚口",
     "lat": 34.75083,
     "lng": 135.42512,
-    "pref": "大阪府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29602,7 +29602,7 @@
     "en": "広野",
     "lat": 34.92855,
     "lng": 135.19143,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29614,7 +29614,7 @@
     "en": "新三田",
     "lat": 34.91014,
     "lng": 135.20862,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29626,7 +29626,7 @@
     "en": "道場",
     "lat": 34.86728,
     "lng": 135.25581,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29638,7 +29638,7 @@
     "en": "三田",
     "lat": 34.88869,
     "lng": 135.22992,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29650,7 +29650,7 @@
     "en": "相野",
     "lat": 34.94763,
     "lng": 135.15595,
-    "pref": "京都府",
+    "pref": "兵庫県",
     "lines": [
       "fukuchiyama-line"
     ]
@@ -29722,7 +29722,7 @@
     "en": "藤阪",
     "lat": 34.81444,
     "lng": 135.70275,
-    "pref": "京都府",
+    "pref": "大阪府",
     "lines": [
       "katamachi-line"
     ]
@@ -29734,7 +29734,7 @@
     "en": "西木津",
     "lat": 34.73813,
     "lng": 135.80245,
-    "pref": "三重県",
+    "pref": "京都府",
     "lines": [
       "katamachi-line"
     ]
@@ -29746,7 +29746,7 @@
     "en": "津田",
     "lat": 34.80141,
     "lng": 135.69797,
-    "pref": "京都府",
+    "pref": "大阪府",
     "lines": [
       "katamachi-line"
     ]
@@ -29758,7 +29758,7 @@
     "en": "長尾",
     "lat": 34.82596,
     "lng": 135.71302,
-    "pref": "京都府",
+    "pref": "大阪府",
     "lines": [
       "katamachi-line"
     ]
@@ -29794,7 +29794,7 @@
     "en": "祝園",
     "lat": 34.76019,
     "lng": 135.79203,
-    "pref": "奈良県",
+    "pref": "京都府",
     "lines": [
       "katamachi-line"
     ]
@@ -29854,7 +29854,7 @@
     "en": "JR三山木",
     "lat": 34.79847,
     "lng": 135.78451,
-    "pref": "奈良県",
+    "pref": "京都府",
     "lines": [
       "katamachi-line"
     ]
@@ -29866,7 +29866,7 @@
     "en": "下狛",
     "lat": 34.78058,
     "lng": 135.78855,
-    "pref": "奈良県",
+    "pref": "京都府",
     "lines": [
       "katamachi-line"
     ]
@@ -29928,7 +29928,7 @@
     "en": "余呉",
     "lat": 35.53389,
     "lng": 136.19827,
-    "pref": "福井県",
+    "pref": "滋賀県",
     "lines": [
       "hokuriku-main"
     ]
@@ -29940,7 +29940,7 @@
     "en": "長浜",
     "lat": 35.3786,
     "lng": 136.26499,
-    "pref": "岐阜県",
+    "pref": "滋賀県",
     "lines": [
       "hokuriku-main"
     ]
@@ -29952,7 +29952,7 @@
     "en": "虎姫",
     "lat": 35.42456,
     "lng": 136.25739,
-    "pref": "岐阜県",
+    "pref": "滋賀県",
     "lines": [
       "hokuriku-main"
     ]
@@ -29964,7 +29964,7 @@
     "en": "田村",
     "lat": 35.35631,
     "lng": 136.28188,
-    "pref": "岐阜県",
+    "pref": "滋賀県",
     "lines": [
       "hokuriku-main"
     ]
@@ -29988,7 +29988,7 @@
     "en": "坂田",
     "lat": 35.33613,
     "lng": 136.28768,
-    "pref": "岐阜県",
+    "pref": "滋賀県",
     "lines": [
       "hokuriku-main"
     ]
@@ -30000,7 +30000,7 @@
     "en": "高月",
     "lat": 35.47066,
     "lng": 136.23765,
-    "pref": "岐阜県",
+    "pref": "滋賀県",
     "lines": [
       "hokuriku-main"
     ]
@@ -30012,7 +30012,7 @@
     "en": "木ノ本",
     "lat": 35.50618,
     "lng": 136.22159,
-    "pref": "岐阜県",
+    "pref": "滋賀県",
     "lines": [
       "hokuriku-main"
     ]
@@ -30024,7 +30024,7 @@
     "en": "河毛",
     "lat": 35.44844,
     "lng": 136.24951,
-    "pref": "岐阜県",
+    "pref": "滋賀県",
     "lines": [
       "hokuriku-main"
     ]
@@ -30072,7 +30072,7 @@
     "en": "出雲三成",
     "lat": 35.19667,
     "lng": 133.00985,
-    "pref": "鳥取県",
+    "pref": "島根県",
     "lines": [
       "kisuki-line"
     ]
@@ -30096,7 +30096,7 @@
     "en": "出雲八代",
     "lat": 35.2273,
     "lng": 133.00148,
-    "pref": "鳥取県",
+    "pref": "島根県",
     "lines": [
       "kisuki-line"
     ]
@@ -30120,7 +30120,7 @@
     "en": "油木",
     "lat": 35.0446,
     "lng": 133.11927,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kisuki-line"
     ]
@@ -30132,7 +30132,7 @@
     "en": "八川",
     "lat": 35.14939,
     "lng": 133.08945,
-    "pref": "鳥取県",
+    "pref": "島根県",
     "lines": [
       "kisuki-line"
     ]
@@ -30144,7 +30144,7 @@
     "en": "出雲横田",
     "lat": 35.17741,
     "lng": 133.09256,
-    "pref": "鳥取県",
+    "pref": "島根県",
     "lines": [
       "kisuki-line"
     ]
@@ -30168,7 +30168,7 @@
     "en": "亀嵩",
     "lat": 35.20626,
     "lng": 133.05287,
-    "pref": "鳥取県",
+    "pref": "島根県",
     "lines": [
       "kisuki-line"
     ]
@@ -30216,7 +30216,7 @@
     "en": "出雲坂根",
     "lat": 35.10244,
     "lng": 133.12058,
-    "pref": "鳥取県",
+    "pref": "島根県",
     "lines": [
       "kisuki-line"
     ]
@@ -30264,7 +30264,7 @@
     "en": "中飯降",
     "lat": 34.30447,
     "lng": 135.53245,
-    "pref": "大阪府",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30276,7 +30276,7 @@
     "en": "畠田",
     "lat": 34.57776,
     "lng": 135.70363,
-    "pref": "大阪府",
+    "pref": "奈良県",
     "lines": [
       "wakayama-line"
     ]
@@ -30288,7 +30288,7 @@
     "en": "志都美",
     "lat": 34.56204,
     "lng": 135.70196,
-    "pref": "大阪府",
+    "pref": "奈良県",
     "lines": [
       "wakayama-line"
     ]
@@ -30300,7 +30300,7 @@
     "en": "大和新庄",
     "lat": 34.48893,
     "lng": 135.73602,
-    "pref": "大阪府",
+    "pref": "奈良県",
     "lines": [
       "wakayama-line"
     ]
@@ -30312,7 +30312,7 @@
     "en": "下兵庫",
     "lat": 34.32259,
     "lng": 135.63474,
-    "pref": "大阪府",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30348,7 +30348,7 @@
     "en": "紀伊山田",
     "lat": 34.31299,
     "lng": 135.58411,
-    "pref": "大阪府",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30360,7 +30360,7 @@
     "en": "玉手",
     "lat": 34.4584,
     "lng": 135.74851,
-    "pref": "大阪府",
+    "pref": "奈良県",
     "lines": [
       "wakayama-line"
     ]
@@ -30372,7 +30372,7 @@
     "en": "橋本",
     "lat": 34.31816,
     "lng": 135.61477,
-    "pref": "大阪府",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30384,7 +30384,7 @@
     "en": "高野口",
     "lat": 34.30762,
     "lng": 135.55692,
-    "pref": "大阪府",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30396,7 +30396,7 @@
     "en": "JR五位堂",
     "lat": 34.5273,
     "lng": 135.71885,
-    "pref": "大阪府",
+    "pref": "奈良県",
     "lines": [
       "wakayama-line"
     ]
@@ -30408,7 +30408,7 @@
     "en": "大和二見",
     "lat": 34.34612,
     "lng": 135.68444,
-    "pref": "大阪府",
+    "pref": "奈良県",
     "lines": [
       "wakayama-line"
     ]
@@ -30420,7 +30420,7 @@
     "en": "隅田",
     "lat": 34.32809,
     "lng": 135.65558,
-    "pref": "大阪府",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30444,7 +30444,7 @@
     "en": "香芝",
     "lat": 34.54377,
     "lng": 135.70532,
-    "pref": "大阪府",
+    "pref": "奈良県",
     "lines": [
       "wakayama-line"
     ]
@@ -30456,7 +30456,7 @@
     "en": "御所",
     "lat": 34.46508,
     "lng": 135.73379,
-    "pref": "大阪府",
+    "pref": "奈良県",
     "lines": [
       "wakayama-line"
     ]
@@ -30468,7 +30468,7 @@
     "en": "大谷",
     "lat": 34.2986,
     "lng": 135.49385,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30480,7 +30480,7 @@
     "en": "北宇智",
     "lat": 34.38229,
     "lng": 135.71447,
-    "pref": "大阪府",
+    "pref": "奈良県",
     "lines": [
       "wakayama-line"
     ]
@@ -30492,7 +30492,7 @@
     "en": "五条",
     "lat": 34.35575,
     "lng": 135.69869,
-    "pref": "大阪府",
+    "pref": "奈良県",
     "lines": [
       "wakayama-line"
     ]
@@ -30504,7 +30504,7 @@
     "en": "名手",
     "lat": 34.27294,
     "lng": 135.43368,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30516,7 +30516,7 @@
     "en": "岩出",
     "lat": 34.25502,
     "lng": 135.32128,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30528,7 +30528,7 @@
     "en": "田井ノ瀬",
     "lat": 34.24207,
     "lng": 135.22945,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30540,7 +30540,7 @@
     "en": "粉河",
     "lat": 34.27072,
     "lng": 135.4042,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30552,7 +30552,7 @@
     "en": "布施屋",
     "lat": 34.24445,
     "lng": 135.26167,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30564,7 +30564,7 @@
     "en": "下井阪",
     "lat": 34.26201,
     "lng": 135.3402,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30576,7 +30576,7 @@
     "en": "紀伊長田",
     "lat": 34.26828,
     "lng": 135.39156,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30588,7 +30588,7 @@
     "en": "船戸",
     "lat": 34.24831,
     "lng": 135.31124,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30600,7 +30600,7 @@
     "en": "千旦",
     "lat": 34.24165,
     "lng": 135.24567,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30612,7 +30612,7 @@
     "en": "紀伊小倉",
     "lat": 34.24637,
     "lng": 135.28742,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30624,7 +30624,7 @@
     "en": "打田",
     "lat": 34.26515,
     "lng": 135.36417,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30636,7 +30636,7 @@
     "en": "笠田",
     "lat": 34.29206,
     "lng": 135.4799,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30648,7 +30648,7 @@
     "en": "西笠田",
     "lat": 34.28012,
     "lng": 135.45263,
-    "pref": "兵庫県",
+    "pref": "和歌山県",
     "lines": [
       "wakayama-line"
     ]
@@ -30687,7 +30687,7 @@
     "en": "朝日",
     "lat": 35.03373,
     "lng": 136.658,
-    "pref": "愛知県",
+    "pref": "三重県",
     "lines": [
       "tokai-kansai"
     ]
@@ -30699,7 +30699,7 @@
     "en": "富田浜",
     "lat": 34.99656,
     "lng": 136.6501,
-    "pref": "愛知県",
+    "pref": "三重県",
     "lines": [
       "tokai-kansai"
     ]
@@ -30711,7 +30711,7 @@
     "en": "富田",
     "lat": 35.00816,
     "lng": 136.65316,
-    "pref": "愛知県",
+    "pref": "三重県",
     "lines": [
       "tokai-kansai"
     ]
@@ -30747,7 +30747,7 @@
     "en": "桑名",
     "lat": 35.06667,
     "lng": 136.68374,
-    "pref": "愛知県",
+    "pref": "三重県",
     "lines": [
       "tokai-kansai"
     ]
@@ -30771,7 +30771,7 @@
     "en": "長島",
     "lat": 35.09817,
     "lng": 136.69565,
-    "pref": "愛知県",
+    "pref": "三重県",
     "lines": [
       "tokai-kansai"
     ]
@@ -30807,7 +30807,7 @@
     "en": "南四日市",
     "lat": 34.94144,
     "lng": 136.60958,
-    "pref": "愛知県",
+    "pref": "三重県",
     "lines": [
       "tokai-kansai"
     ]
@@ -30831,7 +30831,7 @@
     "en": "四日市",
     "lat": 34.96211,
     "lng": 136.62987,
-    "pref": "愛知県",
+    "pref": "三重県",
     "lines": [
       "tokai-kansai"
     ]
@@ -31446,7 +31446,7 @@
     "en": "駿河小山",
     "lat": 35.35924,
     "lng": 138.99758,
-    "pref": "山梨県",
+    "pref": "静岡県",
     "lines": [
       "tokai-gotemba"
     ]
@@ -31542,7 +31542,7 @@
     "en": "足柄",
     "lat": 35.33207,
     "lng": 138.98175,
-    "pref": "山梨県",
+    "pref": "静岡県",
     "lines": [
       "tokai-gotemba"
     ]
@@ -31567,7 +31567,7 @@
     "en": "杉崎",
     "lat": 36.24989,
     "lng": 137.16899,
-    "pref": "群馬県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-takayama"
     ]
@@ -31579,7 +31579,7 @@
     "en": "打保",
     "lat": 36.38394,
     "lng": 137.18199,
-    "pref": "群馬県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-takayama"
     ]
@@ -31591,7 +31591,7 @@
     "en": "飛騨古川",
     "lat": 36.23663,
     "lng": 137.18998,
-    "pref": "群馬県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-takayama"
     ]
@@ -31651,7 +31651,7 @@
     "en": "杉原",
     "lat": 36.41586,
     "lng": 137.19247,
-    "pref": "群馬県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-takayama"
     ]
@@ -31663,7 +31663,7 @@
     "en": "飛騨国府",
     "lat": 36.21112,
     "lng": 137.21577,
-    "pref": "群馬県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-takayama"
     ]
@@ -31687,7 +31687,7 @@
     "en": "飛騨細江",
     "lat": 36.26113,
     "lng": 137.14563,
-    "pref": "群馬県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-takayama"
     ]
@@ -31699,7 +31699,7 @@
     "en": "坂上",
     "lat": 36.32755,
     "lng": 137.1409,
-    "pref": "群馬県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-takayama"
     ]
@@ -31711,7 +31711,7 @@
     "en": "角川",
     "lat": 36.2999,
     "lng": 137.11336,
-    "pref": "群馬県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-takayama"
     ]
@@ -31723,7 +31723,7 @@
     "en": "美濃太田",
     "lat": 35.44561,
     "lng": 137.01953,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-takayama",
       "tokai-taita"
@@ -31736,7 +31736,7 @@
     "en": "坂祝",
     "lat": 35.4264,
     "lng": 136.97681,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-takayama"
     ]
@@ -31796,7 +31796,7 @@
     "en": "中川辺",
     "lat": 35.48708,
     "lng": 137.06513,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-takayama"
     ]
@@ -31832,7 +31832,7 @@
     "en": "古井",
     "lat": 35.45743,
     "lng": 137.04766,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-takayama"
     ]
@@ -31916,7 +31916,7 @@
     "en": "鵜沼",
     "lat": 35.39756,
     "lng": 136.94605,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-takayama"
     ]
@@ -31928,7 +31928,7 @@
     "en": "那加",
     "lat": 35.40054,
     "lng": 136.83558,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-takayama"
     ]
@@ -31940,7 +31940,7 @@
     "en": "蘇原",
     "lat": 35.40328,
     "lng": 136.87177,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-takayama"
     ]
@@ -31952,7 +31952,7 @@
     "en": "各務ケ原",
     "lat": 35.40388,
     "lng": 136.90106,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-takayama"
     ]
@@ -31964,7 +31964,7 @@
     "en": "長森",
     "lat": 35.40208,
     "lng": 136.80286,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-takayama"
     ]
@@ -31976,7 +31976,7 @@
     "en": "岐阜",
     "lat": 35.40953,
     "lng": 136.75656,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-tokaido",
       "tokai-takayama"
@@ -32025,7 +32025,7 @@
     "en": "二見浦",
     "lat": 34.50371,
     "lng": 136.77769,
-    "pref": "愛知県",
+    "pref": "三重県",
     "lines": [
       "tokai-sangu"
     ]
@@ -32037,7 +32037,7 @@
     "en": "宮川",
     "lat": 34.50308,
     "lng": 136.67187,
-    "pref": "愛知県",
+    "pref": "三重県",
     "lines": [
       "tokai-sangu"
     ]
@@ -32290,7 +32290,7 @@
     "en": "富士宮",
     "lat": 35.2212,
     "lng": 138.61548,
-    "pref": "長野県",
+    "pref": "静岡県",
     "lines": [
       "tokai-minobu"
     ]
@@ -32302,7 +32302,7 @@
     "en": "富士根",
     "lat": 35.20527,
     "lng": 138.63561,
-    "pref": "長野県",
+    "pref": "静岡県",
     "lines": [
       "tokai-minobu"
     ]
@@ -32338,7 +32338,7 @@
     "en": "十島",
     "lat": 35.23019,
     "lng": 138.51588,
-    "pref": "長野県",
+    "pref": "山梨県",
     "lines": [
       "tokai-minobu"
     ]
@@ -32362,7 +32362,7 @@
     "en": "寄畑",
     "lat": 35.26484,
     "lng": 138.47499,
-    "pref": "長野県",
+    "pref": "山梨県",
     "lines": [
       "tokai-minobu"
     ]
@@ -32386,7 +32386,7 @@
     "en": "井出",
     "lat": 35.24745,
     "lng": 138.49099,
-    "pref": "長野県",
+    "pref": "山梨県",
     "lines": [
       "tokai-minobu"
     ]
@@ -32410,7 +32410,7 @@
     "en": "内船",
     "lat": 35.28221,
     "lng": 138.46503,
-    "pref": "長野県",
+    "pref": "山梨県",
     "lines": [
       "tokai-minobu"
     ]
@@ -32483,7 +32483,7 @@
     "en": "西富士宮",
     "lat": 35.22543,
     "lng": 138.6025,
-    "pref": "長野県",
+    "pref": "静岡県",
     "lines": [
       "tokai-minobu"
     ]
@@ -32507,7 +32507,7 @@
     "en": "稲子",
     "lat": 35.23054,
     "lng": 138.53693,
-    "pref": "長野県",
+    "pref": "静岡県",
     "lines": [
       "tokai-minobu"
     ]
@@ -32519,7 +32519,7 @@
     "en": "源道寺",
     "lat": 35.21449,
     "lng": 138.62712,
-    "pref": "長野県",
+    "pref": "静岡県",
     "lines": [
       "tokai-minobu"
     ]
@@ -32567,7 +32567,7 @@
     "en": "多治見",
     "lat": 35.33483,
     "lng": 137.12029,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-chuo",
       "tokai-taita"
@@ -32580,7 +32580,7 @@
     "en": "姫",
     "lat": 35.382,
     "lng": 137.07212,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-taita"
     ]
@@ -32592,7 +32592,7 @@
     "en": "下切",
     "lat": 35.39374,
     "lng": 137.06371,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-taita"
     ]
@@ -32604,7 +32604,7 @@
     "en": "可児",
     "lat": 35.42293,
     "lng": 137.05535,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-taita"
     ]
@@ -32616,7 +32616,7 @@
     "en": "根本",
     "lat": 35.36147,
     "lng": 137.09015,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-taita"
     ]
@@ -32628,7 +32628,7 @@
     "en": "美濃川合",
     "lat": 35.4441,
     "lng": 137.04539,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-taita"
     ]
@@ -32640,7 +32640,7 @@
     "en": "小泉",
     "lat": 35.34915,
     "lng": 137.10056,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-taita"
     ]
@@ -32727,7 +32727,7 @@
     "en": "恵那",
     "lat": 35.45509,
     "lng": 137.4078,
-    "pref": "長野県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-chuo"
     ]
@@ -32799,7 +32799,7 @@
     "en": "中津川",
     "lat": 35.50015,
     "lng": 137.50281,
-    "pref": "長野県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-chuo"
     ]
@@ -32811,7 +32811,7 @@
     "en": "坂下",
     "lat": 35.57458,
     "lng": 137.53118,
-    "pref": "長野県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-chuo"
     ]
@@ -32847,7 +32847,7 @@
     "en": "瑞浪",
     "lat": 35.36911,
     "lng": 137.25192,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-chuo"
     ]
@@ -32859,7 +32859,7 @@
     "en": "武並",
     "lat": 35.43793,
     "lng": 137.35412,
-    "pref": "長野県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-chuo"
     ]
@@ -32907,7 +32907,7 @@
     "en": "釜戸",
     "lat": 35.41124,
     "lng": 137.30523,
-    "pref": "長野県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-chuo"
     ]
@@ -32931,7 +32931,7 @@
     "en": "土岐市",
     "lat": 35.35974,
     "lng": 137.18213,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-chuo"
     ]
@@ -32943,7 +32943,7 @@
     "en": "落合川",
     "lat": 35.52532,
     "lng": 137.53006,
-    "pref": "長野県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-chuo"
     ]
@@ -33003,7 +33003,7 @@
     "en": "古虎渓",
     "lat": 35.30381,
     "lng": 137.10179,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-chuo"
     ]
@@ -33015,7 +33015,7 @@
     "en": "美乃坂本",
     "lat": 35.47925,
     "lng": 137.45036,
-    "pref": "長野県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-chuo"
     ]
@@ -33112,7 +33112,7 @@
     "en": "Tokyo",
     "lat": 35.68093,
     "lng": 139.76667,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "chuo-main",
       "tokaido",
@@ -33134,7 +33134,7 @@
     "en": "Shinagawa",
     "lat": 35.62863,
     "lng": 139.73849,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "yamanote",
       "tokaido",
@@ -33148,7 +33148,7 @@
     "en": "Shin-Yokohama",
     "lat": 35.50674,
     "lng": 139.61733,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "yokohama-line",
       "shinkansen-tokaido"
@@ -33187,7 +33187,7 @@
     "en": "Atami",
     "lat": 35.1039,
     "lng": 139.07797,
-    "pref": "神奈川県",
+    "pref": "静岡県",
     "lines": [
       "tokaido",
       "ito-line",
@@ -33240,7 +33240,7 @@
     "en": "岐阜羽島",
     "lat": 35.31574,
     "lng": 136.68575,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "shinkansen-tokaido"
     ]
@@ -33641,7 +33641,7 @@
     "en": "西岐阜",
     "lat": 35.40452,
     "lng": 136.72326,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-tokaido"
     ]
@@ -33665,7 +33665,7 @@
     "en": "柏原",
     "lat": 35.3446,
     "lng": 136.40233,
-    "pref": "岐阜県",
+    "pref": "滋賀県",
     "lines": [
       "tokai-tokaido"
     ]
@@ -33689,7 +33689,7 @@
     "en": "醒ヶ井",
     "lat": 35.32771,
     "lng": 136.34519,
-    "pref": "岐阜県",
+    "pref": "滋賀県",
     "lines": [
       "tokai-tokaido"
     ]
@@ -33737,7 +33737,7 @@
     "en": "近江長岡",
     "lat": 35.35908,
     "lng": 136.37402,
-    "pref": "岐阜県",
+    "pref": "滋賀県",
     "lines": [
       "tokai-tokaido"
     ]
@@ -33761,7 +33761,7 @@
     "en": "穂積",
     "lat": 35.39627,
     "lng": 136.69364,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-tokaido"
     ]
@@ -33773,7 +33773,7 @@
     "en": "大垣",
     "lat": 35.3671,
     "lng": 136.61796,
-    "pref": "愛知県",
+    "pref": "岐阜県",
     "lines": [
       "tokai-tokaido",
       "tokai-minoakasaka"
@@ -34098,7 +34098,7 @@
     "en": "二川",
     "lat": 34.7258,
     "lng": 137.43887,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-tokaido"
     ]
@@ -34507,7 +34507,7 @@
     "en": "東栄",
     "lat": 35.02897,
     "lng": 137.71386,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -34543,7 +34543,7 @@
     "en": "池場",
     "lat": 35.02433,
     "lng": 137.7039,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -34747,7 +34747,7 @@
     "en": "柿平",
     "lat": 34.99052,
     "lng": 137.64401,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -34795,7 +34795,7 @@
     "en": "小和田",
     "lat": 35.2099,
     "lng": 137.836,
-    "pref": "長野県",
+    "pref": "静岡県",
     "lines": [
       "tokai-iida"
     ]
@@ -34843,7 +34843,7 @@
     "en": "三河槙原",
     "lat": 34.98855,
     "lng": 137.62091,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -34939,7 +34939,7 @@
     "en": "三河川合",
     "lat": 35.00172,
     "lng": 137.66399,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -35011,7 +35011,7 @@
     "en": "鳥居",
     "lat": 34.92075,
     "lng": 137.55163,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -35035,7 +35035,7 @@
     "en": "三河大野",
     "lat": 34.95198,
     "lng": 137.603,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -35047,7 +35047,7 @@
     "en": "湯谷温泉",
     "lat": 34.9705,
     "lng": 137.61303,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -35071,7 +35071,7 @@
     "en": "野田城",
     "lat": 34.8893,
     "lng": 137.47789,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -35083,7 +35083,7 @@
     "en": "東上",
     "lat": 34.87616,
     "lng": 137.45536,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -35095,7 +35095,7 @@
     "en": "三河東郷",
     "lat": 34.91224,
     "lng": 137.52731,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -35107,7 +35107,7 @@
     "en": "東新町",
     "lat": 34.90611,
     "lng": 137.50298,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -35119,7 +35119,7 @@
     "en": "新城",
     "lat": 34.90107,
     "lng": 137.493,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -35131,7 +35131,7 @@
     "en": "本長篠",
     "lat": 34.93264,
     "lng": 137.57674,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -35143,7 +35143,7 @@
     "en": "三河一宮",
     "lat": 34.84795,
     "lng": 137.41461,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -35155,7 +35155,7 @@
     "en": "茶臼山",
     "lat": 34.91036,
     "lng": 137.51444,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -35191,7 +35191,7 @@
     "en": "大海",
     "lat": 34.93016,
     "lng": 137.54901,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -35203,7 +35203,7 @@
     "en": "長篠城",
     "lat": 34.92604,
     "lng": 137.56528,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -35215,7 +35215,7 @@
     "en": "江島",
     "lat": 34.86785,
     "lng": 137.44156,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -35227,7 +35227,7 @@
     "en": "長山",
     "lat": 34.8644,
     "lng": 137.43135,
-    "pref": "静岡県",
+    "pref": "愛知県",
     "lines": [
       "tokai-iida"
     ]
@@ -35794,7 +35794,7 @@
     "en": "吹浦",
     "lat": 39.07005,
     "lng": 139.87865,
-    "pref": "秋田県",
+    "pref": "山形県",
     "lines": [
       "uetsu-main"
     ]
@@ -35830,7 +35830,7 @@
     "en": "女鹿",
     "lat": 39.09875,
     "lng": 139.88098,
-    "pref": "秋田県",
+    "pref": "山形県",
     "lines": [
       "uetsu-main"
     ]
@@ -35866,7 +35866,7 @@
     "en": "遊佐",
     "lat": 39.01599,
     "lng": 139.90515,
-    "pref": "秋田県",
+    "pref": "山形県",
     "lines": [
       "uetsu-main"
     ]
@@ -36059,7 +36059,7 @@
     "en": "月岡",
     "lat": 37.88933,
     "lng": 139.27246,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36071,7 +36071,7 @@
     "en": "間島",
     "lat": 38.27305,
     "lng": 139.45025,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36083,7 +36083,7 @@
     "en": "岩船町",
     "lat": 38.18348,
     "lng": 139.45969,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36095,7 +36095,7 @@
     "en": "村上",
     "lat": 38.21988,
     "lng": 139.46332,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36107,7 +36107,7 @@
     "en": "加治",
     "lat": 37.97651,
     "lng": 139.35855,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36143,7 +36143,7 @@
     "en": "中浦",
     "lat": 37.91219,
     "lng": 139.30277,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36155,7 +36155,7 @@
     "en": "平木田",
     "lat": 38.09439,
     "lng": 139.42791,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36167,7 +36167,7 @@
     "en": "越後早川",
     "lat": 38.31638,
     "lng": 139.44994,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36179,7 +36179,7 @@
     "en": "越後寒川",
     "lat": 38.44877,
     "lng": 139.49004,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36203,7 +36203,7 @@
     "en": "金塚",
     "lat": 38.02031,
     "lng": 139.37954,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36215,7 +36215,7 @@
     "en": "水原",
     "lat": 37.83656,
     "lng": 139.21719,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36227,7 +36227,7 @@
     "en": "神山",
     "lat": 37.86286,
     "lng": 139.24485,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36263,7 +36263,7 @@
     "en": "今川",
     "lat": 38.41015,
     "lng": 139.46838,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36275,7 +36275,7 @@
     "en": "平林",
     "lat": 38.15009,
     "lng": 139.45903,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36299,7 +36299,7 @@
     "en": "勝木",
     "lat": 38.49027,
     "lng": 139.51746,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36311,7 +36311,7 @@
     "en": "京ヶ瀬",
     "lat": 37.81762,
     "lng": 139.17848,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36323,7 +36323,7 @@
     "en": "府屋",
     "lat": 38.51348,
     "lng": 139.53043,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36335,7 +36335,7 @@
     "en": "桑川",
     "lat": 38.37518,
     "lng": 139.45879,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36347,7 +36347,7 @@
     "en": "中条",
     "lat": 38.04989,
     "lng": 139.39801,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main"
     ]
@@ -36359,7 +36359,7 @@
     "en": "新津",
     "lat": 37.8003,
     "lng": 139.12121,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "shinetsu-line",
       "uetsu-main",
@@ -36373,7 +36373,7 @@
     "en": "新発田",
     "lat": 37.94385,
     "lng": 139.33497,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "hakushin-line",
       "uetsu-main"
@@ -36386,7 +36386,7 @@
     "en": "坂町",
     "lat": 38.11928,
     "lng": 139.44585,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "uetsu-main",
       "yonesaka-line"
@@ -36412,7 +36412,7 @@
     "en": "岩室",
     "lat": 37.72143,
     "lng": 138.87999,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "echigo-line"
     ]
@@ -36424,7 +36424,7 @@
     "en": "越後赤塚",
     "lat": 37.816,
     "lng": 138.90818,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "echigo-line"
     ]
@@ -36472,7 +36472,7 @@
     "en": "白山",
     "lat": 37.91187,
     "lng": 139.03003,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "echigo-line"
     ]
@@ -36484,7 +36484,7 @@
     "en": "内野",
     "lat": 37.85849,
     "lng": 138.93688,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "echigo-line"
     ]
@@ -36533,7 +36533,7 @@
     "en": "新潟大学前",
     "lat": 37.86917,
     "lng": 138.95459,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "echigo-line"
     ]
@@ -36557,7 +36557,7 @@
     "en": "巻",
     "lat": 37.75698,
     "lng": 138.88961,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "echigo-line"
     ]
@@ -36581,7 +36581,7 @@
     "en": "青山",
     "lat": 37.89859,
     "lng": 139.00087,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "echigo-line"
     ]
@@ -36593,7 +36593,7 @@
     "en": "越後曽根",
     "lat": 37.7935,
     "lng": 138.9111,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "echigo-line"
     ]
@@ -36605,7 +36605,7 @@
     "en": "北吉田",
     "lat": 37.70201,
     "lng": 138.88223,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "echigo-line"
     ]
@@ -36629,7 +36629,7 @@
     "en": "関屋",
     "lat": 37.90614,
     "lng": 139.01516,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "echigo-line"
     ]
@@ -36653,7 +36653,7 @@
     "en": "寺尾",
     "lat": 37.8792,
     "lng": 138.97395,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "echigo-line"
     ]
@@ -36665,7 +36665,7 @@
     "en": "内野西が丘",
     "lat": 37.84614,
     "lng": 138.92673,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "echigo-line"
     ]
@@ -36689,7 +36689,7 @@
     "en": "小針",
     "lat": 37.88949,
     "lng": 138.99114,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "echigo-line"
     ]
@@ -36773,7 +36773,7 @@
     "en": "Niigata",
     "lat": 37.91225,
     "lng": 139.06134,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "shinkansen-joetsu",
       "shinetsu-line",
@@ -36814,7 +36814,7 @@
     "en": "大館",
     "lat": 40.28807,
     "lng": 140.55579,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "ou-main",
       "hanawa-line"
@@ -36877,7 +36877,7 @@
     "en": "下川沿",
     "lat": 40.27637,
     "lng": 140.49663,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "ou-main"
     ]
@@ -36937,7 +36937,7 @@
     "en": "富根",
     "lat": 40.21798,
     "lng": 140.17266,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "ou-main"
     ]
@@ -36985,7 +36985,7 @@
     "en": "糠沢",
     "lat": 40.25068,
     "lng": 140.3975,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "ou-main"
     ]
@@ -37021,7 +37021,7 @@
     "en": "鷹ノ巣",
     "lat": 40.23222,
     "lng": 140.36966,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "ou-main"
     ]
@@ -37033,7 +37033,7 @@
     "en": "陣場",
     "lat": 40.39902,
     "lng": 140.60763,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "ou-main"
     ]
@@ -37129,7 +37129,7 @@
     "en": "二ツ井",
     "lat": 40.2125,
     "lng": 140.23565,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "ou-main"
     ]
@@ -37141,7 +37141,7 @@
     "en": "白沢",
     "lat": 40.33813,
     "lng": 140.5917,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "ou-main"
     ]
@@ -37165,7 +37165,7 @@
     "en": "鶴形",
     "lat": 40.20389,
     "lng": 140.11855,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "ou-main"
     ]
@@ -37189,7 +37189,7 @@
     "en": "前山",
     "lat": 40.21476,
     "lng": 140.31245,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "ou-main"
     ]
@@ -37201,7 +37201,7 @@
     "en": "早口",
     "lat": 40.27133,
     "lng": 140.44746,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "ou-main"
     ]
@@ -37341,7 +37341,7 @@
     "en": "福島",
     "lat": 37.75409,
     "lng": 140.45966,
-    "pref": "宮城県",
+    "pref": "福島県",
     "lines": [
       "shinkansen-tohoku",
       "shinkansen-yamagata",
@@ -37589,7 +37589,7 @@
     "en": "庭坂",
     "lat": 37.77156,
     "lng": 140.38983,
-    "pref": "山形県",
+    "pref": "福島県",
     "lines": [
       "ou-main"
     ]
@@ -37907,7 +37907,7 @@
     "en": "笹木野",
     "lat": 37.7659,
     "lng": 140.42611,
-    "pref": "宮城県",
+    "pref": "福島県",
     "lines": [
       "ou-main"
     ]
@@ -38004,7 +38004,7 @@
     "en": "Kurihama",
     "lat": 35.23307,
     "lng": 139.70098,
-    "pref": "千葉県",
+    "pref": "神奈川県",
     "lines": [
       "yokosuka-line"
     ]
@@ -38115,7 +38115,7 @@
     "en": "Kozukue",
     "lat": 35.50863,
     "lng": 139.59962,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "yokohama-line"
     ]
@@ -38139,7 +38139,7 @@
     "en": "Kikuna",
     "lat": 35.50962,
     "lng": 139.63024,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "yokohama-line"
     ]
@@ -38151,7 +38151,7 @@
     "en": "Hashimoto",
     "lat": 35.59488,
     "lng": 139.34502,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "yokohama-line",
       "sagami"
@@ -38164,7 +38164,7 @@
     "en": "Nakayama",
     "lat": 35.51467,
     "lng": 139.53938,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "yokohama-line"
     ]
@@ -38188,7 +38188,7 @@
     "en": "Sagamihara",
     "lat": 35.58149,
     "lng": 139.37062,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "yokohama-line"
     ]
@@ -38212,7 +38212,7 @@
     "en": "Fuchinobe",
     "lat": 35.5685,
     "lng": 139.39534,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "yokohama-line"
     ]
@@ -38248,7 +38248,7 @@
     "en": "Tokaichiba",
     "lat": 35.5262,
     "lng": 139.51667,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "yokohama-line"
     ]
@@ -38260,7 +38260,7 @@
     "en": "Nagatsuta",
     "lat": 35.53163,
     "lng": 139.49526,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "yokohama-line"
     ]
@@ -38272,7 +38272,7 @@
     "en": "Yabe",
     "lat": 35.57308,
     "lng": 139.38654,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "yokohama-line"
     ]
@@ -38284,7 +38284,7 @@
     "en": "Kamoi",
     "lat": 35.51086,
     "lng": 139.56695,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "yokohama-line"
     ]
@@ -38308,7 +38308,7 @@
     "en": "Kobuchi",
     "lat": 35.55599,
     "lng": 139.41925,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "yokohama-line"
     ]
@@ -38346,7 +38346,7 @@
     "en": "湯瀬温泉",
     "lat": 40.12237,
     "lng": 140.84031,
-    "pref": "岩手県",
+    "pref": "秋田県",
     "lines": [
       "hanawa-line"
     ]
@@ -38358,7 +38358,7 @@
     "en": "八幡平",
     "lat": 40.14298,
     "lng": 140.80445,
-    "pref": "岩手県",
+    "pref": "秋田県",
     "lines": [
       "hanawa-line"
     ]
@@ -38502,7 +38502,7 @@
     "en": "末広",
     "lat": 40.22989,
     "lng": 140.73733,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "hanawa-line"
     ]
@@ -38514,7 +38514,7 @@
     "en": "鹿角花輪",
     "lat": 40.18854,
     "lng": 140.78516,
-    "pref": "岩手県",
+    "pref": "秋田県",
     "lines": [
       "hanawa-line"
     ]
@@ -38526,7 +38526,7 @@
     "en": "陸中大里",
     "lat": 40.15854,
     "lng": 140.79345,
-    "pref": "岩手県",
+    "pref": "秋田県",
     "lines": [
       "hanawa-line"
     ]
@@ -38538,7 +38538,7 @@
     "en": "十二所",
     "lat": 40.21432,
     "lng": 140.66818,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "hanawa-line"
     ]
@@ -38550,7 +38550,7 @@
     "en": "土深井",
     "lat": 40.22249,
     "lng": 140.71305,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "hanawa-line"
     ]
@@ -38562,7 +38562,7 @@
     "en": "柴平",
     "lat": 40.23077,
     "lng": 140.78806,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "hanawa-line"
     ]
@@ -38574,7 +38574,7 @@
     "en": "沢尻",
     "lat": 40.23034,
     "lng": 140.69327,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "hanawa-line"
     ]
@@ -38586,7 +38586,7 @@
     "en": "扇田",
     "lat": 40.22928,
     "lng": 140.57249,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "hanawa-line"
     ]
@@ -38598,7 +38598,7 @@
     "en": "東大館",
     "lat": 40.26616,
     "lng": 140.55468,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "hanawa-line"
     ]
@@ -38610,7 +38610,7 @@
     "en": "十和田南",
     "lat": 40.25597,
     "lng": 140.77067,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "hanawa-line"
     ]
@@ -38622,7 +38622,7 @@
     "en": "大滝温泉",
     "lat": 40.20978,
     "lng": 140.63962,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "hanawa-line"
     ]
@@ -39484,7 +39484,7 @@
     "en": "Nishi-Funabashi",
     "lat": 35.70734,
     "lng": 139.95915,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "musashino",
       "sobu-main"
@@ -39605,7 +39605,7 @@
     "en": "Etchujima",
     "lat": 35.66801,
     "lng": 139.7925,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "keiyo"
     ]
@@ -39629,7 +39629,7 @@
     "en": "Kasai-Rinkai-Koen",
     "lat": 35.64418,
     "lng": 139.86149,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "keiyo"
     ]
@@ -39641,7 +39641,7 @@
     "en": "Hatchobori",
     "lat": 35.67464,
     "lng": 139.77819,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "keiyo"
     ]
@@ -39653,7 +39653,7 @@
     "en": "Shin-Kiba",
     "lat": 35.64599,
     "lng": 139.82685,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "keiyo"
     ]
@@ -39665,7 +39665,7 @@
     "en": "Shiomi",
     "lat": 35.65886,
     "lng": 139.81716,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "keiyo"
     ]
@@ -39677,7 +39677,7 @@
     "en": "武蔵引田",
     "lat": 35.72969,
     "lng": 139.27009,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "itsukaichi-line"
     ]
@@ -39689,7 +39689,7 @@
     "en": "Musashi-Itsukaichi",
     "lat": 35.73215,
     "lng": 139.22812,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "itsukaichi-line"
     ]
@@ -39701,7 +39701,7 @@
     "en": "武蔵増戸",
     "lat": 35.73095,
     "lng": 139.25631,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "itsukaichi-line"
     ]
@@ -39713,7 +39713,7 @@
     "en": "熊川",
     "lat": 35.72829,
     "lng": 139.33573,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "itsukaichi-line"
     ]
@@ -39725,7 +39725,7 @@
     "en": "Akigawa",
     "lat": 35.72805,
     "lng": 139.28675,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "itsukaichi-line"
     ]
@@ -39737,7 +39737,7 @@
     "en": "Haijima",
     "lat": 35.72124,
     "lng": 139.34343,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line",
       "hachiko-line",
@@ -39751,7 +39751,7 @@
     "en": "東秋留",
     "lat": 35.72593,
     "lng": 139.31167,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "itsukaichi-line"
     ]
@@ -39787,7 +39787,7 @@
     "en": "向能代",
     "lat": 40.22568,
     "lng": 140.03922,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "gonou-line"
     ]
@@ -39811,7 +39811,7 @@
     "en": "あきた白神",
     "lat": 40.38649,
     "lng": 139.98803,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "gonou-line"
     ]
@@ -39871,7 +39871,7 @@
     "en": "沢目",
     "lat": 40.29606,
     "lng": 140.03779,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "gonou-line"
     ]
@@ -39919,7 +39919,7 @@
     "en": "八森",
     "lat": 40.3713,
     "lng": 140.01789,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "gonou-line"
     ]
@@ -39931,7 +39931,7 @@
     "en": "東八森",
     "lat": 40.33212,
     "lng": 140.0325,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "gonou-line"
     ]
@@ -39943,7 +39943,7 @@
     "en": "北能代",
     "lat": 40.25411,
     "lng": 140.03377,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "gonou-line"
     ]
@@ -39955,7 +39955,7 @@
     "en": "能代",
     "lat": 40.20647,
     "lng": 140.03312,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "gonou-line"
     ]
@@ -40003,7 +40003,7 @@
     "en": "岩館",
     "lat": 40.4062,
     "lng": 139.96629,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "gonou-line"
     ]
@@ -40159,7 +40159,7 @@
     "en": "鳥形",
     "lat": 40.27142,
     "lng": 140.03689,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "gonou-line"
     ]
@@ -40183,7 +40183,7 @@
     "en": "滝ノ間",
     "lat": 40.37997,
     "lng": 140.00227,
-    "pref": "青森県",
+    "pref": "秋田県",
     "lines": [
       "gonou-line"
     ]
@@ -40500,7 +40500,7 @@
     "en": "Jimbohara",
     "lat": 36.25362,
     "lng": 139.14901,
-    "pref": "群馬県",
+    "pref": "埼玉県",
     "lines": [
       "takasaki-line"
     ]
@@ -40549,7 +40549,7 @@
     "en": "Honjo",
     "lat": 36.23632,
     "lng": 139.18807,
-    "pref": "群馬県",
+    "pref": "埼玉県",
     "lines": [
       "takasaki-line"
     ]
@@ -40561,7 +40561,7 @@
     "en": "Okabe",
     "lat": 36.20578,
     "lng": 139.23738,
-    "pref": "栃木県",
+    "pref": "埼玉県",
     "lines": [
       "takasaki-line"
     ]
@@ -40967,7 +40967,7 @@
     "en": "Tabata",
     "lat": 35.73747,
     "lng": 139.76157,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "yamanote",
       "tohoku-main"
@@ -40980,7 +40980,7 @@
     "en": "Sugamo",
     "lat": 35.73372,
     "lng": 139.74035,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "yamanote"
     ]
@@ -40992,7 +40992,7 @@
     "en": "Komagome",
     "lat": 35.73703,
     "lng": 139.7484,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "yamanote"
     ]
@@ -41004,7 +41004,7 @@
     "en": "Ikebukuro",
     "lat": 35.73028,
     "lng": 139.71108,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "yamanote",
       "akabane-line"
@@ -41017,7 +41017,7 @@
     "en": "Takadanobaba",
     "lat": 35.71331,
     "lng": 139.70397,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "yamanote"
     ]
@@ -41029,7 +41029,7 @@
     "en": "Mejiro",
     "lat": 35.72039,
     "lng": 139.70627,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "yamanote"
     ]
@@ -41041,7 +41041,7 @@
     "en": "Shin-Okubo",
     "lat": 35.70093,
     "lng": 139.70025,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "yamanote"
     ]
@@ -41053,7 +41053,7 @@
     "en": "Otsuka",
     "lat": 35.73179,
     "lng": 139.72794,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "yamanote"
     ]
@@ -41065,7 +41065,7 @@
     "en": "Osaki",
     "lat": 35.61994,
     "lng": 139.72824,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "yamanote"
     ]
@@ -41077,7 +41077,7 @@
     "en": "Gotanda",
     "lat": 35.62607,
     "lng": 139.72371,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "yamanote"
     ]
@@ -41089,7 +41089,7 @@
     "en": "Meguro",
     "lat": 35.6334,
     "lng": 139.71572,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "yamanote"
     ]
@@ -41101,7 +41101,7 @@
     "en": "Ebisu",
     "lat": 35.64667,
     "lng": 139.71011,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "yamanote"
     ]
@@ -41113,7 +41113,7 @@
     "en": "Shibuya",
     "lat": 35.65807,
     "lng": 139.70165,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "yamanote"
     ]
@@ -41125,7 +41125,7 @@
     "en": "Shinjuku",
     "lat": 35.68991,
     "lng": 139.7006,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "yamanote",
       "chuo-main"
@@ -41138,7 +41138,7 @@
     "en": "Yoyogi",
     "lat": 35.6838,
     "lng": 139.70221,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "yamanote"
     ]
@@ -41150,7 +41150,7 @@
     "en": "Harajuku",
     "lat": 35.67132,
     "lng": 139.7027,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "yamanote"
     ]
@@ -41334,7 +41334,7 @@
     "en": "香取",
     "lat": 35.8979,
     "lng": 140.53241,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "kashima-line",
       "narita-line"
@@ -41347,7 +41347,7 @@
     "en": "十二橋",
     "lat": 35.91702,
     "lng": 140.54584,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "kashima-line"
     ]
@@ -41407,7 +41407,7 @@
     "en": "冠着",
     "lat": 36.45722,
     "lng": 138.07935,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinonoi-line"
     ]
@@ -41419,7 +41419,7 @@
     "en": "聖高原",
     "lat": 36.45506,
     "lng": 138.04757,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinonoi-line"
     ]
@@ -41431,7 +41431,7 @@
     "en": "坂北",
     "lat": 36.43071,
     "lng": 138.01576,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinonoi-line"
     ]
@@ -41443,7 +41443,7 @@
     "en": "西条",
     "lat": 36.40045,
     "lng": 138.01249,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinonoi-line"
     ]
@@ -41455,7 +41455,7 @@
     "en": "姨捨",
     "lat": 36.50287,
     "lng": 138.09314,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinonoi-line"
     ]
@@ -41467,7 +41467,7 @@
     "en": "明科",
     "lat": 36.35427,
     "lng": 137.93035,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinonoi-line"
     ]
@@ -41491,7 +41491,7 @@
     "en": "稲荷山",
     "lat": 36.55264,
     "lng": 138.1081,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinonoi-line"
     ]
@@ -41503,7 +41503,7 @@
     "en": "篠ノ井",
     "lat": 36.57696,
     "lng": 138.13806,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinonoi-line"
     ]
@@ -41515,7 +41515,7 @@
     "en": "松本",
     "lat": 36.23027,
     "lng": 137.96462,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinonoi-line",
       "oito-line"
@@ -41528,7 +41528,7 @@
     "en": "南松本",
     "lat": 36.21071,
     "lng": 137.96962,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinonoi-line"
     ]
@@ -41540,7 +41540,7 @@
     "en": "田沢",
     "lat": 36.3017,
     "lng": 137.94103,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinonoi-line"
     ]
@@ -41564,7 +41564,7 @@
     "en": "青沼",
     "lat": 36.18131,
     "lng": 138.48917,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41576,7 +41576,7 @@
     "en": "美里",
     "lat": 36.29229,
     "lng": 138.45025,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41588,7 +41588,7 @@
     "en": "龍岡城",
     "lat": 36.20422,
     "lng": 138.49072,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41600,7 +41600,7 @@
     "en": "三岡",
     "lat": 36.30419,
     "lng": 138.44846,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41612,7 +41612,7 @@
     "en": "北中込",
     "lat": 36.25491,
     "lng": 138.4767,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41624,7 +41624,7 @@
     "en": "乙女",
     "lat": 36.31131,
     "lng": 138.44052,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41636,7 +41636,7 @@
     "en": "中込",
     "lat": 36.23065,
     "lng": 138.47941,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41648,7 +41648,7 @@
     "en": "岩村田",
     "lat": 36.27449,
     "lng": 138.47244,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41660,7 +41660,7 @@
     "en": "小諸",
     "lat": 36.32501,
     "lng": 138.42342,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41672,7 +41672,7 @@
     "en": "佐久平",
     "lat": 36.27787,
     "lng": 138.46405,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinkansen-hokuriku",
       "koumi-line"
@@ -41685,7 +41685,7 @@
     "en": "中佐都",
     "lat": 36.28088,
     "lng": 138.45361,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41697,7 +41697,7 @@
     "en": "東小諸",
     "lat": 36.317,
     "lng": 138.43208,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41709,7 +41709,7 @@
     "en": "滑津",
     "lat": 36.23872,
     "lng": 138.47501,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41721,7 +41721,7 @@
     "en": "太田部",
     "lat": 36.22034,
     "lng": 138.48778,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41733,7 +41733,7 @@
     "en": "臼田",
     "lat": 36.19399,
     "lng": 138.48825,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41758,7 +41758,7 @@
     "en": "海瀬",
     "lat": 36.15578,
     "lng": 138.48594,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41770,7 +41770,7 @@
     "en": "松原湖",
     "lat": 36.061,
     "lng": 138.47055,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41782,7 +41782,7 @@
     "en": "小海",
     "lat": 36.08868,
     "lng": 138.48288,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41794,7 +41794,7 @@
     "en": "海尻",
     "lat": 36.04131,
     "lng": 138.47355,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41818,7 +41818,7 @@
     "en": "信濃川上",
     "lat": 35.97588,
     "lng": 138.52709,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41830,7 +41830,7 @@
     "en": "高岩",
     "lat": 36.11574,
     "lng": 138.47753,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41842,7 +41842,7 @@
     "en": "佐久海ノ口",
     "lat": 36.02118,
     "lng": 138.49082,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41866,7 +41866,7 @@
     "en": "馬流",
     "lat": 36.10184,
     "lng": 138.48598,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41878,7 +41878,7 @@
     "en": "野辺山",
     "lat": 35.95532,
     "lng": 138.47446,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41902,7 +41902,7 @@
     "en": "羽黒下",
     "lat": 36.1664,
     "lng": 138.48964,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41914,7 +41914,7 @@
     "en": "八千穂",
     "lat": 36.13332,
     "lng": 138.47742,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41926,7 +41926,7 @@
     "en": "佐久広瀬",
     "lat": 36.00369,
     "lng": 138.5194,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "koumi-line"
     ]
@@ -41989,7 +41989,7 @@
     "en": "Honjo-Waseda",
     "lat": 36.21867,
     "lng": 139.17975,
-    "pref": "群馬県",
+    "pref": "埼玉県",
     "lines": [
       "shinkansen-joetsu",
       "shinkansen-hokuriku"
@@ -42247,7 +42247,7 @@
     "en": "湯檜曽",
     "lat": 36.80287,
     "lng": 138.98631,
-    "pref": "新潟県",
+    "pref": "群馬県",
     "lines": [
       "joetsu-line"
     ]
@@ -42307,7 +42307,7 @@
     "en": "土合",
     "lat": 36.83182,
     "lng": 138.96678,
-    "pref": "新潟県",
+    "pref": "群馬県",
     "lines": [
       "joetsu-line"
     ]
@@ -42403,7 +42403,7 @@
     "en": "駒ヶ嶺",
     "lat": 37.84237,
     "lng": 140.92507,
-    "pref": "宮城県",
+    "pref": "福島県",
     "lines": [
       "joban"
     ]
@@ -42439,7 +42439,7 @@
     "en": "相馬",
     "lat": 37.80248,
     "lng": 140.92573,
-    "pref": "宮城県",
+    "pref": "福島県",
     "lines": [
       "joban"
     ]
@@ -42451,7 +42451,7 @@
     "en": "新地",
     "lat": 37.87921,
     "lng": 140.92563,
-    "pref": "宮城県",
+    "pref": "福島県",
     "lines": [
       "joban"
     ]
@@ -42463,7 +42463,7 @@
     "en": "日立木",
     "lat": 37.75613,
     "lng": 140.93466,
-    "pref": "宮城県",
+    "pref": "福島県",
     "lines": [
       "joban"
     ]
@@ -42741,7 +42741,7 @@
     "en": "鹿島",
     "lat": 37.70283,
     "lng": 140.97006,
-    "pref": "宮城県",
+    "pref": "福島県",
     "lines": [
       "joban"
     ]
@@ -42873,7 +42873,7 @@
     "en": "岩間",
     "lat": 36.29545,
     "lng": 140.27647,
-    "pref": "栃木県",
+    "pref": "茨城県",
     "lines": [
       "joban"
     ]
@@ -42922,7 +42922,7 @@
     "en": "羽鳥",
     "lat": 36.24754,
     "lng": 140.28676,
-    "pref": "栃木県",
+    "pref": "茨城県",
     "lines": [
       "joban"
     ]
@@ -42982,7 +42982,7 @@
     "en": "大津港",
     "lat": 36.84606,
     "lng": 140.77801,
-    "pref": "福島県",
+    "pref": "茨城県",
     "lines": [
       "joban"
     ]
@@ -43043,7 +43043,7 @@
     "en": "Minami-Kashiwa",
     "lat": 35.84466,
     "lng": 139.95418,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "joban"
     ]
@@ -43079,7 +43079,7 @@
     "en": "Kashiwa",
     "lat": 35.86219,
     "lng": 139.97102,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "joban"
     ]
@@ -43103,7 +43103,7 @@
     "en": "Kita-Kashiwa",
     "lat": 35.87568,
     "lng": 139.98804,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "joban"
     ]
@@ -43127,7 +43127,7 @@
     "en": "Shin-Matsudo",
     "lat": 35.82546,
     "lng": 139.92117,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "musashino",
       "joban"
@@ -43152,7 +43152,7 @@
     "en": "Kita-Kogane",
     "lat": 35.83317,
     "lng": 139.93075,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "joban"
     ]
@@ -43164,7 +43164,7 @@
     "en": "Tennodai",
     "lat": 35.87247,
     "lng": 140.04232,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "joban"
     ]
@@ -43200,7 +43200,7 @@
     "en": "Abiko",
     "lat": 35.87287,
     "lng": 140.01046,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line",
       "joban"
@@ -43237,7 +43237,7 @@
     "en": "Kita-Matsudo",
     "lat": 35.80037,
     "lng": 139.91162,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "joban"
     ]
@@ -43249,7 +43249,7 @@
     "en": "Nippori",
     "lat": 35.72793,
     "lng": 139.77126,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "tohoku-main",
       "joban"
@@ -43262,7 +43262,7 @@
     "en": "Mabashi",
     "lat": 35.81169,
     "lng": 139.91731,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "joban"
     ]
@@ -43274,7 +43274,7 @@
     "en": "Minami-Senju",
     "lat": 35.73464,
     "lng": 139.79982,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "joban"
     ]
@@ -43286,7 +43286,7 @@
     "en": "Kita-Senju",
     "lat": 35.74884,
     "lng": 139.80465,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "joban"
     ]
@@ -43298,7 +43298,7 @@
     "en": "Ayase",
     "lat": 35.76217,
     "lng": 139.82493,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "joban"
     ]
@@ -43310,7 +43310,7 @@
     "en": "Mikawashima",
     "lat": 35.73334,
     "lng": 139.77728,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "joban"
     ]
@@ -43322,7 +43322,7 @@
     "en": "Kameari",
     "lat": 35.76654,
     "lng": 139.84756,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "joban"
     ]
@@ -43334,7 +43334,7 @@
     "en": "Matsudo",
     "lat": 35.78472,
     "lng": 139.90087,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "joban"
     ]
@@ -43346,7 +43346,7 @@
     "en": "Kanamachi",
     "lat": 35.7695,
     "lng": 139.87039,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "joban"
     ]
@@ -43370,7 +43370,7 @@
     "en": "矢代田",
     "lat": 37.74888,
     "lng": 139.0955,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "shinetsu-line"
     ]
@@ -43430,7 +43430,7 @@
     "en": "さつき野",
     "lat": 37.8131,
     "lng": 139.11736,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "shinetsu-line"
     ]
@@ -43526,7 +43526,7 @@
     "en": "古津",
     "lat": 37.77299,
     "lng": 139.11448,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "shinetsu-line"
     ]
@@ -43599,7 +43599,7 @@
     "en": "越後石山",
     "lat": 37.89637,
     "lng": 139.09548,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "shinetsu-line"
     ]
@@ -43707,7 +43707,7 @@
     "en": "荻川",
     "lat": 37.83258,
     "lng": 139.11163,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "shinetsu-line"
     ]
@@ -43719,7 +43719,7 @@
     "en": "亀田",
     "lat": 37.87719,
     "lng": 139.10825,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "shinetsu-line"
     ]
@@ -43755,7 +43755,7 @@
     "en": "田上",
     "lat": 37.71903,
     "lng": 139.07456,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "shinetsu-line"
     ]
@@ -43887,7 +43887,7 @@
     "en": "今井",
     "lat": 36.59488,
     "lng": 138.1451,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinonoi-line"
     ]
@@ -43899,7 +43899,7 @@
     "en": "安茂里",
     "lat": 36.63027,
     "lng": 138.16182,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinonoi-line"
     ]
@@ -43911,7 +43911,7 @@
     "en": "川中島",
     "lat": 36.61409,
     "lng": 138.15071,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinonoi-line"
     ]
@@ -44128,7 +44128,7 @@
     "en": "下野宮",
     "lat": 36.81576,
     "lng": 140.37552,
-    "pref": "福島県",
+    "pref": "茨城県",
     "lines": [
       "suigun-line"
     ]
@@ -44467,7 +44467,7 @@
     "en": "新治",
     "lat": 36.32796,
     "lng": 140.03921,
-    "pref": "栃木県",
+    "pref": "茨城県",
     "lines": [
       "mito-line"
     ]
@@ -44479,7 +44479,7 @@
     "en": "小田林",
     "lat": 36.30079,
     "lng": 139.8536,
-    "pref": "栃木県",
+    "pref": "茨城県",
     "lines": [
       "mito-line"
     ]
@@ -44491,7 +44491,7 @@
     "en": "稲田",
     "lat": 36.36888,
     "lng": 140.21503,
-    "pref": "栃木県",
+    "pref": "茨城県",
     "lines": [
       "mito-line"
     ]
@@ -44503,7 +44503,7 @@
     "en": "Yuki",
     "lat": 36.29808,
     "lng": 139.87304,
-    "pref": "栃木県",
+    "pref": "茨城県",
     "lines": [
       "mito-line"
     ]
@@ -44515,7 +44515,7 @@
     "en": "福原",
     "lat": 36.35153,
     "lng": 140.18728,
-    "pref": "栃木県",
+    "pref": "茨城県",
     "lines": [
       "mito-line"
     ]
@@ -44527,7 +44527,7 @@
     "en": "羽黒",
     "lat": 36.35529,
     "lng": 140.143,
-    "pref": "栃木県",
+    "pref": "茨城県",
     "lines": [
       "mito-line"
     ]
@@ -44539,7 +44539,7 @@
     "en": "宍戸",
     "lat": 36.34466,
     "lng": 140.28853,
-    "pref": "栃木県",
+    "pref": "茨城県",
     "lines": [
       "mito-line"
     ]
@@ -44551,7 +44551,7 @@
     "en": "玉戸",
     "lat": 36.29856,
     "lng": 139.93855,
-    "pref": "栃木県",
+    "pref": "茨城県",
     "lines": [
       "mito-line"
     ]
@@ -44563,7 +44563,7 @@
     "en": "Shimodate",
     "lat": 36.30413,
     "lng": 139.97818,
-    "pref": "栃木県",
+    "pref": "茨城県",
     "lines": [
       "mito-line"
     ]
@@ -44575,7 +44575,7 @@
     "en": "岩瀬",
     "lat": 36.35942,
     "lng": 140.10874,
-    "pref": "栃木県",
+    "pref": "茨城県",
     "lines": [
       "mito-line"
     ]
@@ -44587,7 +44587,7 @@
     "en": "大和",
     "lat": 36.34555,
     "lng": 140.07323,
-    "pref": "栃木県",
+    "pref": "茨城県",
     "lines": [
       "mito-line"
     ]
@@ -44599,7 +44599,7 @@
     "en": "東結城",
     "lat": 36.29661,
     "lng": 139.89141,
-    "pref": "栃木県",
+    "pref": "茨城県",
     "lines": [
       "mito-line"
     ]
@@ -44611,7 +44611,7 @@
     "en": "川島",
     "lat": 36.29592,
     "lng": 139.91634,
-    "pref": "栃木県",
+    "pref": "茨城県",
     "lines": [
       "mito-line"
     ]
@@ -44623,7 +44623,7 @@
     "en": "Kasama",
     "lat": 36.37305,
     "lng": 140.24652,
-    "pref": "栃木県",
+    "pref": "茨城県",
     "lines": [
       "mito-line"
     ]
@@ -44661,7 +44661,7 @@
     "en": "小見川",
     "lat": 35.84997,
     "lng": 140.6046,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line"
     ]
@@ -44673,7 +44673,7 @@
     "en": "下総神崎",
     "lat": 35.89486,
     "lng": 140.41066,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line"
     ]
@@ -44685,7 +44685,7 @@
     "en": "滑河",
     "lat": 35.87706,
     "lng": 140.34787,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line"
     ]
@@ -44709,7 +44709,7 @@
     "en": "下総松崎",
     "lat": 35.80777,
     "lng": 140.27755,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line"
     ]
@@ -44721,7 +44721,7 @@
     "en": "久住",
     "lat": 35.83217,
     "lng": 140.33888,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line"
     ]
@@ -44745,7 +44745,7 @@
     "en": "小林",
     "lat": 35.83073,
     "lng": 140.19311,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line"
     ]
@@ -44757,7 +44757,7 @@
     "en": "安食",
     "lat": 35.83571,
     "lng": 140.24227,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line"
     ]
@@ -44769,7 +44769,7 @@
     "en": "Sawara",
     "lat": 35.89492,
     "lng": 140.49376,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line"
     ]
@@ -44781,7 +44781,7 @@
     "en": "布佐",
     "lat": 35.84936,
     "lng": 140.133,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line"
     ]
@@ -44793,7 +44793,7 @@
     "en": "笹川",
     "lat": 35.83943,
     "lng": 140.65582,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line"
     ]
@@ -44817,7 +44817,7 @@
     "en": "東我孫子",
     "lat": 35.86898,
     "lng": 140.0476,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line"
     ]
@@ -44841,7 +44841,7 @@
     "en": "湖北",
     "lat": 35.8672,
     "lng": 140.07795,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line"
     ]
@@ -44853,7 +44853,7 @@
     "en": "水郷",
     "lat": 35.88545,
     "lng": 140.57018,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line"
     ]
@@ -44865,7 +44865,7 @@
     "en": "大戸",
     "lat": 35.88992,
     "lng": 140.45774,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line"
     ]
@@ -44877,7 +44877,7 @@
     "en": "新木",
     "lat": 35.86241,
     "lng": 140.10705,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line"
     ]
@@ -44889,7 +44889,7 @@
     "en": "下総橘",
     "lat": 35.81878,
     "lng": 140.70214,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line"
     ]
@@ -44913,7 +44913,7 @@
     "en": "木下",
     "lat": 35.83888,
     "lng": 140.14799,
-    "pref": "茨城県",
+    "pref": "千葉県",
     "lines": [
       "narita-line"
     ]
@@ -44951,7 +44951,7 @@
     "en": "鳩ノ巣",
     "lat": 35.81511,
     "lng": 139.12894,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -44963,7 +44963,7 @@
     "en": "Nishi-Tachikawa",
     "lat": 35.70354,
     "lng": 139.39339,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -44975,7 +44975,7 @@
     "en": "古里",
     "lat": 35.81632,
     "lng": 139.15114,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -44987,7 +44987,7 @@
     "en": "小作",
     "lat": 35.77606,
     "lng": 139.30227,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -44999,7 +44999,7 @@
     "en": "軍畑",
     "lat": 35.80758,
     "lng": 139.20765,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45011,7 +45011,7 @@
     "en": "白丸",
     "lat": 35.81172,
     "lng": 139.11483,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45023,7 +45023,7 @@
     "en": "Okutama",
     "lat": 35.80915,
     "lng": 139.09714,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45035,7 +45035,7 @@
     "en": "沢井",
     "lat": 35.80595,
     "lng": 139.1934,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45047,7 +45047,7 @@
     "en": "川井",
     "lat": 35.81377,
     "lng": 139.16431,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45059,7 +45059,7 @@
     "en": "東青梅",
     "lat": 35.78981,
     "lng": 139.27281,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45071,7 +45071,7 @@
     "en": "Ome",
     "lat": 35.79054,
     "lng": 139.25813,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45083,7 +45083,7 @@
     "en": "Kabe",
     "lat": 35.78477,
     "lng": 139.28406,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45095,7 +45095,7 @@
     "en": "Mitake",
     "lat": 35.80142,
     "lng": 139.18275,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45107,7 +45107,7 @@
     "en": "日向和田",
     "lat": 35.78865,
     "lng": 139.22953,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45119,7 +45119,7 @@
     "en": "牛浜",
     "lat": 35.73434,
     "lng": 139.33379,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45131,7 +45131,7 @@
     "en": "中神",
     "lat": 35.709,
     "lng": 139.37571,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45143,7 +45143,7 @@
     "en": "Fussa",
     "lat": 35.74248,
     "lng": 139.32775,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45155,7 +45155,7 @@
     "en": "東中神",
     "lat": 35.70628,
     "lng": 139.38459,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45167,7 +45167,7 @@
     "en": "二俣尾",
     "lat": 35.80395,
     "lng": 139.21614,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45179,7 +45179,7 @@
     "en": "Akishima",
     "lat": 35.71322,
     "lng": 139.36164,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45191,7 +45191,7 @@
     "en": "宮ノ平",
     "lat": 35.78759,
     "lng": 139.23732,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45203,7 +45203,7 @@
     "en": "石神前",
     "lat": 35.79683,
     "lng": 139.22514,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45215,7 +45215,7 @@
     "en": "Hamura",
     "lat": 35.75794,
     "lng": 139.3163,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "ome-line"
     ]
@@ -45374,7 +45374,7 @@
     "en": "Akabane",
     "lat": 35.77752,
     "lng": 139.72099,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "akabane-line",
       "tohoku-main"
@@ -45387,7 +45387,7 @@
     "en": "Jujo",
     "lat": 35.76039,
     "lng": 139.72225,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "akabane-line"
     ]
@@ -45399,7 +45399,7 @@
     "en": "Itabashi",
     "lat": 35.74503,
     "lng": 139.71919,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "akabane-line"
     ]
@@ -45475,7 +45475,7 @@
     "en": "面白山高原",
     "lat": 38.33294,
     "lng": 140.49723,
-    "pref": "宮城県",
+    "pref": "山形県",
     "lines": [
       "senzan-line"
     ]
@@ -45583,7 +45583,7 @@
     "en": "山寺",
     "lat": 38.30958,
     "lng": 140.43478,
-    "pref": "宮城県",
+    "pref": "山形県",
     "lines": [
       "senzan-line"
     ]
@@ -46041,7 +46041,7 @@
     "en": "Kamimizo",
     "lat": 35.55761,
     "lng": 139.36314,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "sagami"
     ]
@@ -46487,7 +46487,7 @@
     "en": "Shimosa-Nakayama",
     "lat": 35.71428,
     "lng": 139.94307,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "sobu-main"
     ]
@@ -46511,7 +46511,7 @@
     "en": "Motoyawata",
     "lat": 35.72084,
     "lng": 139.9274,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "sobu-main"
     ]
@@ -46559,7 +46559,7 @@
     "en": "Funabashi",
     "lat": 35.70179,
     "lng": 139.98407,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "sobu-main"
     ]
@@ -46595,7 +46595,7 @@
     "en": "Ochanomizu",
     "lat": 35.6996,
     "lng": 139.76503,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "chuo-main",
       "sobu-main"
@@ -46608,7 +46608,7 @@
     "en": "Shin-Koiwa",
     "lat": 35.71684,
     "lng": 139.85774,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "sobu-main"
     ]
@@ -46620,7 +46620,7 @@
     "en": "Asakusabashi",
     "lat": 35.69683,
     "lng": 139.78552,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "sobu-main"
     ]
@@ -46632,7 +46632,7 @@
     "en": "Kinshicho",
     "lat": 35.69673,
     "lng": 139.81464,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "sobu-main"
     ]
@@ -46644,7 +46644,7 @@
     "en": "Kameido",
     "lat": 35.69731,
     "lng": 139.82633,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "sobu-main"
     ]
@@ -46656,7 +46656,7 @@
     "en": "Hirai",
     "lat": 35.70658,
     "lng": 139.84258,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "sobu-main"
     ]
@@ -46668,7 +46668,7 @@
     "en": "Ichikawa",
     "lat": 35.72887,
     "lng": 139.90817,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "sobu-main"
     ]
@@ -46680,7 +46680,7 @@
     "en": "Koiwa",
     "lat": 35.73333,
     "lng": 139.88185,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "sobu-main"
     ]
@@ -46692,7 +46692,7 @@
     "en": "Akihabara",
     "lat": 35.69834,
     "lng": 139.77312,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "sobu-main",
       "tohoku-main"
@@ -46705,7 +46705,7 @@
     "en": "Ryogoku",
     "lat": 35.69576,
     "lng": 139.79335,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "sobu-main"
     ]
@@ -46717,7 +46717,7 @@
     "en": "Bakurocho",
     "lat": 35.69334,
     "lng": 139.78239,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "sobu-main"
     ]
@@ -46729,7 +46729,7 @@
     "en": "Shin-Nihombashi",
     "lat": 35.689,
     "lng": 139.77416,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "sobu-main"
     ]
@@ -46741,7 +46741,7 @@
     "en": "一日市場",
     "lat": 36.26008,
     "lng": 137.90397,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46753,7 +46753,7 @@
     "en": "島内",
     "lat": 36.24691,
     "lng": 137.94476,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46765,7 +46765,7 @@
     "en": "中萱",
     "lat": 36.27389,
     "lng": 137.90328,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46777,7 +46777,7 @@
     "en": "島高松",
     "lat": 36.24634,
     "lng": 137.93162,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46789,7 +46789,7 @@
     "en": "千国",
     "lat": 36.76324,
     "lng": 137.90086,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46801,7 +46801,7 @@
     "en": "南豊科",
     "lat": 36.29099,
     "lng": 137.90349,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46813,7 +46813,7 @@
     "en": "北松本",
     "lat": 36.23689,
     "lng": 137.96109,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46825,7 +46825,7 @@
     "en": "梓橋",
     "lat": 36.25018,
     "lng": 137.91808,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46837,7 +46837,7 @@
     "en": "豊科",
     "lat": 36.30002,
     "lng": 137.90094,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46849,7 +46849,7 @@
     "en": "細野",
     "lat": 36.39707,
     "lng": 137.86578,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46861,7 +46861,7 @@
     "en": "信濃常盤",
     "lat": 36.46737,
     "lng": 137.84715,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46873,7 +46873,7 @@
     "en": "稲尾",
     "lat": 36.55411,
     "lng": 137.84262,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46885,7 +46885,7 @@
     "en": "信濃木崎",
     "lat": 36.53564,
     "lng": 137.84625,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46897,7 +46897,7 @@
     "en": "北大町",
     "lat": 36.51761,
     "lng": 137.85807,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46909,7 +46909,7 @@
     "en": "安曇沓掛",
     "lat": 36.4478,
     "lng": 137.85477,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46921,7 +46921,7 @@
     "en": "飯森",
     "lat": 36.6706,
     "lng": 137.85016,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46933,7 +46933,7 @@
     "en": "神城",
     "lat": 36.65822,
     "lng": 137.84662,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46945,7 +46945,7 @@
     "en": "南神城",
     "lat": 36.63718,
     "lng": 137.84163,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46957,7 +46957,7 @@
     "en": "白馬大池",
     "lat": 36.73995,
     "lng": 137.88554,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46969,7 +46969,7 @@
     "en": "信濃松川",
     "lat": 36.42447,
     "lng": 137.85857,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46981,7 +46981,7 @@
     "en": "安曇追分",
     "lat": 36.37186,
     "lng": 137.87277,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -46993,7 +46993,7 @@
     "en": "北細野",
     "lat": 36.40644,
     "lng": 137.86273,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -47005,7 +47005,7 @@
     "en": "白馬",
     "lat": 36.69602,
     "lng": 137.86388,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -47017,7 +47017,7 @@
     "en": "海ノ口",
     "lat": 36.56567,
     "lng": 137.84183,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -47029,7 +47029,7 @@
     "en": "穂高",
     "lat": 36.33904,
     "lng": 137.88188,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -47041,7 +47041,7 @@
     "en": "信濃大町",
     "lat": 36.50023,
     "lng": 137.86168,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -47053,7 +47053,7 @@
     "en": "柏矢町",
     "lat": 36.32247,
     "lng": 137.88835,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -47065,7 +47065,7 @@
     "en": "南大町",
     "lat": 36.49153,
     "lng": 137.85627,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -47077,7 +47077,7 @@
     "en": "信濃森上",
     "lat": 36.71099,
     "lng": 137.87182,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -47089,7 +47089,7 @@
     "en": "簗場",
     "lat": 36.59491,
     "lng": 137.84483,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -47101,7 +47101,7 @@
     "en": "有明",
     "lat": 36.36001,
     "lng": 137.87825,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "oito-line"
     ]
@@ -47257,7 +47257,7 @@
     "en": "気仙沼",
     "lat": 38.91002,
     "lng": 141.55885,
-    "pref": "岩手県",
+    "pref": "宮城県",
     "lines": [
       "ofunato-line"
     ]
@@ -47584,7 +47584,7 @@
     "en": "会津横田",
     "lat": 37.39237,
     "lng": 139.4359,
-    "pref": "新潟県",
+    "pref": "福島県",
     "lines": [
       "tadami-line"
     ]
@@ -47608,7 +47608,7 @@
     "en": "会津川口",
     "lat": 37.45507,
     "lng": 139.52376,
-    "pref": "新潟県",
+    "pref": "福島県",
     "lines": [
       "tadami-line"
     ]
@@ -47644,7 +47644,7 @@
     "en": "会津蒲生",
     "lat": 37.38178,
     "lng": 139.33333,
-    "pref": "新潟県",
+    "pref": "福島県",
     "lines": [
       "tadami-line"
     ]
@@ -47680,7 +47680,7 @@
     "en": "会津塩沢",
     "lat": 37.39362,
     "lng": 139.35511,
-    "pref": "新潟県",
+    "pref": "福島県",
     "lines": [
       "tadami-line"
     ]
@@ -47704,7 +47704,7 @@
     "en": "早戸",
     "lat": 37.47007,
     "lng": 139.59358,
-    "pref": "新潟県",
+    "pref": "福島県",
     "lines": [
       "tadami-line"
     ]
@@ -47716,7 +47716,7 @@
     "en": "会津水沼",
     "lat": 37.48298,
     "lng": 139.56054,
-    "pref": "新潟県",
+    "pref": "福島県",
     "lines": [
       "tadami-line"
     ]
@@ -47728,7 +47728,7 @@
     "en": "本名",
     "lat": 37.44478,
     "lng": 139.4988,
-    "pref": "新潟県",
+    "pref": "福島県",
     "lines": [
       "tadami-line"
     ]
@@ -47740,7 +47740,7 @@
     "en": "会津中川",
     "lat": 37.4738,
     "lng": 139.53224,
-    "pref": "新潟県",
+    "pref": "福島県",
     "lines": [
       "tadami-line"
     ]
@@ -47752,7 +47752,7 @@
     "en": "会津越川",
     "lat": 37.39869,
     "lng": 139.46943,
-    "pref": "新潟県",
+    "pref": "福島県",
     "lines": [
       "tadami-line"
     ]
@@ -47800,7 +47800,7 @@
     "en": "会津大塩",
     "lat": 37.39279,
     "lng": 139.41315,
-    "pref": "新潟県",
+    "pref": "福島県",
     "lines": [
       "tadami-line"
     ]
@@ -47812,7 +47812,7 @@
     "en": "只見",
     "lat": 37.35026,
     "lng": 139.31481,
-    "pref": "新潟県",
+    "pref": "福島県",
     "lines": [
       "tadami-line"
     ]
@@ -47932,7 +47932,7 @@
     "en": "Suidobashi",
     "lat": 35.702,
     "lng": 139.75374,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": []
   },
   "iidabashi": {
@@ -47942,7 +47942,7 @@
     "en": "Iidabashi",
     "lat": 35.70015,
     "lng": 139.74367,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": []
   },
   "nakano": {
@@ -47952,7 +47952,7 @@
     "en": "Nakano",
     "lat": 35.70554,
     "lng": 139.66577,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "chuo-main"
     ]
@@ -47964,7 +47964,7 @@
     "en": "Higashi-Nakano",
     "lat": 35.70625,
     "lng": 139.68508,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": []
   },
   "kichijoji": {
@@ -47974,7 +47974,7 @@
     "en": "Kichijoji",
     "lat": 35.70315,
     "lng": 139.57999,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "chuo-main"
     ]
@@ -47986,7 +47986,7 @@
     "en": "Nishi-Ogikubo",
     "lat": 35.7038,
     "lng": 139.5997,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "chuo-main"
     ]
@@ -47998,7 +47998,7 @@
     "en": "Ogikubo",
     "lat": 35.70443,
     "lng": 139.62025,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "chuo-main"
     ]
@@ -48010,7 +48010,7 @@
     "en": "阿佐ヶ谷",
     "lat": 35.70489,
     "lng": 139.63626,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "chuo-main"
     ]
@@ -48022,7 +48022,7 @@
     "en": "Koenji",
     "lat": 35.70532,
     "lng": 139.64972,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "chuo-main"
     ]
@@ -48034,7 +48034,7 @@
     "en": "Okubo",
     "lat": 35.70063,
     "lng": 139.69745,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": []
   },
   "kanda": {
@@ -48044,7 +48044,7 @@
     "en": "Kanda",
     "lat": 35.69177,
     "lng": 139.77087,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "chuo-main",
       "tohoku-main"
@@ -48057,7 +48057,7 @@
     "en": "Yotsuya",
     "lat": 35.68573,
     "lng": 139.73056,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "chuo-main"
     ]
@@ -48069,7 +48069,7 @@
     "en": "市ヶ谷",
     "lat": 35.69115,
     "lng": 139.73532,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": []
   },
   "shinanomachi": {
@@ -48079,7 +48079,7 @@
     "en": "Shinanomachi",
     "lat": 35.67993,
     "lng": 139.72129,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": []
   },
   "st-b4u1sy": {
@@ -48089,7 +48089,7 @@
     "en": "千駄ヶ谷",
     "lat": 35.68121,
     "lng": 139.71145,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": []
   },
   "kokubunji": {
@@ -48099,7 +48099,7 @@
     "en": "Kokubunji",
     "lat": 35.70014,
     "lng": 139.48056,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "chuo-main"
     ]
@@ -48135,7 +48135,7 @@
     "en": "富士見",
     "lat": 35.91227,
     "lng": 138.23787,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "chuo-main"
     ]
@@ -48147,7 +48147,7 @@
     "en": "すずらんの里",
     "lat": 35.93047,
     "lng": 138.2118,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "chuo-main"
     ]
@@ -48172,7 +48172,7 @@
     "en": "Musashi-Sakai",
     "lat": 35.70209,
     "lng": 139.54356,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "chuo-main"
     ]
@@ -48184,7 +48184,7 @@
     "en": "Higashi-Koganei",
     "lat": 35.70156,
     "lng": 139.52376,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "chuo-main"
     ]
@@ -48196,7 +48196,7 @@
     "en": "青柳",
     "lat": 35.94271,
     "lng": 138.19753,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "chuo-main"
     ]
@@ -48293,7 +48293,7 @@
     "en": "Musashi-Koganei",
     "lat": 35.70103,
     "lng": 139.50593,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "chuo-main"
     ]
@@ -48341,7 +48341,7 @@
     "en": "信濃境",
     "lat": 35.8849,
     "lng": 138.27553,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "chuo-main"
     ]
@@ -48353,7 +48353,7 @@
     "en": "Uenohara",
     "lat": 35.61843,
     "lng": 139.11541,
-    "pref": "東京都",
+    "pref": "山梨県",
     "lines": [
       "chuo-main"
     ]
@@ -48401,7 +48401,7 @@
     "en": "Fujino",
     "lat": 35.61599,
     "lng": 139.15133,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "chuo-main"
     ]
@@ -48461,7 +48461,7 @@
     "en": "上諏訪",
     "lat": 36.04676,
     "lng": 138.11626,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "chuo-main"
     ]
@@ -48569,7 +48569,7 @@
     "en": "Sagamiko",
     "lat": 35.61731,
     "lng": 139.18852,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "chuo-main"
     ]
@@ -48617,7 +48617,7 @@
     "en": "茅野",
     "lat": 35.99477,
     "lng": 138.15196,
-    "pref": "山梨県",
+    "pref": "長野県",
     "lines": [
       "chuo-main"
     ]
@@ -48653,7 +48653,7 @@
     "en": "Mitaka",
     "lat": 35.70271,
     "lng": 139.56071,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "chuo-main"
     ]
@@ -48907,7 +48907,7 @@
     "en": "Ogimachi",
     "lat": 35.50203,
     "lng": 139.72254,
-    "pref": "千葉県",
+    "pref": "神奈川県",
     "lines": [
       "tsurumi-line"
     ]
@@ -48919,7 +48919,7 @@
     "en": "Hamakawasaki",
     "lat": 35.50973,
     "lng": 139.71377,
-    "pref": "千葉県",
+    "pref": "神奈川県",
     "lines": [
       "tsurumi-line"
     ]
@@ -48931,7 +48931,7 @@
     "en": "Anzen",
     "lat": 35.49982,
     "lng": 139.70125,
-    "pref": "千葉県",
+    "pref": "神奈川県",
     "lines": [
       "tsurumi-line"
     ]
@@ -49112,7 +49112,7 @@
     "en": "田沢湖",
     "lat": 39.70046,
     "lng": 140.72228,
-    "pref": "岩手県",
+    "pref": "秋田県",
     "lines": [
       "shinkansen-akita",
       "tazawako-line"
@@ -49222,7 +49222,7 @@
     "en": "Shimbashi",
     "lat": 35.66628,
     "lng": 139.75821,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "tokaido"
     ]
@@ -49246,7 +49246,7 @@
     "en": "Hamamatsucho",
     "lat": 35.65541,
     "lng": 139.75713,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "tokaido"
     ]
@@ -49258,7 +49258,7 @@
     "en": "Tamachi",
     "lat": 35.64575,
     "lng": 139.7476,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "tokaido"
     ]
@@ -49270,7 +49270,7 @@
     "en": "Nishi-Oi",
     "lat": 35.60176,
     "lng": 139.72164,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": []
   },
   "oimachi": {
@@ -49292,7 +49292,7 @@
     "en": "Yurakucho",
     "lat": 35.67504,
     "lng": 139.76326,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "tokaido"
     ]
@@ -49304,7 +49304,7 @@
     "en": "Kawasaki",
     "lat": 35.53136,
     "lng": 139.69681,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "tokaido",
       "nambu"
@@ -49317,7 +49317,7 @@
     "en": "Shin-Kawasaki",
     "lat": 35.55159,
     "lng": 139.67162,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": []
   },
   "shin-koyasu": {
@@ -49555,7 +49555,7 @@
     "en": "二戸",
     "lat": 40.25978,
     "lng": 141.28558,
-    "pref": "青森県",
+    "pref": "岩手県",
     "lines": [
       "shinkansen-tohoku"
     ]
@@ -49671,7 +49671,7 @@
     "en": "Nasushiobara",
     "lat": 36.9314,
     "lng": 140.02092,
-    "pref": "福島県",
+    "pref": "栃木県",
     "lines": [
       "tohoku-main",
       "shinkansen-tohoku"
@@ -49712,7 +49712,7 @@
     "en": "Ueno",
     "lat": 35.71377,
     "lng": 139.77636,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "tohoku-main",
       "shinkansen-tohoku",
@@ -49849,7 +49849,7 @@
     "en": "花泉",
     "lat": 38.83336,
     "lng": 141.18001,
-    "pref": "宮城県",
+    "pref": "岩手県",
     "lines": [
       "tohoku-main"
     ]
@@ -49921,7 +49921,7 @@
     "en": "清水原",
     "lat": 38.85495,
     "lng": 141.15646,
-    "pref": "宮城県",
+    "pref": "岩手県",
     "lines": [
       "tohoku-main"
     ]
@@ -49957,7 +49957,7 @@
     "en": "油島",
     "lat": 38.79711,
     "lng": 141.17571,
-    "pref": "宮城県",
+    "pref": "岩手県",
     "lines": [
       "tohoku-main"
     ]
@@ -50245,7 +50245,7 @@
     "en": "桑折",
     "lat": 37.85517,
     "lng": 140.5173,
-    "pref": "宮城県",
+    "pref": "福島県",
     "lines": [
       "tohoku-main"
     ]
@@ -50293,7 +50293,7 @@
     "en": "藤田",
     "lat": 37.87888,
     "lng": 140.53941,
-    "pref": "宮城県",
+    "pref": "福島県",
     "lines": [
       "tohoku-main"
     ]
@@ -50305,7 +50305,7 @@
     "en": "東福島",
     "lat": 37.79983,
     "lng": 140.47741,
-    "pref": "宮城県",
+    "pref": "福島県",
     "lines": [
       "tohoku-main"
     ]
@@ -50329,7 +50329,7 @@
     "en": "貝田",
     "lat": 37.90811,
     "lng": 140.58098,
-    "pref": "宮城県",
+    "pref": "福島県",
     "lines": [
       "tohoku-main"
     ]
@@ -50353,7 +50353,7 @@
     "en": "伊達",
     "lat": 37.82428,
     "lng": 140.49337,
-    "pref": "宮城県",
+    "pref": "福島県",
     "lines": [
       "tohoku-main"
     ]
@@ -50365,7 +50365,7 @@
     "en": "豊原",
     "lat": 37.05497,
     "lng": 140.15508,
-    "pref": "福島県",
+    "pref": "栃木県",
     "lines": [
       "tohoku-main"
     ]
@@ -50389,7 +50389,7 @@
     "en": "Kuroiso",
     "lat": 36.97012,
     "lng": 140.06015,
-    "pref": "福島県",
+    "pref": "栃木県",
     "lines": [
       "tohoku-main"
     ]
@@ -50473,7 +50473,7 @@
     "en": "南福島",
     "lat": 37.72381,
     "lng": 140.45585,
-    "pref": "宮城県",
+    "pref": "福島県",
     "lines": [
       "tohoku-main"
     ]
@@ -50497,7 +50497,7 @@
     "en": "黒田原",
     "lat": 37.02355,
     "lng": 140.12108,
-    "pref": "福島県",
+    "pref": "栃木県",
     "lines": [
       "tohoku-main"
     ]
@@ -50521,7 +50521,7 @@
     "en": "高久",
     "lat": 36.99651,
     "lng": 140.08735,
-    "pref": "福島県",
+    "pref": "栃木県",
     "lines": [
       "tohoku-main"
     ]
@@ -50569,7 +50569,7 @@
     "en": "Nishi-Nasuno",
     "lat": 36.88381,
     "lng": 139.98645,
-    "pref": "福島県",
+    "pref": "栃木県",
     "lines": [
       "tohoku-main"
     ]
@@ -50629,7 +50629,7 @@
     "en": "Koga",
     "lat": 36.19441,
     "lng": 139.70971,
-    "pref": "埼玉県",
+    "pref": "茨城県",
     "lines": [
       "tohoku-main"
     ]
@@ -50701,7 +50701,7 @@
     "en": "野崎",
     "lat": 36.84381,
     "lng": 139.9581,
-    "pref": "福島県",
+    "pref": "栃木県",
     "lines": [
       "tohoku-main"
     ]
@@ -50749,7 +50749,7 @@
     "en": "Yaita",
     "lat": 36.80662,
     "lng": 139.93296,
-    "pref": "福島県",
+    "pref": "栃木県",
     "lines": [
       "tohoku-main"
     ]
@@ -50773,7 +50773,7 @@
     "en": "Nishi-Nippori",
     "lat": 35.73218,
     "lng": 139.76672,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "tohoku-main"
     ]
@@ -50785,7 +50785,7 @@
     "en": "Oku",
     "lat": 35.74688,
     "lng": 139.75373,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "tohoku-main"
     ]
@@ -50797,7 +50797,7 @@
     "en": "Okachimachi",
     "lat": 35.7072,
     "lng": 139.77472,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "tohoku-main"
     ]
@@ -50809,7 +50809,7 @@
     "en": "Uguisudani",
     "lat": 35.72145,
     "lng": 139.77803,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "tohoku-main"
     ]
@@ -50821,7 +50821,7 @@
     "en": "Oji",
     "lat": 35.75233,
     "lng": 139.73821,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "tohoku-main"
     ]
@@ -50833,7 +50833,7 @@
     "en": "Kami-Nakazato",
     "lat": 35.74688,
     "lng": 139.74628,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "tohoku-main"
     ]
@@ -51051,7 +51051,7 @@
     "en": "Higashi-Jujo",
     "lat": 35.76382,
     "lng": 139.72673,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "tohoku-main"
     ]
@@ -51099,7 +51099,7 @@
     "en": "Ukima-Funado",
     "lat": 35.79125,
     "lng": 139.69149,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "tohoku-main"
     ]
@@ -51111,7 +51111,7 @@
     "en": "Kita-Akabane",
     "lat": 35.78696,
     "lng": 139.70582,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "tohoku-main"
     ]
@@ -51495,7 +51495,7 @@
     "en": "Tsudayama",
     "lat": 35.60365,
     "lng": 139.60072,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "nambu"
     ]
@@ -51507,7 +51507,7 @@
     "en": "Shukugawara",
     "lat": 35.61542,
     "lng": 139.57954,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "nambu"
     ]
@@ -51519,7 +51519,7 @@
     "en": "Musashi-Shinjo",
     "lat": 35.58742,
     "lng": 139.62909,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "nambu"
     ]
@@ -51531,7 +51531,7 @@
     "en": "Kuji",
     "lat": 35.61011,
     "lng": 139.59308,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "nambu"
     ]
@@ -51543,7 +51543,7 @@
     "en": "Musashi-Mizonokuchi",
     "lat": 35.59882,
     "lng": 139.61138,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "nambu"
     ]
@@ -51555,7 +51555,7 @@
     "en": "Shitte",
     "lat": 35.53098,
     "lng": 139.6843,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "nambu"
     ]
@@ -51567,7 +51567,7 @@
     "en": "Hirama",
     "lat": 35.56056,
     "lng": 139.67108,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "nambu"
     ]
@@ -51579,7 +51579,7 @@
     "en": "Yako",
     "lat": 35.53945,
     "lng": 139.68036,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "nambu"
     ]
@@ -51591,7 +51591,7 @@
     "en": "川崎新町",
     "lat": 35.51833,
     "lng": 139.69926,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": []
   },
   "st-cb875": {
@@ -51601,7 +51601,7 @@
     "en": "八丁畷",
     "lat": 35.52307,
     "lng": 139.69138,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": []
   },
   "mukaigawara": {
@@ -51611,7 +51611,7 @@
     "en": "Mukaigawara",
     "lat": 35.57217,
     "lng": 139.66729,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "nambu"
     ]
@@ -51623,7 +51623,7 @@
     "en": "Musashi-Kosugi",
     "lat": 35.57654,
     "lng": 139.66161,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "nambu"
     ]
@@ -51635,7 +51635,7 @@
     "en": "Kashimada",
     "lat": 35.55146,
     "lng": 139.67498,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "nambu"
     ]
@@ -51647,7 +51647,7 @@
     "en": "Musashi-Nakahara",
     "lat": 35.58056,
     "lng": 139.64214,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "nambu"
     ]
@@ -51671,7 +51671,7 @@
     "en": "Inadazutsumi",
     "lat": 35.63341,
     "lng": 139.53593,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "nambu"
     ]
@@ -51695,7 +51695,7 @@
     "en": "Nakanoshima",
     "lat": 35.63003,
     "lng": 139.55108,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "nambu"
     ]
@@ -51719,7 +51719,7 @@
     "en": "Noborito",
     "lat": 35.62072,
     "lng": 139.57021,
-    "pref": "東京都",
+    "pref": "神奈川県",
     "lines": [
       "nambu"
     ]
@@ -51864,7 +51864,7 @@
     "en": "大形",
     "lat": 37.91543,
     "lng": 139.12934,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "hakushin-line"
     ]
@@ -51876,7 +51876,7 @@
     "en": "佐々木",
     "lat": 37.9498,
     "lng": 139.26981,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "hakushin-line"
     ]
@@ -51888,7 +51888,7 @@
     "en": "東新潟",
     "lat": 37.90879,
     "lng": 139.10865,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "hakushin-line"
     ]
@@ -51900,7 +51900,7 @@
     "en": "豊栄",
     "lat": 37.91955,
     "lng": 139.21562,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "hakushin-line"
     ]
@@ -51912,7 +51912,7 @@
     "en": "黒山",
     "lat": 37.93728,
     "lng": 139.24139,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "hakushin-line"
     ]
@@ -51924,7 +51924,7 @@
     "en": "早通",
     "lat": 37.9211,
     "lng": 139.17817,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "hakushin-line"
     ]
@@ -51936,7 +51936,7 @@
     "en": "新崎",
     "lat": 37.92243,
     "lng": 139.15837,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "hakushin-line"
     ]
@@ -51948,7 +51948,7 @@
     "en": "西新発田",
     "lat": 37.94135,
     "lng": 139.30674,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "hakushin-line"
     ]
@@ -51984,7 +51984,7 @@
     "en": "種市",
     "lat": 40.41038,
     "lng": 141.71518,
-    "pref": "青森県",
+    "pref": "岩手県",
     "lines": [
       "hachinohe-line"
     ]
@@ -52008,7 +52008,7 @@
     "en": "陸中中野",
     "lat": 40.30507,
     "lng": 141.78775,
-    "pref": "青森県",
+    "pref": "岩手県",
     "lines": [
       "hachinohe-line"
     ]
@@ -52044,7 +52044,7 @@
     "en": "陸中夏井",
     "lat": 40.20767,
     "lng": 141.79198,
-    "pref": "青森県",
+    "pref": "岩手県",
     "lines": [
       "hachinohe-line"
     ]
@@ -52068,7 +52068,7 @@
     "en": "平内",
     "lat": 40.42558,
     "lng": 141.69923,
-    "pref": "青森県",
+    "pref": "岩手県",
     "lines": [
       "hachinohe-line"
     ]
@@ -52092,7 +52092,7 @@
     "en": "有家",
     "lat": 40.32405,
     "lng": 141.77309,
-    "pref": "青森県",
+    "pref": "岩手県",
     "lines": [
       "hachinohe-line"
     ]
@@ -52104,7 +52104,7 @@
     "en": "玉川",
     "lat": 40.38042,
     "lng": 141.73502,
-    "pref": "青森県",
+    "pref": "岩手県",
     "lines": [
       "hachinohe-line"
     ]
@@ -52116,7 +52116,7 @@
     "en": "宿戸",
     "lat": 40.36608,
     "lng": 141.74685,
-    "pref": "青森県",
+    "pref": "岩手県",
     "lines": [
       "hachinohe-line"
     ]
@@ -52128,7 +52128,7 @@
     "en": "陸中八木",
     "lat": 40.34537,
     "lng": 141.76671,
-    "pref": "青森県",
+    "pref": "岩手県",
     "lines": [
       "hachinohe-line"
     ]
@@ -52140,7 +52140,7 @@
     "en": "侍浜",
     "lat": 40.26161,
     "lng": 141.76059,
-    "pref": "青森県",
+    "pref": "岩手県",
     "lines": [
       "hachinohe-line"
     ]
@@ -52164,7 +52164,7 @@
     "en": "角の浜",
     "lat": 40.44446,
     "lng": 141.68176,
-    "pref": "青森県",
+    "pref": "岩手県",
     "lines": [
       "hachinohe-line"
     ]
@@ -52236,7 +52236,7 @@
     "en": "丹荘",
     "lat": 36.21648,
     "lng": 139.1026,
-    "pref": "群馬県",
+    "pref": "埼玉県",
     "lines": [
       "hachiko-line"
     ]
@@ -52332,7 +52332,7 @@
     "en": "箱根ヶ崎",
     "lat": 35.7717,
     "lng": 139.34673,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "hachiko-line"
     ]
@@ -52452,7 +52452,7 @@
     "en": "東福生",
     "lat": 35.74575,
     "lng": 139.33589,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "hachiko-line"
     ]
@@ -52488,7 +52488,7 @@
     "en": "森宮野原",
     "lat": 36.98945,
     "lng": 138.57745,
-    "pref": "新潟県",
+    "pref": "長野県",
     "lines": [
       "iiyama-line"
     ]
@@ -52512,7 +52512,7 @@
     "en": "上桑名川",
     "lat": 36.96294,
     "lng": 138.44142,
-    "pref": "新潟県",
+    "pref": "長野県",
     "lines": [
       "iiyama-line"
     ]
@@ -52524,7 +52524,7 @@
     "en": "西大滝",
     "lat": 36.97924,
     "lng": 138.48086,
-    "pref": "新潟県",
+    "pref": "長野県",
     "lines": [
       "iiyama-line"
     ]
@@ -52536,7 +52536,7 @@
     "en": "横倉",
     "lat": 36.9799,
     "lng": 138.55034,
-    "pref": "新潟県",
+    "pref": "長野県",
     "lines": [
       "iiyama-line"
     ]
@@ -52644,7 +52644,7 @@
     "en": "信濃白鳥",
     "lat": 36.9836,
     "lng": 138.50303,
-    "pref": "新潟県",
+    "pref": "長野県",
     "lines": [
       "iiyama-line"
     ]
@@ -52656,7 +52656,7 @@
     "en": "平滝",
     "lat": 36.98606,
     "lng": 138.53374,
-    "pref": "新潟県",
+    "pref": "長野県",
     "lines": [
       "iiyama-line"
     ]
@@ -52668,7 +52668,7 @@
     "en": "桑名川",
     "lat": 36.97591,
     "lng": 138.45795,
-    "pref": "新潟県",
+    "pref": "長野県",
     "lines": [
       "iiyama-line"
     ]
@@ -52692,7 +52692,7 @@
     "en": "豊野",
     "lat": 36.7116,
     "lng": 138.27661,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "iiyama-line"
     ]
@@ -52704,7 +52704,7 @@
     "en": "立ヶ花",
     "lat": 36.7313,
     "lng": 138.30699,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "iiyama-line"
     ]
@@ -52716,7 +52716,7 @@
     "en": "上境",
     "lat": 36.93798,
     "lng": 138.41905,
-    "pref": "新潟県",
+    "pref": "長野県",
     "lines": [
       "iiyama-line"
     ]
@@ -52728,7 +52728,7 @@
     "en": "替佐",
     "lat": 36.7693,
     "lng": 138.32414,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "iiyama-line"
     ]
@@ -52740,7 +52740,7 @@
     "en": "戸狩野沢温泉",
     "lat": 36.91666,
     "lng": 138.39294,
-    "pref": "新潟県",
+    "pref": "長野県",
     "lines": [
       "iiyama-line"
     ]
@@ -52752,7 +52752,7 @@
     "en": "北飯山",
     "lat": 36.85882,
     "lng": 138.36386,
-    "pref": "新潟県",
+    "pref": "長野県",
     "lines": [
       "iiyama-line"
     ]
@@ -52764,7 +52764,7 @@
     "en": "蓮",
     "lat": 36.80884,
     "lng": 138.34917,
-    "pref": "新潟県",
+    "pref": "長野県",
     "lines": [
       "iiyama-line"
     ]
@@ -52776,7 +52776,7 @@
     "en": "信濃平",
     "lat": 36.885,
     "lng": 138.37851,
-    "pref": "新潟県",
+    "pref": "長野県",
     "lines": [
       "iiyama-line"
     ]
@@ -52788,7 +52788,7 @@
     "en": "上今井",
     "lat": 36.75335,
     "lng": 138.31949,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "iiyama-line"
     ]
@@ -52800,7 +52800,7 @@
     "en": "飯山",
     "lat": 36.8455,
     "lng": 138.35874,
-    "pref": "新潟県",
+    "pref": "長野県",
     "lines": [
       "shinkansen-hokuriku",
       "iiyama-line"
@@ -52813,7 +52813,7 @@
     "en": "信濃浅野",
     "lat": 36.72177,
     "lng": 138.2945,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "iiyama-line"
     ]
@@ -53077,7 +53077,7 @@
     "en": "北五泉",
     "lat": 37.74681,
     "lng": 139.16966,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "banetsu-west"
     ]
@@ -53089,7 +53089,7 @@
     "en": "新関",
     "lat": 37.76823,
     "lng": 139.16239,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "banetsu-west"
     ]
@@ -53101,7 +53101,7 @@
     "en": "東下条",
     "lat": 37.73671,
     "lng": 139.32198,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "banetsu-west"
     ]
@@ -53137,7 +53137,7 @@
     "en": "五十島",
     "lat": 37.71592,
     "lng": 139.35346,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "banetsu-west"
     ]
@@ -53149,7 +53149,7 @@
     "en": "日出谷",
     "lat": 37.70572,
     "lng": 139.534,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "banetsu-west"
     ]
@@ -53161,7 +53161,7 @@
     "en": "三川",
     "lat": 37.7084,
     "lng": 139.38149,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "banetsu-west"
     ]
@@ -53173,7 +53173,7 @@
     "en": "馬下",
     "lat": 37.7376,
     "lng": 139.26037,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "banetsu-west"
     ]
@@ -53197,7 +53197,7 @@
     "en": "五泉",
     "lat": 37.73435,
     "lng": 139.17978,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "banetsu-west"
     ]
@@ -53245,7 +53245,7 @@
     "en": "東新津",
     "lat": 37.78773,
     "lng": 139.14359,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "banetsu-west"
     ]
@@ -53269,7 +53269,7 @@
     "en": "猿和田",
     "lat": 37.72963,
     "lng": 139.22236,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "banetsu-west"
     ]
@@ -53281,7 +53281,7 @@
     "en": "咲花",
     "lat": 37.73501,
     "lng": 139.2909,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "banetsu-west"
     ]
@@ -53461,7 +53461,7 @@
     "en": "Higashi-Matsudo",
     "lat": 35.77076,
     "lng": 139.94378,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "musashino"
     ]
@@ -53473,7 +53473,7 @@
     "en": "Funabashihoten",
     "lat": 35.73052,
     "lng": 139.9667,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "musashino"
     ]
@@ -53485,7 +53485,7 @@
     "en": "Ichikawaono",
     "lat": 35.75541,
     "lng": 139.95129,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "musashino"
     ]
@@ -53497,7 +53497,7 @@
     "en": "Shin-Yahashira",
     "lat": 35.79129,
     "lng": 139.93855,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "musashino"
     ]
@@ -53533,7 +53533,7 @@
     "en": "Minami-Nagareyama",
     "lat": 35.83785,
     "lng": 139.90424,
-    "pref": "埼玉県",
+    "pref": "千葉県",
     "lines": [
       "musashino"
     ]
@@ -53629,7 +53629,7 @@
     "en": "Shin-Akitsu",
     "lat": 35.77831,
     "lng": 139.49375,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "musashino"
     ]
@@ -53653,7 +53653,7 @@
     "en": "Shin-Kodaira",
     "lat": 35.73094,
     "lng": 139.47052,
-    "pref": "埼玉県",
+    "pref": "東京都",
     "lines": [
       "musashino"
     ]
@@ -53845,7 +53845,7 @@
     "en": "越後大島",
     "lat": 38.09966,
     "lng": 139.51833,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "yonesaka-line"
     ]
@@ -53857,7 +53857,7 @@
     "en": "越後下関",
     "lat": 38.08999,
     "lng": 139.56015,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "yonesaka-line"
     ]
@@ -53869,7 +53869,7 @@
     "en": "越後片貝",
     "lat": 38.07077,
     "lng": 139.62242,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "yonesaka-line"
     ]
@@ -53881,7 +53881,7 @@
     "en": "越後金丸",
     "lat": 38.06651,
     "lng": 139.66354,
-    "pref": "山形県",
+    "pref": "新潟県",
     "lines": [
       "yonesaka-line"
     ]
@@ -54061,7 +54061,7 @@
     "en": "Karuizawa",
     "lat": 36.3426,
     "lng": 138.63492,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinkansen-hokuriku"
     ]
@@ -54073,7 +54073,7 @@
     "en": "上田",
     "lat": 36.39615,
     "lng": 138.25024,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinkansen-hokuriku"
     ]
@@ -54085,7 +54085,7 @@
     "en": "Nagano",
     "lat": 36.64294,
     "lng": 138.18906,
-    "pref": "群馬県",
+    "pref": "長野県",
     "lines": [
       "shinkansen-hokuriku",
       "shinonoi-line"
@@ -54374,7 +54374,7 @@
     "en": "堺田",
     "lat": 38.73556,
     "lng": 140.61278,
-    "pref": "宮城県",
+    "pref": "山形県",
     "lines": [
       "rikuuto-line"
     ]
@@ -54386,7 +54386,7 @@
     "en": "立小路",
     "lat": 38.74202,
     "lng": 140.54271,
-    "pref": "宮城県",
+    "pref": "山形県",
     "lines": [
       "rikuuto-line"
     ]
@@ -54422,7 +54422,7 @@
     "en": "赤倉温泉",
     "lat": 38.73054,
     "lng": 140.55357,
-    "pref": "宮城県",
+    "pref": "山形県",
     "lines": [
       "rikuuto-line"
     ]
@@ -54434,7 +54434,7 @@
     "en": "大堀",
     "lat": 38.76595,
     "lng": 140.4754,
-    "pref": "宮城県",
+    "pref": "山形県",
     "lines": [
       "rikuuto-line"
     ]
@@ -54458,7 +54458,7 @@
     "en": "鵜杉",
     "lat": 38.76493,
     "lng": 140.45367,
-    "pref": "宮城県",
+    "pref": "山形県",
     "lines": [
       "rikuuto-line"
     ]
@@ -54470,7 +54470,7 @@
     "en": "最上",
     "lat": 38.75592,
     "lng": 140.51765,
-    "pref": "宮城県",
+    "pref": "山形県",
     "lines": [
       "rikuuto-line"
     ]
@@ -54494,7 +54494,7 @@
     "en": "瀬見温泉",
     "lat": 38.75513,
     "lng": 140.41963,
-    "pref": "宮城県",
+    "pref": "山形県",
     "lines": [
       "rikuuto-line"
     ]
@@ -54614,7 +54614,7 @@
     "en": "Kiryu",
     "lat": 36.4111,
     "lng": 139.33326,
-    "pref": "栃木県",
+    "pref": "群馬県",
     "lines": [
       "ryomo-line"
     ]
@@ -54626,7 +54626,7 @@
     "en": "岩宿",
     "lat": 36.39591,
     "lng": 139.29715,
-    "pref": "栃木県",
+    "pref": "群馬県",
     "lines": [
       "ryomo-line"
     ]
@@ -54722,7 +54722,7 @@
     "en": "国定",
     "lat": 36.35901,
     "lng": 139.24245,
-    "pref": "栃木県",
+    "pref": "群馬県",
     "lines": [
       "ryomo-line"
     ]
@@ -58616,7 +58616,7 @@
     "en": "さくら夙川",
     "lat": 34.73903,
     "lng": 135.33127,
-    "pref": "大阪府",
+    "pref": "兵庫県",
     "lines": [
       "tokaido-west"
     ]
@@ -58818,7 +58818,7 @@
     "en": "和木",
     "lat": 34.20406,
     "lng": 132.22771,
-    "pref": "広島県",
+    "pref": "山口県",
     "lines": [
       "sanyo-main"
     ]
@@ -58830,7 +58830,7 @@
     "en": "島本",
     "lat": 34.88037,
     "lng": 135.6625,
-    "pref": "京都府",
+    "pref": "大阪府",
     "lines": [
       "tokaido-west"
     ]
@@ -58842,7 +58842,7 @@
     "en": "婦中鵜坂",
     "lat": 36.67781,
     "lng": 137.16862,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "takayama-west"
     ]
@@ -58866,7 +58866,7 @@
     "en": "小村神社前",
     "lat": 33.53983,
     "lng": 133.39268,
-    "pref": "愛媛県",
+    "pref": "高知県",
     "lines": [
       "shikoku-dosan"
     ]
@@ -58926,7 +58926,7 @@
     "en": "新鳥栖",
     "lat": 33.37021,
     "lng": 130.49123,
-    "pref": "福岡県",
+    "pref": "佐賀県",
     "lines": [
       "shinkansen-kyushu",
       "kyushu-nagasaki"
@@ -59073,7 +59073,7 @@
     "en": "黒部宇奈月温泉",
     "lat": 36.87406,
     "lng": 137.48113,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "shinkansen-hokuriku"
     ]
@@ -59085,7 +59085,7 @@
     "en": "新高岡",
     "lat": 36.727,
     "lng": 137.01113,
-    "pref": "群馬県",
+    "pref": "富山県",
     "lines": [
       "shinkansen-hokuriku",
       "johana-line"
@@ -59098,7 +59098,7 @@
     "en": "Kanazawa",
     "lat": 36.57792,
     "lng": 136.64805,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "shinkansen-hokuriku"
     ]
@@ -59122,7 +59122,7 @@
     "en": "新白島",
     "lat": 34.4085,
     "lng": 132.46104,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -59182,7 +59182,7 @@
     "en": "小田栄",
     "lat": 35.51442,
     "lng": 139.70508,
-    "pref": "千葉県",
+    "pref": "神奈川県",
     "lines": []
   },
   "st-flimt": {
@@ -59204,7 +59204,7 @@
     "en": "摩耶",
     "lat": 34.70852,
     "lng": 135.22475,
-    "pref": "大阪府",
+    "pref": "兵庫県",
     "lines": [
       "tokaido-west"
     ]
@@ -59240,7 +59240,7 @@
     "en": "あき亀山",
     "lat": 34.5172,
     "lng": 132.49623,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kabe-line"
     ]
@@ -59252,7 +59252,7 @@
     "en": "河戸帆待川",
     "lat": 34.51668,
     "lng": 132.50517,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "kabe-line"
     ]
@@ -59276,7 +59276,7 @@
     "en": "寺家",
     "lat": 34.43953,
     "lng": 132.72265,
-    "pref": "島根県",
+    "pref": "広島県",
     "lines": [
       "sanyo-main"
     ]
@@ -59288,7 +59288,7 @@
     "en": "JR総持寺",
     "lat": 34.82852,
     "lng": 135.57767,
-    "pref": "京都府",
+    "pref": "大阪府",
     "lines": [
       "tokaido-west"
     ]
@@ -59418,7 +59418,7 @@
     "en": "Takanawa Gateway",
     "lat": 35.63538,
     "lng": 139.74064,
-    "pref": "千葉県",
+    "pref": "東京都",
     "lines": [
       "tokaido"
     ]
@@ -59563,7 +59563,7 @@
     "en": "加賀温泉",
     "lat": 36.3203,
     "lng": 136.35081,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "shinkansen-hokuriku"
     ]
@@ -59575,7 +59575,7 @@
     "en": "芦原温泉",
     "lat": 36.21543,
     "lng": 136.23536,
-    "pref": "群馬県",
+    "pref": "福井県",
     "lines": [
       "shinkansen-hokuriku"
     ]
@@ -59587,7 +59587,7 @@
     "en": "福井",
     "lat": 36.06165,
     "lng": 136.22338,
-    "pref": "岐阜県",
+    "pref": "福井県",
     "lines": [
       "shinkansen-hokuriku"
     ]
@@ -59599,7 +59599,7 @@
     "en": "小松",
     "lat": 36.40234,
     "lng": 136.4531,
-    "pref": "群馬県",
+    "pref": "石川県",
     "lines": [
       "shinkansen-hokuriku"
     ]
