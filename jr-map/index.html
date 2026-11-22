@@ -139,6 +139,11 @@
             </div>
           </div>
 
+          <!-- 発着入れ替えボタン -->
+          <div class="route-swap-row">
+            <button type="button" id="btn-swap-stations" class="btn-swap-stations" title="発駅と着駅を入れ替え" aria-label="発駅と着駅を入れ替え" tabindex="-1">⇅</button>
+          </div>
+
           <!-- 経由駅リスト (動的・ドラッグ並び替え対応) -->
           <div id="route-via-container" class="route-via-container">
             <!-- 動的経由駅アイテム -->
@@ -170,7 +175,7 @@
 
           <div class="route-options">
             <label class="route-checkbox-label">
-              <input type="checkbox" id="chk-use-shinkansen" checked>
+              <input type="checkbox" id="chk-use-shinkansen">
               <span>新幹線利用</span>
             </label>
             <button type="button" id="btn-toggle-shinkansen-segments" class="btn-text-action">特定区間新幹線指定 ▼</button>
@@ -217,7 +222,7 @@
 
         <!-- 探索結果表示エリア -->
         <div id="route-result-container" class="route-result-container" style="display: none;">
-          <!-- 券面操作バー（運賃種別切替・乗車日・券種モード） -->
+          <!-- 券面操作バー（運賃種別切替・乗車日） -->
           <div class="ticket-control-bar">
             <div class="fare-type-group" id="fare-type-group">
               <button type="button" class="fare-type-btn active" data-type="adult" id="btn-fare-adult">大人</button>
@@ -227,11 +232,6 @@
             <div class="ticket-date-wrapper">
               <label for="ticket-date-input" class="ticket-date-label">乗車日</label>
               <input type="date" id="ticket-date-input" class="ticket-date-input">
-            </div>
-            <div class="ticket-size-toggle" id="ticket-size-toggle">
-              <button type="button" class="size-btn active" data-size="auto" id="btn-size-auto" title="自動判定">自動</button>
-              <button type="button" class="size-btn" data-size="85" id="btn-size-85" title="85mm券強制">85mm</button>
-              <button type="button" class="size-btn" data-size="120" id="btn-size-120" title="120mm券強制">120mm</button>
             </div>
           </div>
 
@@ -245,10 +245,7 @@
                     <span class="company-symbol-badge" id="ticket-company-symbol">[東]</span>
                     <span class="ticket-title" id="ticket-type-label">乗　車　券</span>
                     <span class="student-symbol-badge" id="ticket-student-badge" style="display: none;">学割</span>
-                  </div>
-                  <div class="ticket-header-right">
-                    <span class="ticket-size-indicator" id="ticket-size-indicator">85mm券</span>
-                    <span class="gate-symbol" id="ticket-gate-symbol" title="自動改札対応">□</span>
+                    <span class="child-symbol-badge" id="ticket-child-badge" style="display: none;">小</span>
                   </div>
                 </div>
 
@@ -259,8 +256,7 @@
                     <span class="station-sub-text" id="ticket-dept-sub" style="display: none;"></span>
                   </div>
                   <div class="ticket-arrow-wrapper">
-                    <span class="ticket-arrow-symbol">→</span>
-                    <span class="child-symbol-badge" id="ticket-child-badge" style="display: none;">小</span>
+                    <span class="ticket-arrow-symbol">──→</span>
                   </div>
                   <div class="station-box dest-box">
                     <span class="station-print-name" id="ticket-dest-name">新宿</span>
@@ -278,54 +274,54 @@
                 <div class="ticket-bottom-row">
                   <div class="ticket-bottom-left">
                     <div class="validity-date-line" id="ticket-validity-text">発売当日限り有効</div>
-                    <div class="stopover-line" id="ticket-stopover-text">下車前途無効</div>
+                    <div class="stopover-line" id="ticket-stopover-text" style="display: none;">下車前途無効</div>
                     <div class="ticket-student-note" id="ticket-student-note" style="display: none;"></div>
                   </div>
                   <div class="ticket-bottom-right">
                     <div class="fare-currency">￥<span class="fare-amount" id="ticket-base-fare">260</span></div>
-                    <div class="fare-tax-note">（入鋏省略）</div>
                   </div>
                 </div>
 
-                <!-- マルス券面フッター飾り -->
+                <!-- マルス券面フッター (発売日のみ) -->
                 <div class="ticket-meta-footer">
                   <span class="ticket-issue-date" id="ticket-issue-date">2026.-3.14</span>
-                  <span class="ticket-issue-station" id="ticket-issue-station">東京駅＃１</span>
-                  <span class="ticket-serial">（２-タ）</span>
-                  <span class="ticket-status-badge" id="route-validity-badge">一筆書き成立</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- 券面下部アクションバー (コピー・通知) -->
-          <div class="ticket-action-bar">
-            <button type="button" class="btn-copy-ticket" id="btn-copy-ticket">券面テキストコピー</button>
-            <span id="copy-toast" class="copy-toast" style="display: none;">コピー完了</span>
-          </div>
 
-          <!-- 運賃計算・適用特例内訳カード -->
-          <div class="fare-details-card" id="fare-details-card">
-            <div class="fare-details-header">
-              <span class="details-title">運賃計算・適用特例内訳</span>
-              <span class="mars-count-pill" id="ticket-mars-count-badge">4 / 16 経路 (マルス可)</span>
+          <!-- きっぷ詳細・内訳カード (統合) -->
+          <div class="ticket-summary-card" id="ticket-summary-card">
+            <!-- トップバー (ステータスバッジ群 + コピーボタン) -->
+            <div class="summary-top-bar">
+              <div class="summary-badge-group">
+                <span class="ticket-status-badge" id="route-validity-badge">一筆書き成立</span>
+                <span class="ticket-gate-badge" id="ticket-gate-badge">85mm券 / 自動改札可</span>
+                <span class="mars-count-pill" id="ticket-mars-count-badge">1 / 16 経路</span>
+              </div>
+              <div class="summary-action-group">
+                <button type="button" class="btn-copy-ticket" id="btn-copy-ticket" aria-label="券面テキストコピー">コピー</button>
+                <span id="copy-toast" class="copy-toast" style="display: none;">コピー完了</span>
+              </div>
             </div>
-            <div class="fare-specs-grid">
-              <div class="spec-item">
-                <span class="spec-label">実営業キロ</span>
-                <span class="spec-val" id="spec-actual-km">10.3 km</span>
+            <!-- 数値グリッド (2列×2行) -->
+            <div class="summary-specs-grid">
+              <div class="summary-spec-item">
+                <span class="summary-spec-label">営業キロ</span>
+                <span class="summary-spec-val" id="spec-actual-km">0.0 km</span>
               </div>
-              <div class="spec-item" id="spec-fare-km-item">
-                <span class="spec-label">運賃計算キロ</span>
-                <span class="spec-val" id="spec-fare-km">10.3 km</span>
+              <div class="summary-spec-item" id="spec-fare-km-item">
+                <span class="summary-spec-label">運賃計算キロ</span>
+                <span class="summary-spec-val" id="spec-fare-km">0.0 km</span>
               </div>
-              <div class="spec-item" id="spec-lines-breakdown-item" style="display: none;">
-                <span class="spec-label">路線区分</span>
-                <span class="spec-val" id="spec-lines-breakdown">幹線 0km / 地通 0km</span>
+              <div class="summary-spec-item" id="spec-lines-breakdown-item">
+                <span class="summary-spec-label">路線区分</span>
+                <span class="summary-spec-val" id="spec-lines-breakdown">幹線のみ</span>
               </div>
-              <div class="spec-item">
-                <span class="spec-label">会社別営業キロ</span>
-                <span class="spec-val" id="spec-company-km">東: 10.3km</span>
+              <div class="summary-spec-item" id="spec-company-km-item">
+                <span class="summary-spec-label">会社別営業キロ</span>
+                <span class="summary-spec-val" id="spec-company-km">-</span>
               </div>
             </div>
             <!-- 適用特例タグ群 -->

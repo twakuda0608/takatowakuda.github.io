@@ -1895,15 +1895,14 @@
   // =======================================================
   const ROUTE_STATE = {
     isOpen: false,
-    useShinkansen: true,
+    useShinkansen: false,
     searchMode: 'shortest',
     shinkansenSegments: [], // [{ fromId, toId, fromName, toName, km, lineId }]
     activeRouteLayers: [],
     activePinLayers: [],
     lastResult: null,
     currentFareType: 'adult',    // 'adult' | 'child' | 'student'
-    ticketDate: getLocalISODate(),
-    ticketSizeMode: 'auto'       // 'auto' | '85' | '120'
+    ticketDate: getLocalISODate()
   };
 
   // 全国の主要デフォルト新幹線区間 (初期状態または非該当時用)
@@ -2167,107 +2166,35 @@
     return null;
   }
 
-  // ルートから関連する新幹線候補ペアを全国動的に抽出 (O(1) 高速版)
+  // ルートから関連する新幹線候補ペアを動的に抽出 (ルート外駅の混入を完全防止)
   function getRelevantShinkansenPairs(explicitDeptSt, explicitDestSt) {
-    const passedStationIds = [];
-    const addPassedId = (id) => {
-      if (id && !passedStationIds.includes(id)) passedStationIds.push(id);
+    const isShinkansenStation = (id) => {
+      if (!id || !STATIONS[id]) return false;
+      const st = STATIONS[id];
+      return !!(st.lines && st.lines.some(l => l.startsWith('shinkansen-')));
     };
 
-    if (explicitDeptSt) addPassedId(typeof explicitDeptSt === 'string' ? explicitDeptSt : explicitDeptSt.id);
-    if (explicitDestSt) addPassedId(typeof explicitDestSt === 'string' ? explicitDestSt : explicitDestSt.id);
-
-    // 1. 発着駅・経由駅
-    const deptInput = document.getElementById('route-dept-input');
-    const destInput = document.getElementById('route-dest-input');
-    if (deptInput && deptInput.getAttribute('data-id')) addPassedId(deptInput.getAttribute('data-id'));
-    document.querySelectorAll('.route-via-input').forEach(inp => {
-      if (inp.getAttribute('data-id')) addPassedId(inp.getAttribute('data-id'));
-    });
-    if (destInput && destInput.getAttribute('data-id')) addPassedId(destInput.getAttribute('data-id'));
-
-    // 入力値の名前からも検索
-    if (deptInput && deptInput.value.trim()) {
-      const st = findStationByName(deptInput.value.trim());
-      if (st) addPassedId(st.id);
-    }
-    document.querySelectorAll('.route-via-input').forEach(inp => {
-      if (inp.value && inp.value.trim()) {
-        const st = findStationByName(inp.value.trim());
-        if (st) addPassedId(st.id);
-      }
-    });
-    if (destInput && destInput.value.trim()) {
-      const st = findStationByName(destInput.value.trim());
-      if (st) addPassedId(st.id);
-    }
-
-    // 2. 直近の探索結果
-    if (ROUTE_STATE.lastResult) {
-      if (ROUTE_STATE.lastResult.allStationIds) {
-        ROUTE_STATE.lastResult.allStationIds.forEach(id => addPassedId(id));
-      }
-      if (ROUTE_STATE.lastResult.sections) {
-        ROUTE_STATE.lastResult.sections.forEach(sec => {
-          if (sec.from) addPassedId(sec.from);
-          if (sec.to) addPassedId(sec.to);
-        });
-      }
-    }
-
-    if (passedStationIds.length === 0) {
-      return DEFAULT_SHINKANSEN_PAIRS;
-    }
-
-    // 新幹線駅の抽出（発着・経由駅を最優先）
-    const priorityShIds = [];
-    const otherShIds = [];
-    const addShId = (stId, isPriority) => {
-      if (!stId || !STATIONS[stId]) return;
-      const st = STATIONS[stId];
-      const isSh = st.lines && st.lines.some(l => l.startsWith('shinkansen-'));
-      if (isSh) {
-        if (isPriority && !priorityShIds.includes(stId)) {
-          priorityShIds.push(stId);
-        } else if (!isPriority && !priorityShIds.includes(stId) && !otherShIds.includes(stId)) {
-          otherShIds.push(stId);
-        }
-      }
-    };
-
-    // 発着駅・経由駅およびその対応新幹線駅を高優先度として登録
-    const endStationIds = [];
-    if (explicitDeptSt) endStationIds.push(typeof explicitDeptSt === 'string' ? explicitDeptSt : explicitDeptSt.id);
-    if (explicitDestSt) endStationIds.push(typeof explicitDestSt === 'string' ? explicitDestSt : explicitDestSt.id);
-    if (deptInput && deptInput.getAttribute('data-id')) endStationIds.push(deptInput.getAttribute('data-id'));
-    if (destInput && destInput.getAttribute('data-id')) endStationIds.push(destInput.getAttribute('data-id'));
-
-    endStationIds.forEach(id => {
-      addShId(id, true);
-      const mapped = CITY_HUB_TO_SHINKANSEN[id];
-      if (mapped) mapped.forEach(mid => addShId(mid, true));
-    });
-
-    // その他の通過駅
-    passedStationIds.forEach(id => {
-      if (!endStationIds.includes(id)) {
-        addShId(id, false);
-        const mapped = CITY_HUB_TO_SHINKANSEN[id];
-        if (mapped) mapped.forEach(mid => addShId(mid, false));
-      }
-    });
-
-    const shinkansenStationIds = [...priorityShIds, ...otherShIds];
     const candidates = [];
     const seenPairs = new Set();
 
-    // 高優先駅同士のペアを最優先で探索
-    const searchPairs = (idsList) => {
-      for (let i = 0; i < idsList.length; i++) {
-        for (let j = 0; j < idsList.length; j++) {
-          if (i === j) continue;
-          const fromId = idsList[i];
-          const toId = idsList[j];
+    // 1. 探索後: lastResult のルート通過駅（allStationIds）のみを対象とする
+    if (ROUTE_STATE.lastResult && ROUTE_STATE.lastResult.allStationIds) {
+      const routeStationIds = ROUTE_STATE.lastResult.allStationIds;
+      const shInRoute = [];
+      const seenSh = new Set();
+
+      routeStationIds.forEach(id => {
+        if (isShinkansenStation(id) && !seenSh.has(id)) {
+          seenSh.add(id);
+          shInRoute.push(id);
+        }
+      });
+
+      // ルート出現順序 (i < j) で新幹線区間をペア化
+      for (let i = 0; i < shInRoute.length; i++) {
+        for (let j = i + 1; j < shInRoute.length; j++) {
+          const fromId = shInRoute[i];
+          const toId = shInRoute[j];
           const pairKey = [fromId, toId].sort().join('--');
           if (seenPairs.has(pairKey)) continue;
 
@@ -2283,46 +2210,166 @@
               line: shDist.line,
               lineId: shDist.lineId
             });
-            if (candidates.length >= 8) return;
+            if (candidates.length >= 8) break;
+          }
+        }
+        if (candidates.length >= 8) break;
+      }
+
+      // 選択中セグメントの解除用保持 (候補にない場合も追加)
+      if (ROUTE_STATE.shinkansenSegments && ROUTE_STATE.shinkansenSegments.length > 0) {
+        ROUTE_STATE.shinkansenSegments.forEach(seg => {
+          const pairKey = [seg.fromId, seg.toId].sort().join('--');
+          if (!seenPairs.has(pairKey)) {
+            seenPairs.add(pairKey);
+            candidates.unshift({
+              from: seg.fromName || (STATIONS[seg.fromId] ? STATIONS[seg.fromId].name : seg.fromId),
+              to: seg.toName || (STATIONS[seg.toId] ? STATIONS[seg.toId].name : seg.toId),
+              fromId: seg.fromId,
+              toId: seg.toId,
+              km: seg.km || 0,
+              line: seg.line,
+              lineId: seg.lineId
+            });
+          }
+        });
+      }
+
+      return candidates;
+    }
+
+    // 2. 探索前 (入力中): 発着・経由駅の在来線最短経路上の新幹線停車駅のみを抽出
+    const deptInput = document.getElementById('route-dept-input');
+    const destInput = document.getElementById('route-dest-input');
+
+    const deptSt = explicitDeptSt ? (typeof explicitDeptSt === 'string' ? STATIONS[explicitDeptSt] : explicitDeptSt) : resolveStation(deptInput);
+    const destSt = explicitDestSt ? (typeof explicitDestSt === 'string' ? STATIONS[explicitDestSt] : explicitDestSt) : resolveStation(destInput);
+
+    const viaInputs = document.querySelectorAll('.route-via-input');
+    const viaSts = [];
+    viaInputs.forEach(inp => {
+      const st = resolveStation(inp);
+      if (st) viaSts.push(st);
+    });
+
+    const inputChain = [deptSt, ...viaSts, destSt].filter(Boolean);
+
+    // 未入力時はデフォルト候補
+    if (inputChain.length === 0) {
+      return DEFAULT_SHINKANSEN_PAIRS;
+    }
+
+    // 1駅のみ新幹線駅が入力されている場合 (例: 発駅が東京)
+    if (inputChain.length === 1) {
+      const singleSt = inputChain[0];
+      if (isShinkansenStation(singleSt.id)) {
+        const hubs = ['tokyo', 'shin-osaka', 'sendai', 'kanazawa', 'hakata', 'nagoya', 'hiroshima', 'morioka'];
+        for (const hubId of hubs) {
+          if (hubId === singleSt.id || !STATIONS[hubId]) continue;
+          const pairKey = [singleSt.id, hubId].sort().join('--');
+          if (seenPairs.has(pairKey)) continue;
+          const shDist = calcShinkansenDistance(singleSt.id, hubId);
+          if (shDist && shDist.km > 0) {
+            seenPairs.add(pairKey);
+            candidates.push({
+              from: singleSt.name,
+              to: STATIONS[hubId].name,
+              fromId: singleSt.id,
+              toId: hubId,
+              km: shDist.km,
+              line: shDist.line,
+              lineId: shDist.lineId
+            });
+            if (candidates.length >= 4) break;
           }
         }
       }
-    };
-
-    if (priorityShIds.length >= 2) {
-      searchPairs(priorityShIds);
-    }
-    if (candidates.length < 8 && shinkansenStationIds.length >= 2) {
-      searchPairs(shinkansenStationIds);
+      return candidates.length > 0 ? candidates : DEFAULT_SHINKANSEN_PAIRS;
     }
 
-    // 候補が0件で1駅だけ新幹線駅がある場合、主要ハブとのペアを提案
-    if (candidates.length === 0 && shinkansenStationIds.length === 1) {
-      const singleId = shinkansenStationIds[0];
-      const singleSt = STATIONS[singleId];
-      const hubs = ['tokyo', 'ueno', 'omiya', 'sendai', 'morioka', 'shin-osaka', 'nagoya', 'hakata', 'kanazawa', 'takasaki', 'okayama', 'hiroshima'];
-      for (const hubId of hubs) {
-        if (hubId === singleId || !STATIONS[hubId]) continue;
-        const pairKey = [singleId, hubId].sort().join('--');
+    // 2駅以上入力されている場合: 各レグの在来線最短経路を調べて通過する新幹線駅のみを収集
+    const passedShIds = [];
+    const seenPassedSh = new Set();
+
+    for (let k = 0; k < inputChain.length - 1; k++) {
+      const u = inputChain[k];
+      const v = inputChain[k + 1];
+
+      if (isShinkansenStation(u.id) && !seenPassedSh.has(u.id)) {
+        seenPassedSh.add(u.id);
+        passedShIds.push(u.id);
+      }
+
+      if (window.JR_ROUTE_ENGINE && ROUTE_ENGINE_GRAPH && u.id !== v.id) {
+        try {
+          const leg = window.JR_ROUTE_ENGINE.findLeg(
+            ROUTE_ENGINE_GRAPH,
+            u.id,
+            v.id,
+            { allowShinkansen: false }
+          );
+          if (leg && Array.isArray(leg)) {
+            leg.forEach(step => {
+              if (step && step.to && isShinkansenStation(step.to) && !seenPassedSh.has(step.to)) {
+                seenPassedSh.add(step.to);
+                passedShIds.push(step.to);
+              }
+            });
+          }
+        } catch (e) {}
+      }
+
+      if (isShinkansenStation(v.id) && !seenPassedSh.has(v.id)) {
+        seenPassedSh.add(v.id);
+        passedShIds.push(v.id);
+      }
+    }
+
+    for (let i = 0; i < passedShIds.length; i++) {
+      for (let j = i + 1; j < passedShIds.length; j++) {
+        const fromId = passedShIds[i];
+        const toId = passedShIds[j];
+        const pairKey = [fromId, toId].sort().join('--');
         if (seenPairs.has(pairKey)) continue;
-        const shDist = calcShinkansenDistance(singleId, hubId);
+
+        const shDist = calcShinkansenDistance(fromId, toId);
         if (shDist && shDist.km > 0) {
           seenPairs.add(pairKey);
           candidates.push({
-            from: singleSt.name,
-            to: STATIONS[hubId].name,
-            fromId: singleId,
-            toId: hubId,
+            from: STATIONS[fromId].name,
+            to: STATIONS[toId].name,
+            fromId: fromId,
+            toId: toId,
             km: shDist.km,
             line: shDist.line,
             lineId: shDist.lineId
           });
-          if (candidates.length >= 4) break;
+          if (candidates.length >= 8) break;
         }
       }
+      if (candidates.length >= 8) break;
     }
 
-    return candidates.length > 0 ? candidates.slice(0, 8) : DEFAULT_SHINKANSEN_PAIRS;
+    // 選択中セグメントの解除用保持
+    if (ROUTE_STATE.shinkansenSegments && ROUTE_STATE.shinkansenSegments.length > 0) {
+      ROUTE_STATE.shinkansenSegments.forEach(seg => {
+        const pairKey = [seg.fromId, seg.toId].sort().join('--');
+        if (!seenPairs.has(pairKey)) {
+          seenPairs.add(pairKey);
+          candidates.unshift({
+            from: seg.fromName || (STATIONS[seg.fromId] ? STATIONS[seg.fromId].name : seg.fromId),
+            to: seg.toName || (STATIONS[seg.toId] ? STATIONS[seg.toId].name : seg.toId),
+            fromId: seg.fromId,
+            toId: seg.toId,
+            km: seg.km || 0,
+            line: seg.line,
+            lineId: seg.lineId
+          });
+        }
+      });
+    }
+
+    return candidates;
   }
 
   // ルート連動の新幹線候補チップを描画 (向き反転ボタン ⇄ 完備)
@@ -2480,6 +2527,28 @@
       markInputChanged();
     }, () => getDeptStation());
 
+    // 発着駅入れ替えボタン (⇅)
+    const swapStationsBtn = document.getElementById('btn-swap-stations');
+    if (swapStationsBtn && deptInput && destInput) {
+      swapStationsBtn.addEventListener('click', () => {
+        const deptVal = deptInput.value;
+        const deptId = deptInput.getAttribute('data-id');
+        const destVal = destInput.value;
+        const destId = destInput.getAttribute('data-id');
+
+        deptInput.value = destVal;
+        if (destId) deptInput.setAttribute('data-id', destId);
+        else deptInput.removeAttribute('data-id');
+
+        destInput.value = deptVal;
+        if (deptId) destInput.setAttribute('data-id', deptId);
+        else destInput.removeAttribute('data-id');
+
+        markInputChanged();
+        updateShinkansenCandidateChips();
+      });
+    }
+
     // 各入力フィールドのクリアボタン (✕)
     document.querySelectorAll('.btn-input-clear').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -2495,13 +2564,21 @@
       });
     });
 
-    // 経由駅追加ボタン (＋ 経由駅追加)
+    // 経由駅追加ボタン (＋ 経由駅追加: クリックまたは Enter/Space で追加し即フォーカス)
     const addViaBtn = document.getElementById('btn-add-via-field');
     if (addViaBtn) {
-      addViaBtn.addEventListener('click', () => {
-        addViaStationRow();
+      const handleAddVia = (e) => {
+        if (e && e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+        if (e) e.preventDefault();
+        const newRow = addViaStationRow();
         markInputChanged();
-      });
+        if (newRow) {
+          const inp = newRow.querySelector('.route-via-input');
+          if (inp) inp.focus();
+        }
+      };
+      addViaBtn.addEventListener('click', handleAddVia);
+      addViaBtn.addEventListener('keydown', handleAddVia);
     }
 
     // 探索モード切り替えボタン (最短経路 / 重複区間なし)
@@ -2644,18 +2721,6 @@
       });
     }
 
-    // 券種サイズ切り替えボタン (自動 / 85mm / 120mm)
-    const sizeBtns = document.querySelectorAll('.size-btn');
-    sizeBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        sizeBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        ROUTE_STATE.ticketSizeMode = btn.getAttribute('data-size') || 'auto';
-        if (ROUTE_STATE.lastResult) {
-          renderMarsTicket(ROUTE_STATE.lastResult);
-        }
-      });
-    });
 
     // 券面テキストコピーボタン
     const copyBtn = document.getElementById('btn-copy-ticket');
@@ -2925,7 +2990,7 @@
 
     const childBadge = document.getElementById('ticket-child-badge');
     if (childBadge) {
-      childBadge.style.display = (fareType === 'child') ? 'inline-block' : 'none';
+      childBadge.style.display = (fareType === 'child') ? 'inline-flex' : 'none';
     }
 
     const studentBadge = document.getElementById('ticket-student-badge');
@@ -2949,7 +3014,7 @@
       }
     }
 
-    // 6. 有効期間・途中下車印字
+    // 6. 有効期間・途中下車印字 (マルス券面仕様: 途中下車可能時は無印字、不可時のみ「下車前途無効」)
     const dateStr = ROUTE_STATE.ticketDate || getLocalISODate();
     const [y, m, d] = dateStr.split('-').map(Number);
     const validDays = fr.validityDays || 1;
@@ -2958,32 +3023,26 @@
       if (fr.isSuburbanOnly || validDays === 1) {
         validityTextEl.textContent = '発売当日限り有効';
       } else {
-        const sDate = new Date(y, m - 1, d);
-        const eDate = new Date(sDate);
-        eDate.setDate(sDate.getDate() + validDays - 1);
-        validityTextEl.textContent = `${m}月${d}日から ${validDays}日間有効 (${eDate.getMonth() + 1}月${eDate.getDate()}日まで有効)`;
+        validityTextEl.textContent = `${m}月${d}日から ${validDays}日間有効`;
       }
     }
 
     const stopoverTextEl = document.getElementById('ticket-stopover-text');
     if (stopoverTextEl) {
-      stopoverTextEl.textContent = fr.stopoverAllowed ? '途中下車可能' : '下車前途無効';
+      if (fr.stopoverAllowed) {
+        stopoverTextEl.textContent = '';
+        stopoverTextEl.style.display = 'none';
+      } else {
+        stopoverTextEl.textContent = '下車前途無効';
+        stopoverTextEl.style.display = 'block';
+      }
     }
 
-    // 7. 券サイズ（85mm / 120mm / 出札補充券）および自動改札マーク
+    // 7. 券サイズ（85mm / 120mm / 出札補充券）自動判定
     const marsCount = fr.marsRouteCount || (result.sections ? result.sections.length : 1);
     const marsStrLen = (result.marsString || '').length;
     const isMarsIssuable = fr.isMarsIssuable !== false && marsCount <= 16;
-
-    let is120mm = false;
-    if (ROUTE_STATE.ticketSizeMode === '120') {
-      is120mm = true;
-    } else if (ROUTE_STATE.ticketSizeMode === '85') {
-      is120mm = false;
-    } else {
-      // auto: 経由7経路以上、または経由文字列28文字以上、または16経路超過
-      is120mm = (marsCount >= 7 || marsStrLen >= 28 || !isMarsIssuable);
-    }
+    const is120mm = (marsCount >= 7 || marsStrLen >= 28 || !isMarsIssuable);
 
     const ticketCard = document.getElementById('mars-ticket-card');
     if (ticketCard) {
@@ -2994,45 +3053,30 @@
       else ticketCard.classList.remove('is-hojyu');
     }
 
-    const sizeIndicator = document.getElementById('ticket-size-indicator');
-    if (sizeIndicator) {
-      if (!isMarsIssuable) {
-        sizeIndicator.textContent = '出札補充券';
-      } else if (is120mm) {
-        sizeIndicator.textContent = '120mm券';
-      } else {
-        sizeIndicator.textContent = '85mm券';
-      }
-    }
-
-    const gateSymbol = document.getElementById('ticket-gate-symbol');
-    if (gateSymbol) {
+    // きっぷ詳細カード側: サイズ・自動改札可否バッジ
+    const gateBadge = document.getElementById('ticket-gate-badge');
+    if (gateBadge) {
       if (!fr.isAvailable) {
-        gateSymbol.textContent = '×';
-        gateSymbol.title = '発売不可（自動改札利用不可）';
-        gateSymbol.style.color = '#b91c1c';
+        gateBadge.textContent = '発売不可 / 自動改札不可';
+        gateBadge.className = 'ticket-gate-badge gate-unavailable';
       } else if (!is120mm && isMarsIssuable) {
-        gateSymbol.textContent = '□';
-        gateSymbol.title = '自動改札対応';
-        gateSymbol.style.color = '#1e3a8a';
+        gateBadge.textContent = '85mm券 / 自動改札可';
+        gateBadge.className = 'ticket-gate-badge gate-auto';
+      } else if (isMarsIssuable) {
+        gateBadge.textContent = '120mm券 / 有人改札';
+        gateBadge.className = 'ticket-gate-badge gate-manual';
       } else {
-        gateSymbol.textContent = '×';
-        gateSymbol.title = '自動改札非対応（有人改札専用）';
-        gateSymbol.style.color = '#b91c1c';
+        gateBadge.textContent = '出札補充券 / 有人改札';
+        gateBadge.className = 'ticket-gate-badge gate-manual';
       }
     }
 
-    // 8. 券面メタフッター (1桁の月日のみハイフンを付けるマルス発売日仕様: 例 2026.-3.-9, 2026.11.22)
+    // 8. 券面フッター (発売日のみ)
     const issueDateEl = document.getElementById('ticket-issue-date');
     if (issueDateEl) {
       const mStr = m < 10 ? `-${m}` : `${m}`;
       const dStr = d < 10 ? `-${d}` : `${d}`;
       issueDateEl.textContent = `${y}.${mStr}.${dStr}`;
-    }
-
-    const issueStEl = document.getElementById('ticket-issue-station');
-    if (issueStEl) {
-      issueStEl.textContent = `${result.deptName}駅＃１`;
     }
 
     const validityBadge = document.getElementById('route-validity-badge');
@@ -3054,17 +3098,17 @@
       }
     }
 
-    // 9. 内訳カード（fare-details-card）
+    // 9. きっぷ詳細・内訳カード
     const marsCountBadge = document.getElementById('ticket-mars-count-badge');
     if (marsCountBadge) {
       if (marsCount <= 12) {
-        marsCountBadge.textContent = `${marsCount} / 16 経路 (マルス可)`;
+        marsCountBadge.textContent = `${marsCount} / 16 経路`;
         marsCountBadge.className = 'mars-count-pill';
       } else if (marsCount <= 16) {
-        marsCountBadge.textContent = `${marsCount} / 16 経路 (残少)`;
+        marsCountBadge.textContent = `${marsCount} / 16 経路`;
         marsCountBadge.className = 'mars-count-pill pill-warning';
       } else {
-        marsCountBadge.textContent = `${marsCount} / 16 経路 (出札補充券扱い)`;
+        marsCountBadge.textContent = `${marsCount} / 16 経路 (補充券)`;
         marsCountBadge.className = 'mars-count-pill pill-danger';
       }
     }
@@ -3090,11 +3134,11 @@
     const linesBreakdownItem = document.getElementById('spec-lines-breakdown-item');
     const linesBreakdownEl = document.getElementById('spec-lines-breakdown');
     if (linesBreakdownItem && linesBreakdownEl) {
-      if ((fr.trunkKm && fr.trunkKm > 0) || (fr.localKm && fr.localKm > 0)) {
-        linesBreakdownItem.style.display = 'flex';
-        linesBreakdownEl.textContent = `幹線 ${(fr.trunkKm || 0).toFixed(1)}km / 地通 ${(fr.localKm || 0).toFixed(1)}km`;
+      linesBreakdownItem.style.display = 'flex';
+      if (fr.localKm && fr.localKm > 0) {
+        linesBreakdownEl.textContent = `幹線 ${(fr.trunkKm || 0).toFixed(1)}km / 地方 ${fr.localKm.toFixed(1)}km`;
       } else {
-        linesBreakdownItem.style.display = 'none';
+        linesBreakdownEl.textContent = '幹線のみ';
       }
     }
 
@@ -3303,15 +3347,23 @@
             }
           }
           dropdownEl.style.display = 'none';
-
-          // 次マスへフォーカス移動 (勝手に探索は実行せず、手動の経路探索ボタンに任せる)
           e.preventDefault();
+
           const deptInput = document.getElementById('route-dept-input');
           const destInput = document.getElementById('route-dest-input');
           const viaInputs = Array.from(document.querySelectorAll('.route-via-input'));
-          const searchBtn = document.getElementById('btn-search-route');
 
-          if (inputEl === deptInput) {
+          const hasDept = deptInput && (deptInput.getAttribute('data-id') || deptInput.value.trim());
+          const hasDest = destInput && (destInput.getAttribute('data-id') || destInput.value.trim());
+
+          // 発駅と着駅の両方が入力済みであれば、即座に経路探索を実行
+          if (hasDept && hasDest) {
+            executeRouteSearch();
+          } else if (!hasDept && deptInput) {
+            deptInput.focus();
+          } else if (!hasDest && destInput) {
+            destInput.focus();
+          } else if (inputEl === deptInput) {
             if (viaInputs.length > 0) {
               viaInputs[0].focus();
             } else if (destInput) {
@@ -3323,11 +3375,6 @@
               viaInputs[currentIdx + 1].focus();
             } else if (destInput) {
               destInput.focus();
-            }
-          } else if (inputEl === destInput) {
-            // 着駅の次は経路探索ボタンへフォーカス移動
-            if (searchBtn && !searchBtn.disabled) {
-              searchBtn.focus();
             }
           }
         }
@@ -3515,6 +3562,7 @@
     if (!initialStation) {
       input.focus();
     }
+    return row;
   }
 
   function resolveStation(inputEl, refSt = null) {
@@ -3688,20 +3736,17 @@
     if (resultContainer) resultContainer.style.display = 'none';
 
     // 新幹線区間指定と手動入力のリセット
+    ROUTE_STATE.useShinkansen = false;
     ROUTE_STATE.searchMode = 'shortest';
     ROUTE_STATE.shinkansenSegments = [];
     ROUTE_STATE.currentFareType = 'adult';
-    ROUTE_STATE.ticketSizeMode = 'auto';
+
+    const shinkansenChk = document.getElementById('chk-use-shinkansen');
+    if (shinkansenChk) shinkansenChk.checked = false;
 
     const fareBtns = document.querySelectorAll('.fare-type-btn');
     fareBtns.forEach(b => {
       if (b.getAttribute('data-type') === 'adult') b.classList.add('active');
-      else b.classList.remove('active');
-    });
-
-    const sizeBtns = document.querySelectorAll('.size-btn');
-    sizeBtns.forEach(b => {
-      if (b.getAttribute('data-size') === 'auto') b.classList.add('active');
       else b.classList.remove('active');
     });
 

@@ -1164,6 +1164,38 @@ body.theme-light .station-pref {
   gap: 8px;
 }
 
+.route-swap-row {
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 36px;
+  margin: -4px 0 -4px 0;
+  z-index: 2;
+  position: relative;
+}
+
+.btn-swap-stations {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.btn-swap-stations:hover {
+  background: #f0f9ff;
+  color: #0284c7;
+  border-color: #0284c7;
+  transform: scale(1.1);
+}
+
 .route-add-via-row {
   display: flex;
   justify-content: flex-start;
@@ -1366,7 +1398,6 @@ body.theme-light .station-pref {
   border-radius: var(--radius-md);
   padding: 6px 10px;
   margin-bottom: 8px;
-  flex-wrap: wrap;
 }
 
 .fare-type-group {
@@ -1421,34 +1452,6 @@ body.theme-light .station-pref {
   cursor: pointer;
 }
 
-.ticket-size-toggle {
-  display: inline-flex;
-  background: #f1f5f9;
-  border-radius: 6px;
-  padding: 2px;
-  gap: 2px;
-  border: 1px solid #e2e8f0;
-}
-.size-btn {
-  border: none;
-  background: transparent;
-  padding: 3px 8px;
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 4px;
-  color: #64748b;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.size-btn:hover {
-  color: #0f172a;
-}
-.size-btn.active {
-  background: #ffffff;
-  color: #0284c7;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
 /* =======================================================
    本物マルス普通乗車券面 (85mm / 120mm / 補充券)
 ======================================================= */
@@ -1461,15 +1464,15 @@ body.theme-light .station-pref {
 
 .mars-ticket-card {
   width: 100%;
-  max-width: 440px;
-  min-height: 210px;
+  max-width: 420px;
+  min-height: 175px;
   background: linear-gradient(135deg, #e8f5ec 0%, #daf0e2 50%, #e2f4e8 100%);
   background-image: 
     linear-gradient(135deg, rgba(232, 245, 236, 0.94) 0%, rgba(218, 240, 226, 0.94) 100%),
     repeating-linear-gradient(45deg, rgba(45, 106, 79, 0.03) 0, rgba(45, 106, 79, 0.03) 2px, transparent 2px, transparent 6px);
   border: 2px solid #52b788;
   border-radius: 6px;
-  padding: 8px;
+  padding: 6px;
   position: relative;
   box-shadow: 0 4px 18px rgba(34, 76, 56, 0.12), inset 0 0 20px rgba(255, 255, 255, 0.5);
   font-family: "SFMono-Regular", Consolas, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, monospace;
@@ -1479,8 +1482,8 @@ body.theme-light .station-pref {
 
 /* 120mm券モード (横長・多情報対応) */
 .mars-ticket-card.is-120mm {
-  max-width: 560px;
-  min-height: 220px;
+  max-width: 520px;
+  min-height: 175px;
   border-color: #2d6a4f;
   background: linear-gradient(135deg, #e4f4ea 0%, #d5eedf 50%, #def2e5 100%);
 }
@@ -1495,11 +1498,11 @@ body.theme-light .station-pref {
 .ticket-inner-frame {
   border: 1px dashed rgba(45, 106, 79, 0.35);
   border-radius: 4px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 190px;
+  min-height: 160px;
   box-sizing: border-box;
   background: rgba(255, 255, 255, 0.25);
 }
@@ -1513,12 +1516,12 @@ body.theme-light .station-pref {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(45, 106, 79, 0.25);
-  padding-bottom: 4px;
+  padding-bottom: 3px;
 }
 .ticket-header-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 .company-symbol-badge {
   font-size: 13px;
@@ -1527,11 +1530,11 @@ body.theme-light .station-pref {
   letter-spacing: 0.5px;
 }
 .ticket-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 900;
   color: #1b4332;
-  letter-spacing: 4px;
-  padding-left: 4px;
+  letter-spacing: 3px;
+  padding-left: 2px;
 }
 .mars-ticket-card.is-hojyu .ticket-title {
   color: #b45309;
@@ -1547,100 +1550,71 @@ body.theme-light .station-pref {
   background: rgba(254, 226, 226, 0.7);
   letter-spacing: 1px;
 }
-
-.ticket-header-right {
-  display: flex;
+.child-symbol-badge {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-}
-.ticket-size-indicator {
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border: 1.5px solid #166534;
+  border-radius: 50%;
   font-size: 10px;
-  font-weight: 800;
-  color: #2d6a4f;
-  background: rgba(82, 183, 136, 0.2);
-  border: 1px solid rgba(45, 106, 79, 0.3);
-  padding: 1px 6px;
-  border-radius: 10px;
-}
-.mars-ticket-card.is-hojyu .ticket-size-indicator {
-  color: #b45309;
-  background: rgba(245, 158, 11, 0.15);
-  border-color: rgba(180, 83, 9, 0.3);
-}
-.gate-symbol {
-  font-size: 16px;
   font-weight: 900;
-  color: #1b4332;
+  color: #166534;
+  background: rgba(220, 252, 231, 0.9);
   line-height: 1;
 }
 
-/* 発着駅表示行 */
+
+/* 発着駅表示行 (中央揃えで間延び解消) */
 .ticket-stations-row {
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  padding: 8px 4px;
-  gap: 8px;
+  justify-content: center;
+  padding: 4px 0;
+  gap: 16px;
 }
 .station-box {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  flex: 1;
 }
 .station-print-name {
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 900;
   color: #0f172a;
   letter-spacing: 2px;
   line-height: 1.2;
 }
 .station-sub-text {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #475569;
-  margin-top: 2px;
+  margin-top: 1px;
   letter-spacing: 0.5px;
 }
 .ticket-arrow-wrapper {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  position: relative;
-  width: 40px;
 }
 .ticket-arrow-symbol {
-  font-size: 22px;
+  font-size: 16px;
   font-weight: 900;
   color: #1b4332;
+  letter-spacing: -1px;
   line-height: 1;
 }
-.child-symbol-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border: 1.5px solid #166534;
-  border-radius: 50%;
-  font-size: 11px;
-  font-weight: 900;
-  color: #166534;
-  background: rgba(220, 252, 231, 0.9);
-  position: absolute;
-  top: -12px;
-}
 
-/* 経由欄 */
+/* 経由欄 (白背景枠線を廃止し地紋に直接印字) */
 .ticket-via-row {
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(45, 106, 79, 0.25);
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 12px;
-  line-height: 1.4;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 2px 2px;
+  font-size: 11px;
+  line-height: 1.35;
   color: #0f172a;
   word-break: break-all;
   display: flex;
@@ -1661,7 +1635,7 @@ body.theme-light .station-pref {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  padding-top: 6px;
+  padding-top: 4px;
   border-top: 1px solid rgba(45, 106, 79, 0.25);
   gap: 8px;
 }
@@ -1671,13 +1645,13 @@ body.theme-light .station-pref {
   gap: 2px;
 }
 .validity-date-line {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   color: #1b4332;
   letter-spacing: 0.5px;
 }
 .stopover-line {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 900;
   color: #1b4332;
   letter-spacing: 1px;
@@ -1696,36 +1670,28 @@ body.theme-light .station-pref {
   text-align: right;
 }
 .fare-currency {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 900;
   color: #0f172a;
   line-height: 1;
 }
 .fare-amount {
-  font-size: 24px;
+  font-size: 21px;
   font-weight: 900;
   letter-spacing: 0.5px;
 }
-.fare-tax-note {
-  font-size: 10px;
-  font-weight: 700;
-  color: #475569;
-  margin-top: 2px;
-}
-
-/* 券面フッター飾り */
+/* 券面フッター (発売日のみ) */
 .ticket-meta-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   font-size: 10px;
   font-weight: 700;
   color: #2d6a4f;
-  padding-top: 4px;
+  padding-top: 3px;
   border-top: 1px dashed rgba(45, 106, 79, 0.2);
-  margin-top: 4px;
-  flex-wrap: wrap;
-  gap: 4px;
+  margin-top: 3px;
+  letter-spacing: 0.5px;
 }
 .mars-count-pill {
   font-size: 10px;
@@ -1774,21 +1740,73 @@ body.theme-light .station-pref {
 }
 
 /* =======================================================
-   券面下部アクションバー (コピー・通知)
+   きっぷ詳細・内訳カード (統合)
 ======================================================= */
-.ticket-action-bar {
+.ticket-summary-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-top: 6px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summary-top-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.summary-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ticket-gate-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  white-space: nowrap;
+}
+.ticket-gate-badge.gate-auto {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #bbf7d0;
+}
+.ticket-gate-badge.gate-manual {
+  background: #fef3c7;
+  color: #b45309;
+  border-color: #fde68a;
+}
+.ticket-gate-badge.gate-unavailable {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+
+.summary-action-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .btn-copy-ticket {
   background: #15803d;
   color: #ffffff;
   border: none;
   border-radius: 6px;
-  padding: 6px 14px;
-  font-size: 12px;
+  padding: 5px 12px;
+  font-size: 11px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1803,53 +1821,30 @@ body.theme-light .station-pref {
   color: #15803d;
   background: #dcfce7;
   border: 1px solid #86efac;
-  padding: 3px 8px;
+  padding: 2px 6px;
   border-radius: 4px;
 }
 
-/* =======================================================
-   運賃計算・適用特例内訳カード
-======================================================= */
-.fare-details-card {
-  background: var(--panel-bg);
-  border: 1px solid var(--panel-border);
-  border-radius: var(--radius-md);
-  padding: 10px 12px;
-  margin-bottom: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.fare-details-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.details-title {
-  font-size: 12px;
-  font-weight: 800;
-  color: #334155;
-}
-.fare-specs-grid {
+.summary-specs-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 6px 10px;
+  gap: 6px 12px;
   background: rgba(241, 245, 249, 0.6);
   padding: 8px 10px;
   border-radius: 6px;
   border: 1px solid #e2e8f0;
 }
-.spec-item {
+.summary-spec-item {
   display: flex;
   flex-direction: column;
   gap: 1px;
 }
-.spec-label {
+.summary-spec-label {
   font-size: 10px;
   font-weight: 700;
   color: #64748b;
 }
-.spec-val {
+.summary-spec-val {
   font-size: 12px;
   font-weight: 800;
   color: #0f172a;
