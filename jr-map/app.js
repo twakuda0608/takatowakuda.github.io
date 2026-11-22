@@ -99,7 +99,7 @@
   let routeCanvasRenderer = null;
 
   // 駅名ラベルプール (DOMノード数を最小限に抑え60fpsを維持)
-  const LABEL_POOL_SIZE = 240;
+  let LABEL_POOL_SIZE = 360;
   const labelPool = [];
 
   // キャッシュ・更新抑制用フラグ
@@ -453,6 +453,7 @@
       updateScheduled = true;
       requestAnimationFrame(() => {
         updateScheduled = false;
+        updateStationMarkerSizes();
         updateLabelsVisibility();
         updateLineLabelsVisibility();
       });
@@ -474,14 +475,21 @@
     let lastMoveUpdateTime = 0;
     map.on('move', () => {
       const now = performance.now();
-      if (now - lastMoveUpdateTime > 100) {
+      if (now - lastMoveUpdateTime > 60) {
         lastMoveUpdateTime = now;
         scheduleVisibilityUpdate();
       }
     });
 
     map.on('moveend', () => {
+      updateStationMarkerSizes();
       scheduleVisibilityUpdate();
+    });
+
+    window.addEventListener('resize', () => {
+      updateStationMarkerSizes();
+      scheduleVisibilityUpdate();
+      updateLineWeights();
     });
 
     map.on('click', (e) => {
@@ -863,7 +871,280 @@
     });
   }
 
-  // ズームレベルに応じた駅マーカーの表示・サイズ動的調整 (画面密度・非重複ベース表示)
+  // =======================================================
+  // ズーム別レイアウトキャッシュ (絶対ワールド座標ベース・完全決定論的アーキテクチャ)
+  // map.project([lat, lng], zoom) によるビューポート非依存の絶対座標で衝突判定を行い、
+  // ドラッグ・パン時の駅名・路線名・駅◯のポップイン／ポップアウトを100%根本排除
+  // =======================================================
+  const zoomLayoutCache = new Map();
+  const lineLabelCandidateSlots = [];
+  let allStationsSorted = null;
+
+  function getAllStationsSorted() {
+    if (!allStationsSorted) {
+      allStationsSorted = Object.values(STATIONS).slice().sort((a, b) => {
+        return ((b._baseScore || 0) - (a._baseScore || 0)) || a.id.localeCompare(b.id);
+      });
+    }
+    return allStationsSorted;
+  }
+
+  function getZoomLayout(zoom) {
+    const intZoom = Math.round(zoom);
+    let layout = zoomLayoutCache.get(intZoom);
+    if (!layout) {
+      layout = computeZoomLayout(intZoom);
+      zoomLayoutCache.set(intZoom, layout);
+    }
+    return layout;
+  }
+
+  function computeZoomLayout(intZoom) {
+    if (lineLabelCandidateSlots.length === 0 && map && lineLabelsLayerGroup) {
+      setupLineLabels();
+    }
+
+    const stations = getAllStationsSorted();
+    const cellSize = 64;
+    const grid = new Map();
+
+    function insertBox(box) {
+      const gx1 = Math.floor(box.x1 / cellSize);
+      const gx2 = Math.floor(box.x2 / cellSize);
+      const gy1 = Math.floor(box.y1 / cellSize);
+      const gy2 = Math.floor(box.y2 / cellSize);
+      for (let gx = gx1; gx <= gx2; gx++) {
+        for (let gy = gy1; gy <= gy2; gy++) {
+          const key = `${gx},${gy}`;
+          let cell = grid.get(key);
+          if (!cell) {
+            cell = [];
+            grid.set(key, cell);
+          }
+          cell.push(box);
+        }
+      }
+    }
+
+    function checkCollision(box) {
+      const gx1 = Math.floor(box.x1 / cellSize);
+      const gx2 = Math.floor(box.x2 / cellSize);
+      const gy1 = Math.floor(box.y1 / cellSize);
+      const gy2 = Math.floor(box.y2 / cellSize);
+      for (let gx = gx1; gx <= gx2; gx++) {
+        for (let gy = gy1; gy <= gy2; gy++) {
+          const cell = grid.get(`${gx},${gy}`);
+          if (cell) {
+            for (let i = 0; i < cell.length; i++) {
+              const b = cell[i];
+              if (!(box.x2 < b.x1 || box.x1 > b.x2 || box.y2 < b.y1 || box.y1 > b.y2)) {
+                return true;
+              }
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    const placedStationList = [];
+    const placedStationSet = new Set();
+
+    // ----------------------------------------------------
+    // 第1段階: 主要駅名 (Tier1 / Tier2 相当: _baseScore >= 2500)
+    // ----------------------------------------------------
+    for (let i = 0; i < stations.length; i++) {
+      const st = stations[i];
+      if ((st._baseScore || 0) < 2500) break;
+
+      // 極端な全国ズーム (zoom <= 5) はさらに上位駅のみ
+      if (intZoom <= 5 && (st._baseScore || 0) < 3500) continue;
+
+      const pt = map.project([st.lat, st.lng], intZoom);
+      const isMega = TIER1_MEGA_HUBS.has(st.id) || TIER1_STATION_NAMES.has(st.name);
+      const isMajor = TIER2_MAJOR_HUBS.has(st.id) || TIER2_STATION_NAMES.has(st.name);
+      const charWidth = isMega ? 13 : (isMajor ? 12 : 11);
+      const textWidth = Math.max(34, st.name.length * charWidth + 8);
+      const textHeight = isMega ? 18 : 15;
+
+      const box = {
+        x1: pt.x + 4 - 6,
+        y1: pt.y - 10 - 5,
+        x2: pt.x + 8 + textWidth + 6,
+        y2: pt.y + textHeight - 6 + 5
+      };
+
+      if (!checkCollision(box)) {
+        insertBox(box);
+        placedStationList.push(st.id);
+        placedStationSet.add(st.id);
+      }
+    }
+
+    // ----------------------------------------------------
+    // 第2段階: 路線名SVGラベル (主要駅と重ならない空きスペースへ配置確定)
+    // ----------------------------------------------------
+    const placedLineSlots = [];
+    const placedLineCenters = new Map(); // lineId -> [pt, ...]
+    const pendingExtraLineSlots = [];
+
+    for (let i = 0; i < lineLabelCandidateSlots.length; i++) {
+      const slot = lineLabelCandidateSlots[i];
+      let meetsZoom = false;
+      if (slot.tier === 1) meetsZoom = (intZoom >= 5);
+      else if (slot.tier === 2) meetsZoom = (intZoom >= 6);
+      else meetsZoom = (intZoom >= 7);
+
+      if (!meetsZoom) continue;
+
+      const charWidth = slot.tier === 1 ? 13 : 11.5;
+      const textWidth = Math.max(30, slot.nameLen * charWidth + 8);
+      const textHeight = slot.tier === 1 ? 16 : 14;
+
+      // 線路のピクセル長がテキスト幅より短い場合は文字欠け・描画異常を起こすためスキップ
+      const kmPerPixel = (40075 * Math.cos(slot.lat * Math.PI / 180)) / (256 * Math.pow(2, intZoom));
+      const linePixelLen = (slot.totalKm || 100) / kmPerPixel;
+      if (linePixelLen < textWidth + 15) continue;
+
+      const pt = map.project([slot.lat, slot.lng], intZoom);
+      const cos = Math.abs(Math.cos(slot.angle || 0));
+      const sin = Math.abs(Math.sin(slot.angle || 0));
+      const padX = 14;
+      const padY = 10;
+      const boundWidth = textWidth * cos + textHeight * sin + padX * 2;
+      const boundHeight = textWidth * sin + textHeight * cos + padY * 2;
+
+      const box = {
+        x1: pt.x - boundWidth / 2,
+        y1: pt.y - boundHeight / 2,
+        x2: pt.x + boundWidth / 2,
+        y2: pt.y + boundHeight / 2
+      };
+
+      if (placedLineCenters.has(slot.lineId)) {
+        pendingExtraLineSlots.push({ slot, pt, box });
+        continue;
+      }
+
+      if (!checkCollision(box)) {
+        insertBox(box);
+        placedLineSlots.push({ elem: slot.elem, lat: slot.lat, lng: slot.lng, lineId: slot.lineId, pt });
+        placedLineCenters.set(slot.lineId, [pt]);
+      }
+    }
+
+    // パス2: 同一路線の追加配置 (同一路線はワールド座標上で180px以上離れている箇所)
+    for (let i = 0; i < pendingExtraLineSlots.length; i++) {
+      const item = pendingExtraLineSlots[i];
+      const centers = placedLineCenters.get(item.slot.lineId) || [];
+      const isTooClose = centers.some(cPt => Math.hypot(item.pt.x - cPt.x, item.pt.y - cPt.y) < 180);
+      if (isTooClose) continue;
+
+      if (!checkCollision(item.box)) {
+        insertBox(item.box);
+        placedLineSlots.push({ elem: item.slot.elem, lat: item.slot.lat, lng: item.slot.lng, lineId: item.slot.lineId, pt: item.pt });
+        centers.push(item.pt);
+      }
+    }
+
+    // ----------------------------------------------------
+    // 第3段階: 一般駅名 (_baseScore < 2500)
+    // ----------------------------------------------------
+    if (intZoom >= 6) {
+      for (let i = 0; i < stations.length; i++) {
+        const st = stations[i];
+        if ((st._baseScore || 0) >= 2500) continue;
+        if (intZoom === 6 && (st._baseScore || 0) < 800) continue;
+
+        const pt = map.project([st.lat, st.lng], intZoom);
+        const charWidth = 11;
+        const textWidth = Math.max(34, st.name.length * charWidth + 8);
+        const textHeight = 15;
+
+        const box = {
+          x1: pt.x + 4 - 6,
+          y1: pt.y - 10 - 5,
+          x2: pt.x + 8 + textWidth + 6,
+          y2: pt.y + textHeight - 6 + 5
+        };
+
+        if (!checkCollision(box)) {
+          insertBox(box);
+          placedStationList.push(st.id);
+          placedStationSet.add(st.id);
+        }
+      }
+    }
+
+    // ----------------------------------------------------
+    // 第4段階: 駅マーカー (◯) の確定 (ズーム別 minDist 空間グリッド判定)
+    // ----------------------------------------------------
+    const placedCircleSet = new Set();
+    let minDist = 0;
+    if (intZoom <= 6) minDist = 20;
+    else if (intZoom === 7) minDist = 17;
+    else if (intZoom === 8) minDist = 14;
+    else if (intZoom === 9) minDist = 12;
+    else if (intZoom === 10) minDist = 10;
+    else if (intZoom === 11) minDist = 8;
+    else if (intZoom === 12) minDist = 6;
+    else minDist = 0; // intZoom >= 13: 全駅表示
+
+    if (minDist === 0) {
+      for (let i = 0; i < stations.length; i++) {
+        placedCircleSet.add(stations[i].id);
+      }
+    } else {
+      const circleGrid = new Map();
+      const circleCellSize = Math.max(14, minDist);
+      const minDistSq = minDist * minDist;
+
+      for (let i = 0; i < stations.length; i++) {
+        const st = stations[i];
+        const pt = map.project([st.lat, st.lng], intZoom);
+        const gx = Math.floor(pt.x / circleCellSize);
+        const gy = Math.floor(pt.y / circleCellSize);
+
+        let tooClose = false;
+        for (let dx = -1; dx <= 1 && !tooClose; dx++) {
+          for (let dy = -1; dy <= 1 && !tooClose; dy++) {
+            const key = `${gx + dx},${gy + dy}`;
+            const pts = circleGrid.get(key);
+            if (pts) {
+              for (let p = 0; p < pts.length; p++) {
+                const ep = pts[p];
+                const distSq = (pt.x - ep.x) * (pt.x - ep.x) + (pt.y - ep.y) * (pt.y - ep.y);
+                if (distSq < minDistSq) {
+                  tooClose = true;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        if (!tooClose) {
+          placedCircleSet.add(st.id);
+          const key = `${gx},${gy}`;
+          let cell = circleGrid.get(key);
+          if (!cell) {
+            cell = [];
+            circleGrid.set(key, cell);
+          }
+          cell.push(pt);
+        }
+      }
+    }
+
+    return {
+      placedStationList,
+      placedStationSet,
+      placedLineSlots,
+      placedCircleSet
+    };
+  }
+
+  // ズームレベルに応じた駅マーカーの表示・サイズ動的調整 (キャッシュ反映 & 非表示マーカー radius=0 誤爆防止)
   function updateStationMarkerSizes() {
     if (!map) return;
     const zoom = map.getZoom();
@@ -882,12 +1163,96 @@
       map.addLayer(stationsLayerGroup);
     }
 
-    // 画面外バッファ（画面ピクセル + 80px）
+    const layout = getZoomLayout(zoom);
+    const circleSet = layout.placedCircleSet;
+
     const mapSize = map.getSize();
-    const minX = -80;
-    const maxX = mapSize.x + 80;
-    const minY = -80;
-    const maxY = mapSize.y + 80;
+    const minX = -50;
+    const maxX = mapSize.x + 50;
+    const minY = -50;
+    const maxY = mapSize.y + 50;
+
+    const bounds = map.getBounds();
+    const latSpan = bounds.getNorth() - bounds.getSouth();
+    const lngSpan = bounds.getEast() - bounds.getWest();
+    const minLat = bounds.getSouth() - latSpan * 0.25;
+    const maxLat = bounds.getNorth() + latSpan * 0.25;
+    const minLng = bounds.getWest() - lngSpan * 0.25;
+    const maxLng = bounds.getEast() + lngSpan * 0.25;
+
+    stationMarkers.forEach((marker, stId) => {
+      const st = STATIONS[stId];
+      if (!st) return;
+
+      const isSelected = STATE.selectedStationId === stId;
+      const isCachedCircle = circleSet.has(stId);
+
+      // キャッシュに含まれない駅は非表示 (radius=0 でホバー・クリック誤爆完全防止)
+      if (!isSelected && !isCachedCircle) {
+        marker.setRadius(0);
+        marker.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
+        return;
+      }
+
+      // 画面外の駅も非表示 (radius=0 でホバー・クリック誤爆完全防止)
+      if (st.lat < minLat || st.lat > maxLat || st.lng < minLng || st.lng > maxLng) {
+        marker.setRadius(0);
+        marker.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
+        return;
+      }
+
+      const pt = map.latLngToContainerPoint([st.lat, st.lng]);
+      if (pt.x < minX || pt.x > maxX || pt.y < minY || pt.y > maxY) {
+        marker.setRadius(0);
+        marker.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
+        return;
+      }
+
+      const isMega = TIER1_MEGA_HUBS.has(stId) || TIER1_STATION_NAMES.has(st.name);
+      const isMajor = TIER2_MAJOR_HUBS.has(stId) || TIER2_STATION_NAMES.has(st.name);
+
+      let radius = 3.2;
+      let weight = 1.4;
+      if (isSelected) {
+        radius = 6;
+        weight = 3;
+      } else if (isMega) {
+        radius = zoom <= 7 ? 4.5 : (zoom <= 9 ? 5 : (zoom <= 11 ? 5.5 : 6.5));
+        weight = 2.5;
+      } else if (isMajor) {
+        radius = zoom <= 7 ? 3.5 : (zoom <= 9 ? 4 : (zoom <= 11 ? 4.2 : 5));
+        weight = 1.8;
+      } else {
+        radius = zoom <= 7 ? 2.5 : (zoom <= 9 ? 2.8 : (zoom <= 11 ? 3.2 : 3.8));
+        weight = 1.4;
+      }
+
+      marker.setRadius(radius);
+      marker.setStyle({
+        fillOpacity: 1,
+        opacity: 1,
+        weight: weight
+      });
+    });
+  }
+
+  // ズームレベル & 絶対ワールド座標キャッシュに応じた動的駅名ラベル表示 (ポップイン／ポップアウト完全排除)
+  function updateLabelsVisibility() {
+    if (!map) return;
+
+    const currentZoom = map.getZoom();
+    const layout = getZoomLayout(currentZoom);
+    const placedList = layout.placedStationList;
+
+    const mapSize = map.getSize();
+    const width = mapSize.x;
+    const height = mapSize.y;
+
+    // 画面外バッファ (-150px 〜 width + 150px, -120px 〜 height + 120px)
+    const minX = -150;
+    const maxX = width + 150;
+    const minY = -120;
+    const maxY = height + 120;
 
     // 緯度経度による高速画面外刈り込み (マージン 30% 拡大)
     const bounds = map.getBounds();
@@ -898,280 +1263,81 @@
     const minLng = bounds.getWest() - lngSpan * 0.3;
     const maxLng = bounds.getEast() + lngSpan * 0.3;
 
-    // ズームに応じた駅◯同士の最小ピクセル距離 (過密防止 & 地方ではしっかり表示)
-    let minDist = 0;
-    if (zoom <= 6) minDist = 20;
-    else if (zoom === 7) minDist = 17;
-    else if (zoom === 8) minDist = 14;
-    else if (zoom === 9) minDist = 12;
-    else if (zoom === 10) minDist = 10;
-    else if (zoom === 11) minDist = 8;
-    else if (zoom === 12) minDist = 6;
-    else minDist = 0; // zoom >= 13: 重なり判定なしで全駅表示
+    const visibleStationsToRender = [];
+    const addedIds = new Set();
 
-    // 画面内にある駅候補を収集
-    const visibleCandidates = [];
-    stationMarkers.forEach((marker, stId) => {
-      const st = STATIONS[stId];
-      if (!st) return;
-      if (st.lat < minLat || st.lat > maxLat || st.lng < minLng || st.lng > maxLng) {
-        marker.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
-        return;
+    // 1. 選択駅 (最優先)
+    if (STATE.selectedStationId) {
+      const selSt = STATIONS[STATE.selectedStationId];
+      if (selSt) {
+        const pt = map.latLngToContainerPoint([selSt.lat, selSt.lng]);
+        if (pt.x >= minX && pt.x <= maxX && pt.y >= minY && pt.y <= maxY) {
+          visibleStationsToRender.push({ stId: selSt.id, st: selSt, isSelected: true, isRouteStation: false });
+          addedIds.add(selSt.id);
+        }
       }
-      const pt = map.latLngToContainerPoint([st.lat, st.lng]);
-      if (pt.x < minX || pt.x > maxX || pt.y < minY || pt.y > maxY) {
-        marker.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
-        return;
-      }
+    }
 
-      const isSelected = STATE.selectedStationId === stId;
-      const belongsToSelectedLine = !!(STATE.selectedLineId && st.lines && st.lines.includes(STATE.selectedLineId));
-      let score = st._baseScore || 0;
-      if (isSelected) score += 1000000;
-      else if (belongsToSelectedLine) score += 100000;
-
-      visibleCandidates.push({
-        stId,
-        st,
-        marker,
-        pt,
-        score,
-        isSelected,
-        belongsToSelectedLine
-      });
-    });
-
-    // 優先度スコア順にソート
-    visibleCandidates.sort((a, b) => b.score - a.score || a.stId.localeCompare(b.stId));
-
-    // 空間距離チェック用グリッド (O(1) 近接探索)
-    const cellSize = Math.max(14, minDist);
-    const grid = new Map(); // "gx,gy" -> [pt]
-
-    visibleCandidates.forEach(cand => {
-      const isMega = TIER1_MEGA_HUBS.has(cand.stId) || (cand.st && TIER1_STATION_NAMES.has(cand.st.name));
-      const isMajor = TIER2_MAJOR_HUBS.has(cand.stId) || (cand.st && TIER2_STATION_NAMES.has(cand.st.name));
-
-      let shouldShow = false;
-      if (cand.isSelected || cand.belongsToSelectedLine || minDist === 0) {
-        shouldShow = true;
-      } else {
-        const gx = Math.floor(cand.pt.x / cellSize);
-        const gy = Math.floor(cand.pt.y / cellSize);
-        let tooClose = false;
-
-        for (let dx = -1; dx <= 1 && !tooClose; dx++) {
-          for (let dy = -1; dy <= 1 && !tooClose; dy++) {
-            const key = `${gx + dx},${gy + dy}`;
-            const existingPts = grid.get(key);
-            if (existingPts) {
-              for (let i = 0; i < existingPts.length; i++) {
-                const ep = existingPts[i];
-                const distSq = (cand.pt.x - ep.x) * (cand.pt.x - ep.x) + (cand.pt.y - ep.y) * (cand.pt.y - ep.y);
-                if (distSq < minDist * minDist) {
-                  tooClose = true;
-                  break;
-                }
-              }
-            }
+    // 2. 経路探索結果の通過駅 (優先)
+    const routeActive = !!(ROUTE_STATE && ROUTE_STATE.lastResult && ROUTE_STATE.lastResult.allStationIds);
+    if (routeActive) {
+      ROUTE_STATE.lastResult.allStationIds.forEach(stId => {
+        if (addedIds.has(stId)) return;
+        const rSt = STATIONS[stId];
+        if (rSt) {
+          const pt = map.latLngToContainerPoint([rSt.lat, rSt.lng]);
+          if (pt.x >= minX && pt.x <= maxX && pt.y >= minY && pt.y <= maxY) {
+            visibleStationsToRender.push({ stId: rSt.id, st: rSt, isSelected: false, isRouteStation: true });
+            addedIds.add(rSt.id);
           }
         }
-
-        if (!tooClose) {
-          shouldShow = true;
-        }
-      }
-
-      if (shouldShow) {
-        // グリッドに登録
-        const gx = Math.floor(cand.pt.x / cellSize);
-        const gy = Math.floor(cand.pt.y / cellSize);
-        const key = `${gx},${gy}`;
-        if (!grid.has(key)) grid.set(key, []);
-        grid.get(key).push(cand.pt);
-
-        let radius = 3.2;
-        let weight = 1.4;
-        if (cand.isSelected) {
-          radius = 6;
-          weight = 3;
-        } else if (isMega) {
-          radius = zoom <= 7 ? 4.5 : (zoom <= 9 ? 5 : (zoom <= 11 ? 5.5 : 6.5));
-          weight = 2.5;
-        } else if (isMajor) {
-          radius = zoom <= 7 ? 3.5 : (zoom <= 9 ? 4 : (zoom <= 11 ? 4.2 : 5));
-          weight = 1.8;
-        } else {
-          radius = zoom <= 7 ? 2.5 : (zoom <= 9 ? 2.8 : (zoom <= 11 ? 3.2 : 3.8));
-          weight = 1.4;
-        }
-
-        cand.marker.setRadius(radius);
-        cand.marker.setStyle({
-          fillOpacity: 1,
-          opacity: 1,
-          weight
-        });
-      } else {
-        cand.marker.setStyle({
-          fillOpacity: 0,
-          opacity: 0,
-          weight: 0
-        });
-      }
-    });
-  }
-
-  // ズームレベル & 確定スコアに応じた動的駅名ラベル表示 (画面密度・非重複ベース - 高速プール反映)
-  // 地図ドラッグ時にもスコアや順序が一切変動しない決定論的アーキテクチャにより、
-  // 同一ズーム度におけるチラつき・消去・遅延を完全排除
-  function updateLabelsVisibility() {
-    if (!map) return;
-
-    const currentZoom = map.getZoom();
-    const mapSize = map.getSize();
-    const width = mapSize.x;
-    const height = mapSize.y;
-
-    // 画面外バッファ (-250px 〜 width + 250px, -200px 〜 height + 200px)
-    const bufferX = 250;
-    const bufferY = 200;
-    const minX = -bufferX;
-    const maxX = width + bufferX;
-    const minY = -bufferY;
-    const maxY = height + bufferY;
-
-    // 緯度経度による高速画面外刈り込み (マージン 35% 拡大)
-    const bounds = map.getBounds();
-    const latSpan = bounds.getNorth() - bounds.getSouth();
-    const lngSpan = bounds.getEast() - bounds.getWest();
-    const minLat = bounds.getSouth() - latSpan * 0.35;
-    const maxLat = bounds.getNorth() + latSpan * 0.35;
-    const minLng = bounds.getWest() - lngSpan * 0.35;
-    const maxLng = bounds.getEast() + lngSpan * 0.35;
-
-    const routeActive = !!(ROUTE_STATE && ROUTE_STATE.lastResult && ROUTE_STATE.lastResult.allStationIds);
-    const routeStationIds = routeActive ? new Set(ROUTE_STATE.lastResult.allStationIds) : null;
-
-    // 1. 画面内候補の収集 (厳しい固定スコア閾値を撤廃し、画面内の空きスペースに自然と表示)
-    const candidates = [];
-    for (const stId in STATIONS) {
-      const st = STATIONS[stId];
-      if (st.lat < minLat || st.lat > maxLat || st.lng < minLng || st.lng > maxLng) {
-        continue;
-      }
-
-      const isSelected = STATE.selectedStationId === stId;
-      const belongsToSelectedLine = !!(STATE.selectedLineId && st.lines && st.lines.includes(STATE.selectedLineId));
-      const isRouteStation = !!(routeStationIds && routeStationIds.has(stId));
-
-      // 極端な全国ズーム (zoom <= 5) のみ上位駅に絞り、zoom >= 6 では全画面内駅を候補にして衝突判定に委ねる
-      let isCandidate = false;
-      if (isSelected || belongsToSelectedLine || isRouteStation) {
-        isCandidate = true;
-      } else if (currentZoom <= 5) {
-        isCandidate = (st._baseScore || 0) >= 2000;
-      } else {
-        isCandidate = true; // zoom >= 6: 画面内にある全駅が候補
-      }
-
-      if (!isCandidate) continue;
-
-      const pt = map.latLngToContainerPoint([st.lat, st.lng]);
-      if (pt.x < minX || pt.x > maxX || pt.y < minY || pt.y > maxY) {
-        continue;
-      }
-
-      let score = st._baseScore || 0;
-      if (isSelected) {
-        score += 1000000; // 選択駅は最優先
-      } else if (isRouteStation) {
-        score += 500000;
-      } else if (belongsToSelectedLine) {
-        score += 100000;
-      }
-
-      candidates.push({
-        stId,
-        st,
-        pt,
-        score,
-        isSelected,
-        belongsToSelectedLine
       });
     }
 
-    // 2. 確定的なスコア順（主要駅・高優先度順）にソート
-    candidates.sort((a, b) => b.score - a.score || a.stId.localeCompare(b.stId));
+    // 3. キャッシュ確定済みの駅リストから画面内に入る駅を収集
+    for (let i = 0; i < placedList.length; i++) {
+      const stId = placedList[i];
+      if (addedIds.has(stId)) continue;
+      const st = STATIONS[stId];
+      if (!st) continue;
 
-    // 3. 衝突判定 (Greedy Collision Detection)
-    const placedBoxes = [];
-    const placedStations = [];
+      if (st.lat < minLat || st.lat > maxLat || st.lng < minLng || st.lng > maxLng) continue;
 
-    for (let c = 0; c < candidates.length; c++) {
-      if (placedStations.length >= LABEL_POOL_SIZE) break;
-      const cand = candidates[c];
+      const pt = map.latLngToContainerPoint([st.lat, st.lng]);
+      if (pt.x < minX || pt.x > maxX || pt.y < minY || pt.y > maxY) continue;
 
-      const isMega = TIER1_MEGA_HUBS.has(cand.stId) || TIER1_STATION_NAMES.has(cand.st.name);
-      const isMajor = TIER2_MAJOR_HUBS.has(cand.stId) || TIER2_STATION_NAMES.has(cand.st.name);
-      const charWidth = isMega ? 13 : (isMajor ? 12 : 11);
-      const textWidth = Math.max(34, cand.st.name.length * charWidth + 8);
-      const textHeight = isMega ? 18 : 15;
-
-      // ラベル位置 (マーカー右側にアンカー)
-      const box = {
-        x1: cand.pt.x + 6 - 3,
-        y1: cand.pt.y - 9 - 2,
-        x2: cand.pt.x + 6 + textWidth + 3,
-        y2: cand.pt.y - 9 + textHeight + 2
-      };
-
-      if (cand.isSelected) {
-        // 選択駅は衝突判定に関係なく必ず表示し、占有領域として登録
-        placedStations.push(cand);
-        placedBoxes.push(box);
-        placedBoxes.push({
-          x1: cand.pt.x - 9,
-          y1: cand.pt.y - 9,
-          x2: cand.pt.x + 9,
-          y2: cand.pt.y + 9
-        });
-        continue;
-      }
-
-      // 既存の配置済みラベルとの重なりをチェック
-      let collides = false;
-      for (let i = 0; i < placedBoxes.length; i++) {
-        const pb = placedBoxes[i];
-        if (!(box.x2 < pb.x1 || box.x1 > pb.x2 || box.y2 < pb.y1 || box.y1 > pb.y2)) {
-          collides = true;
-          break;
-        }
-      }
-
-      if (!collides) {
-        placedStations.push(cand);
-        placedBoxes.push(box);
-        // 駅マーカー本体の周囲も障害物として登録（路線名ラベルが駅丸印に被らないようにする）
-        placedBoxes.push({
-          x1: cand.pt.x - 7,
-          y1: cand.pt.y - 7,
-          x2: cand.pt.x + 7,
-          y2: cand.pt.y + 7
-        });
-      }
+      visibleStationsToRender.push({ stId: st.id, st: st, isSelected: false, isRouteStation: false });
+      addedIds.add(st.id);
     }
 
-    STATE.placedStationBoxes = placedBoxes;
+    // 4. 動的プール拡張 (画面内確定数に応じて不足があれば自動追加)
+    while (labelPool.length < visibleStationsToRender.length) {
+      const icon = L.divIcon({
+        className: 'station-label leaflet-zoom-animated',
+        html: '<span></span>',
+        iconSize: [110, 16],
+        iconAnchor: [-8, 8]
+      });
+      const marker = L.marker([0, 0], {
+        icon: icon,
+        pane: 'stationLabelsPane',
+        interactive: false
+      }).addTo(labelsLayerGroup);
+      const el = marker.getElement();
+      if (el) el.style.display = 'none';
+      labelPool.push({
+        marker,
+        currentStationId: null,
+        currentClass: ''
+      });
+    }
 
-    // 4. プールマーカーへの超高速反映 (DOM要素再利用・最小限のミューテーション)
-    const poolLen = labelPool.length;
-    const placedCount = placedStations.length;
-
-    for (let i = 0; i < poolLen; i++) {
+    // 5. プールマーカーへの超高速反映 (DOM要素再利用・最小限のミューテーション)
+    const renderCount = visibleStationsToRender.length;
+    for (let i = 0; i < labelPool.length; i++) {
       const item = labelPool[i];
-      if (i < placedCount) {
-        const cand = placedStations[i];
+      if (i < renderCount) {
+        const cand = visibleStationsToRender[i];
         const isMega = TIER1_MEGA_HUBS.has(cand.stId) || TIER1_STATION_NAMES.has(cand.st.name);
         const isMajor = TIER2_MAJOR_HUBS.has(cand.stId) || TIER2_STATION_NAMES.has(cand.st.name);
         const targetClass = `station-label leaflet-zoom-animated ${isMega ? 'hub-label' : (isMajor ? 'major-label' : 'regular-label')}`;
@@ -1393,6 +1559,13 @@
       const totalPts = rawGuidePts.length;
       if (totalPts < 2) return;
 
+      let lineTotalKm = 0;
+      for (let p = 0; p < totalPts - 1; p++) {
+        const dLat = (rawGuidePts[p + 1][0] - rawGuidePts[p][0]) * 111;
+        const dLng = (rawGuidePts[p + 1][1] - rawGuidePts[p][1]) * 85;
+        lineTotalKm += Math.hypot(dLat, dLng);
+      }
+
       // スロット比率の高密度サンプリング (画面内の空いている場所へ動的に配置できるよう候補を増やす)
       const isSuperLong = isShinkansen || totalPts >= 200 || (isMajorTrunk && totalPts >= 120);
       const isMediumLong = !isSuperLong && totalPts >= 70;
@@ -1473,7 +1646,39 @@
         const smoothed = smoothTrackPoints(slotPts, 5);
         if (smoothed.length < 2) return;
 
-        const centerPt = smoothed[Math.floor(smoothed.length / 2)];
+        // SVG textPath startOffset="50%" と寸分違わぬ真の50%累積弧長地点 & 接線角度を算出
+        let totalArcLen = 0;
+        const cumDists = [0];
+        for (let i = 0; i < smoothed.length - 1; i++) {
+          const p1 = smoothed[i];
+          const p2 = smoothed[i + 1];
+          const dLat = (p2[0] - p1[0]) * 111;
+          const dLng = (p2[1] - p1[1]) * 85;
+          totalArcLen += Math.hypot(dLat, dLng);
+          cumDists.push(totalArcLen);
+        }
+
+        const halfArc = totalArcLen * 0.5;
+        let centerPt = smoothed[Math.floor(smoothed.length / 2)];
+        let trackAngle = 0;
+
+        for (let i = 0; i < cumDists.length - 1; i++) {
+          if (cumDists[i] <= halfArc && halfArc <= cumDists[i + 1]) {
+            const segLen = cumDists[i + 1] - cumDists[i];
+            const t = segLen > 0 ? (halfArc - cumDists[i]) / segLen : 0;
+            const p1 = smoothed[i];
+            const p2 = smoothed[i + 1];
+            centerPt = [
+              p1[0] + (p2[0] - p1[0]) * t,
+              p1[1] + (p2[1] - p1[1]) * t
+            ];
+            const segLat = (p2[0] - p1[0]) * 111;
+            const segLng = (p2[1] - p1[1]) * 85;
+            trackAngle = Math.atan2(segLat, segLng);
+            break;
+          }
+        }
+
         const guideId = `guide-track-${line.id}-${slotIdx}`;
 
         // スロット専用の正立ガイドポリラインを作成 (SVG textPath のため SVG レンダラー指定)
@@ -1513,162 +1718,72 @@
         textElem.appendChild(textPathElem);
 
         labelsGroup.appendChild(textElem);
+
+        lineLabelCandidateSlots.push({
+          elem: textElem,
+          lineId: line.id,
+          tier: tier,
+          slot: slotIdx,
+          lat: centerPt[0],
+          lng: centerPt[1],
+          name: cleanName,
+          nameLen: cleanName.length,
+          totalKm: lineTotalKm,
+          angle: trackAngle,
+          priority: (tier === 1 ? 500 : (tier === 2 ? 300 : (tier === 3 ? 200 : 100)))
+        });
       });
     });
+
+    lineLabelCandidateSlots.sort((a, b) => (b.priority - a.priority) || a.lineId.localeCompare(b.lineId) || (a.slot - b.slot));
+    zoomLayoutCache.clear();
   }
 
-  // ズームレベル & 衝突判定に応じた動的路線名表示 (空きスペースへの高密度・非重複配置)
+  // ズームレベル & 絶対ワールド座標キャッシュに応じた動的路線名表示
   function updateLineLabelsVisibility() {
     const labelsGroup = document.getElementById('svg-line-labels-group');
     if (!labelsGroup || !map) return;
 
     const zoom = map.getZoom();
+    const layout = getZoomLayout(zoom);
+    const placedSlots = layout.placedLineSlots;
+
     const mapSize = map.getSize();
-    const width = mapSize.x;
-    const height = mapSize.y;
-    const selectedId = STATE.selectedLineId;
-    const textElems = Array.from(labelsGroup.querySelectorAll('.svg-line-text'));
+    const minX = -80;
+    const maxX = mapSize.x + 80;
+    const minY = -60;
+    const maxY = mapSize.y + 60;
 
-    const stationBoxes = STATE.placedStationBoxes || [];
-    const placedLineBoxes = [];
-    const placedLineIds = new Map(); // lineId -> Array of placed centers for distance check
+    const bounds = map.getBounds();
+    const latSpan = bounds.getNorth() - bounds.getSouth();
+    const lngSpan = bounds.getEast() - bounds.getWest();
+    const minLat = bounds.getSouth() - latSpan * 0.25;
+    const maxLat = bounds.getNorth() + latSpan * 0.25;
+    const minLng = bounds.getWest() - lngSpan * 0.25;
+    const maxLng = bounds.getEast() + lngSpan * 0.25;
 
-    // すべて一旦リセット
-    textElems.forEach(el => {
+    const selectedLineId = STATE.selectedLineId;
+
+    // すべて一旦非表示
+    const allElems = labelsGroup.querySelectorAll('.svg-line-text');
+    allElems.forEach(el => {
       el.style.display = 'none';
       el.classList.remove('active-line-text');
     });
 
-    // 表示候補のフィルタリング
-    const candidates = [];
+    // キャッシュ確定済みのスロットのうち、現在画面内に入るものを表示
+    for (let i = 0; i < placedSlots.length; i++) {
+      const item = placedSlots[i];
+      if (item.lat < minLat || item.lat > maxLat || item.lng < minLng || item.lng > maxLng) continue;
 
-    textElems.forEach(elem => {
-      const lineId = elem.getAttribute('data-line-id');
-      const tier = parseInt(elem.getAttribute('data-tier'), 10) || 4;
-      const isSelected = selectedId === lineId;
-      const lat = parseFloat(elem.getAttribute('data-lat'));
-      const lng = parseFloat(elem.getAttribute('data-lng'));
-      const nameLen = parseInt(elem.getAttribute('data-name-len'), 10) || 4;
-      const slot = parseInt(elem.getAttribute('data-slot'), 10) || 0;
+      const pt = map.latLngToContainerPoint([item.lat, item.lng]);
+      if (pt.x < minX || pt.x > maxX || pt.y < minY || pt.y > maxY) continue;
 
-      // ズーム条件の大幅緩和 (ローカル線もzoom 7から表示候補に)
-      let meetsZoom = false;
-      if (isSelected) {
-        meetsZoom = true;
-      } else if (tier === 1) { // 新幹線
-        meetsZoom = (zoom >= 5);
-      } else if (tier === 2) { // 主要幹線
-        meetsZoom = (zoom >= 6);
-      } else if (tier === 3) { // 地域幹線
-        meetsZoom = (zoom >= 7);
-      } else { // ローカル線
-        meetsZoom = (zoom >= 7);
+      item.elem.style.display = '';
+      if (selectedLineId === item.lineId) {
+        item.elem.classList.add('active-line-text');
       }
-
-      if (!meetsZoom || isNaN(lat) || isNaN(lng)) {
-        return;
-      }
-
-      // 画面上のピクセル位置
-      const pt = map.latLngToContainerPoint([lat, lng]);
-
-      // 画面外マージン (-80px 〜 width + 80px, -60px 〜 height + 60px)
-      if (pt.x < -80 || pt.x > width + 80 || pt.y < -60 || pt.y > height + 60) {
-        return;
-      }
-
-      let priority = 0;
-      if (isSelected) priority = 10000;
-      else if (tier === 1) priority = 500;
-      else if (tier === 2) priority = 300;
-      else if (tier === 3) priority = 200;
-      else priority = 100;
-
-      candidates.push({
-        elem,
-        lineId,
-        tier,
-        slot,
-        isSelected,
-        pt,
-        nameLen,
-        priority
-      });
-    });
-
-    // 優先度順（選択路線 > 新幹線 > 主要幹線 > 地域幹線 > ローカル線）にソート
-    candidates.sort((a, b) => (b.priority - a.priority) || a.lineId.localeCompare(b.lineId) || (a.slot - b.slot));
-
-    // 衝突チェック関数
-    function checkCollision(box) {
-      // 1. 駅名テキストおよび駅マーカーとの衝突
-      for (let i = 0; i < stationBoxes.length; i++) {
-        const sb = stationBoxes[i];
-        if (!(box.x2 < sb.x1 || box.x1 > sb.x2 || box.y2 < sb.y1 || box.y1 > sb.y2)) {
-          return true;
-        }
-      }
-      // 2. 他の配置済み路線名ラベルとの衝突
-      for (let i = 0; i < placedLineBoxes.length; i++) {
-        const lb = placedLineBoxes[i];
-        if (!(box.x2 < lb.x1 || box.x1 > lb.x2 || box.y2 < lb.y1 || box.y1 > lb.y2)) {
-          return true;
-        }
-      }
-      return false;
     }
-
-    // パス1: 各路線につき最低1つ、空いているスペースが見つかったスロットに路線名を配置
-    // パス2: 画面内に長く見えている長大路線の追加ラベル配置 (同一路線で180px以上離れている箇所)
-    const pendingExtraCandidates = [];
-
-    candidates.forEach(cand => {
-      const charWidth = cand.tier === 1 ? 13 : 11.5;
-      const boxWidth = Math.max(30, cand.nameLen * charWidth + 10);
-      const boxHeight = cand.tier === 1 ? 16 : 14;
-
-      const box = {
-        x1: cand.pt.x - boxWidth / 2,
-        y1: cand.pt.y - boxHeight / 2,
-        x2: cand.pt.x + boxWidth / 2,
-        y2: cand.pt.y + boxHeight / 2
-      };
-
-      if (cand.isSelected) {
-        cand.elem.style.display = '';
-        cand.elem.classList.add('active-line-text');
-        placedLineBoxes.push(box);
-        return;
-      }
-
-      // この路線がすでに1つ以上配置されている場合は、パス2（追加ラベル）へ回す
-      if (placedLineIds.has(cand.lineId)) {
-        pendingExtraCandidates.push({ cand, box });
-        return;
-      }
-
-      if (!checkCollision(box)) {
-        cand.elem.style.display = '';
-        placedLineBoxes.push(box);
-        placedLineIds.set(cand.lineId, [cand.pt]);
-      }
-    });
-
-    // パス2: 追加ラベルの配置 (未表示路線の機会を奪わないよう、パス1の後に実行)
-    pendingExtraCandidates.forEach(({ cand, box }) => {
-      const existingCenters = placedLineIds.get(cand.lineId) || [];
-      const isTooClose = existingCenters.some(cPt => {
-        const dist = Math.hypot(cand.pt.x - cPt.x, cand.pt.y - cPt.y);
-        return dist < 180; // 同一路線は180px以上離す
-      });
-      if (isTooClose) return;
-
-      if (!checkCollision(box)) {
-        cand.elem.style.display = '';
-        placedLineBoxes.push(box);
-        existingCenters.push(cand.pt);
-      }
-    });
   }
 
   // ズームレベルに応じた線幅の調整 (差分更新により不要なsetStyleを完全抑止)
@@ -4091,13 +4206,8 @@
     }
     ROUTE_STATE.activePinLayers = [];
 
-    // 駅マーカーレイヤーグループを復元
-    const zoom = map.getZoom();
-    if (zoom >= 10 || STATE.selectedStationId) {
-      if (!map.hasLayer(stationsLayerGroup)) {
-        map.addLayer(stationsLayerGroup);
-      }
-    }
+    // 駅マーカーの復元
+    updateStationMarkerSizes();
 
     // 地図の通常スタイルおよびラベルを復元
     resetAllMapStyles();
@@ -4389,7 +4499,9 @@
       getLinePolylines: () => linePolylines,
       updateStationMarkerSizes,
       updateLabelsVisibility,
-      updateLineLabelsVisibility
+      updateLineLabelsVisibility,
+      getZoomLayout,
+      getZoomLayoutCache: () => zoomLayoutCache
     };
   }
 })();
