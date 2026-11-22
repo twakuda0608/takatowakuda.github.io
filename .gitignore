@@ -6,4 +6,5 @@ TODO.md
 AGENTS.md
 .agents/
 jr-map/test-browser.js
+scratch/
 .gitignore

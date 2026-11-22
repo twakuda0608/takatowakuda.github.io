@@ -644,31 +644,29 @@
     const segments = fullSegments || sections || [];
     if (segments.length === 0) return { totalShortenKm: 0, appliedCorridors: [], trunkDelta: 0, localDelta: 0 };
 
+    // 経路上の駅ノード列を構築 (segments[i] は nodeNames[i] から nodeNames[i+1] へのエッジ)
+    const nodeNames = [];
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i];
+      const fName = stations[seg.from] ? stations[seg.from].name : seg.from;
+      const tName = stations[seg.to] ? stations[seg.to].name : seg.to;
+      if (i === 0) nodeNames.push(fName);
+      nodeNames.push(tName);
+    }
+
     for (const corridor of FareRulesData.ARTICLE_69_CORRIDORS) {
       const end1 = corridor.endStationNames[0];
       const end2 = corridor.endStationNames[1];
 
-      // セグメント列から end1, end2 の位置を特定
-      let idx1 = -1;
-      let idx2 = -1;
+      // 駅ノード列から end1, end2 の位置を特定
+      const nIdx1 = nodeNames.indexOf(end1);
+      const nIdx2 = nodeNames.indexOf(end2);
 
-      for (let i = 0; i < segments.length; i++) {
-        const seg = segments[i];
-        const fName = stations[seg.from] ? stations[seg.from].name : seg.from;
-        const tName = stations[seg.to] ? stations[seg.to].name : seg.to;
-
-        if (fName === end1 || tName === end1) {
-          if (idx1 === -1) idx1 = i;
-        }
-        if (fName === end2 || tName === end2) {
-          if (idx2 === -1) idx2 = i;
-        }
-      }
-
-      if (idx1 >= 0 && idx2 >= 0 && idx1 !== idx2) {
-        const startIdx = Math.min(idx1, idx2);
-        const endIdx = Math.max(idx1, idx2);
-        const subSegments = segments.slice(startIdx, endIdx + 1);
+      if (nIdx1 >= 0 && nIdx2 >= 0 && nIdx1 !== nIdx2) {
+        // end1 と end2 の間に挟まれたセグメントだけをスライス
+        const startSegIdx = Math.min(nIdx1, nIdx2);
+        const endSegIdx = Math.max(nIdx1, nIdx2) - 1;
+        const subSegments = segments.slice(startSegIdx, endSegIdx + 1);
 
         const subStationNames = new Set();
         let subActualKm = 0;

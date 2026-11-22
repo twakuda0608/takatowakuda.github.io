@@ -217,41 +217,122 @@
 
         <!-- 探索結果表示エリア -->
         <div id="route-result-container" class="route-result-container" style="display: none;">
-          <!-- マルス券面風カード -->
-          <div class="mars-ticket-card">
-            <div class="ticket-header">
-              <span class="ticket-type" id="ticket-type-label">普通乗車券</span>
-              <span class="ticket-status-badge" id="route-validity-badge">一筆書き成立</span>
+          <!-- 券面操作バー（運賃種別切替・乗車日・券種モード） -->
+          <div class="ticket-control-bar">
+            <div class="fare-type-group" id="fare-type-group">
+              <button type="button" class="fare-type-btn active" data-type="adult" id="btn-fare-adult">大人</button>
+              <button type="button" class="fare-type-btn" data-type="child" id="btn-fare-child">小児</button>
+              <button type="button" class="fare-type-btn" data-type="student" id="btn-fare-student">学割</button>
             </div>
-            <div class="ticket-stations-row">
-              <span class="ticket-dept" id="ticket-dept-name">東京</span>
-              <span class="ticket-arrow">→</span>
-              <span class="ticket-dest" id="ticket-dest-name">新宿</span>
+            <div class="ticket-date-wrapper">
+              <label for="ticket-date-input" class="ticket-date-label">乗車日</label>
+              <input type="date" id="ticket-date-input" class="ticket-date-input">
             </div>
-            <div class="ticket-via-block">
-              <div class="ticket-via-label">経由</div>
-              <div class="ticket-via-text" id="ticket-via-text">中央東</div>
+            <div class="ticket-size-toggle" id="ticket-size-toggle">
+              <button type="button" class="size-btn active" data-size="auto" id="btn-size-auto" title="自動判定">自動</button>
+              <button type="button" class="size-btn" data-size="85" id="btn-size-85" title="85mm券強制">85mm</button>
+              <button type="button" class="size-btn" data-size="120" id="btn-size-120" title="120mm券強制">120mm</button>
             </div>
+          </div>
 
-            <!-- 運賃ブロック -->
-            <div class="ticket-fare-block" id="ticket-fare-block">
-              <span class="fare-label">運賃:</span>
-              <span class="fare-value" id="ticket-base-fare">260円</span>
-            </div>
+          <!-- 本格マルス乗車券面 -->
+          <div class="mars-ticket-wrapper">
+            <div class="mars-ticket-card" id="mars-ticket-card">
+              <div class="ticket-inner-frame">
+                <!-- 券面上部ヘッダー -->
+                <div class="ticket-header-row">
+                  <div class="ticket-header-left">
+                    <span class="company-symbol-badge" id="ticket-company-symbol">[東]</span>
+                    <span class="ticket-title" id="ticket-type-label">乗　車　券</span>
+                    <span class="student-symbol-badge" id="ticket-student-badge" style="display: none;">学割</span>
+                  </div>
+                  <div class="ticket-header-right">
+                    <span class="ticket-size-indicator" id="ticket-size-indicator">85mm券</span>
+                    <span class="gate-symbol" id="ticket-gate-symbol" title="自動改札対応">□</span>
+                  </div>
+                </div>
 
-            <!-- 旅規ルール (有効期間・途中下車) ブロック -->
-            <div class="ticket-rules-block">
-              <div class="rule-badge-row">
-                <span class="rule-badge" id="ticket-validity-badge">2日間有効</span>
-                <span class="rule-badge" id="ticket-stopover-badge">途中下車可能</span>
+                <!-- 発着駅表示 -->
+                <div class="ticket-stations-row">
+                  <div class="station-box dept-box">
+                    <span class="station-print-name" id="ticket-dept-name">東京</span>
+                    <span class="station-sub-text" id="ticket-dept-sub" style="display: none;"></span>
+                  </div>
+                  <div class="ticket-arrow-wrapper">
+                    <span class="ticket-arrow-symbol">→</span>
+                    <span class="child-symbol-badge" id="ticket-child-badge" style="display: none;">小</span>
+                  </div>
+                  <div class="station-box dest-box">
+                    <span class="station-print-name" id="ticket-dest-name">新宿</span>
+                    <span class="station-sub-text" id="ticket-dest-sub" style="display: none;"></span>
+                  </div>
+                </div>
+
+                <!-- 経由印字 -->
+                <div class="ticket-via-row">
+                  <span class="ticket-via-prefix">経由：</span>
+                  <span class="ticket-via-content" id="ticket-via-text">中央東</span>
+                </div>
+
+                <!-- 有効期間・途中下車・運賃 -->
+                <div class="ticket-bottom-row">
+                  <div class="ticket-bottom-left">
+                    <div class="validity-date-line" id="ticket-validity-text">発売当日限り有効</div>
+                    <div class="stopover-line" id="ticket-stopover-text">下車前途無効</div>
+                    <div class="ticket-student-note" id="ticket-student-note" style="display: none;"></div>
+                  </div>
+                  <div class="ticket-bottom-right">
+                    <div class="fare-currency">￥<span class="fare-amount" id="ticket-base-fare">260</span></div>
+                    <div class="fare-tax-note">（入鋏省略）</div>
+                  </div>
+                </div>
+
+                <!-- マルス券面フッター飾り -->
+                <div class="ticket-meta-footer">
+                  <span class="ticket-issue-date" id="ticket-issue-date">2026.-3.14</span>
+                  <span class="ticket-issue-station" id="ticket-issue-station">東京駅＃１</span>
+                  <span class="ticket-serial">（２-タ）</span>
+                  <span class="ticket-status-badge" id="route-validity-badge">一筆書き成立</span>
+                </div>
               </div>
             </div>
+          </div>
 
-            <div class="ticket-footer-row">
-              <span class="ticket-kilo" id="ticket-total-kilo">営業キロ: 10.3 km</span>
-              <span class="ticket-kilo-warning" id="ticket-kilo-warning" style="display: none;"></span>
-              <button type="button" class="btn-copy-ticket" id="btn-copy-ticket">コピー</button>
+          <!-- 券面下部アクションバー (コピー・通知) -->
+          <div class="ticket-action-bar">
+            <button type="button" class="btn-copy-ticket" id="btn-copy-ticket">券面テキストコピー</button>
+            <span id="copy-toast" class="copy-toast" style="display: none;">コピー完了</span>
+          </div>
+
+          <!-- 運賃計算・適用特例内訳カード -->
+          <div class="fare-details-card" id="fare-details-card">
+            <div class="fare-details-header">
+              <span class="details-title">運賃計算・適用特例内訳</span>
+              <span class="mars-count-pill" id="ticket-mars-count-badge">4 / 16 経路 (マルス可)</span>
             </div>
+            <div class="fare-specs-grid">
+              <div class="spec-item">
+                <span class="spec-label">実営業キロ</span>
+                <span class="spec-val" id="spec-actual-km">10.3 km</span>
+              </div>
+              <div class="spec-item" id="spec-fare-km-item">
+                <span class="spec-label">運賃計算キロ</span>
+                <span class="spec-val" id="spec-fare-km">10.3 km</span>
+              </div>
+              <div class="spec-item" id="spec-lines-breakdown-item" style="display: none;">
+                <span class="spec-label">路線区分</span>
+                <span class="spec-val" id="spec-lines-breakdown">幹線 0km / 地通 0km</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">会社別営業キロ</span>
+                <span class="spec-val" id="spec-company-km">東: 10.3km</span>
+              </div>
+            </div>
+            <!-- 適用特例タグ群 -->
+            <div class="rule-tags-container" id="rule-tags-container">
+              <!-- 特例バッジ -->
+            </div>
+            <div id="ticket-kilo-warning" class="ticket-kilo-warning" style="display: none;"></div>
           </div>
 
           <!-- 詳細区間リスト -->
