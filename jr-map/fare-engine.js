@@ -819,10 +819,20 @@
 
     // ゾーン再進入チェック (旅規第86条・第87条ただし書: ゾーン外に出て再び入る場合は単駅扱い)
     function checkReentry(zone) {
-      if (!zone) return false;
+      if (!zone || segments.length === 0) return false;
       let state = 0; // 0: 初期(未進入), 1: ゾーン内, 2: ゾーン外離脱
-      for (const seg of segments) {
-        const inZone = isStationInZone(seg.to, stations[seg.to]?.name, zone);
+
+      // 発駅（segments[0].from）から順に全ノードを走査
+      const firstFromId = segments[0].from;
+      const firstFromName = stations[firstFromId] ? stations[firstFromId].name : firstFromId;
+      if (isStationInZone(firstFromId, firstFromName, zone)) {
+        state = 1;
+      }
+
+      for (let i = 0; i < segments.length; i++) {
+        const toId = segments[i].to;
+        const toName = stations[toId] ? stations[toId].name : toId;
+        const inZone = isStationInZone(toId, toName, zone);
         if (state === 0 && inZone) state = 1;
         else if (state === 1 && !inZone) state = 2;
         else if (state === 2 && inZone) return true; // 再進入検出
@@ -871,11 +881,14 @@
           const fName = stations[seg.from] ? stations[seg.from].name : seg.from;
           const tName = stations[seg.to] ? stations[seg.to].name : seg.to;
 
-          if (!candidateDestZone.stationNames.has(fName) && candidateDestZone.stationNames.has(tName)) {
+          const isFromInZone = isStationInZone(seg.from, fName, candidateDestZone);
+          const isToInZone = isStationInZone(seg.to, tName, candidateDestZone);
+
+          if (!isFromInZone && isToInZone) {
             destBorderStationId = seg.to;
             distBorderToDest = totalKm - (cumDist + segDist);
             break;
-          } else if (candidateDestZone.stationNames.has(fName) && destBorderStationId === null) {
+          } else if (isFromInZone && destBorderStationId === null) {
             destBorderStationId = seg.from;
             distBorderToDest = totalKm - cumDist;
             break;
@@ -928,8 +941,8 @@
           const fName = stations[seg.from] ? stations[seg.from].name : seg.from;
           const tName = stations[seg.to] ? stations[seg.to].name : seg.to;
 
-          const isFromInZone = candidateDeptZone.stationNames.has(fName);
-          const isToInZone = candidateDeptZone.stationNames.has(tName);
+          const isFromInZone = isStationInZone(seg.from, fName, candidateDeptZone);
+          const isToInZone = isStationInZone(seg.to, tName, candidateDeptZone);
           const isShinkansen = seg.isShinkansen || (seg.lineId && seg.lineId.startsWith('shinkansen-'));
 
           // 在来線ゾーン内から新幹線に乗車する場合、新幹線の乗車駅がゾーン境界（中心駅接続）となる
@@ -1416,6 +1429,8 @@
       displayDestName: zoneResult.displayDestName,
       deptZoneApplied: zoneResult.deptApplied,
       destZoneApplied: zoneResult.destApplied,
+      deptBorderStationId: zoneResult.deptBorderStationId,
+      destBorderStationId: zoneResult.destBorderStationId,
 
       isAvailable: isAvailable,
       baseFare: adultFare,

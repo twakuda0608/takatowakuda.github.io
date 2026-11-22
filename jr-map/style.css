@@ -2337,19 +2337,25 @@ body.theme-light .station-pref {
 .shinkansen-input-wrapper {
   position: relative;
   flex: 1;
+  min-width: 0;
 }
 .shinkansen-input-wrapper .route-station-input {
   width: 100%;
+  height: 28px;
+  box-sizing: border-box;
   padding: 4px 8px;
   font-size: 12px;
+  border-radius: 6px;
 }
 .btn-swap-shinkansen {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  height: 28px;
+  box-sizing: border-box;
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 4px 6px;
   font-size: 13px;
   font-weight: 700;
@@ -2364,6 +2370,52 @@ body.theme-light .station-pref {
   color: #0f172a;
   border-color: #94a3b8;
   transform: scale(1.05);
+}
+
+/* 新幹線手動区間追加ボタン (アプリ統一デザイン) */
+#btn-add-shinkansen-seg,
+.shinkansen-add-row .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  background: #0284c7;
+  color: #ffffff;
+  border: 1px solid #0284c7;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.25);
+}
+
+#btn-add-shinkansen-seg:hover,
+.shinkansen-add-row .btn-secondary:hover {
+  background: #0369a1;
+  border-color: #0369a1;
+  box-shadow: 0 2px 5px rgba(2, 132, 199, 0.35);
+  transform: translateY(-1px);
+}
+
+#btn-add-shinkansen-seg:active,
+.shinkansen-add-row .btn-secondary:active {
+  background: #075985;
+  border-color: #075985;
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+#btn-add-shinkansen-seg:focus-visible,
+.shinkansen-add-row .btn-secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.4);
 }
 
 /* ルート描画専用 Pane (前面にあってもマウス操作を一切妨げない) */

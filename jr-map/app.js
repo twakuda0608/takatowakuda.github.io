@@ -152,7 +152,7 @@
       const st = STATIONS[id];
       st._nameLower = (st.name || '').toLowerCase();
       st._kanaLower = (st.kana || '').toLowerCase();
-      st._enLower = (st.en || '').toLowerCase();
+      st._enLower = (getStationEnName(st) || '').toLowerCase();
     }
   }
 
@@ -230,6 +230,104 @@
     if (marsMap[id]) return marsMap[id];
     const st = STATIONS[id] || (typeof stOrId === 'object' ? stOrId : null);
     return st ? st.name : (typeof stOrId === 'string' ? stOrId : '');
+  }
+
+  // =======================================================
+  // ヘボン式ローマ字安全変換 & 駅英語名取得ヘルパー
+  // =======================================================
+  const KANA_HEPBURN_MAP = {
+    'あ': 'a', 'い': 'i', 'う': 'u', 'え': 'e', 'お': 'o',
+    'か': 'ka', 'き': 'ki', 'く': 'ku', 'け': 'ke', 'こ': 'ko',
+    'さ': 'sa', 'し': 'shi', 'す': 'su', 'せ': 'se', 'そ': 'so',
+    'た': 'ta', 'ち': 'chi', 'つ': 'tsu', 'て': 'te', 'と': 'to',
+    'な': 'na', 'に': 'ni', 'ぬ': 'nu', 'ね': 'ne', 'の': 'no',
+    'は': 'ha', 'ひ': 'hi', 'ふ': 'fu', 'へ': 'he', 'ほ': 'ho',
+    'ま': 'ma', 'み': 'mi', 'む': 'mu', 'め': 'me', 'も': 'mo',
+    'や': 'ya', 'ゆ': 'yu', 'よ': 'yo',
+    'ら': 'ra', 'り': 'ri', 'る': 'ru', 'れ': 're', 'ろ': 'ro',
+    'わ': 'wa', 'を': 'o', 'ん': 'n',
+    'が': 'ga', 'ぎ': 'gi', 'ぐ': 'gu', 'げ': 'ge', 'ご': 'go',
+    'ざ': 'za', 'じ': 'ji', 'ず': 'zu', 'ぜ': 'ze', 'ぞ': 'zo',
+    'だ': 'da', 'ぢ': 'ji', 'づ': 'zu', 'で': 'de', 'ど': 'do',
+    'ば': 'ba', 'び': 'bi', 'ぶ': 'bu', 'べ': 'be', 'ぼ': 'bo',
+    'ぱ': 'pa', 'ぴ': 'pi', 'ぷ': 'pu', 'ぺ': 'pe', 'ぽ': 'po',
+    'きゃ': 'kya', 'きゅ': 'kyu', 'きょ': 'kyo',
+    'ぎゃ': 'gya', 'ぎゅ': 'gyu', 'ぎょ': 'gyo',
+    'しゃ': 'sha', 'しゅ': 'shu', 'しょ': 'sho',
+    'じゃ': 'ja', 'じゅ': 'ju', 'じょ': 'jo',
+    'ちゃ': 'cha', 'ちゅ': 'chu', 'ちょ': 'cho',
+    'ぢゃ': 'ja', 'ぢゅ': 'ju', 'ぢょ': 'jo',
+    'にゃ': 'nya', 'にゅ': 'nyu', 'にょ': 'nyo',
+    'ひゃ': 'hya', 'ひゅ': 'hyu', 'ひょ': 'hyo',
+    'びゃ': 'bya', 'びゅ': 'byu', 'びょ': 'byo',
+    'ぴゃ': 'pya', 'ぴゅ': 'pyu', 'ぴょ': 'pyo',
+    'みゃ': 'mya', 'みゅ': 'myu', 'みょ': 'myo',
+    'りゃ': 'rya', 'りゅ': 'ryu', 'りょ': 'ryo',
+    'ふぁ': 'fa', 'ふぃ': 'fi', 'ふぇ': 'fe', 'ふぉ': 'fo',
+    'てぃ': 'ti', 'でぃ': 'di', 'ヴ': 'v'
+  };
+
+  function kanaToHepburnSafe(kana) {
+    if (!kana) return '';
+    let k = kana.replace(/[\u30a1-\u30f6]/g, m => String.fromCharCode(m.charCodeAt(0) - 0x60));
+    let res = '';
+    let i = 0;
+    while (i < k.length) {
+      if (i + 1 < k.length) {
+        const two = k.slice(i, i + 2);
+        if (KANA_HEPBURN_MAP[two]) {
+          res += KANA_HEPBURN_MAP[two];
+          i += 2;
+          continue;
+        }
+      }
+      const c = k[i];
+      if (c === 'っ') {
+        if (i + 1 < k.length) {
+          const nextTwo = k.slice(i + 1, i + 3);
+          const nextOne = k[i + 1];
+          let nextR = KANA_HEPBURN_MAP[nextTwo] || KANA_HEPBURN_MAP[nextOne] || '';
+          if (nextR.startsWith('ch')) res += 't';
+          else if (nextR) res += nextR[0];
+        }
+        i++;
+        continue;
+      }
+      if (c === 'ー') {
+        i++;
+        continue;
+      }
+      if (c === 'う' && i > 0 && ['o', 'u'].includes(res.slice(-1))) {
+        i++;
+        continue;
+      }
+      if (c === 'お' && i > 0 && res.slice(-1) === 'o') {
+        i++;
+        continue;
+      }
+      if (KANA_HEPBURN_MAP[c]) {
+        res += KANA_HEPBURN_MAP[c];
+      } else {
+        res += c;
+      }
+      i++;
+    }
+    res = res.replace(/nb/g, 'mb').replace(/np/g, 'mp').replace(/nm/g, 'mm');
+    if (res) res = res.charAt(0).toUpperCase() + res.slice(1);
+    return res;
+  }
+
+  function getStationEnName(stOrId) {
+    if (!stOrId) return '';
+    const st = typeof stOrId === 'string' ? STATIONS[stOrId] : stOrId;
+    if (!st) return '';
+    // st.en に日本語（ひらがな・カタカナ・漢字等）が含まれず空でない場合はそのまま使用
+    if (st.en && !/[^\x00-\x7F]/.test(st.en)) {
+      return st.en;
+    }
+    // 万一 st.en に日本語が残っているか空の場合は st.kana または st.name からヘボン式ローマ字へ安全に変換
+    const fallbackSource = (st.kana && !/[\u4e00-\u9faf]/.test(st.kana)) ? st.kana : (st.name || '');
+    return kanaToHepburnSafe(fallbackSource) || st.en || st.name || '';
   }
 
   // 駅の優先度スコア・局所孤立度（過疎地域判定）の事前計算 (起動時に1回のみ高速実行)
@@ -1681,8 +1779,8 @@
 
     const sheet = document.getElementById('station-sheet');
     document.getElementById('sheet-pref').textContent = st.pref;
-    document.getElementById('sheet-kana').textContent = st.kana;
-    document.getElementById('sheet-en').textContent = st.en;
+    document.getElementById('sheet-kana').textContent = st.kana || '';
+    document.getElementById('sheet-en').textContent = getStationEnName(st);
     document.getElementById('sheet-name').textContent = getStationUiName(st);
 
     const linesContainer = document.getElementById('sheet-lines');
@@ -1801,7 +1899,7 @@
       const st = STATIONS[id];
       const name = st._nameLower || st.name.toLowerCase();
       const kana = st._kanaLower || (st.kana || '').toLowerCase();
-      const en = st._enLower || (st.en || '').toLowerCase();
+      const en = st._enLower || (getStationEnName(st) || '').toLowerCase();
 
       let score = -1;
       // 1. 漢字完全一致 (最優先)
@@ -1903,7 +2001,7 @@
         item.innerHTML = `
           <div class="search-item-info">
             <span class="search-item-name">${getStationUiName(st)}</span>
-            <span class="search-item-kana">${st.kana} (${st.en})</span>
+            <span class="search-item-kana">${st.kana || ''} (${getStationEnName(st)})</span>
           </div>
           <span class="search-item-pref">${st.pref}</span>
         `;
@@ -4245,7 +4343,10 @@
       calcShinkansenDistance,
       getRelevantShinkansenPairs,
       addShinkansenSegment,
-      getRouteState: () => ROUTE_STATE
+      getRouteState: () => ROUTE_STATE,
+      selectStation,
+      getStationEnName,
+      getStationUiName
     };
   }
 })();
