@@ -96,6 +96,7 @@
     'tokai-kansai': '関西',
     'tokai-kisei': '紀勢',
     'tokai-takayama': '高山線',
+    'takayama-west': '高山線',
     'tokai-iida': '飯田線',
     'tokai-minobu': '身延線',
     'tokai-gotemba': '御殿場線',

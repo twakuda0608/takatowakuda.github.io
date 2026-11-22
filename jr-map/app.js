@@ -3355,6 +3355,7 @@
     }
 
     inputEl.addEventListener('input', () => {
+      inputEl.removeAttribute('data-id');
       const q = inputEl.value.trim().toLowerCase();
       selectedIndex = -1;
       currentMatches = [];
