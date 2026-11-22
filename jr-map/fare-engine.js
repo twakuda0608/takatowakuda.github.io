@@ -644,67 +644,88 @@
     const segments = fullSegments || sections || [];
     if (segments.length === 0) return { totalShortenKm: 0, appliedCorridors: [], trunkDelta: 0, localDelta: 0 };
 
-    // 経路内の全駅名を抽出
-    const passedNames = [];
-    segments.forEach(seg => {
-      const f = stations[seg.from] ? stations[seg.from].name : seg.from;
-      const t = stations[seg.to] ? stations[seg.to].name : seg.to;
-      if (passedNames.length === 0 || passedNames[passedNames.length - 1] !== f) passedNames.push(f);
-      passedNames.push(t);
-    });
-
     for (const corridor of FareRulesData.ARTICLE_69_CORRIDORS) {
       const end1 = corridor.endStationNames[0];
       const end2 = corridor.endStationNames[1];
 
-      const idx1 = passedNames.indexOf(end1);
-      const idx2 = passedNames.indexOf(end2);
+      // セグメント列から end1, end2 の位置を特定
+      let idx1 = -1;
+      let idx2 = -1;
+
+      for (let i = 0; i < segments.length; i++) {
+        const seg = segments[i];
+        const fName = stations[seg.from] ? stations[seg.from].name : seg.from;
+        const tName = stations[seg.to] ? stations[seg.to].name : seg.to;
+
+        if (fName === end1 || tName === end1) {
+          if (idx1 === -1) idx1 = i;
+        }
+        if (fName === end2 || tName === end2) {
+          if (idx2 === -1) idx2 = i;
+        }
+      }
 
       if (idx1 >= 0 && idx2 >= 0 && idx1 !== idx2) {
-        // 両端駅を通過している
+        const startIdx = Math.min(idx1, idx2);
+        const endIdx = Math.max(idx1, idx2);
+        const subSegments = segments.slice(startIdx, endIdx + 1);
+
+        const subStationNames = new Set();
+        let subActualKm = 0;
+        let subLocalKm = 0;
+        let subTrunkKm = 0;
+
+        subSegments.forEach(seg => {
+          const fName = stations[seg.from] ? stations[seg.from].name : seg.from;
+          const tName = stations[seg.to] ? stations[seg.to].name : seg.to;
+          subStationNames.add(fName);
+          subStationNames.add(tName);
+          const segDist = seg.dist !== undefined ? seg.dist : (seg.km || 0);
+          subActualKm += segDist;
+          const isLoc = FareRulesData.isLocalLineSegment ? FareRulesData.isLocalLineSegment(seg.lineId, seg.from, seg.to, stations) : false;
+          if (isLoc) subLocalKm += segDist;
+          else subTrunkKm += segDist;
+        });
+
         let passesDetour = false;
         if (corridor.id === 'art69::akabane-omiya') {
-          passesDetour = passedNames.includes('武蔵浦和');
+          passesDetour = subStationNames.has('武蔵浦和');
         } else if (corridor.id === 'art69::iwakuni-kushigahama') {
-          passesDetour = passedNames.includes('柳井');
+          passesDetour = subStationNames.has('柳井');
         } else if (corridor.id === 'art69::mihara-kaitaichi') {
-          passesDetour = segments.some(seg => corridor.detourLineIds.has(seg.lineId));
+          passesDetour = subSegments.some(seg => corridor.detourLineIds.has(seg.lineId));
         } else if (corridor.id === 'art69::shinosaka-amagasaki') {
-          passesDetour = segments.some(seg => corridor.detourLineIds.has(seg.lineId));
+          passesDetour = subSegments.some(seg => corridor.detourLineIds.has(seg.lineId));
         } else if (corridor.id === 'art69::kashii-hakata') {
-          passesDetour = segments.some(seg => corridor.detourLineIds.has(seg.lineId));
-        } else if (corridor.id === 'art69::kusatsu-tsuge') {
-          passesDetour = segments.some(seg => corridor.detourLineIds.has(seg.lineId));
+          passesDetour = subSegments.some(seg => corridor.detourLineIds.has(seg.lineId));
         } else if (corridor.id === 'art69::nippori-akabane') {
           passesDetour = false; // 同一キロのため短縮なし
         } else {
-          passesDetour = segments.some(seg => corridor.detourLineIds.has(seg.lineId));
+          passesDetour = subSegments.some(seg => corridor.detourLineIds.has(seg.lineId));
         }
 
         if (passesDetour) {
-          const shorten = Math.max(0, Math.round((corridor.detourKm - corridor.shortcutKm) * 10) / 10);
+          const actualDetourKm = Math.round(subActualKm * 10) / 10;
+          const shorten = Math.max(0, Math.round((actualDetourKm - corridor.shortcutKm) * 10) / 10);
           if (shorten > 0) {
             totalShortenKm += shorten;
             appliedCorridors.push({
               id: corridor.id,
               name: corridor.name,
-              detourKm: corridor.detourKm,
+              detourKm: actualDetourKm,
               shortcutKm: corridor.shortcutKm,
               shortenKm: shorten
             });
 
             // 幹線・地方交通線のキロ数調整
             if (corridor.id === 'art69::mihara-kaitaichi') {
-              localDelta -= corridor.detourKm;
-              trunkDelta += corridor.shortcutKm;
+              localDelta -= subLocalKm;
+              trunkDelta += (corridor.shortcutKm - subTrunkKm);
             } else if (corridor.id === 'art69::iwakuni-kushigahama') {
-              trunkDelta -= corridor.detourKm;
-              localDelta += corridor.shortcutKm;
-            } else if (corridor.id === 'art69::akabane-omiya' || corridor.id === 'art69::shinosaka-amagasaki' || corridor.id === 'art69::kashii-hakata') {
+              trunkDelta -= subTrunkKm;
+              localDelta += (corridor.shortcutKm - subLocalKm);
+            } else {
               trunkDelta -= shorten;
-            } else if (corridor.id === 'art69::kusatsu-tsuge') {
-              trunkDelta -= corridor.detourKm;
-              localDelta += corridor.shortcutKm;
             }
           }
         }
@@ -870,9 +891,10 @@
       if (candidateDestZone.id !== 'yamanote' && destCenterKm >= 201) {
         destApplied = true;
         displayDestName = candidateDestZone.displayName;
-      } else if ((candidateDestZone.id === 'yamanote' || candidateDestZone.id === 'tokyo') && destCenterKm >= 101 && destCenterKm <= 200) {
+      } else if (isDestYamanote && destCenterKm >= 101 && destCenterKm <= 200) {
         destApplied = true;
         displayDestName = yamanoteZone.displayName;
+        candidateDestZone = yamanoteZone;
       }
     }
 
@@ -898,6 +920,14 @@
 
           const isFromInZone = candidateDeptZone.stationNames.has(fName);
           const isToInZone = candidateDeptZone.stationNames.has(tName);
+          const isShinkansen = seg.isShinkansen || (seg.lineId && seg.lineId.startsWith('shinkansen-'));
+
+          // 在来線ゾーン内から新幹線に乗車する場合、新幹線の乗車駅がゾーン境界（中心駅接続）となる
+          if (isFromInZone && isShinkansen) {
+            deptBorderStationId = seg.from;
+            distDeptToBorder = cumDist;
+            break;
+          }
 
           if (isFromInZone && !isToInZone) {
             deptBorderStationId = seg.from;
@@ -925,9 +955,10 @@
       if (candidateDeptZone.id !== 'yamanote' && deptCenterKm >= 201) {
         deptApplied = true;
         displayDeptName = candidateDeptZone.displayName;
-      } else if ((candidateDeptZone.id === 'yamanote' || candidateDeptZone.id === 'tokyo') && deptCenterKm >= 101 && deptCenterKm <= 200) {
+      } else if (isDeptYamanote && deptCenterKm >= 101 && deptCenterKm <= 200) {
         deptApplied = true;
         displayDeptName = yamanoteZone.displayName;
+        candidateDeptZone = yamanoteZone;
       }
     }
 
@@ -953,6 +984,8 @@
       destDelta: destDelta,
       deptBorderStationId: deptBorderStationId,
       destBorderStationId: destBorderStationId,
+      deptBorderToCenter: deptBorderStationId ? Math.max(0, Math.round((deptDelta + distDeptToBorder) * 10) / 10) : 0,
+      destBorderToCenter: destBorderStationId ? Math.max(0, Math.round((destDelta + distBorderToDest) * 10) / 10) : 0,
       distDeptToBorder: distDeptToBorder,
       distBorderToDest: distBorderToDest
     };
@@ -993,8 +1026,7 @@
       if (roundedKm <= 10 && FareRulesData && FareRulesData.LOCAL_UNDER_10KM_TABLES && FareRulesData.LOCAL_UNDER_10KM_TABLES[company]) {
         return lookupFareTable(FareRulesData.LOCAL_UNDER_10KM_TABLES[company], roundedKm);
       }
-      const localFareKm = Math.ceil(km * 1.1);
-      return calculateBaseFare(localFareKm, {
+      return calculateBaseFare(roundedKm, {
         company: company,
         isInterCompany: false,
         isLocalOnly: false,
@@ -1123,43 +1155,87 @@
     );
 
     // 5. ゾーン適用時の会社別営業キロ補正 (実乗車区間を中心駅発着に差し替え)
-    if (zoneResult.deptApplied && zoneResult.deptZone) {
-      for (const seg of fullSegments) {
+    const ZONE_COMPANY_MAP = {
+      tokyo: 'east',
+      yamanote: 'east',
+      yokohama: 'east',
+      sendai: 'east',
+      nagoya: 'central',
+      kyoto: 'west',
+      osaka: 'west',
+      kobe: 'west',
+      hiroshima: 'west',
+      sapporo: 'hokkaido',
+      kitakyushu: 'kyushu',
+      fukuoka: 'kyushu'
+    };
+
+    if (zoneResult.deptApplied && zoneResult.deptZone && deptName !== zoneResult.deptZone.centerName) {
+      const borderStId = zoneResult.deptBorderStationId;
+      const borderStName = stations[borderStId] ? stations[borderStId].name : borderStId;
+
+      for (let i = 0; i < fullSegments.length; i++) {
+        const seg = fullSegments[i];
+        const isShinkansen = seg.isShinkansen || (seg.lineId && seg.lineId.startsWith('shinkansen-'));
+        if (isShinkansen) break;
+
+        const segKm = seg.dist !== undefined ? seg.dist : (seg.km || 0);
+        const comp = getLineCompany(seg.lineId, seg.lineName, seg.from, seg.to, stations);
+        if (comp === 'east') eastKm = Math.max(0, eastKm - segKm);
+        else if (comp === 'central') centralKm = Math.max(0, centralKm - segKm);
+        else if (comp === 'west') westKm = Math.max(0, westKm - segKm);
+        else if (comp === 'hokkaido') hokkaidoKm = Math.max(0, hokkaidoKm - segKm);
+        else if (comp === 'shikoku') shikokuKm = Math.max(0, shikokuKm - segKm);
+        else if (comp === 'kyushu') kyushuKm = Math.max(0, kyushuKm - segKm);
+
         const fName = stations[seg.from] ? stations[seg.from].name : seg.from;
-        const isFromInZone = zoneResult.deptZone.stationNames.has(fName);
-        if (isFromInZone && !seg.isShinkansen && !seg.lineId.startsWith('shinkansen-')) {
-          const segKm = seg.dist !== undefined ? seg.dist : (seg.km || 0);
-          const comp = getLineCompany(seg.lineId, seg.lineName, seg.from, seg.to, stations);
-          if (comp === 'east') eastKm = Math.max(0, eastKm - segKm);
-          else if (comp === 'central') centralKm = Math.max(0, centralKm - segKm);
-          else if (comp === 'west') westKm = Math.max(0, westKm - segKm);
-        } else {
+        const tName = stations[seg.to] ? stations[seg.to].name : seg.to;
+        if (borderStId && (seg.to === borderStId || tName === borderStName)) {
           break;
         }
       }
-      if (zoneResult.deptZone.id === 'osaka' && (zoneResult.deptBorderStationId === 'shin-osaka' || passedNames.includes('新大阪'))) {
-        westKm += 3.8;
-      }
+      const deptComp = ZONE_COMPANY_MAP[zoneResult.deptZone.id] || 'east';
+      const addKm = zoneResult.deptBorderToCenter || 0;
+      if (deptComp === 'east') eastKm += addKm;
+      else if (deptComp === 'central') centralKm += addKm;
+      else if (deptComp === 'west') westKm += addKm;
+      else if (deptComp === 'hokkaido') hokkaidoKm += addKm;
+      else if (deptComp === 'shikoku') shikokuKm += addKm;
+      else if (deptComp === 'kyushu') kyushuKm += addKm;
     }
 
-    if (zoneResult.destApplied && zoneResult.destZone) {
-      let inDestZone = false;
-      for (const seg of fullSegments) {
+    if (zoneResult.destApplied && zoneResult.destZone && destName !== zoneResult.destZone.centerName) {
+      const borderStId = zoneResult.destBorderStationId;
+      const borderStName = stations[borderStId] ? stations[borderStId].name : borderStId;
+
+      for (let i = fullSegments.length - 1; i >= 0; i--) {
+        const seg = fullSegments[i];
+        const isShinkansen = seg.isShinkansen || (seg.lineId && seg.lineId.startsWith('shinkansen-'));
+        if (isShinkansen) break;
+
+        const segKm = seg.dist !== undefined ? seg.dist : (seg.km || 0);
+        const comp = getLineCompany(seg.lineId, seg.lineName, seg.from, seg.to, stations);
+        if (comp === 'east') eastKm = Math.max(0, eastKm - segKm);
+        else if (comp === 'central') centralKm = Math.max(0, centralKm - segKm);
+        else if (comp === 'west') westKm = Math.max(0, westKm - segKm);
+        else if (comp === 'hokkaido') hokkaidoKm = Math.max(0, hokkaidoKm - segKm);
+        else if (comp === 'shikoku') shikokuKm = Math.max(0, shikokuKm - segKm);
+        else if (comp === 'kyushu') kyushuKm = Math.max(0, kyushuKm - segKm);
+
+        const fName = stations[seg.from] ? stations[seg.from].name : seg.from;
         const tName = stations[seg.to] ? stations[seg.to].name : seg.to;
-        if (zoneResult.destZone.stationNames.has(tName)) {
-          inDestZone = true;
-        }
-        if (inDestZone && !seg.isShinkansen && !seg.lineId.startsWith('shinkansen-')) {
-          const segKm = seg.dist !== undefined ? seg.dist : (seg.km || 0);
-          const comp = getLineCompany(seg.lineId, seg.lineName, seg.from, seg.to, stations);
-          if (comp === 'east') eastKm = Math.max(0, eastKm - segKm);
-          else if (comp === 'central') centralKm = Math.max(0, centralKm - segKm);
-          else if (comp === 'west') westKm = Math.max(0, westKm - segKm);
+        if (borderStId && (seg.from === borderStId || fName === borderStName)) {
+          break;
         }
       }
-      if (zoneResult.destZone.id === 'osaka' && (zoneResult.destBorderStationId === 'shin-osaka' || passedNames.includes('新大阪'))) {
-        westKm += 3.8;
-      }
+      const destComp = ZONE_COMPANY_MAP[zoneResult.destZone.id] || 'west';
+      const addKm = zoneResult.destBorderToCenter || 0;
+      if (destComp === 'east') eastKm += addKm;
+      else if (destComp === 'central') centralKm += addKm;
+      else if (destComp === 'west') westKm += addKm;
+      else if (destComp === 'hokkaido') hokkaidoKm += addKm;
+      else if (destComp === 'shikoku') shikokuKm += addKm;
+      else if (destComp === 'kyushu') kyushuKm += addKm;
     }
 
     // 6. 主担当会社 & 跨線判定
@@ -1200,7 +1276,11 @@
       if (calcTrunkKm > 0 && calcLocalKm > 0) {
         fareKm = Math.ceil(calcTrunkKm + calcLocalKm * 1.1);
       } else if (calcTrunkKm === 0 && calcLocalKm > 0) {
-        fareKm = calcLocalKm;
+        if (calcLocalKm <= 10) {
+          fareKm = calcLocalKm;
+        } else {
+          fareKm = Math.ceil(calcLocalKm * 1.1);
+        }
       } else {
         fareKm = calcTrunkKm;
       }

@@ -598,7 +598,12 @@
    */
   function resolveStation(stId, stName, stops, stations) {
     if (stId && stations[stId]) return stations[stId];
+    if (stId && !stations[stId]) {
+      const byName = Object.values(stations).find(s => s.name === stId);
+      if (byName) return byName;
+    }
     if (!stName) return null;
+    if (stations[stName]) return stations[stName];
     if (stops && Array.isArray(stops)) {
       for (const id of stops) {
         if (stations[id] && stations[id].name === stName) {
@@ -1412,6 +1417,7 @@
       isLoopRoute: isLoopRoute,
       fareRules: fareRules,
       sections: sections,
+      fullSegments: fullSegments,
       geometryLatlngs: geometryLatlngs,
       normalPolylines: normalPolylines,
       shinkansenPolylines: shinkansenPolylines,

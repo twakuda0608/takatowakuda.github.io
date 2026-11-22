@@ -555,8 +555,8 @@
       endStationNames: ['新大阪', '尼崎'],
       detourLineIds: new Set(['osaka-higashi', 'jr-tozai', 'katamachi-line']),
       shortcutLineId: 'tokaido-west',
-      shortcutKm: 7.7, // 東海道本線経由
-      detourKm: 16.0   // おおさか東線・東西線鴫野・北新地経由概算
+      shortcutKm: 11.5, // 東海道本線経由（新大阪〜大阪3.8 + 大阪〜塚本3.8 + 塚本〜尼崎3.9）
+      detourKm: 17.8    // おおさか東線・東西線鴫野・北新地経由概算
     },
     {
       id: 'art69::kashii-hakata',
@@ -566,15 +566,6 @@
       shortcutLineId: 'kyushu-kagoshima',
       shortcutKm: 8.4,
       detourKm: 14.9
-    },
-    {
-      id: 'art69::kusatsu-tsuge',
-      name: '草津〜柘植（米原・名古屋迂回）',
-      endStationNames: ['草津', '柘植'],
-      detourLineIds: new Set(['tokaido-west', 'tokai-tokaido', 'tokai-kansai', 'kansai-west']),
-      shortcutLineId: 'kusatsu-line',
-      shortcutKm: 36.7, // 草津線経由（地方交通線）
-      detourKm: 215.0   // 米原・名古屋迂回概算
     },
     {
       id: 'art69::nippori-akabane',
