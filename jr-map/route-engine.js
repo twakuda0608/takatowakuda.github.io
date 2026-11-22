@@ -626,6 +626,12 @@
         if (!allowShinkansen && edge.isShinkansen) continue;
         if (options.forceShinkansen && !edge.isShinkansen) continue;
         if (forbiddenStations.has(edge.to) && edge.to !== endId) continue;
+        if (options.forbiddenLines && options.forbiddenLines.has(edge.lineId)) continue;
+        if (options.forbiddenEdges) {
+          const eKey1 = curr.id + '::' + edge.to;
+          const eKey2 = edge.to + '::' + curr.id;
+          if (options.forbiddenEdges.has(eKey1) || options.forbiddenEdges.has(eKey2)) continue;
+        }
 
         let transferPenalty = 0;
         if (curr.marsName && (curr.marsName !== edge.marsName)) {
@@ -706,93 +712,303 @@
     return minIdx;
   }
 
-  // セグメント線路座標の抽出 (指定路線最優先・駅間エッジ対応・候補路線フォールバック・確実な端点スナップ)
+  // 路線別ポリライントポロジーグラフのキャッシュ
+  const lineTrackGraphCache = new Map();
+
+  function buildLineTrackGraph(rawChains) {
+    if (!rawChains || rawChains.length === 0) return null;
+
+    const nodes = [];
+    const chainRanges = [];
+
+    for (let c = 0; c < rawChains.length; c++) {
+      const rawChain = rawChains[c];
+      const startIdx = nodes.length;
+      for (let i = 0; i < rawChain.length; i++) {
+        const pt = rawChain[i];
+        const normPt = pt[0] > 90 ? [pt[1], pt[0]] : [pt[0], pt[1]];
+        nodes.push(normPt);
+      }
+      chainRanges.push({ startIdx, length: rawChain.length });
+    }
+
+    const N = nodes.length;
+    const adj = Array.from({ length: N }, () => []);
+
+    // 1. チェーン内隣接エッジ
+    for (const range of chainRanges) {
+      for (let i = 0; i < range.length - 1; i++) {
+        const u = range.startIdx + i;
+        const v = u + 1;
+        const d = calcDistKm({ lat: nodes[u][0], lng: nodes[u][1] }, { lat: nodes[v][0], lng: nodes[v][1] });
+        adj[u].push({ to: v, dist: d });
+        adj[v].push({ to: u, dist: d });
+      }
+    }
+
+    // 2. 空間グリッドによる近傍接続 (Junction: 分岐・合流・端点接続)
+    const cellSize = 0.002;
+    const grid = new Map();
+
+    function gridKey(lat, lng) {
+      const gx = Math.floor(lat / cellSize);
+      const gy = Math.floor(lng / cellSize);
+      return `${gx},${gy}`;
+    }
+
+    for (let i = 0; i < N; i++) {
+      const k = gridKey(nodes[i][0], nodes[i][1]);
+      if (!grid.has(k)) grid.set(k, []);
+      grid.get(k).push(i);
+    }
+
+    const connectedPairs = new Set();
+    function addJunctionEdge(u, v, d) {
+      const key = u < v ? `${u}-${v}` : `${v}-${u}`;
+      if (connectedPairs.has(key)) return;
+      connectedPairs.add(key);
+      adj[u].push({ to: v, dist: d });
+      adj[v].push({ to: u, dist: d });
+    }
+
+    for (let i = 0; i < N; i++) {
+      const p1 = nodes[i];
+      const gx = Math.floor(p1[0] / cellSize);
+      const gy = Math.floor(p1[1] / cellSize);
+
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+          const k = `${gx + dx},${gy + dy}`;
+          const cell = grid.get(k);
+          if (!cell) continue;
+
+          for (const j of cell) {
+            if (j <= i) continue;
+            if (Math.abs(i - j) === 1) continue;
+
+            const p2 = nodes[j];
+            const d = calcDistKm({ lat: p1[0], lng: p1[1] }, { lat: p2[0], lng: p2[1] });
+            if (d <= 0.15) {
+              addJunctionEdge(i, j, d);
+            }
+          }
+        }
+      }
+    }
+
+    return { nodes, adj };
+  }
+
+  function getLineTrackGraph(tracks, lineId) {
+    if (!tracks || !lineId) return null;
+    const cacheKey = lineId;
+    if (lineTrackGraphCache.has(cacheKey)) {
+      return lineTrackGraphCache.get(cacheKey);
+    }
+    const rawChains = tracks[lineId];
+    if (!rawChains || rawChains.length === 0) {
+      lineTrackGraphCache.set(cacheKey, null);
+      return null;
+    }
+    const graph = buildLineTrackGraph(rawChains);
+    lineTrackGraphCache.set(cacheKey, graph);
+    return graph;
+  }
+
+  // 優先度キュー (MinHeap)
+  class TrackMinHeap {
+    constructor() { this.heap = []; }
+    push(item) {
+      this.heap.push(item);
+      this._bubbleUp(this.heap.length - 1);
+    }
+    pop() {
+      if (this.heap.length === 0) return null;
+      const top = this.heap[0];
+      const bottom = this.heap.pop();
+      if (this.heap.length > 0) {
+        this.heap[0] = bottom;
+        this._sinkDown(0);
+      }
+      return top;
+    }
+    size() { return this.heap.length; }
+    _bubbleUp(i) {
+      while (i > 0) {
+        const p = (i - 1) >> 1;
+        if (this.heap[i].d < this.heap[p].d) {
+          [this.heap[i], this.heap[p]] = [this.heap[p], this.heap[i]];
+          i = p;
+        } else break;
+      }
+    }
+    _sinkDown(i) {
+      const len = this.heap.length;
+      while (true) {
+        let left = (i << 1) + 1;
+        let right = left + 1;
+        let smallest = i;
+        if (left < len && this.heap[left].d < this.heap[smallest].d) smallest = left;
+        if (right < len && this.heap[right].d < this.heap[smallest].d) smallest = right;
+        if (smallest !== i) {
+          [this.heap[i], this.heap[smallest]] = [this.heap[smallest], this.heap[i]];
+          i = smallest;
+        } else break;
+      }
+    }
+  }
+
+  function findTrackShortestPath(graph, st1, st2) {
+    if (!graph) return null;
+    const { nodes, adj } = graph;
+    const N = nodes.length;
+
+    function findCandidates(st) {
+      let cands = [];
+      for (let i = 0; i < N; i++) {
+        const d = calcDistKm(st, { lat: nodes[i][0], lng: nodes[i][1] });
+        if (d <= 3.0) {
+          cands.push({ idx: i, dist: d });
+        }
+      }
+      if (cands.length === 0) {
+        for (let i = 0; i < N; i++) {
+          const d = calcDistKm(st, { lat: nodes[i][0], lng: nodes[i][1] });
+          if (d <= 15.0) {
+            cands.push({ idx: i, dist: d });
+          }
+        }
+      }
+      cands.sort((a, b) => a.dist - b.dist);
+      return cands.slice(0, 10);
+    }
+
+    const startCands = findCandidates(st1);
+    const endCands = findCandidates(st2);
+
+    if (startCands.length === 0 || endCands.length === 0) {
+      return null;
+    }
+
+    const endSet = new Map();
+    for (const ec of endCands) {
+      endSet.set(ec.idx, ec.dist);
+    }
+
+    const dist = new Float64Array(N).fill(Infinity);
+    const prev = new Int32Array(N).fill(-1);
+
+    const pq = new TrackMinHeap();
+    for (const sc of startCands) {
+      dist[sc.idx] = sc.dist;
+      pq.push({ idx: sc.idx, d: sc.dist });
+    }
+
+    let bestEndIdx = -1;
+    let bestTotalDist = Infinity;
+
+    while (pq.size() > 0) {
+      const curr = pq.pop();
+      const u = curr.idx;
+      if (curr.d > dist[u]) continue;
+
+      if (endSet.has(u)) {
+        const total = curr.d + endSet.get(u);
+        if (total < bestTotalDist) {
+          bestTotalDist = total;
+          bestEndIdx = u;
+          break;
+        }
+      }
+
+      const neighbors = adj[u];
+      for (let i = 0; i < neighbors.length; i++) {
+        const edge = neighbors[i];
+        const v = edge.to;
+        const nd = curr.d + edge.dist;
+        if (nd < dist[v]) {
+          dist[v] = nd;
+          prev[v] = u;
+          pq.push({ idx: v, d: nd });
+        }
+      }
+    }
+
+    if (bestEndIdx === -1) return null;
+
+    const path = [];
+    let curr = bestEndIdx;
+    while (curr !== -1) {
+      path.push(curr);
+      curr = prev[curr];
+    }
+    path.reverse();
+
+    return path.map(i => nodes[i]);
+  }
+
+  // セグメント線路座標の抽出 (トポロジーグラフ最短経路探索 + 幾何サニティチェック + 確実な端点スナップ)
   function getSegmentCoords(tracks, stations, lineId, fromStId, toStId) {
     const st1 = stations[fromStId];
     const st2 = stations[toStId];
     if (!st1 || !st2 || !tracks) return [];
 
-    // 特定路線内の最適チェーン探索 (区間として2点以上跨ぐものを最優先し、端点距離和を最小化)
-    function findBestInLine(lid) {
-      const rawChains = tracks[lid] || [];
-      let bestChain = null;
-      let bestIdx1 = -1;
-      let bestIdx2 = -1;
-      let bestDistSum = Infinity;
-      let bestIsSpan = false;
+    const straightKm = calcDistKm(st1, st2);
 
-      for (let c = 0; c < rawChains.length; c++) {
-        const rawChain = rawChains[c];
-        const chain = rawChain.map(pt => pt[0] > 90 ? [pt[1], pt[0]] : pt);
-        let i1 = -1, minD1 = Infinity;
-        let i2 = -1, minD2 = Infinity;
+    function tryLineCoords(lid) {
+      const graph = getLineTrackGraph(tracks, lid);
+      if (!graph) return null;
+      const rawPath = findTrackShortestPath(graph, st1, st2);
+      if (!rawPath || rawPath.length === 0) return null;
 
-        for (let i = 0; i < chain.length; i++) {
-          const p = chain[i];
-          const d1 = Math.hypot(p[0] - st1.lat, p[1] - st1.lng);
-          const d2 = Math.hypot(p[0] - st2.lat, p[1] - st2.lng);
-          if (d1 < minD1) { minD1 = d1; i1 = i; }
-          if (d2 < minD2) { minD2 = d2; i2 = i; }
-        }
+      // 端点スナップを含めた累積実距離の計算
+      const startSnapDist = calcDistKm(st1, { lat: rawPath[0][0], lng: rawPath[0][1] });
+      const endSnapDist = calcDistKm(st2, { lat: rawPath[rawPath.length - 1][0], lng: rawPath[rawPath.length - 1][1] });
 
-        if (i1 >= 0 && i2 >= 0) {
-          const dSum = minD1 + minD2;
-          const isSpan = (i1 !== i2);
-          // 区間として2点以上跨ぐもの (isSpan) を優先、同一優先度なら端点距離和が小さい方を選択
-          if (!bestChain || (isSpan && !bestIsSpan) || (isSpan === bestIsSpan && dSum < bestDistSum)) {
-            bestDistSum = dSum;
-            bestChain = chain;
-            bestIdx1 = i1;
-            bestIdx2 = i2;
-            bestIsSpan = isSpan;
-          }
-        }
+      // 端点スナップ距離の閾値 (新幹線は長大駅間・間引きのため6.0km、在来線は3.5km)
+      const maxSnap = lid.startsWith('shinkansen-') ? 6.0 : 3.5;
+      if (startSnapDist > maxSnap || endSnapDist > maxSnap) {
+        return null;
       }
 
-      // 閾値判定 (約15km以内)
-      if (bestChain && bestDistSum <= 0.15) {
-        return { bestChain, bestIdx1, bestIdx2, bestDistSum };
+      let polyKm = startSnapDist + endSnapDist;
+      for (let k = 0; k < rawPath.length - 1; k++) {
+        polyKm += calcDistKm({ lat: rawPath[k][0], lng: rawPath[k][1] }, { lat: rawPath[k + 1][0], lng: rawPath[k + 1][1] });
       }
-      return null;
+
+      // 幾何サニティチェック (異常な大回り・他方面への寄り道を検知)
+      const maxAllowed = Math.max(straightKm * 2.5 + 3.0, 5.0);
+      if (polyKm > maxAllowed) {
+        return null;
+      }
+
+      return rawPath;
     }
 
-    // 1. 指定路線 (lineId) の線路を最優先で探索 (新幹線指定時は並行在来線等に引っ張られず確実に新幹線軌道を採用)
-    let match = null;
-    if (lineId && tracks[lineId]) {
-      match = findBestInLine(lineId);
+    // 1. 指定路線 (lineId) の線路トポロジーグラフから最優先で探索 (新幹線指定時は新幹線軌道を確実に採用)
+    let path = null;
+    if (lineId) {
+      path = tryLineCoords(lineId);
     }
 
     // 2. 指定路線で線路が見つからない場合のみ、駅共通の他路線をフォールバック探索
-    if (!match && st1.lines && st2.lines) {
+    if (!path && st1.lines && st2.lines) {
       const otherLines = st1.lines.filter(lid => lid !== lineId && st2.lines.includes(lid));
-      let bestOther = null;
       for (const lid of otherLines) {
-        const res = findBestInLine(lid);
-        if (res && (!bestOther || res.bestDistSum < bestOther.bestDistSum)) {
-          bestOther = res;
-        }
+        path = tryLineCoords(lid);
+        if (path) break;
       }
-      match = bestOther;
     }
 
-    // 3. 線路が見つからなかった場合は両駅間の直線フォールバック
-    if (!match) {
+    // 3. 線路が見つからなかった、または異常判定された場合は両駅間の直線フォールバック
+    if (!path || path.length === 0) {
       return [[st1.lat, st1.lng], [st2.lat, st2.lng]];
-    }
-
-    let rawSlice = [];
-    if (match.bestIdx1 === match.bestIdx2) {
-      rawSlice = [match.bestChain[match.bestIdx1]];
-    } else if (match.bestIdx1 < match.bestIdx2) {
-      rawSlice = match.bestChain.slice(match.bestIdx1, match.bestIdx2 + 1);
-    } else {
-      rawSlice = match.bestChain.slice(match.bestIdx2, match.bestIdx1 + 1).reverse();
     }
 
     // 端点を st1 と st2 に確実にスナップ接続 (駅マーカーと線路の隙間をゼロに)
     const resultCoords = [[st1.lat, st1.lng]];
-    for (let k = 0; k < rawSlice.length; k++) {
-      const p = rawSlice[k];
+    for (let k = 0; k < path.length; k++) {
+      const p = path[k];
       const prev = resultCoords[resultCoords.length - 1];
       if (Math.hypot(p[0] - prev[0], p[1] - prev[1]) > 0.00005) {
         resultCoords.push(p);
@@ -1047,40 +1263,44 @@
     stops = expandStopsWithShinkansen(stops, shinkansenSegs, stations);
 
     const searchMode = options.searchMode || options.mode || 'shortest';
-    const requireOneWay = (searchMode === 'oneway');
+    const requireOneWay = (searchMode === 'oneway' || searchMode === 'no-overlap');
 
     const fullSegments = [];
-    const visitedStations = new Set();
     let hasDuplicate = false;
 
     // 一周ルート (発着同一駅) の判定
     const isLoopRoute = (stops.length >= 2 && stops[0] === stops[stops.length - 1]);
 
-    for (let i = 0; i < stops.length - 1; i++) {
-      const origin = stops[i];
-      const destination = stops[i + 1];
+    // 重複区間なし（一筆書き）探索におけるバックトラック・代替経路探索
+    // 前半レグの最短経路が後半レグの唯一のアクセス路を塞いでしまった場合に、
+    // 原因となった路線・エッジを特定して前レグの別ルートを再探索する
+    const MAX_BACKTRACK_ATTEMPTS = 8;
+    let attemptCount = 0;
+    let fullLegs = null;
+    let lastStuckOrigin = null;
+    let lastStuckDest = null;
 
-      // このレグが新幹線指定区間かどうか判定 (順方向・逆方向双方に対応)
-      const oSt = stations[origin];
-      const dSt = stations[destination];
-      const oName = oSt ? oSt.name : origin;
-      const dName = dSt ? dSt.name : destination;
+    const legForbiddenLines = Array.from({ length: stops.length - 1 }, () => new Set());
+    const legForbiddenEdges = Array.from({ length: stops.length - 1 }, () => new Set());
 
-      let isThisLegShinkansen = false;
-      if (shinkansenSegs && shinkansenSegs.length > 0) {
-        isThisLegShinkansen = shinkansenSegs.some(seg => {
-          const fromSt = resolveStation(seg.fromId, seg.from || seg.fromName, stops, stations);
-          const toSt = resolveStation(seg.toId, seg.to || seg.toName, stops, stations);
-          const fId = fromSt ? fromSt.id : seg.fromId;
-          const tId = toSt ? toSt.id : seg.toId;
-          const fName = fromSt ? fromSt.name : (seg.fromName || seg.from);
-          const tName = toSt ? toSt.name : (seg.toName || seg.to);
+    while (attemptCount < MAX_BACKTRACK_ATTEMPTS) {
+      attemptCount++;
+      const currentVisitedStations = new Set();
+      const currentLegs = [];
+      let stuckLegIdx = -1;
 
-          return (origin === fId || oName === fName) && (destination === tId || dName === tName);
-        });
+      for (let i = 0; i < stops.length - 1; i++) {
+        const origin = stops[i];
+        const destination = stops[i + 1];
 
-        // 順方向がない場合のみ単一レグで逆方向も許容
-        if (!isThisLegShinkansen && stops.length === 2) {
+        // このレグが新幹線指定区間かどうか判定 (順方向・逆方向双方に対応)
+        const oSt = stations[origin];
+        const dSt = stations[destination];
+        const oName = oSt ? oSt.name : origin;
+        const dName = dSt ? dSt.name : destination;
+
+        let isThisLegShinkansen = false;
+        if (shinkansenSegs && shinkansenSegs.length > 0) {
           isThisLegShinkansen = shinkansenSegs.some(seg => {
             const fromSt = resolveStation(seg.fromId, seg.from || seg.fromName, stops, stations);
             const toSt = resolveStation(seg.toId, seg.to || seg.toName, stops, stations);
@@ -1088,88 +1308,217 @@
             const tId = toSt ? toSt.id : seg.toId;
             const fName = fromSt ? fromSt.name : (seg.fromName || seg.from);
             const tName = toSt ? toSt.name : (seg.toName || seg.to);
-            return (origin === tId || oName === tName) && (destination === fId || dName === fName);
+
+            return (origin === fId || oName === fName) && (destination === tId || dName === tName);
           });
+
+          // 順方向がない場合のみ単一レグで逆方向も許容
+          if (!isThisLegShinkansen && stops.length === 2) {
+            isThisLegShinkansen = shinkansenSegs.some(seg => {
+              const fromSt = resolveStation(seg.fromId, seg.from || seg.fromName, stops, stations);
+              const toSt = resolveStation(seg.toId, seg.to || seg.toName, stops, stations);
+              const fId = fromSt ? fromSt.id : seg.fromId;
+              const tId = toSt ? toSt.id : seg.toId;
+              const fName = fromSt ? fromSt.name : (seg.fromName || seg.from);
+              const tName = toSt ? toSt.name : (seg.toName || seg.to);
+              return (origin === tId || oName === tName) && (destination === fId || dName === fName);
+            });
+          }
         }
-      }
 
-      let legAllowShinkansen = (options.useShinkansen !== undefined) ? options.useShinkansen : (options.allowShinkansen !== false);
-      let legForceShinkansen = false;
+        let legAllowShinkansen = (options.useShinkansen !== undefined) ? options.useShinkansen : (options.allowShinkansen !== false);
+        let legForceShinkansen = false;
 
-      if (isThisLegShinkansen) {
-        legAllowShinkansen = true;
-        legForceShinkansen = true;
-      } else if (shinkansenSegs && shinkansenSegs.length > 0) {
-        // 特定区間のみ新幹線指定されている場合、未指定レグは新幹線を使用しない
-        legAllowShinkansen = false;
-      } else if (forceShinkansenOnly) {
-        legAllowShinkansen = false;
-      }
+        if (isThisLegShinkansen) {
+          legAllowShinkansen = true;
+          legForceShinkansen = true;
+        } else if (shinkansenSegs && shinkansenSegs.length > 0) {
+          // 特定区間のみ新幹線指定されている場合、未指定レグは新幹線を使用しない
+          legAllowShinkansen = false;
+        } else if (forceShinkansenOnly) {
+          legAllowShinkansen = false;
+        }
 
-      let leg = null;
-      // 東海道新幹線など別線利用レグの場合、直前の在来線レグの通過駅が新幹線駅探索を阻害しないよう調整
-      const legForbiddenStations = new Set(visitedStations);
-      if (legForceShinkansen) {
-        // 別線新幹線探索時は終点駅および別線接続駅を禁止対象から外す
-        legForbiddenStations.delete(destination);
-        legForbiddenStations.delete(origin);
-      }
+        // 基本制約チェック: まだ通過していない将来の経由駅および着駅の途中通過を禁止 (一周ルートの最終着駅は除外)
+        const futureStops = new Set();
+        if (requireOneWay) {
+          for (let j = i + 2; j < stops.length; j++) {
+            const stId = stops[j];
+            if (isLoopRoute && j === stops.length - 1 && stId === stops[0]) continue;
+            futureStops.add(stId);
+          }
+        }
 
-      if (requireOneWay) {
-        // 重複区間なし（一筆書き）モード: 訪問済み駅を禁止して探索
-        leg = findLeg(graph, origin, destination, {
+        // 東海道新幹線など別線利用レグの場合、直前の在来線レグの通過駅が新幹線駅探索を阻害しないよう調整
+        const legForbiddenStations = new Set(currentVisitedStations);
+        futureStops.forEach(id => legForbiddenStations.add(id));
+
+        if (legForceShinkansen) {
+          // 別線新幹線探索時は終点駅および別線接続駅を禁止対象から外す
+          legForbiddenStations.delete(destination);
+          legForbiddenStations.delete(origin);
+        }
+
+        const legOptions = {
           allowShinkansen: legAllowShinkansen,
           forceShinkansen: legForceShinkansen,
-          forbiddenStations: legForbiddenStations
-        });
-        if (!leg && legForceShinkansen) {
-          // 新幹線強制で見つからない場合のフォールバック (在来線含め再探索)
+          forbiddenStations: legForbiddenStations,
+          forbiddenLines: legForbiddenLines[i],
+          forbiddenEdges: legForbiddenEdges[i]
+        };
+
+        let leg = null;
+        if (requireOneWay) {
+          // 重複区間なし（一筆書き）モード: 訪問済み駅 + 将来の駅 + バックトラック除外路線/エッジを禁止して探索
+          leg = findLeg(graph, origin, destination, legOptions);
+          if (!leg && legForceShinkansen) {
+            leg = findLeg(graph, origin, destination, {
+              ...legOptions,
+              allowShinkansen: true,
+              forceShinkansen: false
+            });
+          }
+        } else {
+          // 最短経路モード: 禁止ノードなしで探索
           leg = findLeg(graph, origin, destination, {
-            allowShinkansen: true,
-            forbiddenStations: legForbiddenStations
+            allowShinkansen: legAllowShinkansen,
+            forceShinkansen: legForceShinkansen,
+            forbiddenStations: new Set(),
+            forbiddenLines: legForbiddenLines[i],
+            forbiddenEdges: legForbiddenEdges[i]
           });
+          if (!leg && legForceShinkansen) {
+            leg = findLeg(graph, origin, destination, {
+              allowShinkansen: true,
+              forceShinkansen: false,
+              forbiddenStations: new Set(),
+              forbiddenLines: legForbiddenLines[i],
+              forbiddenEdges: legForbiddenEdges[i]
+            });
+          }
         }
+
         if (!leg) {
-          const originName = (stations[origin] && stations[origin].name) || origin;
-          const destName = (stations[destination] && stations[destination].name) || destination;
-          return {
-            success: false,
-            error: `「${originName}」から「${destName}」への重複区間なし（一筆書き）ルートが見つかりませんでした。「最短経路」をお試しください。`
-          };
+          stuckLegIdx = i;
+          lastStuckOrigin = origin;
+          lastStuckDest = destination;
+          break;
         }
-      } else {
-        // 最短経路モード: 禁止ノードなしで探索
-        leg = findLeg(graph, origin, destination, {
-          allowShinkansen: legAllowShinkansen,
-          forceShinkansen: legForceShinkansen,
-          forbiddenStations: new Set()
+
+        currentLegs.push(leg);
+        leg.forEach(seg => {
+          if (seg.from !== destination) {
+            currentVisitedStations.add(seg.from);
+          }
+          if (seg.to !== destination) {
+            currentVisitedStations.add(seg.to);
+          }
         });
-        if (!leg && legForceShinkansen) {
-          leg = findLeg(graph, origin, destination, {
-            allowShinkansen: true,
-            forbiddenStations: new Set()
-          });
+      }
+
+      if (stuckLegIdx === -1) {
+        // 全レグ探索成功！ (初回成功時は Fast Path で追加コストゼロ)
+        fullLegs = currentLegs;
+        break;
+      }
+
+      // 最短経路モードの場合はバックトラックせず終了
+      if (!requireOneWay) {
+        break;
+      }
+
+      // --- バックトラック・原因区間特定 (逆算チェック) ---
+      const stuckOrigin = stops[stuckLegIdx];
+      const stuckDest = stops[stuckLegIdx + 1];
+
+      // 1. レグ stuckLegIdx を過去の訪問済み制約なしで探索 (理想ルートの取得)
+      const futureStopsOnly = new Set();
+      for (let j = stuckLegIdx + 2; j < stops.length; j++) {
+        const stId = stops[j];
+        if (isLoopRoute && j === stops.length - 1 && stId === stops[0]) continue;
+        futureStopsOnly.add(stId);
+      }
+
+      const idealLeg = findLeg(graph, stuckOrigin, stuckDest, {
+        allowShinkansen: (options.useShinkansen !== undefined) ? options.useShinkansen : (options.allowShinkansen !== false),
+        forbiddenStations: futureStopsOnly
+      });
+
+      if (!idealLeg) {
+        // 制約なしでも到達不能な場合は救済不能
+        break;
+      }
+
+      // 2. 理想ルートで使用されている路線・エッジを特定
+      const idealLines = new Set(idealLeg.map(s => s.lineId));
+      const idealEdges = new Set();
+      idealLeg.forEach(s => {
+        idealEdges.add(s.from + '::' + s.to);
+        idealEdges.add(s.to + '::' + s.from);
+      });
+
+      // 3. 直前のレグから順に過去レグ (p = stuckLegIdx - 1 .. 0) を逆順スキャンし、衝突要素を前レグで除外
+      let conflictResolved = false;
+      const sortedIdealLines = Array.from(idealLines);
+
+      for (let p = stuckLegIdx - 1; p >= 0 && !conflictResolved; p--) {
+        const prevLeg = currentLegs[p];
+        if (!prevLeg) continue;
+
+        // 過去レグ p で使用されている路線で、idealLeg でも使用されているもの
+        const prevLines = new Set(prevLeg.map(s => s.lineId));
+        const commonLines = sortedIdealLines.filter(l => prevLines.has(l));
+
+        for (const lineId of commonLines) {
+          if (!legForbiddenLines[p].has(lineId)) {
+            legForbiddenLines[p].add(lineId);
+            conflictResolved = true;
+            break;
+          }
         }
-        if (!leg) {
-          const originName = (stations[origin] && stations[origin].name) || origin;
-          const destName = (stations[destination] && stations[destination].name) || destination;
-          return {
-            success: false,
-            error: `「${originName}」から「${destName}」への経路が見つかりませんでした。`
-          };
+
+        if (!conflictResolved) {
+          // 路線レベルで共通がない場合、共有エッジを探して禁止
+          const commonEdges = prevLeg.filter(s => idealEdges.has(s.from + '::' + s.to));
+          for (const edgeSeg of commonEdges) {
+            const eKey = edgeSeg.from + '::' + edgeSeg.to;
+            if (!legForbiddenEdges[p].has(eKey)) {
+              legForbiddenEdges[p].add(eKey);
+              conflictResolved = true;
+              break;
+            }
+          }
+        }
+
+        if (conflictResolved) {
+          // 過去レグ p の制約を変更したため、p より後ろのレグのオーバーライドをリセットして再試行
+          for (let r = p + 1; r < stops.length - 1; r++) {
+            legForbiddenLines[r].clear();
+            legForbiddenEdges[r].clear();
+          }
         }
       }
 
+      if (!conflictResolved) {
+        // これ以上除外できる衝突要素がない場合は終了
+        break;
+      }
+    }
+
+    if (!fullLegs || fullLegs.length === 0) {
+      const originName = (stations[lastStuckOrigin] && stations[lastStuckOrigin].name) || lastStuckOrigin;
+      const destName = (stations[lastStuckDest] && stations[lastStuckDest].name) || lastStuckDest;
+      const msg = requireOneWay
+        ? `「${originName}」から「${destName}」への重複区間なし（一筆書き）ルートが見つかりませんでした。「最短経路」をお試しください。`
+        : `「${originName}」から「${destName}」への経路が見つかりませんでした。`;
+      return { success: false, error: msg };
+    }
+
+    fullLegs.forEach(leg => {
       leg.forEach(seg => {
         fullSegments.push(seg);
-        if (seg.from !== destination) {
-          visitedStations.add(seg.from);
-        }
-        if (seg.to !== destination) {
-          visitedStations.add(seg.to);
-        }
       });
-    }
+    });
 
     if (fullSegments.length === 0) {
       return { success: false, error: '有効な経路が見つかりませんでした。' };
