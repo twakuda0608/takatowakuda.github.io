@@ -104,10 +104,14 @@
   let labelsLayerGroup = null;
   let highlightMarker = null;
 
-  // 高速レンダラー (Canvas / SVG)
+  // 高速レンダラー (Canvas / SVG) - レイヤー別専用Canvasレンダラーによる再描画爆発の完全防止
+  let bordersCanvasRenderer = null;
+  let linesCanvasRenderer = null;
+  let stationsCanvasRenderer = null;
   let canvasRenderer = null;
   let svgRenderer = null;
   let routeCanvasRenderer = null;
+  const lineLabelEntities = new Map(); // slotKey -> { guidePoly, textElem, isAttached }
 
   // 駅名ラベルプール (DOMノード数を最小限に抑え60fpsを維持)
   let LABEL_POOL_SIZE = 360;
@@ -557,9 +561,27 @@
     });
     window.JR_MAP = map;
 
-    // 高速 Canvas レンダラーの初期化
-    canvasRenderer = L.canvas({ padding: 0.5 });
-    svgRenderer = L.svg({ padding: 0.5 }).addTo(map);
+    // 高速 Canvas レンダラーの初期化 (レイヤー別専用Pane & レンダラー分離)
+    // 1. 行政界専用 Pane (zIndex 350, pointerEvents none) & レンダラー
+    const bordersPane = map.createPane('bordersPane');
+    bordersPane.style.zIndex = '350';
+    bordersPane.style.pointerEvents = 'none';
+    bordersCanvasRenderer = L.canvas({ pane: 'bordersPane', padding: 0.6 });
+
+    // 2. 路線ポリライン専用 Pane (zIndex 400, pointerEvents none) & レンダラー
+    const linesPane = map.createPane('linesPane');
+    linesPane.style.zIndex = '400';
+    linesPane.style.pointerEvents = 'none';
+    linesCanvasRenderer = L.canvas({ pane: 'linesPane', padding: 0.6 });
+
+    // 3. 駅マーカー専用 Pane (zIndex 450, クリック判定維持のため pointerEvents は通常) & レンダラー
+    const stationsPane = map.createPane('stationsPane');
+    stationsPane.style.zIndex = '450';
+    stationsCanvasRenderer = L.canvas({ pane: 'stationsPane', padding: 0.6 });
+
+    canvasRenderer = stationsCanvasRenderer;
+
+    svgRenderer = L.svg({ padding: 0.6 }).addTo(map);
     if (svgRenderer._container) {
       svgRenderer._container.style.pointerEvents = 'none';
     }
@@ -576,7 +598,7 @@
     const pinPane = map.createPane('routePinPane');
     pinPane.style.zIndex = '650';
 
-    routeCanvasRenderer = L.canvas({ pane: 'routePane', padding: 0.5 });
+    routeCanvasRenderer = L.canvas({ pane: 'routePane', padding: 0.6 });
 
     stationsLayerGroup = L.layerGroup().addTo(map);
 
@@ -607,27 +629,15 @@
     map.on('zoomend', () => {
       labelsPane.style.opacity = '1';
       scheduleVisibilityUpdate();
-      updateStationMarkerSizes();
       updateLineWeights();
     });
 
-    // ドラッグ中も先回り更新し、長距離ドラッグ時でも駅名表示が遅れないようにする
-    let lastMoveUpdateTime = 0;
-    map.on('move', () => {
-      const now = performance.now();
-      if (now - lastMoveUpdateTime > 60) {
-        lastMoveUpdateTime = now;
-        scheduleVisibilityUpdate();
-      }
-    });
-
+    // ドラッグ完了時（moveend）に1回だけ差分更新（ドラッグ中moveイベントでのフル走査を完全廃止）
     map.on('moveend', () => {
-      updateStationMarkerSizes();
       scheduleVisibilityUpdate();
     });
 
     window.addEventListener('resize', () => {
-      updateStationMarkerSizes();
       scheduleVisibilityUpdate();
       updateLineWeights();
     });
@@ -831,7 +841,9 @@
     // 1. 陸地ポリゴン (全国47都道府県のリアルな陸地輪郭・海岸線)
     const landGeoJSON = topojson.feature(topo, topo.objects.japan);
     L.geoJSON(landGeoJSON, {
-      renderer: canvasRenderer,
+      renderer: bordersCanvasRenderer,
+      pane: 'bordersPane',
+      smoothFactor: 1.8,
       style: {
         fillColor: '#ffffff',
         fillOpacity: 0.95,
@@ -847,7 +859,9 @@
     // 2. 都道府県境界線 (内側のリアル県境のみを抽出して破線描画)
     const interiorMesh = topojson.mesh(topo, topo.objects.japan, (a, b) => a !== b);
     L.geoJSON(interiorMesh, {
-      renderer: canvasRenderer,
+      renderer: bordersCanvasRenderer,
+      pane: 'bordersPane',
+      smoothFactor: 1.8,
       style: {
         color: '#64748b',       // 県境: リアルな境界線
         weight: 1.2,
@@ -949,7 +963,9 @@
       if (lineCoords.length === 0) return;
 
       const polyline = L.polyline(lineCoords, {
-        renderer: canvasRenderer,
+        renderer: linesCanvasRenderer,
+        pane: 'linesPane',
+        smoothFactor: 1.5,
         color: line.color,
         weight: defaultWeight,
         opacity: 0.9,
@@ -972,7 +988,7 @@
     });
   }
 
-  // 駅マーカーの描画 (Canvas レンダラーで超高速描画)
+  // 駅マーカーの描画 (専用Canvas レンダラーで超高速描画 & 差分オンデマンド管理)
   function drawStations() {
     Object.values(STATIONS).forEach(st => {
       const isMega = TIER1_MEGA_HUBS.has(st.id) || TIER1_STATION_NAMES.has(st.name);
@@ -981,16 +997,20 @@
       const fillColor = '#ffffff';
       const strokeColor = isMega ? '#e11d48' : (isMajor ? '#f59e0b' : '#64748b');
 
-      // 高速サークルマーカー (Canvas)
+      // 高速サークルマーカー (専用stationsCanvasRenderer & stationsPane)
       const marker = L.circleMarker([st.lat, st.lng], {
-        renderer: canvasRenderer,
-        radius: isMega ? 5.5 : 3.5,
+        renderer: stationsCanvasRenderer,
+        pane: 'stationsPane',
+        radius: 0,
         fillColor: fillColor,
-        fillOpacity: 1,
+        fillOpacity: 0,
         color: strokeColor,
-        weight: isMega ? 2.5 : 1.5,
+        weight: 0,
         className: `station-node ${isMega ? 'hub-station' : ''}`
       });
+      marker._vis = false;
+      marker._r = 0;
+      marker._w = 0;
 
       // マウスホバー時に駅名ツールチップを表示
       marker.bindTooltip(st.name, {
@@ -1006,7 +1026,7 @@
         selectStation(st.id);
       });
 
-      marker.addTo(stationsLayerGroup);
+      // 表示対象のマーカーのみ updateStationMarkerSizes で差分 addLayer するため、ここではMap管理のみ
       stationMarkers.set(st.id, marker);
     });
   }
@@ -1168,7 +1188,7 @@
 
       if (!checkCollision(box)) {
         insertBox(box);
-        placedLineSlots.push({ elem: slot.elem, lat: slot.lat, lng: slot.lng, lineId: slot.lineId, pt });
+        placedLineSlots.push({ slot: slot, lat: slot.lat, lng: slot.lng, lineId: slot.lineId, pt });
         placedLineCenters.set(slot.lineId, [pt]);
       }
     }
@@ -1182,7 +1202,7 @@
 
       if (!checkCollision(item.box)) {
         insertBox(item.box);
-        placedLineSlots.push({ elem: item.slot.elem, lat: item.slot.lat, lng: item.slot.lng, lineId: item.slot.lineId, pt: item.pt });
+        placedLineSlots.push({ slot: item.slot, lat: item.slot.lat, lng: item.slot.lng, lineId: item.slot.lineId, pt: item.pt });
         centers.push(item.pt);
       }
     }
@@ -1381,20 +1401,20 @@
 
     lastCanShowAllCircles = canShowAllCircles;
 
-    // 画面外バッファ (コンテナ座標)
+    // 画面外バッファ (コンテナ座標: padding 0.6 と整合する広域バッファ ±260px)
     const mapSize = map.getSize();
-    const minX = -30;
-    const maxX = mapSize.x + 30;
-    const minY = -30;
-    const maxY = mapSize.y + 30;
+    const minX = -260;
+    const maxX = mapSize.x + 260;
+    const minY = -260;
+    const maxY = mapSize.y + 260;
 
-    // 緯度経度による高速事前刈り込み (マージン 10% 拡大)
+    // 緯度経度による高速事前刈り込み (マージン 35% 拡大)
     const latSpan = maxLat - minLat;
     const lngSpan = maxLng - minLng;
-    const bufMinLat = minLat - latSpan * 0.1;
-    const bufMaxLat = maxLat + latSpan * 0.1;
-    const bufMinLng = minLng - lngSpan * 0.1;
-    const bufMaxLng = maxLng + lngSpan * 0.1;
+    const bufMinLat = minLat - latSpan * 0.35;
+    const bufMaxLat = maxLat + latSpan * 0.35;
+    const bufMinLng = minLng - lngSpan * 0.35;
+    const bufMaxLng = maxLng + lngSpan * 0.35;
 
     stationMarkers.forEach((marker, stId) => {
       const st = STATIONS[stId];
@@ -1415,24 +1435,28 @@
         shouldShow = isMajor && majorCircleSet.has(stId);
       }
 
-      // 表示対象外の駅は非表示 (radius=0 でホバー・クリック誤爆完全防止)
+      // 画面外バッファ判定
+      if (shouldShow) {
+        if (st.lat < bufMinLat || st.lat > bufMaxLat || st.lng < bufMinLng || st.lng > bufMaxLng) {
+          shouldShow = false;
+        } else {
+          const pt = map.latLngToContainerPoint([st.lat, st.lng]);
+          if (pt.x < minX || pt.x > maxX || pt.y < minY || pt.y > maxY) {
+            shouldShow = false;
+          }
+        }
+      }
+
+      // 非表示対象の駅はレイヤーから除外し完全差分更新 (Canvas走査から除外)
       if (!shouldShow) {
-        marker.setRadius(0);
-        marker.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
-        return;
-      }
-
-      // 画面外の駅も非表示 (radius=0 でホバー・クリック誤爆完全防止)
-      if (st.lat < bufMinLat || st.lat > bufMaxLat || st.lng < bufMinLng || st.lng > bufMaxLng) {
-        marker.setRadius(0);
-        marker.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
-        return;
-      }
-
-      const pt = map.latLngToContainerPoint([st.lat, st.lng]);
-      if (pt.x < minX || pt.x > maxX || pt.y < minY || pt.y > maxY) {
-        marker.setRadius(0);
-        marker.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
+        if (marker._vis) {
+          marker.setRadius(0);
+          marker.setStyle({ fillOpacity: 0, opacity: 0, weight: 0 });
+          stationsLayerGroup.removeLayer(marker);
+          marker._vis = false;
+          marker._r = 0;
+          marker._w = 0;
+        }
         return;
       }
 
@@ -1452,12 +1476,21 @@
         weight = 1.4;
       }
 
-      marker.setRadius(radius);
-      marker.setStyle({
-        fillOpacity: 1,
-        opacity: 1,
-        weight: weight
-      });
+      // 差分更新: 前回状態から半径・線幅・可視状態が変化した時だけ setRadius/setStyle/addLayer を呼ぶ
+      if (!marker._vis || marker._r !== radius || marker._w !== weight) {
+        if (!marker._vis) {
+          stationsLayerGroup.addLayer(marker);
+          marker._vis = true;
+        }
+        marker.setRadius(radius);
+        marker.setStyle({
+          fillOpacity: 1,
+          opacity: 1,
+          weight: weight
+        });
+        marker._r = radius;
+        marker._w = weight;
+      }
     });
   }
 
@@ -1473,20 +1506,20 @@
     const width = mapSize.x;
     const height = mapSize.y;
 
-    // 画面外バッファ (-150px 〜 width + 150px, -120px 〜 height + 120px)
-    const minX = -150;
-    const maxX = width + 150;
-    const minY = -120;
-    const maxY = height + 120;
+    // 画面外バッファ (ドラッグ中のネイティブCSSパンでも途切れない ±260px バッファ)
+    const minX = -260;
+    const maxX = width + 260;
+    const minY = -260;
+    const maxY = height + 260;
 
-    // 緯度経度による高速画面外刈り込み (マージン 30% 拡大)
+    // 緯度経度による高速画面外刈り込み (マージン 40% 拡大)
     const bounds = map.getBounds();
     const latSpan = bounds.getNorth() - bounds.getSouth();
     const lngSpan = bounds.getEast() - bounds.getWest();
-    const minLat = bounds.getSouth() - latSpan * 0.3;
-    const maxLat = bounds.getNorth() + latSpan * 0.3;
-    const minLng = bounds.getWest() - lngSpan * 0.3;
-    const maxLng = bounds.getEast() + lngSpan * 0.3;
+    const minLat = bounds.getSouth() - latSpan * 0.4;
+    const maxLat = bounds.getNorth() + latSpan * 0.4;
+    const minLng = bounds.getWest() - lngSpan * 0.4;
+    const maxLng = bounds.getEast() + lngSpan * 0.4;
 
     const visibleStationsToRender = [];
     const addedIds = new Set();
@@ -1729,6 +1762,8 @@
       }
     }
     lineLabelsLayerGroup.clearLayers();
+    lineLabelEntities.clear();
+    lineLabelCandidateSlots.length = 0;
 
     // 既存のSVGテキストグループがあれば破棄
     const oldGroup = document.getElementById('svg-line-labels-group');
@@ -1904,48 +1939,10 @@
           }
         }
 
-        const guideId = `guide-track-${line.id}-${slotIdx}`;
-
-        // スロット専用の正立ガイドポリラインを作成 (SVG textPath のため SVG レンダラー指定)
-        const guidePoly = L.polyline(smoothed, {
-          renderer: svgRenderer,
-          color: 'transparent',
-          weight: 1,
-          opacity: 0,
-          fill: false,
-          interactive: false,
-          className: 'leaflet-textpath-guide'
-        }).addTo(lineLabelsLayerGroup);
-
-        if (guidePoly._path) {
-          guidePoly._path.setAttribute('id', guideId);
-        }
-
-        // SVG text & textPath の生成 (Google Maps風・線路カーブ沿いテキスト)
-        const textElem = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        textElem.setAttribute('class', `svg-line-text ${isShinkansen ? 'shinkansen-text' : ''}`);
-        textElem.setAttribute('data-line-id', line.id);
-        textElem.setAttribute('data-tier', String(tier));
-        textElem.setAttribute('data-slot', String(slotIdx));
-        textElem.setAttribute('data-lat', String(centerPt[0]));
-        textElem.setAttribute('data-lng', String(centerPt[1]));
-        textElem.setAttribute('data-name-len', String(cleanName.length));
-        textElem.setAttribute('dominant-baseline', 'central');
-        textElem.setAttribute('dy', '0.05em');
-
-        const textPathElem = document.createElementNS('http://www.w3.org/2000/svg', 'textPath');
-        textPathElem.setAttribute('href', `#${guideId}`);
-        textPathElem.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${guideId}`);
-        textPathElem.setAttribute('startOffset', '50%'); // ガイドパスの中央に正立配置
-        textPathElem.setAttribute('text-anchor', 'middle');
-        textPathElem.textContent = cleanName;
-
-        textElem.appendChild(textPathElem);
-
-        labelsGroup.appendChild(textElem);
+        const slotKey = `${line.id}-${slotIdx}`;
 
         lineLabelCandidateSlots.push({
-          elem: textElem,
+          key: slotKey,
           lineId: line.id,
           tier: tier,
           slot: slotIdx,
@@ -1955,6 +1952,7 @@
           nameLen: cleanName.length,
           totalKm: lineTotalKm,
           angle: trackAngle,
+          smoothed: smoothed,
           priority: (tier === 1 ? 500 : (tier === 2 ? 300 : (tier === 3 ? 200 : 100)))
         });
       });
@@ -1964,7 +1962,7 @@
     zoomLayoutCache.clear();
   }
 
-  // ズームレベル & 絶対ワールド座標キャッシュに応じた動的路線名表示
+  // ズームレベル & 絶対ワールド座標キャッシュに応じた動的路線名表示 (オンデマンド生成 & 完全差分管理)
   function updateLineLabelsVisibility() {
     const labelsGroup = document.getElementById('svg-line-labels-group');
     if (!labelsGroup || !map) return;
@@ -1974,41 +1972,99 @@
     const placedSlots = layout.placedLineSlots;
 
     const mapSize = map.getSize();
-    const minX = -80;
-    const maxX = mapSize.x + 80;
-    const minY = -60;
-    const maxY = mapSize.y + 60;
+    const minX = -260;
+    const maxX = mapSize.x + 260;
+    const minY = -260;
+    const maxY = mapSize.y + 260;
 
     const bounds = map.getBounds();
     const latSpan = bounds.getNorth() - bounds.getSouth();
     const lngSpan = bounds.getEast() - bounds.getWest();
-    const minLat = bounds.getSouth() - latSpan * 0.25;
-    const maxLat = bounds.getNorth() + latSpan * 0.25;
-    const minLng = bounds.getWest() - lngSpan * 0.25;
-    const maxLng = bounds.getEast() + lngSpan * 0.25;
+    const minLat = bounds.getSouth() - latSpan * 0.35;
+    const maxLat = bounds.getNorth() + latSpan * 0.35;
+    const minLng = bounds.getWest() - lngSpan * 0.35;
+    const maxLng = bounds.getEast() + lngSpan * 0.35;
 
     const selectedLineId = STATE.selectedLineId;
+    const neededSlotKeys = new Set();
 
-    // すべて一旦非表示
-    const allElems = labelsGroup.querySelectorAll('.svg-line-text');
-    allElems.forEach(el => {
-      el.style.display = 'none';
-      el.classList.remove('active-line-text');
-    });
-
-    // キャッシュ確定済みのスロットのうち、現在画面内に入るものを表示
+    // キャッシュ確定済みのスロットのうち、現在画面内（＋バッファ）に入るものをオンデマンド追加
     for (let i = 0; i < placedSlots.length; i++) {
       const item = placedSlots[i];
+      const slot = item.slot;
+      if (!slot) continue;
+
       if (item.lat < minLat || item.lat > maxLat || item.lng < minLng || item.lng > maxLng) continue;
 
       const pt = map.latLngToContainerPoint([item.lat, item.lng]);
       if (pt.x < minX || pt.x > maxX || pt.y < minY || pt.y > maxY) continue;
 
-      item.elem.style.display = '';
-      if (selectedLineId === item.lineId) {
-        item.elem.classList.add('active-line-text');
+      neededSlotKeys.add(slot.key);
+
+      let entity = lineLabelEntities.get(slot.key);
+      if (!entity) {
+        const guideId = `guide-track-${slot.key}`;
+        const guidePoly = L.polyline(slot.smoothed, {
+          renderer: svgRenderer,
+          color: 'transparent',
+          weight: 1,
+          opacity: 0,
+          fill: false,
+          interactive: false,
+          className: 'leaflet-textpath-guide'
+        });
+
+        const isShinkansen = slot.tier === 1;
+        const textElem = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        textElem.setAttribute('class', `svg-line-text ${isShinkansen ? 'shinkansen-text' : ''}`);
+        textElem.setAttribute('data-line-id', slot.lineId);
+        textElem.setAttribute('dominant-baseline', 'central');
+        textElem.setAttribute('dy', '0.05em');
+
+        const textPathElem = document.createElementNS('http://www.w3.org/2000/svg', 'textPath');
+        textPathElem.setAttribute('href', `#${guideId}`);
+        textPathElem.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${guideId}`);
+        textPathElem.setAttribute('startOffset', '50%');
+        textPathElem.setAttribute('text-anchor', 'middle');
+        textPathElem.textContent = slot.name;
+
+        textElem.appendChild(textPathElem);
+
+        entity = {
+          guidePoly,
+          textElem,
+          guideId,
+          isAttached: false
+        };
+        lineLabelEntities.set(slot.key, entity);
+      }
+
+      if (!entity.isAttached) {
+        entity.guidePoly.addTo(lineLabelsLayerGroup);
+        if (entity.guidePoly._path) {
+          entity.guidePoly._path.setAttribute('id', entity.guideId);
+        }
+        labelsGroup.appendChild(entity.textElem);
+        entity.isAttached = true;
+      }
+
+      if (selectedLineId === slot.lineId) {
+        entity.textElem.classList.add('active-line-text');
+      } else {
+        entity.textElem.classList.remove('active-line-text');
       }
     }
+
+    // 画面外に出たスロットをレイヤーおよびDOMから安全にデタッチ（差分更新）
+    lineLabelEntities.forEach((entity, key) => {
+      if (!neededSlotKeys.has(key) && entity.isAttached) {
+        lineLabelsLayerGroup.removeLayer(entity.guidePoly);
+        if (entity.textElem.parentNode) {
+          entity.textElem.parentNode.removeChild(entity.textElem);
+        }
+        entity.isAttached = false;
+      }
+    });
   }
 
   // ズームレベルに応じた線幅の調整 (差分更新により不要なsetStyleを完全抑止)
@@ -2355,7 +2411,8 @@
       highlightMarker = null;
     }
     highlightMarker = L.circleMarker([st.lat, st.lng], {
-      renderer: canvasRenderer,
+      renderer: stationsCanvasRenderer,
+      pane: 'stationsPane',
       radius: 9,
       fillColor: '#3b82f6',
       fillOpacity: 0.35,
