@@ -902,7 +902,7 @@
     return name.replace(/\([^)]*\)/g, "").replace(/（[^）]*）/g, "").trim();
   }
 
-  // 路線名ラベル用ポリラインの結合＆スムージング（ガイドパス生成）
+  // 路線名ラベル用ポリラインの結合（ガイドパス生成）
   function buildSmoothedLineLabelFeatures(lines, tracks) {
     const labelFeatures = [];
 
@@ -918,7 +918,19 @@
       return total;
     }
 
-    function mergeChains(chains, maxDistDeg = 0.03) {
+    // 急激な折り返し（Uターン結合）防止チェック（内積 < -0.5 で約120度以上の急旋回を検出）
+    function isSharpTurn(pPrev, pJoint, pNext) {
+      if (!pPrev || !pJoint || !pNext) return false;
+      const v1x = pJoint[0] - pPrev[0], v1y = pJoint[1] - pPrev[1];
+      const v2x = pNext[0] - pJoint[0], v2y = pNext[1] - pJoint[1];
+      const l1 = Math.sqrt(v1x * v1x + v1y * v1y);
+      const l2 = Math.sqrt(v2x * v2x + v2y * v2y);
+      if (l1 === 0 || l2 === 0) return false;
+      const dot = (v1x * v2x + v1y * v2y) / (l1 * l2);
+      return dot < -0.5;
+    }
+
+    function mergeChains(chains, maxDistDeg = 0.003) {
       if (!chains || chains.length <= 1) return chains ? chains.map(c => [...c]) : [];
       const maxD2 = maxDistDeg * maxDistDeg;
       let pool = chains.map(c => [...c]);
@@ -940,21 +952,33 @@
             const cTail = candidate[candidate.length - 1];
 
             if (distSq(tail, cHead) <= maxD2) {
+              if (current.length >= 2 && candidate.length >= 2 && isSharpTurn(current[current.length - 2], tail, candidate[1])) {
+                continue;
+              }
               current.push(...candidate.slice(1));
               pool.splice(i, 1);
               extended = true;
               break;
             } else if (distSq(tail, cTail) <= maxD2) {
+              if (current.length >= 2 && candidate.length >= 2 && isSharpTurn(current[current.length - 2], tail, candidate[candidate.length - 2])) {
+                continue;
+              }
               current.push(...candidate.slice(0, -1).reverse());
               pool.splice(i, 1);
               extended = true;
               break;
             } else if (distSq(head, cTail) <= maxD2) {
+              if (candidate.length >= 2 && current.length >= 2 && isSharpTurn(candidate[candidate.length - 2], head, current[1])) {
+                continue;
+              }
               current.unshift(...candidate.slice(0, -1));
               pool.splice(i, 1);
               extended = true;
               break;
             } else if (distSq(head, cHead) <= maxD2) {
+              if (candidate.length >= 2 && current.length >= 2 && isSharpTurn(candidate[1], head, current[1])) {
+                continue;
+              }
               current.unshift(...candidate.slice(1).reverse());
               pool.splice(i, 1);
               extended = true;
@@ -965,48 +989,6 @@
         merged.push(current);
       }
       return merged;
-    }
-
-    function douglasPeucker(points, tol) {
-      if (points.length <= 2) return points;
-      let maxD = 0, maxIdx = 0;
-      const p1 = points[0], p2 = points[points.length - 1];
-      const dx = p2[0] - p1[0], dy = p2[1] - p1[1];
-      const lenSq = dx * dx + dy * dy;
-
-      for (let i = 1; i < points.length - 1; i++) {
-        const p = points[i];
-        let d;
-        if (lenSq === 0) {
-          d = Math.sqrt(distSq(p, p1));
-        } else {
-          const t = Math.max(0, Math.min(1, ((p[0] - p1[0]) * dx + (p[1] - p1[1]) * dy) / lenSq));
-          const projX = p1[0] + t * dx, projY = p1[1] + t * dy;
-          d = Math.sqrt((p[0] - projX) ** 2 + (p[1] - projY) ** 2);
-        }
-        if (d > maxD) { maxD = d; maxIdx = i; }
-      }
-
-      if (maxD > tol) {
-        const r1 = douglasPeucker(points.slice(0, maxIdx + 1), tol);
-        const r2 = douglasPeucker(points.slice(maxIdx), tol);
-        return r1.slice(0, -1).concat(r2);
-      }
-      return [p1, p2];
-    }
-
-    function smoothPoints(points) {
-      if (points.length <= 2) return points;
-      const res = [points[0]];
-      for (let i = 1; i < points.length - 1; i++) {
-        const prev = points[i - 1], curr = points[i], next = points[i + 1];
-        res.push([
-          0.25 * prev[0] + 0.5 * curr[0] + 0.25 * next[0],
-          0.25 * prev[1] + 0.5 * curr[1] + 0.25 * next[1]
-        ]);
-      }
-      res.push(points[points.length - 1]);
-      return res;
     }
 
     lines.forEach(line => {
@@ -1033,7 +1015,7 @@
       if (rawChains.length === 0) return;
 
       const lnglatChains = rawChains.map(chain => chain.map(pt => [pt[1], pt[0]]));
-      const mergedChains = mergeChains(lnglatChains, 0.03);
+      const mergedChains = mergeChains(lnglatChains, 0.003);
 
       const cName = cleanLineName(line.name);
       const isShinkansen = line.category === "shinkansen";
@@ -1043,10 +1025,9 @@
         const len = calcChainLength(chain);
         if (mergedChains.length > 1 && len < 0.015) return;
 
-        const simplified = douglasPeucker(chain, 0.0012);
-        const smoothed = smoothPoints(simplified);
-
-        if (smoothed.length >= 2) {
+        // ガイドパスは実線路の座標をそのまま保持（乖離0m）。
+        // ズームに応じた動的簡略化は MapLibre ソースの tolerance: 2.5 に委ねる。
+        if (chain.length >= 2) {
           const sortKey = isShinkansen ? 100 : (isMainLine ? 250 : 500);
 
           labelFeatures.push({
@@ -1063,7 +1044,7 @@
             },
             geometry: {
               type: "LineString",
-              coordinates: smoothed
+              coordinates: chain
             }
           });
         }
@@ -1150,6 +1131,7 @@
 
       map.addSource("line-labels-source", {
         type: "geojson",
+        tolerance: 2.5,
         data: {
           type: "FeatureCollection",
           features: labelFeatures
@@ -1242,7 +1224,7 @@
             15, 13.5
           ],
           "text-letter-spacing": 0.1,
-          "symbol-spacing": 200,
+          "symbol-spacing": 220,
           "text-max-angle": 65,
           "text-pitch-alignment": "viewport",
           "text-rotation-alignment": "map",
