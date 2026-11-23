@@ -244,6 +244,135 @@
   }
 
   // =======================================================
+  // 駅名入力欄ゴーストサフィックス・共通ヘルパー関数
+  // =======================================================
+  function attachStationGhostOverlay(inputEl) {
+    if (!inputEl) return null;
+    if (inputEl._ghostOverlay) return inputEl._ghostOverlay;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'station-input-ghost-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+
+    const mirror = document.createElement('span');
+    mirror.className = 'ghost-mirror';
+
+    const pref = document.createElement('span');
+    pref.className = 'ghost-pref';
+
+    overlay.appendChild(mirror);
+    overlay.appendChild(pref);
+
+    // input要素の直後に挿入 (親ラッパー内に配置)
+    if (inputEl.parentNode) {
+      inputEl.parentNode.insertBefore(overlay, inputEl.nextSibling);
+    }
+
+    inputEl._ghostOverlay = overlay;
+    inputEl._ghostMirror = mirror;
+    inputEl._ghostPref = pref;
+
+    // スクロール同期
+    inputEl.addEventListener('scroll', () => {
+      overlay.scrollLeft = inputEl.scrollLeft;
+    });
+
+    // 文字編集時（1文字でも書き換えたら即座に data-id とゴースト表示をクリア）
+    inputEl.addEventListener('input', () => {
+      inputEl.removeAttribute('data-id');
+      mirror.textContent = '';
+      pref.textContent = '';
+    });
+
+    // フォーカス状態の同期
+    inputEl.addEventListener('focus', () => {
+      overlay.classList.add('is-focused');
+    });
+    inputEl.addEventListener('blur', () => {
+      overlay.classList.remove('is-focused');
+    });
+
+    return overlay;
+  }
+
+  function setStationInputValue(inputEl, st) {
+    if (!inputEl) return;
+    if (DUPLICATE_STATION_IDS.size === 0 && typeof initDuplicateStations === 'function') {
+      initDuplicateStations();
+    }
+    if (!inputEl._ghostOverlay) {
+      attachStationGhostOverlay(inputEl);
+    }
+    const resolvedSt = typeof st === 'string' ? STATIONS[st] : st;
+    if (!resolvedSt) {
+      clearStationInputValue(inputEl);
+      return;
+    }
+
+    inputEl.value = resolvedSt.name;
+    inputEl.setAttribute('data-id', resolvedSt.id);
+
+    const isDuplicate = DUPLICATE_STATION_IDS.has(resolvedSt.id) || DUPLICATE_STATION_NAMES.has(resolvedSt.name);
+    if (isDuplicate) {
+      const prefAbbr = getPrefAbbr(resolvedSt.pref);
+      if (inputEl._ghostMirror) inputEl._ghostMirror.textContent = resolvedSt.name;
+      if (inputEl._ghostPref) inputEl._ghostPref.textContent = `（${prefAbbr}）`;
+    } else {
+      if (inputEl._ghostMirror) inputEl._ghostMirror.textContent = '';
+      if (inputEl._ghostPref) inputEl._ghostPref.textContent = '';
+    }
+
+    if (inputEl._ghostOverlay) {
+      inputEl._ghostOverlay.scrollLeft = inputEl.scrollLeft;
+    }
+  }
+
+  function clearStationInputValue(inputEl) {
+    if (!inputEl) return;
+    if (!inputEl._ghostOverlay) {
+      attachStationGhostOverlay(inputEl);
+    }
+    inputEl.value = '';
+    inputEl.removeAttribute('data-id');
+    if (inputEl._ghostMirror) inputEl._ghostMirror.textContent = '';
+    if (inputEl._ghostPref) inputEl._ghostPref.textContent = '';
+    if (inputEl._ghostOverlay) {
+      inputEl._ghostOverlay.scrollLeft = 0;
+    }
+  }
+
+  function swapStationInputs(inputA, inputB) {
+    if (!inputA || !inputB) return;
+    if (!inputA._ghostOverlay) attachStationGhostOverlay(inputA);
+    if (!inputB._ghostOverlay) attachStationGhostOverlay(inputB);
+
+    const valA = inputA.value;
+    const idA = inputA.getAttribute('data-id');
+    const mirrorA = inputA._ghostMirror ? inputA._ghostMirror.textContent : '';
+    const prefA = inputA._ghostPref ? inputA._ghostPref.textContent : '';
+
+    const valB = inputB.value;
+    const idB = inputB.getAttribute('data-id');
+    const mirrorB = inputB._ghostMirror ? inputB._ghostMirror.textContent : '';
+    const prefB = inputB._ghostPref ? inputB._ghostPref.textContent : '';
+
+    inputA.value = valB;
+    if (idB) inputA.setAttribute('data-id', idB);
+    else inputA.removeAttribute('data-id');
+    if (inputA._ghostMirror) inputA._ghostMirror.textContent = mirrorB;
+    if (inputA._ghostPref) inputA._ghostPref.textContent = prefB;
+
+    inputB.value = valA;
+    if (idA) inputB.setAttribute('data-id', idA);
+    else inputB.removeAttribute('data-id');
+    if (inputB._ghostMirror) inputB._ghostMirror.textContent = mirrorA;
+    if (inputB._ghostPref) inputB._ghostPref.textContent = prefA;
+
+    if (inputA._ghostOverlay) inputA._ghostOverlay.scrollLeft = inputA.scrollLeft;
+    if (inputB._ghostOverlay) inputB._ghostOverlay.scrollLeft = inputB.scrollLeft;
+  }
+
+  // =======================================================
   // ヘボン式ローマ字安全変換 & 駅英語名取得ヘルパー
   // =======================================================
   const KANA_HEPBURN_MAP = {
@@ -2345,6 +2474,7 @@
     const input = document.getElementById('station-search');
     const results = document.getElementById('search-results');
     const clearBtn = document.getElementById('search-clear');
+    if (input) attachStationGhostOverlay(input);
 
     input.addEventListener('input', () => {
       const q = input.value.trim().toLowerCase();
@@ -2375,7 +2505,8 @@
           <span class="search-item-pref">${st.pref}</span>
         `;
         item.addEventListener('click', () => {
-          input.value = getStationUiName(st);
+          setStationInputValue(input, st);
+          clearBtn.style.display = 'block';
           results.style.display = 'none';
           selectStation(st.id);
         });
@@ -2397,7 +2528,7 @@
     });
 
     clearBtn.addEventListener('click', () => {
-      input.value = '';
+      clearStationInputValue(input);
       clearBtn.style.display = 'none';
       results.style.display = 'none';
       input.focus();
@@ -3528,9 +3659,9 @@
     // 発駅入力サジェスト
     const deptInput = document.getElementById('route-dept-input');
     const deptSuggest = document.getElementById('route-dept-suggest');
+    if (deptInput) attachStationGhostOverlay(deptInput);
     setupStationSuggest(deptInput, deptSuggest, (st) => {
-      deptInput.value = getStationUiName(st);
-      deptInput.setAttribute('data-id', st.id);
+      setStationInputValue(deptInput, st);
       updateShinkansenCandidateChips();
       markInputChanged();
     });
@@ -3538,9 +3669,9 @@
     // 着駅入力サジェスト (同名駅は発駅からの直線距離を優先)
     const destInput = document.getElementById('route-dest-input');
     const destSuggest = document.getElementById('route-dest-suggest');
+    if (destInput) attachStationGhostOverlay(destInput);
     setupStationSuggest(destInput, destSuggest, (st) => {
-      destInput.value = getStationUiName(st);
-      destInput.setAttribute('data-id', st.id);
+      setStationInputValue(destInput, st);
       updateShinkansenCandidateChips();
       markInputChanged();
     }, () => getDeptStation());
@@ -3549,19 +3680,7 @@
     const swapStationsBtn = document.getElementById('btn-swap-stations');
     if (swapStationsBtn && deptInput && destInput) {
       swapStationsBtn.addEventListener('click', () => {
-        const deptVal = deptInput.value;
-        const deptId = deptInput.getAttribute('data-id');
-        const destVal = destInput.value;
-        const destId = destInput.getAttribute('data-id');
-
-        deptInput.value = destVal;
-        if (destId) deptInput.setAttribute('data-id', destId);
-        else deptInput.removeAttribute('data-id');
-
-        destInput.value = deptVal;
-        if (deptId) destInput.setAttribute('data-id', deptId);
-        else destInput.removeAttribute('data-id');
-
+        swapStationInputs(deptInput, destInput);
         markInputChanged();
         updateShinkansenCandidateChips();
       });
@@ -3573,8 +3692,7 @@
         const targetId = btn.getAttribute('data-target');
         const targetInput = document.getElementById(targetId);
         if (targetInput) {
-          targetInput.value = '';
-          targetInput.removeAttribute('data-id');
+          clearStationInputValue(targetInput);
           targetInput.focus();
           updateShinkansenCandidateChips();
           markInputChanged();
@@ -3637,17 +3755,17 @@
     const shFromSuggest = document.getElementById('shinkansen-from-suggest');
     const shToInput = document.getElementById('shinkansen-to-input');
     const shToSuggest = document.getElementById('shinkansen-to-suggest');
+    if (shFromInput) attachStationGhostOverlay(shFromInput);
+    if (shToInput) attachStationGhostOverlay(shToInput);
     if (shFromInput && shFromSuggest) {
       setupStationSuggest(shFromInput, shFromSuggest, (st) => {
-        shFromInput.value = getStationUiName(st);
-        shFromInput.setAttribute('data-id', st.id);
+        setStationInputValue(shFromInput, st);
         markInputChanged();
       }, () => getDeptStation());
     }
     if (shToInput && shToSuggest) {
       setupStationSuggest(shToInput, shToSuggest, (st) => {
-        shToInput.value = getStationUiName(st);
-        shToInput.setAttribute('data-id', st.id);
+        setStationInputValue(shToInput, st);
         markInputChanged();
       }, () => getDeptStation());
     }
@@ -3656,19 +3774,7 @@
     const swapShInputsBtn = document.getElementById('btn-swap-shinkansen-inputs');
     if (swapShInputsBtn && shFromInput && shToInput) {
       swapShInputsBtn.addEventListener('click', () => {
-        const fromVal = shFromInput.value;
-        const fromId = shFromInput.getAttribute('data-id');
-        const toVal = shToInput.value;
-        const toId = shToInput.getAttribute('data-id');
-
-        shFromInput.value = toVal;
-        if (toId) shFromInput.setAttribute('data-id', toId);
-        else shFromInput.removeAttribute('data-id');
-
-        shToInput.value = fromVal;
-        if (fromId) shToInput.setAttribute('data-id', fromId);
-        else shToInput.removeAttribute('data-id');
-
+        swapStationInputs(shFromInput, shToInput);
         markInputChanged();
         shFromInput.focus();
       });
@@ -3732,10 +3838,8 @@
           return;
         }
         addShinkansenSegment(fromSt, toSt);
-        shFromInput.value = '';
-        shFromInput.removeAttribute('data-id');
-        shToInput.value = '';
-        shToInput.removeAttribute('data-id');
+        clearStationInputValue(shFromInput);
+        clearStationInputValue(shToInput);
         markInputChanged();
       });
     }
@@ -3821,8 +3925,7 @@
         if (!STATE.selectedStationId) return;
         const st = STATIONS[STATE.selectedStationId];
         if (!st) return;
-        deptInput.value = getStationUiName(st);
-        deptInput.setAttribute('data-id', st.id);
+        setStationInputValue(deptInput, st);
         markInputChanged();
         toggleRoutePanel(true);
       });
@@ -3846,8 +3949,7 @@
         if (!STATE.selectedStationId) return;
         const st = STATIONS[STATE.selectedStationId];
         if (!st) return;
-        destInput.value = getStationUiName(st);
-        destInput.setAttribute('data-id', st.id);
+        setStationInputValue(destInput, st);
         markInputChanged();
         toggleRoutePanel(true);
       });
@@ -4466,10 +4568,10 @@
     const dropdown = row.querySelector('.route-suggest-dropdown');
     const clearBtn = row.querySelector('.btn-input-clear');
     const removeBtn = row.querySelector('.btn-remove-via');
+    if (input) attachStationGhostOverlay(input);
 
     clearBtn.addEventListener('click', () => {
-      input.value = '';
-      input.removeAttribute('data-id');
+      clearStationInputValue(input);
       input.focus();
       markInputChanged();
     });
@@ -4572,15 +4674,13 @@
     });
 
     setupStationSuggest(input, dropdown, (st) => {
-      input.value = getStationUiName(st);
-      input.setAttribute('data-id', st.id);
+      setStationInputValue(input, st);
       updateShinkansenCandidateChips();
       markInputChanged();
     }, () => getDeptStation());
 
     if (initialStation) {
-      input.value = getStationUiName(initialStation);
-      input.setAttribute('data-id', initialStation.id);
+      setStationInputValue(input, initialStation);
     }
 
     container.appendChild(row);
@@ -4778,14 +4878,8 @@
   function clearRouteEngineUI() {
     const deptInput = document.getElementById('route-dept-input');
     const destInput = document.getElementById('route-dest-input');
-    if (deptInput) {
-      deptInput.value = '';
-      deptInput.removeAttribute('data-id');
-    }
-    if (destInput) {
-      destInput.value = '';
-      destInput.removeAttribute('data-id');
-    }
+    if (deptInput) clearStationInputValue(deptInput);
+    if (destInput) clearStationInputValue(destInput);
 
     const viaContainer = document.getElementById('route-via-container');
     if (viaContainer) viaContainer.innerHTML = '';
@@ -4833,14 +4927,8 @@
 
     const shFromInput = document.getElementById('shinkansen-from-input');
     const shToInput = document.getElementById('shinkansen-to-input');
-    if (shFromInput) {
-      shFromInput.value = '';
-      shFromInput.removeAttribute('data-id');
-    }
-    if (shToInput) {
-      shToInput.value = '';
-      shToInput.removeAttribute('data-id');
-    }
+    if (shFromInput) clearStationInputValue(shFromInput);
+    if (shToInput) clearStationInputValue(shToInput);
     lastStationListIds = '';
     renderShinkansenSegmentsList();
     updateShinkansenCandidateChips();
@@ -5201,6 +5289,10 @@
       updateShinkansenSelectors,
       clearRouteEngineUI,
       addShinkansenSegment,
+      attachStationGhostOverlay,
+      setStationInputValue,
+      clearStationInputValue,
+      swapStationInputs,
       getRouteState: () => ROUTE_STATE,
       getState: () => STATE,
       selectStation,
@@ -5225,7 +5317,11 @@
       getRelevantShinkansenPairs,
       getRelevantShinkansenStationList,
       determineDefaultPreset,
-      isYamanoteZoneStation
+      isYamanoteZoneStation,
+      attachStationGhostOverlay,
+      setStationInputValue,
+      clearStationInputValue,
+      swapStationInputs
     };
   }
 })();

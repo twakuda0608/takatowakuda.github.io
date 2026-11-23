@@ -232,6 +232,14 @@ body.theme-light .search-box {
   flex-shrink: 0;
 }
 
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
 .search-box input {
   flex: 1;
   border: none;
@@ -240,6 +248,9 @@ body.theme-light .search-box {
   color: var(--text-main);
   font-family: inherit;
   font-size: 13px;
+  line-height: 1.4;
+  letter-spacing: normal;
+  padding: 0;
   width: 100%;
 }
 .search-box input::placeholder {
@@ -1179,8 +1190,11 @@ body.theme-dark .sheet-header.jr-station-sign {
 .route-station-input {
   width: 100%;
   padding: 8px 30px 8px 12px;
+  font-family: inherit;
   font-size: 13px;
   font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: normal;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   outline: none;
@@ -2485,7 +2499,11 @@ body.theme-dark .sheet-header.jr-station-sign {
   height: 28px;
   box-sizing: border-box;
   padding: 4px 8px;
+  font-family: inherit;
   font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: normal;
   border-radius: 6px;
 }
 .btn-swap-shinkansen {
@@ -2563,4 +2581,89 @@ body.theme-dark .sheet-header.jr-station-sign {
 .leaflet-routePane-pane,
 .leaflet-pane.leaflet-routePane-pane {
   pointer-events: none !important;
+}
+
+/* =======================================================
+   同名駅インライン・ゴーストサフィックス
+   ======================================================= */
+.station-input-ghost-overlay {
+  position: absolute;
+  pointer-events: none;
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  z-index: 2;
+  user-select: none;
+}
+
+.station-input-ghost-overlay .ghost-mirror {
+  visibility: hidden;
+  white-space: pre;
+  letter-spacing: inherit;
+}
+
+.station-input-ghost-overlay .ghost-pref {
+  color: #64748b;
+  font-weight: 500;
+  white-space: pre;
+  letter-spacing: inherit;
+  margin-left: 2px;
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+/* ヘッダー検索入力欄 */
+.search-input-wrapper .station-input-ghost-overlay {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: normal;
+}
+.search-input-wrapper .ghost-pref {
+  color: #94a3b8;
+}
+body.theme-light .search-input-wrapper .ghost-pref {
+  color: #64748b;
+}
+
+/* 経路探索の発駅・着駅・経由駅入力欄 */
+.route-field-wrapper .station-input-ghost-overlay {
+  top: 0;
+  bottom: 0;
+  left: 13px;
+  right: 30px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: normal;
+}
+
+/* 新幹線手動区間入力欄 */
+.shinkansen-input-wrapper .station-input-ghost-overlay {
+  top: 0;
+  bottom: 0;
+  left: 9px;
+  right: 6px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: normal;
+}
+
+/* 編集時（フォーカス時）スタイル: 薄いグレーの背景文字風に変化 */
+.search-input-wrapper:focus-within .ghost-pref,
+.route-field-wrapper:focus-within .ghost-pref,
+.shinkansen-input-wrapper:focus-within .ghost-pref,
+.station-input-ghost-overlay.is-focused .ghost-pref {
+  color: #94a3b8 !important;
+  opacity: 0.55 !important;
 }
