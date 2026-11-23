@@ -61,27 +61,24 @@ html, body {
   transform: translateZ(0);
 }
 
-/* デフォルトのLeafletズームコントロールを非表示 (自前コントロールを使用) */
-.leaflet-control-zoom {
+/* デフォルトのズームコントロール非表示 (自前コントロールを使用) */
+.leaflet-control-zoom,
+.maplibregl-ctrl-zoom {
   display: none !important;
 }
 
-/* Leafletの著作権表記を控えめに */
-.leaflet-control-attribution {
+/* 著作権表記を控えめに */
+.leaflet-control-attribution,
+.maplibregl-ctrl-attrib {
   font-size: 10px !important;
   background: rgba(0, 0, 0, 0.4) !important;
   color: #aaa !important;
   border-radius: 4px;
   padding: 2px 6px !important;
 }
-.leaflet-control-attribution a {
+.leaflet-control-attribution a,
+.maplibregl-ctrl-attrib a {
   color: #ccc !important;
-}
-
-/* 駅名テキストラベル専用 Pane (ズーム時のチラつき・置き去り完全防止) */
-.leaflet-stationLabels-pane {
-  pointer-events: none;
-  transition: opacity 0.12s ease-out;
 }
 
 /* 駅名テキストラベルのスタイル (高速レンダリング & クッキリ白フチ) */
@@ -112,6 +109,24 @@ html, body {
 .station-label.regular-label {
   font-size: 11px;
   font-weight: 600;
+}
+
+/* ホバー時の駅名ツールチップ (MapLibre Popup) */
+.station-hover-popup {
+  pointer-events: none;
+  z-index: 1000;
+}
+.station-hover-popup .maplibregl-popup-content {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+.station-hover-popup .maplibregl-popup-tip {
+  border-top-color: rgba(15, 23, 42, 0.9) !important;
+}
+body.theme-light .station-hover-popup .maplibregl-popup-tip {
+  border-top-color: rgba(255, 255, 255, 0.95) !important;
 }
 
 /* ホバー時の駅名ツールチップ */
