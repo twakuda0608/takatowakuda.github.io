@@ -2843,6 +2843,15 @@
       }
     }
 
+    function slideOutAndClose() {
+      sheet.style.transition = 'transform 0.22s ease-out';
+      const sheetHeight = sheet.offsetHeight || Math.round(window.innerHeight * 0.7);
+      sheet.style.transform = `translateY(${sheetHeight + 50}px)`;
+      setTimeout(() => {
+        closeStationSheet();
+      }, 220);
+    }
+
     function onTouchStart(e) {
       if (window.innerWidth > 768) return;
       if (e.touches.length !== 1) return;
@@ -2872,9 +2881,10 @@
         moved = true;
       }
 
-      const peekY = parseFloat(sheet.dataset.peekY) || 200;
+      const sheetHeight = sheet.offsetHeight || Math.round(window.innerHeight * 0.7);
       let nextY = startTranslateY + deltaY;
-      nextY = Math.max(0, Math.min(peekY, nextY));
+      // 下限を peekY で頭打ちにせず、画面外方向 (sheetHeight + 30) まで引き下げ可能
+      nextY = Math.max(0, Math.min(sheetHeight + 30, nextY));
 
       sheet.style.transform = `translateY(${nextY}px)`;
       sheet.dataset.currentY = nextY;
@@ -2908,6 +2918,12 @@
       const endY = e.changedTouches[0] ? e.changedTouches[0].clientY : lastY;
       const elapsed = Math.max(1, performance.now() - lastTime);
       const velocity = (endY - lastY) / elapsed; // px/ms
+
+      // 下引き下げ量大 (curY > peekY + 48) または Peek付近からの下フリック (velocity > 0.3) で閉じる
+      if (curY > peekY + 48 || (velocity > 0.3 && curY >= peekY * 0.8)) {
+        slideOutAndClose();
+        return;
+      }
 
       if (velocity < -0.3) {
         // 高速上スワイプ -> Expanded
@@ -3032,6 +3048,7 @@
     const panel = document.getElementById('route-panel');
     const handle = document.getElementById('route-sheet-handle');
     const summaryBar = document.getElementById('route-mobile-summary-bar');
+    const panelHeader = panel ? panel.querySelector('.route-panel-header') : null;
     const btnModify = document.getElementById('btn-route-modify');
     const btnSummaryClear = document.getElementById('btn-route-summary-clear');
 
@@ -3043,6 +3060,7 @@
         panel.classList.add('is-editing');
         panel.style.transform = '';
         panel.style.transition = '';
+        setSearchButtonEnabled(true);
       });
     }
 
@@ -3054,6 +3072,7 @@
     }
 
     let isDragging = false;
+    let dragMode = null; // 'result' | 'input'
     let startY = 0;
     let startTranslateY = 0;
     let lastY = 0;
@@ -3062,15 +3081,23 @@
     let moved = false;
     let lastTouchEndTime = 0;
 
+    function slideOutAndClose() {
+      panel.style.transition = 'transform 0.22s ease-out';
+      const panelHeight = panel.offsetHeight || window.innerHeight;
+      panel.style.transform = `translateY(${panelHeight + 50}px)`;
+      setTimeout(() => {
+        toggleRoutePanel(false);
+      }, 220);
+    }
+
     function onTouchStart(e) {
       if (window.innerWidth > 768) return;
-      if (!panel.classList.contains('has-result') || panel.classList.contains('is-editing')) return;
-      if (e.target.closest('button')) return;
+      if (e.target.closest('button') || e.target.closest('input')) return;
       if (e.touches.length !== 1) return;
 
-      const dims = getRouteSheetDimensions();
-      const currentY = parseFloat(panel.dataset.currentY);
-      startTranslateY = !isNaN(currentY) ? currentY : dims.halfY;
+      const isResult = panel.classList.contains('has-result') && !panel.classList.contains('is-editing');
+      dragMode = isResult ? 'result' : 'input';
+
       startY = e.touches[0].clientY;
       lastY = startY;
       lastTime = Date.now();
@@ -3078,6 +3105,14 @@
       moved = false;
       isDragging = true;
       panel.style.transition = 'none';
+
+      if (dragMode === 'result') {
+        const dims = getRouteSheetDimensions();
+        const currentY = parseFloat(panel.dataset.currentY);
+        startTranslateY = !isNaN(currentY) ? currentY : dims.halfY;
+      } else {
+        startTranslateY = 0;
+      }
     }
 
     function onTouchMove(e) {
@@ -3090,11 +3125,16 @@
         if (e.cancelable) e.preventDefault();
       }
 
-      const dims = getRouteSheetDimensions();
-      const rawY = startTranslateY + diffY;
-      const clampedY = Math.max(0, Math.min(dims.miniY, rawY));
-      panel.style.transform = `translateY(${clampedY}px)`;
-      panel.dataset.currentY = clampedY;
+      if (dragMode === 'result') {
+        const dims = getRouteSheetDimensions();
+        const rawY = startTranslateY + diffY;
+        const clampedY = Math.max(0, Math.min(dims.panelHeight + 40, rawY));
+        panel.style.transform = `translateY(${clampedY}px)`;
+        panel.dataset.currentY = clampedY;
+      } else {
+        const nextY = Math.max(0, diffY);
+        panel.style.transform = `translateY(${nextY}px)`;
+      }
 
       const now = Date.now();
       const dt = now - lastTime;
@@ -3108,57 +3148,78 @@
     function onTouchEnd(e) {
       if (!isDragging || window.innerWidth > 768) return;
       isDragging = false;
-      const dims = getRouteSheetDimensions();
-      const curY = parseFloat(panel.dataset.currentY);
-      const currentY = !isNaN(curY) ? curY : dims.halfY;
+      const endY = e.changedTouches[0] ? e.changedTouches[0].clientY : lastY;
+      const diffY = endY - startY;
 
-      // タップ判定 (移動量 8px 未満)
-      if (!moved || Math.abs((e.changedTouches[0] ? e.changedTouches[0].clientY : lastY) - startY) < 8) {
-        if (e.cancelable) e.preventDefault();
-        lastTouchEndTime = Date.now();
-        // Mini → Half → Full → Half サイクル
-        if (panel.classList.contains('mobile-sheet-mini') || Math.abs(currentY - dims.miniY) < 30) {
-          snapRouteSheet('half', true);
-        } else if (panel.classList.contains('mobile-sheet-half') || Math.abs(currentY - dims.halfY) < 30) {
-          snapRouteSheet('full', true);
-        } else {
-          snapRouteSheet('half', true);
-        }
-        return;
-      }
+      if (dragMode === 'result') {
+        const dims = getRouteSheetDimensions();
+        const curY = parseFloat(panel.dataset.currentY);
+        const currentY = !isNaN(curY) ? curY : dims.halfY;
 
-      // フリック速度判定
-      if (velocityY < -0.35) {
-        // 上フリック: Mini からは Half、Half からは Full
-        if (currentY > (dims.miniY + dims.halfY) / 2) {
-          snapRouteSheet('half', true);
-        } else {
-          snapRouteSheet('full', true);
+        // タップ判定 (移動量 8px 未満)
+        if (!moved || Math.abs(diffY) < 8) {
+          if (e.cancelable) e.preventDefault();
+          lastTouchEndTime = Date.now();
+          // Mini → Half → Full → Half サイクル
+          if (panel.classList.contains('mobile-sheet-mini') || Math.abs(currentY - dims.miniY) < 30) {
+            snapRouteSheet('half', true);
+          } else if (panel.classList.contains('mobile-sheet-half') || Math.abs(currentY - dims.halfY) < 30) {
+            snapRouteSheet('full', true);
+          } else {
+            snapRouteSheet('half', true);
+          }
+          return;
         }
-      } else if (velocityY > 0.35) {
-        // 下フリック: Full からは Half、Half からは Mini
-        if (currentY < (dims.fullY + dims.halfY) / 2) {
-          snapRouteSheet('half', true);
+
+        // 下スワイプ閉じる判定 (miniY + 45px 超過、または Mini 付近からの下フリック)
+        if (currentY > dims.miniY + 45 || (velocityY > 0.35 && currentY >= dims.miniY - 15)) {
+          slideOutAndClose();
+          return;
+        }
+
+        // フリック速度判定
+        if (velocityY < -0.35) {
+          if (currentY > (dims.miniY + dims.halfY) / 2) {
+            snapRouteSheet('half', true);
+          } else {
+            snapRouteSheet('full', true);
+          }
+        } else if (velocityY > 0.35) {
+          if (currentY < (dims.fullY + dims.halfY) / 2) {
+            snapRouteSheet('half', true);
+          } else {
+            snapRouteSheet('mini', true);
+          }
         } else {
-          snapRouteSheet('mini', true);
+          // 最寄り位置へスナップ
+          const candidates = [
+            { state: 'full', y: dims.fullY, dist: Math.abs(currentY - dims.fullY) },
+            { state: 'half', y: dims.halfY, dist: Math.abs(currentY - dims.halfY) },
+            { state: 'mini', y: dims.miniY, dist: Math.abs(currentY - dims.miniY) }
+          ];
+          candidates.sort((a, b) => a.dist - b.dist);
+          snapRouteSheet(candidates[0].state, true);
         }
       } else {
-        // 最寄り位置へスナップ
-        const candidates = [
-          { state: 'full', y: dims.fullY, dist: Math.abs(currentY - dims.fullY) },
-          { state: 'half', y: dims.halfY, dist: Math.abs(currentY - dims.halfY) },
-          { state: 'mini', y: dims.miniY, dist: Math.abs(currentY - dims.miniY) }
-        ];
-        candidates.sort((a, b) => a.dist - b.dist);
-        snapRouteSheet(candidates[0].state, true);
+        // 入力・編集モード: 70px 以上引き下げ、または下フリック (velocityY > 0.35 かつ diffY > 20)
+        if (diffY >= 70 || (velocityY > 0.35 && diffY > 20)) {
+          slideOutAndClose();
+        } else {
+          panel.style.transition = 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1)';
+          panel.style.transform = 'translateY(0)';
+          setTimeout(() => {
+            panel.style.transform = '';
+            panel.style.transition = '';
+          }, 240);
+        }
       }
     }
 
-    [handle, summaryBar].forEach(el => {
+    [handle, summaryBar, panelHeader].forEach(el => {
       if (!el) return;
       el.addEventListener('click', (e) => {
         if (Date.now() - lastTouchEndTime < 450) return;
-        if (e.target.closest('button')) return;
+        if (e.target.closest('button') || e.target.closest('input')) return;
         if (!panel.classList.contains('has-result') || panel.classList.contains('is-editing')) return;
         const dims = getRouteSheetDimensions();
         const curY = parseFloat(panel.dataset.currentY);
@@ -3177,7 +3238,12 @@
       el.addEventListener('touchcancel', () => {
         if (isDragging) {
           isDragging = false;
-          snapRouteSheet('half', true);
+          if (dragMode === 'result') {
+            snapRouteSheet('half', true);
+          } else {
+            panel.style.transform = '';
+            panel.style.transition = '';
+          }
         }
       });
     });
@@ -4673,6 +4739,7 @@
       if (panel) {
         panel.classList.remove('is-suspended');
         delete panel.dataset.suspendedSnap;
+        panel.dataset.actionEditing = 'true';
         if (panel.classList.contains('has-result')) {
           panel.classList.add('is-editing');
           panel.style.transform = '';
@@ -4739,6 +4806,131 @@
     document.body.removeChild(ta);
   }
 
+  // 特定都区市内・山手線内シンボルマップ
+  const ZONE_SYMBOL_MAP = {
+    '東京山手線内': { char: '山', type: 'yamanote' },
+    '東京都区内': { char: '区', type: 'city' },
+    '横浜市内': { char: '浜', type: 'city' },
+    '名古屋市内': { char: '名', type: 'city' },
+    '京都市内': { char: '京', type: 'city' },
+    '大阪市内': { char: '阪', type: 'city' },
+    '神戸市内': { char: '神', type: 'city' },
+    '広島市内': { char: '広', type: 'city' },
+    '北九州市内': { char: '九', type: 'city' },
+    '福岡市内': { char: '福', type: 'city' },
+    '仙台市内': { char: '仙', type: 'city' },
+    '札幌市内': { char: '札', type: 'city' }
+  };
+
+  function formatStationHtml(name, isZone) {
+    if (isZone && ZONE_SYMBOL_MAP[name]) {
+      const zm = ZONE_SYMBOL_MAP[name];
+      return `<span class="zone-symbol-badge ${zm.type}">[${zm.char}]</span>${name}`;
+    }
+    return name;
+  }
+
+  function formatStationText(name, isZone) {
+    if (isZone && ZONE_SYMBOL_MAP[name]) {
+      const zm = ZONE_SYMBOL_MAP[name];
+      return `[${zm.char}]${name}`;
+    }
+    return name;
+  }
+
+  // =======================================================
+  // 12桁幹在識別記号 (東京〜熱海、米原〜新大阪、新下関〜博多)
+  // =======================================================
+  function segmentOverlapsRange(line, fromId, toId, targetStartId, targetEndId) {
+    if (!line || !line.stations) return false;
+    const stations = line.stations;
+    const fIdx = stations.indexOf(fromId);
+    const tIdx = stations.indexOf(toId);
+    if (fIdx === -1 || tIdx === -1 || fIdx === tIdx) return false;
+    const sIdx = stations.indexOf(targetStartId);
+    const eIdx = stations.indexOf(targetEndId);
+    if (sIdx === -1 || eIdx === -1) return false;
+
+    const segMin = Math.min(fIdx, tIdx);
+    const segMax = Math.max(fIdx, tIdx);
+    const targetMin = Math.min(sIdx, eIdx);
+    const targetMax = Math.max(sIdx, eIdx);
+
+    return Math.max(segMin, targetMin) < Math.min(segMax, targetMax);
+  }
+
+  function buildKanZaiMark(result) {
+    if (!result || !result.fullSegments || result.fullSegments.length === 0) {
+      return '・・・・・・・・・・・・';
+    }
+
+    const linesData = (typeof LINES !== 'undefined' && Array.isArray(LINES) && LINES.length > 0)
+      ? LINES
+      : (typeof window !== 'undefined' && window.JR_LINES ? window.JR_LINES : []);
+
+    const tokaidoShLine = linesData.find(l => l.id === 'shinkansen-tokaido');
+    const sanyoSLine = linesData.find(l => l.id === 'shinkansen-sanyo');
+    const tokaidoEastLine = linesData.find(l => l.id === 'tokaido');
+    const tokaidoWestLine = linesData.find(l => l.id === 'tokaido-west');
+    const kagoshimaLine = linesData.find(l => l.id === 'kyushu-kagoshima');
+
+    let b1Sh = false, b1Z = false;
+    let b2Sh = false, b2Z = false;
+    let b3Sh = false, b3Z = false;
+
+    const shTokaidoTokyoAtami = new Set(['tokyo', 'shinagawa', 'shin-yokohama', 'odawara', 'atami']);
+    const shTokaidoMaibaraOsaka = new Set(['maibara', 'kyoto', 'shin-osaka']);
+    const shSanyoShimonosekiHakata = new Set(['shin-shimonoseki', 'kokura', 'hakata']);
+
+    result.fullSegments.forEach(seg => {
+      // 1. 東京〜熱海
+      if (seg.lineId === 'shinkansen-tokaido') {
+        if (segmentOverlapsRange(tokaidoShLine, seg.from, seg.to, 'tokyo', 'atami') ||
+            (shTokaidoTokyoAtami.has(seg.from) && shTokaidoTokyoAtami.has(seg.to))) {
+          b1Sh = true;
+        }
+      } else if (seg.lineId === 'tokaido') {
+        b1Z = true;
+      }
+
+      // 2. 米原〜新大阪
+      if (seg.lineId === 'shinkansen-tokaido') {
+        if (segmentOverlapsRange(tokaidoShLine, seg.from, seg.to, 'maibara', 'shin-osaka') ||
+            (shTokaidoMaibaraOsaka.has(seg.from) && shTokaidoMaibaraOsaka.has(seg.to))) {
+          b2Sh = true;
+        }
+      } else if (seg.lineId === 'tokaido-west') {
+        let osakaId = 'st-fzkz';
+        if (tokaidoWestLine && tokaidoWestLine.stations.indexOf(osakaId) === -1) osakaId = 'osaka';
+        if (segmentOverlapsRange(tokaidoWestLine, seg.from, seg.to, 'maibara', osakaId)) {
+          b2Z = true;
+        }
+      }
+
+      // 3. 新下関〜博多
+      if (seg.lineId === 'shinkansen-sanyo') {
+        if (segmentOverlapsRange(sanyoSLine, seg.from, seg.to, 'shin-shimonoseki', 'hakata') ||
+            (shSanyoShimonosekiHakata.has(seg.from) && shSanyoShimonosekiHakata.has(seg.to))) {
+          b3Sh = true;
+        }
+      } else if (seg.lineId === 'kyushu-sanyo') {
+        b3Z = true;
+      } else if (seg.lineId === 'kyushu-kagoshima') {
+        let mojiId = 'st-pw1k';
+        if (kagoshimaLine && kagoshimaLine.stations.indexOf(mojiId) === -1) mojiId = 'moji';
+        if (segmentOverlapsRange(kagoshimaLine, seg.from, seg.to, mojiId, 'hakata')) {
+          b3Z = true;
+        }
+      }
+    });
+
+    const part1 = b1Sh ? '■■■■' : (b1Z ? '□□□□' : '・・・・');
+    const part2 = b2Sh ? '■■■■' : (b2Z ? '□□□□' : '・・・・');
+    const part3 = b3Sh ? '■■■■' : (b3Z ? '□□□□' : '・・・・');
+
+    return part1 + part2 + part3;
+  }
+
   // マルス普通乗車券テキストコピー用のテキストを構築
   function buildTicketCopyText(result) {
     if (!result) return '';
@@ -4757,13 +4949,8 @@
 
     const deptMars = getStationMarsName(result.deptId || result.deptName);
     const destMars = getStationMarsName(result.destId || result.destName);
-    const deptPrint = fr.deptZoneApplied ? fr.displayDeptName : deptMars;
-    const destPrint = fr.destZoneApplied ? fr.displayDestName : destMars;
-    const deptUi = getStationUiName(result.deptId || result.deptName);
-    const destUi = getStationUiName(result.destId || result.destName);
-    const hasDeptSub = fr.deptZoneApplied && deptPrint !== deptUi;
-    const hasDestSub = fr.destZoneApplied && destPrint !== destUi;
-    const subRouteStr = (hasDeptSub || hasDestSub) ? `（実乗車：${deptUi} → ${destUi}）\n` : '';
+    const deptPrint = formatStationText(fr.deptZoneApplied ? fr.displayDeptName : deptMars, fr.deptZoneApplied);
+    const destPrint = formatStationText(fr.destZoneApplied ? fr.displayDestName : destMars, fr.destZoneApplied);
 
     const act = (result.actualKm !== undefined ? result.actualKm : result.totalKm);
     const effectiveKm = (result.totalKm !== undefined ? result.totalKm : act);
@@ -4777,12 +4964,14 @@
     const [y, m, d] = dateStr.split('-').map(Number);
     const validDays = fr.validityDays || 1;
     if (fr.isSuburbanOnly || validDays === 1) {
-      validityStr = '発売当日限り有効';
+      validityStr = `${m}月${d}日当日限り有効`;
     } else {
       const sDate = new Date(y, m - 1, d);
       const eDate = new Date(sDate);
       eDate.setDate(sDate.getDate() + validDays - 1);
-      validityStr = `${m}月${d}日から ${validDays}日間有効 (${eDate.getMonth() + 1}月${eDate.getDate()}日まで有効)`;
+      const em = eDate.getMonth() + 1;
+      const ed = eDate.getDate();
+      validityStr = `${m}月${d}日から${em}月${ed}日まで有効 (${validDays}日間)`;
     }
     const stopoverStr = fr.stopoverAllowed ? '途中下車可能' : '下車前途無効';
 
@@ -4791,7 +4980,6 @@
       'JR普通乗車券（片道）',
       '--------------------------------------',
       `区間：${deptPrint} → ${destPrint}`,
-      subRouteStr ? subRouteStr.trim() : null,
       `経由：${result.marsString || '(直通)'}`,
       `営業キロ：${actualKmStr}（運賃計算キロ：${fareKm} km）`,
       `有効期間：${validityStr}（${stopoverStr}）`,
@@ -4807,52 +4995,32 @@
     const fr = result.fareRules || {};
     const fareType = ROUTE_STATE.currentFareType || 'adult';
 
-    // 1. 券タイトル
+    // 1. 券タイトル & 幹在識別記号
     const typeLabel = document.getElementById('ticket-type-label');
     if (typeLabel) {
       if (fr && !fr.isAvailable) {
-        typeLabel.textContent = '普通乗車券 (発売不可)';
+        typeLabel.textContent = '乗車券 (発売不可)';
       } else if (result.isLoopRoute) {
-        typeLabel.textContent = '乗　車　券 (一周片道)';
+        typeLabel.textContent = '乗車券 (一周片道)';
       } else {
-        typeLabel.textContent = '乗　車　券';
+        typeLabel.textContent = '乗車券';
       }
+    }
+
+    const shinkansenMarkEl = document.getElementById('ticket-shinkansen-mark');
+    if (shinkansenMarkEl) {
+      shinkansenMarkEl.textContent = buildKanZaiMark(result);
     }
 
     // 2. 発着駅表示（特定都区市内・山手線内ゾーン名優先、それ以外はマルス正式略号）
     const deptNameEl = document.getElementById('ticket-dept-name');
-    const deptSubEl = document.getElementById('ticket-dept-sub');
     const destNameEl = document.getElementById('ticket-dest-name');
-    const destSubEl = document.getElementById('ticket-dest-sub');
 
     const displayDept = fr.deptZoneApplied ? fr.displayDeptName : getStationMarsName(result.deptId || result.deptName);
     const displayDest = fr.destZoneApplied ? fr.displayDestName : getStationMarsName(result.destId || result.destName);
 
-    if (deptNameEl) deptNameEl.textContent = displayDept;
-    if (destNameEl) destNameEl.textContent = displayDest;
-
-    const deptUi = getStationUiName(result.deptId || result.deptName);
-    const destUi = getStationUiName(result.destId || result.destName);
-
-    if (deptSubEl) {
-      if (fr.deptZoneApplied && displayDept !== deptUi) {
-        deptSubEl.textContent = `実乗車: ${deptUi}`;
-        deptSubEl.style.display = 'block';
-      } else {
-        deptSubEl.textContent = '';
-        deptSubEl.style.display = 'none';
-      }
-    }
-
-    if (destSubEl) {
-      if (fr.destZoneApplied && displayDest !== destUi) {
-        destSubEl.textContent = `実乗車: ${destUi}`;
-        destSubEl.style.display = 'block';
-      } else {
-        destSubEl.textContent = '';
-        destSubEl.style.display = 'none';
-      }
-    }
+    if (deptNameEl) deptNameEl.innerHTML = formatStationHtml(displayDept, fr.deptZoneApplied);
+    if (destNameEl) destNameEl.innerHTML = formatStationHtml(displayDest, fr.destZoneApplied);
 
     // 4. 経由印字
     const viaTextEl = document.getElementById('ticket-via-text');
@@ -5124,8 +5292,18 @@
       panel.style.display = 'flex';
       if (toggleBtn) toggleBtn.classList.add('active');
 
-      if (window.innerWidth <= 768 && panel.classList.contains('has-result') && !panel.classList.contains('is-editing')) {
-        restoreRouteSheetHalfNoFlicker();
+      if (window.innerWidth <= 768) {
+        const isActionEditing = panel.dataset.actionEditing === 'true';
+        if (ROUTE_STATE.lastResult && !isActionEditing) {
+          panel.classList.add('has-result');
+          panel.classList.remove('is-editing');
+          restoreRouteSheetHalfNoFlicker();
+        } else {
+          panel.style.transform = '';
+          panel.style.transition = '';
+          delete panel.dataset.currentY;
+        }
+        delete panel.dataset.actionEditing;
       }
 
       // 新幹線候補チップを最新の入力/探索ルートに合わせて更新
@@ -5148,6 +5326,12 @@
       }
     } else {
       panel.style.display = 'none';
+      panel.style.transform = '';
+      panel.style.transition = '';
+      panel.classList.remove('is-suspended');
+      delete panel.dataset.suspendedSnap;
+      delete panel.dataset.actionEditing;
+      delete panel.dataset.currentY;
       if (toggleBtn) toggleBtn.classList.remove('active');
     }
   }
@@ -6032,6 +6216,7 @@
 
   if (typeof window !== 'undefined') {
     window.JR_APP = {
+      buildKanZaiMark,
       calcDirectShinkansenDistance,
       calcShinkansenDistance,
       getRelevantShinkansenPairs,
@@ -6077,6 +6262,7 @@
   }
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+      buildKanZaiMark,
       calcDirectShinkansenDistance,
       calcShinkansenDistance,
       getRelevantShinkansenPairs,
