@@ -1846,55 +1846,41 @@ body.theme-dark .sheet-header.jr-station-sign {
   min-height: 175px;
 }
 
-/* 出札補充券モード (16経路超過時) */
-.mars-ticket-card.is-hojyu {
-  background-color: #fef7ee;
-  background-image: 
-    repeating-linear-gradient(45deg, rgba(180, 83, 9, 0.045) 0, rgba(180, 83, 9, 0.045) 2px, transparent 2px, transparent 6px),
-    repeating-linear-gradient(-45deg, rgba(180, 83, 9, 0.035) 0, rgba(180, 83, 9, 0.035) 1px, transparent 1px, transparent 5px);
-  box-shadow: 0 3px 12px rgba(180, 83, 9, 0.12);
-}
-
 .ticket-inner-frame {
   border: none !important;
   border-radius: 0;
-  padding: 10px 14px 6px;
+  padding: 10px 14px 4px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   flex: 1;
-  min-height: 160px;
+  min-height: 155px;
   box-sizing: border-box;
   background: transparent !important;
 }
 
-/* 券面最下端の帯 (本物マルス券の底帯) */
+/* 券面中部の帯 (有効期間行の直下・発売日フッターの上側・左右端までフル幅貫通) */
 .ticket-bottom-band {
   width: 100%;
   height: 11px;
   background: #15803d;
   flex-shrink: 0;
 }
-.mars-ticket-card.is-hojyu .ticket-bottom-band {
-  background: #b45309;
-}
 
-/* 券面上部ヘッダー */
+/* 券面上部ヘッダー (乗車券: 中央より少し左寄り・横線なし) */
 .ticket-header-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  border-bottom: 1px solid rgba(17, 24, 39, 0.18);
-  padding-bottom: 4px;
+  padding-left: 28%;
+  border-bottom: none !important;
+  padding-top: 2px;
+  padding-bottom: 1px;
 }
-.ticket-header-left {
-  display: flex;
+.ticket-title-wrapper {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-}
-.ticket-header-right {
-  display: flex;
-  align-items: center;
 }
 .ticket-title {
   font-size: 13.5px;
@@ -1906,9 +1892,15 @@ body.theme-dark .sheet-header.jr-station-sign {
   line-height: 1.1;
   display: inline-block;
 }
-.mars-ticket-card.is-hojyu .ticket-title {
-  color: #92400e;
-  border-color: #92400e;
+
+/* 幹在識別記号行 (乗車券の直下・独立行) */
+.ticket-shinkansen-row {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding-left: 28%;
+  margin-top: 2px;
+  margin-bottom: 2px;
 }
 .ticket-shinkansen-mark {
   font-family: "SFMono-Regular", Consolas, "Courier New", monospace;
@@ -1917,9 +1909,6 @@ body.theme-dark .sheet-header.jr-station-sign {
   letter-spacing: 1.2px;
   color: #111827;
   line-height: 1;
-}
-.mars-ticket-card.is-hojyu .ticket-shinkansen-mark {
-  color: #92400e;
 }
 
 .student-symbol-badge {
@@ -1973,18 +1962,22 @@ body.theme-dark .sheet-header.jr-station-sign {
   gap: 3px;
 }
 
-/* 特定都区市内・山手線内シンボルマーク ([山], [区] 等) */
+/* 特定都区市内・山手線内シンボルマーク (正方形1文字マーク: 福, 区, 山 等) */
 .zone-symbol-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 11.5px;
+  width: 18px;
+  height: 18px;
+  font-size: 11px;
   font-weight: 900;
   line-height: 1;
-  padding: 1px 2px;
   border-radius: 2px;
-  letter-spacing: 0;
+  box-sizing: border-box;
   vertical-align: middle;
+  margin-right: 4px;
+  letter-spacing: 0;
+  flex-shrink: 0;
 }
 .zone-symbol-badge.yamanote {
   background: #ffffff;
@@ -2034,13 +2027,14 @@ body.theme-dark .sheet-header.jr-station-sign {
   color: #111827;
 }
 
-/* 有効期間・途中下車・運賃行 */
+/* 有効期間・途中下車・運賃行 (区切り線なし) */
 .ticket-bottom-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   padding-top: 4px;
-  border-top: 1px solid rgba(17, 24, 39, 0.18);
+  padding-bottom: 2px;
+  border-top: none !important;
   gap: 8px;
 }
 .ticket-bottom-left {
@@ -2059,12 +2053,6 @@ body.theme-dark .sheet-header.jr-station-sign {
   font-weight: 900;
   color: #111827;
   letter-spacing: 1px;
-}
-.ticket-student-note {
-  font-size: 10px;
-  font-weight: 700;
-  color: #dc2626;
-  margin-top: 1px;
 }
 
 .ticket-bottom-right {
@@ -2085,7 +2073,7 @@ body.theme-dark .sheet-header.jr-station-sign {
   letter-spacing: 0.5px;
   color: #111827;
 }
-/* 券面フッター (発売日のみ) */
+/* 券面フッター (発売日のみ・帯の下側余白・区切り線なし) */
 .ticket-meta-footer {
   display: flex;
   justify-content: flex-start;
@@ -2093,9 +2081,9 @@ body.theme-dark .sheet-header.jr-station-sign {
   font-size: 10px;
   font-weight: 700;
   color: #374151;
-  padding-top: 2px;
-  border-top: none;
-  margin-top: 2px;
+  padding: 4px 14px 6px;
+  border-top: none !important;
+  margin-top: 0;
   letter-spacing: 0.5px;
 }
 .mars-count-pill {

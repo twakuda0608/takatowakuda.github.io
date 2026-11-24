@@ -289,19 +289,21 @@
           <div class="mars-ticket-wrapper">
             <div class="mars-ticket-card" id="mars-ticket-card">
               <div class="ticket-inner-frame">
-                <!-- 券面上部ヘッダー -->
+                <!-- 1. 券種 (中央より少し左寄り) -->
                 <div class="ticket-header-row">
-                  <div class="ticket-header-left">
-                    <span class="ticket-title" id="ticket-type-label">乗　車　券</span>
+                  <div class="ticket-title-wrapper">
+                    <span class="ticket-title" id="ticket-type-label">乗車券</span>
                     <span class="student-symbol-badge" id="ticket-student-badge" style="display: none;">学割</span>
                     <span class="child-symbol-badge" id="ticket-child-badge" style="display: none;">小</span>
                   </div>
-                  <div class="ticket-header-right">
-                    <span id="ticket-shinkansen-mark" class="ticket-shinkansen-mark">・・・・・・・・・・・・</span>
-                  </div>
                 </div>
 
-                <!-- 発着駅表示 -->
+                <!-- 2. 幹在識別記号 (独立行・乗車券下) -->
+                <div class="ticket-shinkansen-row">
+                  <span id="ticket-shinkansen-mark" class="ticket-shinkansen-mark">・・・・・・・・・・・・</span>
+                </div>
+
+                <!-- 3. 発着駅表示 -->
                 <div class="ticket-stations-row">
                   <div class="station-box dept-box">
                     <span class="station-print-name" id="ticket-dept-name">東京</span>
@@ -314,30 +316,31 @@
                   </div>
                 </div>
 
-                <!-- 経由印字 -->
+                <!-- 4. 経由印字 -->
                 <div class="ticket-via-row">
                   <span class="ticket-via-prefix">経由：</span>
                   <span class="ticket-via-content" id="ticket-via-text">中央東</span>
                 </div>
 
-                <!-- 有効期間・途中下車・運賃 -->
+                <!-- 5. 有効期間・途中下車・運賃 -->
                 <div class="ticket-bottom-row">
                   <div class="ticket-bottom-left">
-                    <div class="validity-date-line" id="ticket-validity-text">発売当日限り有効</div>
+                    <div class="validity-date-line" id="ticket-validity-text">3月14日当日限り有効</div>
                     <div class="stopover-line" id="ticket-stopover-text" style="display: none;">下車前途無効</div>
-                    <div class="ticket-student-note" id="ticket-student-note" style="display: none;"></div>
                   </div>
                   <div class="ticket-bottom-right">
                     <div class="fare-currency">￥<span class="fare-amount" id="ticket-base-fare">260</span></div>
                   </div>
                 </div>
-
-                <!-- マルス券面フッター (発売日のみ) -->
-                <div class="ticket-meta-footer">
-                  <span class="ticket-issue-date" id="ticket-issue-date">2026.-3.14</span>
-                </div>
               </div>
+
+              <!-- 6. 濃い緑の帯 (有効期間・運賃行の直下、発売日フッターの上側、左右端まで貫通) -->
               <div class="ticket-bottom-band" id="ticket-bottom-band"></div>
+
+              <!-- 7. マルス券面フッター (発売日のみ) -->
+              <div class="ticket-meta-footer">
+                <span class="ticket-issue-date" id="ticket-issue-date">2026.-3.14</span>
+              </div>
             </div>
           </div>
 

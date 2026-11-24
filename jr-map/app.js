@@ -4825,7 +4825,7 @@
   function formatStationHtml(name, isZone) {
     if (isZone && ZONE_SYMBOL_MAP[name]) {
       const zm = ZONE_SYMBOL_MAP[name];
-      return `<span class="zone-symbol-badge ${zm.type}">[${zm.char}]</span>${name}`;
+      return `<span class="zone-symbol-badge ${zm.type}">${zm.char}</span>${name}`;
     }
     return name;
   }
@@ -4971,7 +4971,7 @@
       eDate.setDate(sDate.getDate() + validDays - 1);
       const em = eDate.getMonth() + 1;
       const ed = eDate.getDate();
-      validityStr = `${m}月${d}日から${em}月${ed}日まで有効 (${validDays}日間)`;
+      validityStr = `${m}月${d}日から${em}月${ed}日まで有効`;
     }
     const stopoverStr = fr.stopoverAllowed ? '途中下車可能' : '下車前途無効';
 
@@ -5066,22 +5066,6 @@
       studentBadge.style.display = (fareType === 'student') ? 'inline-block' : 'none';
     }
 
-    const studentNote = document.getElementById('ticket-student-note');
-    if (studentNote) {
-      if (fareType === 'student') {
-        studentNote.style.display = 'block';
-        if (!isStudentEligible) {
-          studentNote.textContent = '※100km以下のため学割対象外（大人運賃適用）';
-          studentNote.style.color = '#b91c1c';
-        } else {
-          studentNote.textContent = '※学生割引（大人運賃の2割引・10円未満切捨）';
-          studentNote.style.color = '#047857';
-        }
-      } else {
-        studentNote.style.display = 'none';
-      }
-    }
-
     // 6. 有効期間・途中下車印字 (マルス券面仕様: 途中下車可能時は無印字、不可時のみ「下車前途無効」)
     const dateStr = ROUTE_STATE.ticketDate || getLocalISODate();
     const [y, m, d] = dateStr.split('-').map(Number);
@@ -5089,9 +5073,14 @@
     const validityTextEl = document.getElementById('ticket-validity-text');
     if (validityTextEl) {
       if (fr.isSuburbanOnly || validDays === 1) {
-        validityTextEl.textContent = '発売当日限り有効';
+        validityTextEl.textContent = `${m}月${d}日当日限り有効`;
       } else {
-        validityTextEl.textContent = `${m}月${d}日から ${validDays}日間有効`;
+        const sDate = new Date(y, m - 1, d);
+        const eDate = new Date(sDate);
+        eDate.setDate(sDate.getDate() + validDays - 1);
+        const em = eDate.getMonth() + 1;
+        const ed = eDate.getDate();
+        validityTextEl.textContent = `${m}月${d}日から${em}月${ed}日まで有効`;
       }
     }
 
@@ -5117,8 +5106,7 @@
       if (is120mm) ticketCard.classList.add('is-120mm');
       else ticketCard.classList.remove('is-120mm');
 
-      if (!isMarsIssuable) ticketCard.classList.add('is-hojyu');
-      else ticketCard.classList.remove('is-hojyu');
+      ticketCard.classList.remove('is-hojyu');
     }
 
     // きっぷ詳細カード側: サイズ・自動改札可否バッジ
@@ -5906,12 +5894,6 @@
       else b.classList.remove('active');
     });
 
-    const deptSub = document.getElementById('ticket-dept-sub');
-    if (deptSub) { deptSub.textContent = ''; deptSub.style.display = 'none'; }
-    const destSub = document.getElementById('ticket-dest-sub');
-    if (destSub) { destSub.textContent = ''; destSub.style.display = 'none'; }
-    const studentNote = document.getElementById('ticket-student-note');
-    if (studentNote) studentNote.style.display = 'none';
     const studentBadge = document.getElementById('ticket-student-badge');
     if (studentBadge) studentBadge.style.display = 'none';
     const childBadge = document.getElementById('ticket-child-badge');
@@ -6217,6 +6199,8 @@
   if (typeof window !== 'undefined') {
     window.JR_APP = {
       buildKanZaiMark,
+      formatStationHtml,
+      formatStationText,
       calcDirectShinkansenDistance,
       calcShinkansenDistance,
       getRelevantShinkansenPairs,
@@ -6263,6 +6247,10 @@
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
       buildKanZaiMark,
+      formatStationHtml,
+      formatStationText,
+      buildTicketCopyText,
+      getRouteState: () => ROUTE_STATE,
       calcDirectShinkansenDistance,
       calcShinkansenDistance,
       getRelevantShinkansenPairs,
