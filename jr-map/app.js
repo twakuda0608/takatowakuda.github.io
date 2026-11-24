@@ -593,11 +593,25 @@
   function setupMapInteractions() {
     if (!map) return;
 
-    // 単一のクリックイベントハンドラ（駅優先 & 貫通防止）
+    // 単一のクリックイベントハンドラ（ピン最優先 & 駅優先 & 貫通防止）
     map.on('click', (e) => {
       if (e.defaultPrevented) return;
 
-      // 1. まず駅（全駅ドット・全駅名ラベル・全駅コライダー）へのヒット判定
+      // 1. まずルートピン (発・経由・着) の判定 (最優先)
+      const pinLayers = ['route-pins-circle', 'route-pins-label'].filter(id => map.getLayer(id));
+      if (pinLayers.length > 0) {
+        const pinFeatures = map.queryRenderedFeatures(e.point, { layers: pinLayers });
+        if (pinFeatures && pinFeatures.length > 0) {
+          const stId = pinFeatures[0].properties.stationId;
+          if (stId) {
+            closeLineBanner();
+            selectStation(stId, false);
+            return;
+          }
+        }
+      }
+
+      // 2. 次に駅（全駅ドット・全駅名ラベル・全駅コライダー）へのヒット判定
       const hitLayers = ALL_STATION_INTERACTIVE_LAYERS.filter(id => map.getLayer(id));
       const stationFeatures = map.queryRenderedFeatures(e.point, {
         layers: hitLayers
@@ -614,7 +628,7 @@
         }
       }
 
-      // 2. 駅にヒットしなかった場合は余白クリックとしてシートおよび路線バナーを閉じる（路線クリック誤爆なし）
+      // 3. 駅・ピンにヒットしなかった場合は余白クリックとしてシートおよび路線バナーを閉じる（路線クリック誤爆なし）
       closeStationSheet();
       closeLineBanner();
     });
@@ -1743,12 +1757,6 @@
           map.getCanvas().style.cursor = '';
           if (hoverPopup) hoverPopup.remove();
         });
-        map.on('click', layerId, (e) => {
-          if (e.features && e.features.length > 0) {
-            const stId = e.features[0].properties.stationId;
-            if (stId) selectStation(stId, false);
-          }
-        });
       });
     }
   }
@@ -1957,11 +1965,11 @@
         if (!isMobile && panelRect.width > 0 && panelRect.width < mapW * 0.7) {
           // PC / タブレット (左側配置)
           left = Math.round(panelRect.right - mapRect.left) + 36;
-        } else if (isMobile && routePanel.classList.contains('has-result') && !routePanel.classList.contains('is-editing')) {
-          // スマホ (下部ボトムシート)
+        } else if (isMobile && routePanel.classList.contains('has-result') && !routePanel.classList.contains('is-editing') && !routePanel.classList.contains('is-suspended')) {
+          // スマホ (下部ボトムシート: translateY で下に下がった分を正しく反映)
           isMobileResultSheet = true;
-          const pHeight = (panelRect.height > 50) ? panelRect.height : Math.round(mapH * 0.46);
-          bottom = Math.round(pHeight) + 24;
+          const visibleBottomHeight = Math.max(0, Math.round(mapRect.bottom - panelRect.top));
+          bottom = visibleBottomHeight + 20;
         }
       }
     }
@@ -2354,6 +2362,19 @@
 
     STATE.selectedStationId = stId;
 
+    // スマホで経路シートが結果表示中なら一時退避 (.is-suspended で下端外へ沈めて二重被り防止)
+    if (window.innerWidth <= 768) {
+      const routePanel = document.getElementById('route-panel');
+      if (routePanel && routePanel.classList.contains('has-result') && !routePanel.classList.contains('is-editing')) {
+        let currentSnap = 'half';
+        if (routePanel.classList.contains('mobile-sheet-full')) currentSnap = 'full';
+        else if (routePanel.classList.contains('mobile-sheet-mini')) currentSnap = 'mini';
+        routePanel.dataset.suspendedSnap = currentSnap;
+        routePanel.classList.add('is-suspended');
+        routePanel.style.transform = 'translateY(100%)';
+      }
+    }
+
     const sheet = document.getElementById('station-sheet');
     const prefEl = document.getElementById('sheet-pref');
     const kanaEl = document.getElementById('sheet-kana');
@@ -2550,7 +2571,7 @@
     }
   }
 
-  function closeStationSheet() {
+  function closeStationSheet(options = {}) {
     STATE.selectedStationId = null;
     updateSelectedStationHighlight(null, null);
     const sheet = document.getElementById('station-sheet');
@@ -2559,6 +2580,21 @@
       sheet.style.transform = '';
       sheet.style.transition = '';
       sheet.classList.remove('is-peek', 'is-expanded');
+    }
+
+    // スマホで退避中の経路パネルがあれば自動復帰
+    if (window.innerWidth <= 768 && !options.skipRouteResume) {
+      const routePanel = document.getElementById('route-panel');
+      if (routePanel && routePanel.classList.contains('is-suspended')) {
+        routePanel.classList.remove('is-suspended');
+        const snap = routePanel.dataset.suspendedSnap || 'half';
+        delete routePanel.dataset.suspendedSnap;
+        // 退避前が full の場合は画面を見やすくするため half で復帰
+        const resumeSnap = (snap === 'full') ? 'half' : snap;
+        if (typeof snapRouteSheet === 'function') {
+          snapRouteSheet(resumeSnap, true);
+        }
+      }
     }
   }
 
@@ -2661,25 +2697,42 @@
     const clearBtn = document.getElementById('search-clear');
     if (input) attachStationGhostOverlay(input);
 
+    let selectedIndex = -1;
+    let currentMatches = [];
+
+    function updateHighlight() {
+      const items = results.querySelectorAll('.search-item');
+      items.forEach((item, idx) => {
+        if (idx === selectedIndex) {
+          item.classList.add('active');
+          item.scrollIntoView({ block: 'nearest' });
+        } else {
+          item.classList.remove('active');
+        }
+      });
+    }
+
     input.addEventListener('input', () => {
       const q = input.value.trim().toLowerCase();
       clearBtn.style.display = q ? 'block' : 'none';
+      selectedIndex = -1;
+      currentMatches = [];
 
       if (!q) {
         results.style.display = 'none';
         return;
       }
 
-      const matches = searchStations(q, 8);
+      currentMatches = searchStations(q, 8);
 
-      if (matches.length === 0) {
+      if (currentMatches.length === 0) {
         results.innerHTML = '<div style="padding:10px 14px;color:var(--text-muted);font-size:12px;">該当する駅が見つかりません</div>';
         results.style.display = 'block';
         return;
       }
 
       results.innerHTML = '';
-      matches.forEach((st, idx) => {
+      currentMatches.forEach((st, idx) => {
         const item = document.createElement('div');
         item.className = `search-item ${idx === 0 ? 'active' : ''}`;
         item.innerHTML = `
@@ -2689,6 +2742,10 @@
           </div>
           <span class="search-item-pref">${st.pref}</span>
         `;
+        item.addEventListener('mouseenter', () => {
+          selectedIndex = idx;
+          updateHighlight();
+        });
         item.addEventListener('click', () => {
           setStationInputValue(input, st);
           clearBtn.style.display = 'block';
@@ -2698,14 +2755,46 @@
         results.appendChild(item);
       });
 
+      selectedIndex = 0; // 先頭候補をデフォルトで選択状態に
       results.style.display = 'block';
     });
 
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        const first = results.querySelector('.search-item');
-        if (first) {
-          first.click();
+      if (e.isComposing || e.keyCode === 229) return;
+      const isDropdownOpen = results.style.display !== 'none' && currentMatches.length > 0;
+
+      if (e.key === 'ArrowDown') {
+        if (isDropdownOpen) {
+          e.preventDefault();
+          selectedIndex = (selectedIndex + 1) % currentMatches.length;
+          updateHighlight();
+        }
+      } else if (e.key === 'ArrowUp') {
+        if (isDropdownOpen) {
+          e.preventDefault();
+          selectedIndex = (selectedIndex - 1 + currentMatches.length) % currentMatches.length;
+          updateHighlight();
+        }
+      } else if (e.key === 'Enter') {
+        if (isDropdownOpen && selectedIndex >= 0 && selectedIndex < currentMatches.length) {
+          e.preventDefault();
+          const targetSt = currentMatches[selectedIndex];
+          setStationInputValue(input, targetSt);
+          clearBtn.style.display = 'block';
+          results.style.display = 'none';
+          selectStation(targetSt.id);
+        } else {
+          const val = input.value.trim();
+          if (val) {
+            const matches = searchStations(val, 1);
+            if (matches.length > 0) {
+              const targetSt = matches[0];
+              setStationInputValue(input, targetSt);
+              clearBtn.style.display = 'block';
+              results.style.display = 'none';
+              selectStation(targetSt.id);
+            }
+          }
         }
       } else if (e.key === 'Escape') {
         results.style.display = 'none';
@@ -2739,6 +2828,7 @@
     let lastY = 0;
     let lastTime = 0;
     let moved = false;
+    let lastStationTouchEndTime = 0;
 
     function snapTo(targetY) {
       sheet.style.transition = 'transform 0.26s cubic-bezier(0.22, 1, 0.36, 1)';
@@ -2804,6 +2894,8 @@
 
       // タップ判定 (移動量 < 8px)
       if (!moved) {
+        if (e.cancelable) e.preventDefault();
+        lastStationTouchEndTime = Date.now();
         if (curY >= peekY * 0.5) {
           snapTo(0);
         } else {
@@ -2853,8 +2945,89 @@
   }
 
   // =======================================================
-  // スマホ経路検索ボトムシート (ハーフ/フル展開 & サマリーバー操作)
+  // スマホ経路検索ボトムシート (Mini / Half / Full 3段階スナップ & 連続ドラッグ)
   // =======================================================
+  function getRouteSheetDimensions() {
+    const panel = document.getElementById('route-panel');
+    if (!panel) return { panelHeight: 0, fullY: 0, halfY: 0, miniY: 0 };
+    const panelHeight = panel.offsetHeight || Math.round(window.innerHeight * 0.82);
+    const fullY = 0;
+    const halfY = Math.max(0, Math.round(panelHeight - window.innerHeight * 0.46));
+    const summaryBar = document.getElementById('route-mobile-summary-bar');
+    let miniVisibleHeight = 60;
+    if (summaryBar && panel) {
+      const summaryRect = summaryBar.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      if (summaryRect.bottom > panelRect.top) {
+        miniVisibleHeight = Math.round(summaryRect.bottom - panelRect.top) + 6;
+      }
+    }
+    const miniY = Math.max(0, Math.round(panelHeight - miniVisibleHeight));
+    return { panelHeight, fullY, halfY, miniY };
+  }
+
+  function snapRouteSheet(targetState, animate = true) {
+    const panel = document.getElementById('route-panel');
+    if (!panel || window.innerWidth > 768) return;
+    panel.classList.remove('is-suspended');
+    delete panel.dataset.suspendedSnap;
+
+    const dims = getRouteSheetDimensions();
+    let targetY = dims.halfY;
+    if (targetState === 'full') targetY = dims.fullY;
+    else if (targetState === 'mini') targetY = dims.miniY;
+    else if (targetState === 'half') targetY = dims.halfY;
+    else if (typeof targetState === 'number') targetY = targetState;
+
+    if (animate) {
+      panel.style.transition = 'transform 0.26s cubic-bezier(0.22, 1, 0.36, 1)';
+    } else {
+      panel.style.transition = 'none';
+    }
+    panel.style.transform = `translateY(${targetY}px)`;
+    panel.dataset.currentY = targetY;
+
+    const panelBody = panel.querySelector('.route-panel-body');
+    if (panelBody) {
+      if (targetY === dims.halfY) {
+        panelBody.style.paddingBottom = (dims.halfY + 20) + 'px';
+      } else {
+        panelBody.style.paddingBottom = '20px';
+      }
+    }
+
+    panel.classList.remove('mobile-sheet-full', 'mobile-sheet-half', 'mobile-sheet-mini');
+    if (targetY === dims.fullY) {
+      panel.classList.add('mobile-sheet-full');
+      closeStationSheet({ skipRouteResume: true });
+    } else if (targetY === dims.miniY) {
+      panel.classList.add('mobile-sheet-mini');
+    } else {
+      panel.classList.add('mobile-sheet-half');
+      closeStationSheet({ skipRouteResume: true });
+    }
+  }
+
+  function restoreRouteSheetHalfNoFlicker() {
+    const panel = document.getElementById('route-panel');
+    if (!panel || window.innerWidth > 768) return;
+    panel.classList.remove('is-editing', 'is-suspended');
+    delete panel.dataset.suspendedSnap;
+    panel.style.visibility = 'hidden';
+    panel.style.transition = 'none';
+    const dims = getRouteSheetDimensions();
+    panel.style.transform = `translateY(${dims.halfY}px)`;
+    panel.dataset.currentY = dims.halfY;
+    panel.classList.remove('mobile-sheet-full', 'mobile-sheet-mini');
+    panel.classList.add('mobile-sheet-half');
+    const panelBody = panel.querySelector('.route-panel-body');
+    if (panelBody) {
+      panelBody.style.paddingBottom = (dims.halfY + 20) + 'px';
+    }
+    void panel.offsetHeight; // force reflow
+    panel.style.visibility = '';
+  }
+
   function setupRouteSheetMobileInteractions() {
     const panel = document.getElementById('route-panel');
     const handle = document.getElementById('route-sheet-handle');
@@ -2868,6 +3041,8 @@
       btnModify.addEventListener('click', (e) => {
         e.stopPropagation();
         panel.classList.add('is-editing');
+        panel.style.transform = '';
+        panel.style.transition = '';
       });
     }
 
@@ -2878,64 +3053,199 @@
       });
     }
 
-    function toggleRouteSheetHeight() {
-      if (!panel.classList.contains('has-result') || panel.classList.contains('is-editing')) return;
-      if (panel.classList.contains('mobile-sheet-full')) {
-        panel.classList.remove('mobile-sheet-full');
-        panel.classList.add('mobile-sheet-half');
-      } else {
-        panel.classList.remove('mobile-sheet-half');
-        panel.classList.add('mobile-sheet-full');
-      }
-    }
-
-    let touchStartY = 0;
-    let isSwiping = false;
+    let isDragging = false;
+    let startY = 0;
+    let startTranslateY = 0;
+    let lastY = 0;
+    let lastTime = 0;
+    let velocityY = 0;
+    let moved = false;
+    let lastTouchEndTime = 0;
 
     function onTouchStart(e) {
       if (window.innerWidth > 768) return;
       if (!panel.classList.contains('has-result') || panel.classList.contains('is-editing')) return;
       if (e.target.closest('button')) return;
       if (e.touches.length !== 1) return;
-      touchStartY = e.touches[0].clientY;
-      isSwiping = true;
+
+      const dims = getRouteSheetDimensions();
+      const currentY = parseFloat(panel.dataset.currentY);
+      startTranslateY = !isNaN(currentY) ? currentY : dims.halfY;
+      startY = e.touches[0].clientY;
+      lastY = startY;
+      lastTime = Date.now();
+      velocityY = 0;
+      moved = false;
+      isDragging = true;
+      panel.style.transition = 'none';
     }
 
     function onTouchMove(e) {
-      if (!isSwiping || window.innerWidth > 768) return;
+      if (!isDragging || window.innerWidth > 768) return;
       const curY = e.touches[0].clientY;
-      const diffY = curY - touchStartY;
-      if (Math.abs(diffY) > 6 && e.cancelable) {
-        e.preventDefault();
+      const diffY = curY - startY;
+
+      if (Math.abs(diffY) > 5) {
+        moved = true;
+        if (e.cancelable) e.preventDefault();
+      }
+
+      const dims = getRouteSheetDimensions();
+      const rawY = startTranslateY + diffY;
+      const clampedY = Math.max(0, Math.min(dims.miniY, rawY));
+      panel.style.transform = `translateY(${clampedY}px)`;
+      panel.dataset.currentY = clampedY;
+
+      const now = Date.now();
+      const dt = now - lastTime;
+      if (dt > 0) {
+        velocityY = (curY - lastY) / dt;
+        lastY = curY;
+        lastTime = now;
       }
     }
 
     function onTouchEnd(e) {
-      if (!isSwiping || window.innerWidth > 768) return;
-      isSwiping = false;
-      const endY = e.changedTouches[0] ? e.changedTouches[0].clientY : touchStartY;
-      const diffY = endY - touchStartY;
+      if (!isDragging || window.innerWidth > 768) return;
+      isDragging = false;
+      const dims = getRouteSheetDimensions();
+      const curY = parseFloat(panel.dataset.currentY);
+      const currentY = !isNaN(curY) ? curY : dims.halfY;
 
-      if (Math.abs(diffY) < 8) {
-        toggleRouteSheetHeight();
-      } else if (diffY < -30) {
-        panel.classList.remove('mobile-sheet-half');
-        panel.classList.add('mobile-sheet-full');
-      } else if (diffY > 30) {
-        panel.classList.remove('mobile-sheet-full');
-        panel.classList.add('mobile-sheet-half');
+      // タップ判定 (移動量 8px 未満)
+      if (!moved || Math.abs((e.changedTouches[0] ? e.changedTouches[0].clientY : lastY) - startY) < 8) {
+        if (e.cancelable) e.preventDefault();
+        lastTouchEndTime = Date.now();
+        // Mini → Half → Full → Half サイクル
+        if (panel.classList.contains('mobile-sheet-mini') || Math.abs(currentY - dims.miniY) < 30) {
+          snapRouteSheet('half', true);
+        } else if (panel.classList.contains('mobile-sheet-half') || Math.abs(currentY - dims.halfY) < 30) {
+          snapRouteSheet('full', true);
+        } else {
+          snapRouteSheet('half', true);
+        }
+        return;
+      }
+
+      // フリック速度判定
+      if (velocityY < -0.35) {
+        // 上フリック: Mini からは Half、Half からは Full
+        if (currentY > (dims.miniY + dims.halfY) / 2) {
+          snapRouteSheet('half', true);
+        } else {
+          snapRouteSheet('full', true);
+        }
+      } else if (velocityY > 0.35) {
+        // 下フリック: Full からは Half、Half からは Mini
+        if (currentY < (dims.fullY + dims.halfY) / 2) {
+          snapRouteSheet('half', true);
+        } else {
+          snapRouteSheet('mini', true);
+        }
+      } else {
+        // 最寄り位置へスナップ
+        const candidates = [
+          { state: 'full', y: dims.fullY, dist: Math.abs(currentY - dims.fullY) },
+          { state: 'half', y: dims.halfY, dist: Math.abs(currentY - dims.halfY) },
+          { state: 'mini', y: dims.miniY, dist: Math.abs(currentY - dims.miniY) }
+        ];
+        candidates.sort((a, b) => a.dist - b.dist);
+        snapRouteSheet(candidates[0].state, true);
       }
     }
 
     [handle, summaryBar].forEach(el => {
       if (!el) return;
       el.addEventListener('click', (e) => {
+        if (Date.now() - lastTouchEndTime < 450) return;
         if (e.target.closest('button')) return;
-        toggleRouteSheetHeight();
+        if (!panel.classList.contains('has-result') || panel.classList.contains('is-editing')) return;
+        const dims = getRouteSheetDimensions();
+        const curY = parseFloat(panel.dataset.currentY);
+        const currentY = !isNaN(curY) ? curY : dims.halfY;
+        if (panel.classList.contains('mobile-sheet-mini') || Math.abs(currentY - dims.miniY) < 30) {
+          snapRouteSheet('half', true);
+        } else if (panel.classList.contains('mobile-sheet-half') || Math.abs(currentY - dims.halfY) < 30) {
+          snapRouteSheet('full', true);
+        } else {
+          snapRouteSheet('half', true);
+        }
       });
       el.addEventListener('touchstart', onTouchStart, { passive: true });
       el.addEventListener('touchmove', onTouchMove, { passive: false });
       el.addEventListener('touchend', onTouchEnd, { passive: false });
+      el.addEventListener('touchcancel', () => {
+        if (isDragging) {
+          isDragging = false;
+          snapRouteSheet('half', true);
+        }
+      });
+    });
+  }
+
+  // =======================================================
+  // エリアジャンプ選択ポップオーバー
+  // =======================================================
+  const AREA_PRESET_ITEMS = [
+    { key: 'japan', label: '全国' },
+    { key: 'hokkaido', label: '北海道' },
+    { key: 'tohoku', label: '東北' },
+    { key: 'kanto', label: '関東' },
+    { key: 'tokai', label: '東海' },
+    { key: 'kansai', label: '関西' },
+    { key: 'chugoku', label: '中国' },
+    { key: 'shikoku', label: '四国' },
+    { key: 'kyushu', label: '九州' }
+  ];
+
+  function initAreaPresetMenu() {
+    const btnReset = document.getElementById('btn-zoom-reset');
+    const menu = document.getElementById('area-preset-menu');
+    const listEl = document.getElementById('area-preset-list');
+    if (!btnReset || !menu || !listEl) return;
+
+    function renderMenuItems() {
+      listEl.innerHTML = '';
+      const current = STATE.currentPreset || 'kanto';
+      AREA_PRESET_ITEMS.forEach(item => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `area-menu-item ${item.key === current ? 'active' : ''}`;
+        btn.textContent = item.label;
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          STATE.currentPreset = item.key;
+          const preset = PRESETS[item.key] || PRESETS.kanto;
+          if (preset && map) {
+            map.flyTo({ center: preset.center, zoom: preset.zoom, duration: 700 });
+          }
+          menu.style.display = 'none';
+        });
+        listEl.appendChild(btn);
+      });
+    }
+
+    btnReset.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isVisible = menu.style.display !== 'none';
+      if (isVisible) {
+        menu.style.display = 'none';
+      } else {
+        renderMenuItems();
+        menu.style.display = 'flex';
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#area-preset-menu') && !e.target.closest('#btn-zoom-reset')) {
+        menu.style.display = 'none';
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        menu.style.display = 'none';
+      }
     });
   }
 
@@ -2943,6 +3253,7 @@
     setupSearch();
     setupStationSheetMobileInteractions();
     setupRouteSheetMobileInteractions();
+    initAreaPresetMenu();
     updateSearchPlaceholder();
 
     document.getElementById('btn-zoom-in').addEventListener('click', () => {
@@ -2950,10 +3261,6 @@
     });
     document.getElementById('btn-zoom-out').addEventListener('click', () => {
       map.zoomOut();
-    });
-    document.getElementById('btn-zoom-reset').addEventListener('click', () => {
-      const preset = PRESETS[STATE.currentPreset] || PRESETS.kanto;
-      map.flyTo({ center: preset.center, zoom: preset.zoom, duration: 700 });
     });
 
     document.getElementById('btn-sheet-close').addEventListener('click', closeStationSheet);
@@ -2994,6 +3301,17 @@
         } else {
           sheet.style.transform = '';
           sheet.style.transition = '';
+        }
+      }
+
+      const routePanel = document.getElementById('route-panel');
+      if (routePanel && routePanel.classList.contains('has-result') && !routePanel.classList.contains('is-editing')) {
+        if (window.innerWidth <= 768) {
+          const currentSnap = routePanel.classList.contains('mobile-sheet-full') ? 'full' : (routePanel.classList.contains('mobile-sheet-mini') ? 'mini' : 'half');
+          snapRouteSheet(currentSnap, false);
+        } else {
+          routePanel.style.transform = '';
+          routePanel.style.transition = '';
         }
       }
     });
@@ -4079,7 +4397,7 @@
       closeBtn.addEventListener('click', () => {
         const panel = document.getElementById('route-panel');
         if (panel && panel.classList.contains('is-editing') && panel.classList.contains('has-result')) {
-          panel.classList.remove('is-editing');
+          restoreRouteSheetHalfNoFlicker();
           return;
         }
         toggleRoutePanel(false);
@@ -4349,6 +4667,21 @@
     }
 
     // 駅詳細シート内のアクションボタン (発駅設定 / 経由追加 / 着駅設定)
+    function prepareRoutePanelForStationAction() {
+      closeStationSheet({ skipRouteResume: true });
+      const panel = document.getElementById('route-panel');
+      if (panel) {
+        panel.classList.remove('is-suspended');
+        delete panel.dataset.suspendedSnap;
+        if (panel.classList.contains('has-result')) {
+          panel.classList.add('is-editing');
+          panel.style.transform = '';
+          panel.style.transition = '';
+        }
+      }
+      toggleRoutePanel(true);
+    }
+
     const setDeptBtn = document.getElementById('btn-set-dept');
     if (setDeptBtn) {
       setDeptBtn.addEventListener('click', () => {
@@ -4357,7 +4690,7 @@
         if (!st) return;
         setStationInputValue(deptInput, st);
         markInputChanged();
-        toggleRoutePanel(true);
+        prepareRoutePanelForStationAction();
       });
     }
 
@@ -4369,7 +4702,7 @@
         if (!st) return;
         addViaStationRow(st);
         markInputChanged();
-        toggleRoutePanel(true);
+        prepareRoutePanelForStationAction();
       });
     }
 
@@ -4381,7 +4714,7 @@
         if (!st) return;
         setStationInputValue(destInput, st);
         markInputChanged();
-        toggleRoutePanel(true);
+        prepareRoutePanelForStationAction();
       });
     }
   }
@@ -4543,6 +4876,15 @@
         baseFareEl.textContent = '0 (発売不可)';
       } else {
         baseFareEl.textContent = displayFare.toLocaleString();
+      }
+    }
+
+    const summaryFare = document.getElementById('route-summary-fare');
+    if (summaryFare) {
+      if (fr && !fr.isAvailable) {
+        summaryFare.textContent = '発売不可';
+      } else {
+        summaryFare.textContent = `￥${displayFare.toLocaleString()}`;
       }
     }
 
@@ -4776,25 +5118,34 @@
     }
 
     if (ROUTE_STATE.isOpen) {
+      closeStationSheet({ skipRouteResume: true });
+      panel.classList.remove('is-suspended');
+      delete panel.dataset.suspendedSnap;
       panel.style.display = 'flex';
       if (toggleBtn) toggleBtn.classList.add('active');
+
+      if (window.innerWidth <= 768 && panel.classList.contains('has-result') && !panel.classList.contains('is-editing')) {
+        restoreRouteSheetHalfNoFlicker();
+      }
 
       // 新幹線候補チップを最新の入力/探索ルートに合わせて更新
       updateShinkansenCandidateChips();
 
-      // ★UI改善: メニューを開いたら直ちに文字打ちできるよう、発駅（または未入力の着駅）に自動フォーカス
-      setTimeout(() => {
-        const deptInput = document.getElementById('route-dept-input');
-        const destInput = document.getElementById('route-dest-input');
-        if (deptInput && !deptInput.value.trim()) {
-          deptInput.focus();
-        } else if (destInput && !destInput.value.trim()) {
-          destInput.focus();
-        } else if (deptInput) {
-          deptInput.focus();
-          deptInput.select();
-        }
-      }, 50);
+      // PC幅（window.innerWidth > 768）のときだけ自動フォーカス（スマホでの仮想キーボード自動起動を防止）
+      if (window.innerWidth > 768) {
+        setTimeout(() => {
+          const deptInput = document.getElementById('route-dept-input');
+          const destInput = document.getElementById('route-dest-input');
+          if (deptInput && !deptInput.value.trim()) {
+            deptInput.focus();
+          } else if (destInput && !destInput.value.trim()) {
+            destInput.focus();
+          } else if (deptInput) {
+            deptInput.focus();
+            deptInput.select();
+          }
+        }, 50);
+      }
     } else {
       panel.style.display = 'none';
       if (toggleBtn) toggleBtn.classList.remove('active');
@@ -5295,8 +5646,7 @@
     const routePanel = document.getElementById('route-panel');
     if (routePanel) {
       if (window.innerWidth <= 768) {
-        routePanel.classList.add('has-result', 'mobile-sheet-half');
-        routePanel.classList.remove('mobile-sheet-full', 'is-editing');
+        routePanel.classList.add('has-result');
         const summaryText = document.getElementById('route-summary-text');
         if (summaryText) {
           const viaNames = viaStIds.map(id => STATIONS[id] ? getStationUiName(STATIONS[id]) : '').filter(Boolean);
@@ -5308,8 +5658,11 @@
           summaryText.textContent = text;
           summaryText.title = text;
         }
+        restoreRouteSheetHalfNoFlicker();
       } else {
-        routePanel.classList.remove('has-result', 'mobile-sheet-half', 'mobile-sheet-full', 'is-editing');
+        routePanel.classList.remove('has-result', 'mobile-sheet-half', 'mobile-sheet-full', 'mobile-sheet-mini', 'is-editing');
+        routePanel.style.transform = '';
+        routePanel.style.transition = '';
       }
     }
 
@@ -5400,8 +5753,14 @@
 
     const routePanel = document.getElementById('route-panel');
     if (routePanel) {
-      routePanel.classList.remove('has-result', 'mobile-sheet-half', 'mobile-sheet-full', 'is-editing');
+      routePanel.classList.remove('has-result', 'mobile-sheet-half', 'mobile-sheet-full', 'mobile-sheet-mini', 'is-editing', 'is-suspended');
+      delete routePanel.dataset.suspendedSnap;
+      routePanel.style.transform = '';
+      routePanel.style.transition = '';
     }
+
+    const summaryFare = document.getElementById('route-summary-fare');
+    if (summaryFare) summaryFare.textContent = '';
 
     clearRouteMapLayers();
     setSearchButtonEnabled(true);
@@ -5686,9 +6045,14 @@
       setStationInputValue,
       clearStationInputValue,
       swapStationInputs,
+      closeStationSheet,
+      snapRouteSheet,
+      getRouteSheetDimensions,
+      getVisibleMapPadding,
       getRouteState: () => ROUTE_STATE,
       getState: () => STATE,
       selectStation,
+      closeStationSheet,
       getAdjacentIndex: () => adjacentIndex,
       selectLine,
       closeLineBanner,
@@ -5705,7 +6069,10 @@
       getZoomLayout,
       getZoomLayoutCache: () => new Map(),
       getCanShowAllCircles: () => true,
-      isMajorStation
+      isMajorStation,
+      snapRouteSheet,
+      getRouteSheetDimensions,
+      getVisibleMapPadding
     };
   }
   if (typeof module !== 'undefined' && module.exports) {
@@ -5719,7 +6086,11 @@
       attachStationGhostOverlay,
       setStationInputValue,
       clearStationInputValue,
-      swapStationInputs
+      swapStationInputs,
+      closeStationSheet,
+      snapRouteSheet,
+      getRouteSheetDimensions,
+      getVisibleMapPadding
     };
   }
 })();

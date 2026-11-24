@@ -74,9 +74,15 @@
         <button type="button" id="btn-zoom-out" class="ctrl-btn" title="縮小" aria-label="縮小">
           <svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         </button>
-        <button type="button" id="btn-zoom-reset" class="ctrl-btn" title="全体表示" aria-label="全体表示">
+        <button type="button" id="btn-zoom-reset" class="ctrl-btn" title="エリア選択" aria-label="エリア選択">
           <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="3" fill="currentColor"/><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/></svg>
         </button>
+      </div>
+
+      <!-- エリア選択ポップオーバー -->
+      <div id="area-preset-menu" class="area-preset-menu" style="display: none;">
+        <div class="area-menu-header">エリア選択</div>
+        <div class="area-menu-list" id="area-preset-list"></div>
       </div>
     </div>
 
@@ -129,6 +135,20 @@
     <!-- マルス経路探索パネル -->
     <div id="route-panel" class="route-panel" style="display: none;">
       <div class="route-sheet-handle" id="route-sheet-handle"></div>
+
+      <!-- スマホ結果表示時のサマリーバー (固定ヘッダー・スクロール領域外) -->
+      <div id="route-mobile-summary-bar" class="route-mobile-summary-bar" style="display: none;">
+        <div class="route-summary-info">
+          <span class="route-summary-icon">経路</span>
+          <span class="route-summary-text" id="route-summary-text">東京 → 新宿</span>
+          <span class="route-summary-fare" id="route-summary-fare"></span>
+        </div>
+        <div class="route-summary-actions">
+          <button type="button" id="btn-route-modify" class="btn-secondary btn-sm">条件変更</button>
+          <button type="button" id="btn-route-summary-clear" class="btn-icon btn-sm" aria-label="クリア" title="クリア">✕</button>
+        </div>
+      </div>
+
       <div class="route-panel-header">
         <div class="route-panel-title">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
@@ -142,18 +162,6 @@
       </div>
 
       <div class="route-panel-body">
-        <!-- スマホ結果表示時のサマリーバー -->
-        <div id="route-mobile-summary-bar" class="route-mobile-summary-bar" style="display: none;">
-          <div class="route-summary-info">
-            <span class="route-summary-icon">経路</span>
-            <span class="route-summary-text" id="route-summary-text">東京 → 新宿</span>
-          </div>
-          <div class="route-summary-actions">
-            <button type="button" id="btn-route-modify" class="btn-secondary btn-sm">条件変更</button>
-            <button type="button" id="btn-route-summary-clear" class="btn-icon btn-sm" aria-label="クリア" title="クリア">✕</button>
-          </div>
-        </div>
-
         <!-- 駅入力セクション -->
         <div class="route-inputs" id="route-inputs-container">
           <!-- 発駅 -->

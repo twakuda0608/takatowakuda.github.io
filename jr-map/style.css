@@ -525,6 +525,58 @@ body.theme-light .view-presets {
   transform: scale(0.96);
 }
 
+/* エリア選択ポップオーバー */
+.area-preset-menu {
+  position: absolute;
+  right: 50px;
+  bottom: 0;
+  width: 124px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-float);
+  padding: 6px;
+  z-index: 1020;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.area-menu-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding: 3px 6px 5px;
+  border-bottom: 1px solid var(--panel-border);
+  margin-bottom: 3px;
+  text-align: center;
+}
+.area-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.area-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 8px;
+  font-size: 12.5px;
+  color: var(--text-main);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.area-menu-item:hover {
+  background: var(--card-bg, rgba(0, 0, 0, 0.05));
+}
+.area-menu-item.active {
+  background: var(--primary, #0284c7);
+  color: #fff;
+  font-weight: 700;
+}
+
 /* =======================================================
    駅詳細ボトムシート / カード
 ======================================================= */
@@ -945,7 +997,7 @@ body.theme-dark .sheet-header.jr-station-sign {
 }
 .legend-dot.hub {
   background: #fff;
-  border: 2.5px solid #e11d48;
+  border: 2.5px solid #0f172a;
 }
 .legend-dot.regular {
   background: #fff;
@@ -1040,7 +1092,7 @@ body.theme-dark .sheet-header.jr-station-sign {
     overflow: hidden;
     box-sizing: border-box;
     box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.25);
-    z-index: 1005;
+    z-index: 1015; /* #route-panel.has-result (1010) より上 */
     will-change: transform;
     touch-action: none;
     animation: none !important;
@@ -1137,12 +1189,22 @@ body.theme-dark .sheet-header.jr-station-sign {
   }
 
   .map-controls {
+    top: 56px;
     right: 10px;
-    bottom: 20px;
+    bottom: auto;
+    gap: 6px;
   }
   .ctrl-btn {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
+    font-size: 15px;
+  }
+  .area-preset-menu {
+    top: 0;
+    bottom: auto;
+    right: 44px;
+    width: 112px;
+    padding: 4px;
   }
 
   .line-banner {
@@ -2376,41 +2438,78 @@ body.theme-dark .sheet-header.jr-station-sign {
     padding: 7px 10px;
   }
 
+  /* スマホ版: 入力・編集・結果すべて下端固定のボトムシート */
   .route-panel {
-    top: 58px;
-    left: 8px;
-    right: 8px;
-    width: auto;
-    max-width: none;
-    max-height: calc(100dvh - 70px);
-  }
-
-  /* 検索結果表示モード (画面下半分のボトムシート) */
-  .route-panel.has-result {
+    position: fixed !important;
     top: auto !important;
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
+    max-width: 100% !important;
     border-radius: 20px 20px 0 0 !important;
     box-shadow: 0 -6px 28px rgba(0, 0, 0, 0.35) !important;
     z-index: 1010;
     display: flex;
     flex-direction: column;
-    transition: height 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: height;
+    animation: none !important;
+    background: var(--panel-bg);
+    box-sizing: border-box;
   }
 
-  /* Half (標準・初期値 約 46dvh) */
-  .route-panel.has-result.mobile-sheet-half {
-    height: 46dvh !important;
-    max-height: 46dvh !important;
+  /* 入力モード (初期表示および条件編集時) */
+  .route-panel:not(.has-result),
+  .route-panel.is-editing {
+    height: auto !important;
+    max-height: 82dvh !important;
+    transform: none !important;
+    transition: none !important;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
-  /* Full (展開 約 82dvh) */
-  .route-panel.has-result.mobile-sheet-full {
+  /* 条件編集時は探索結果リストを非表示にして画面上部への突き抜けを防止 */
+  .route-panel.is-editing #route-result-container {
+    display: none !important;
+  }
+  .route-panel.is-editing .route-sheet-handle {
+    display: none !important;
+  }
+  .route-panel.is-editing .route-mobile-summary-bar {
+    display: none !important;
+  }
+  .route-panel.is-editing .route-panel-header {
+    display: flex !important;
+  }
+  .route-panel.is-editing .route-inputs,
+  .route-panel.is-editing .route-options-container,
+  .route-panel.is-editing .route-buttons {
+    display: flex !important;
+  }
+
+  /* 結果表示モード (3段階スナップボトムシート) */
+  .route-panel.has-result:not(.is-editing) {
     height: 82dvh !important;
     max-height: 82dvh !important;
+    transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+    touch-action: none;
+    overflow: hidden;
+  }
+
+  /* 結果表示中のリスト内スクロール */
+  .route-panel.has-result:not(.is-editing) .route-panel-body {
+    touch-action: pan-y;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* 駅シート表示中の一時退避状態 (画面下端外へ沈める) */
+  .route-panel.is-suspended {
+    transform: translateY(100%) !important;
+    pointer-events: none !important;
   }
 
   /* ドラッグハンドル */
@@ -2436,7 +2535,7 @@ body.theme-dark .sheet-header.jr-station-sign {
     display: none !important;
   }
 
-  /* サマリーバー */
+  /* 固定サマリーバー (スクロール領域外) */
   .route-panel.has-result:not(.is-editing) .route-mobile-summary-bar {
     display: flex !important;
     align-items: center;
@@ -2452,7 +2551,7 @@ body.theme-dark .sheet-header.jr-station-sign {
   .route-summary-info {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     font-weight: 700;
     font-size: 13px;
     min-width: 0;
@@ -2473,6 +2572,17 @@ body.theme-dark .sheet-header.jr-station-sign {
     overflow: hidden;
     text-overflow: ellipsis;
     color: var(--text-main);
+    min-width: 0;
+    flex-shrink: 1;
+  }
+
+  .route-summary-fare {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--primary, #0284c7);
+    margin-left: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .route-summary-actions {
@@ -2480,29 +2590,6 @@ body.theme-dark .sheet-header.jr-station-sign {
     align-items: center;
     gap: 6px;
     flex-shrink: 0;
-  }
-
-  /* 条件変更中の通常パネル再表示 */
-  .route-panel.has-result.is-editing {
-    top: 58px !important;
-    bottom: auto !important;
-    left: 8px !important;
-    right: 8px !important;
-    width: auto !important;
-    height: auto !important;
-    max-height: calc(100dvh - 70px) !important;
-    border-radius: var(--radius-lg) !important;
-  }
-  .route-panel.has-result.is-editing .route-sheet-handle {
-    display: none !important;
-  }
-  .route-panel.has-result.is-editing .route-panel-header {
-    display: flex !important;
-  }
-  .route-panel.has-result.is-editing .route-inputs,
-  .route-panel.has-result.is-editing .route-options-container,
-  .route-panel.has-result.is-editing .route-buttons {
-    display: flex !important;
   }
 }
 
