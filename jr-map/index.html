@@ -289,16 +289,12 @@
           <div class="mars-ticket-wrapper">
             <div class="mars-ticket-card" id="mars-ticket-card">
               <div class="ticket-inner-frame">
-                <!-- 1. 券種 (中央より少し左寄り) -->
+                <!-- 1. 券種 (中央揃え) -->
                 <div class="ticket-header-row">
-                  <div class="ticket-title-wrapper">
-                    <span class="ticket-title" id="ticket-type-label">乗車券</span>
-                    <span class="student-symbol-badge" id="ticket-student-badge" style="display: none;">学割</span>
-                    <span class="child-symbol-badge" id="ticket-child-badge" style="display: none;">小</span>
-                  </div>
+                  <span class="ticket-title" id="ticket-type-label">乗車券</span>
                 </div>
 
-                <!-- 2. 幹在識別記号 (独立行・乗車券下) -->
+                <!-- 2. 幹在識別記号 (中央揃え・乗車券直下) -->
                 <div class="ticket-shinkansen-row">
                   <span id="ticket-shinkansen-mark" class="ticket-shinkansen-mark">・・・・・・・・・・・・</span>
                 </div>
@@ -312,6 +308,16 @@
                     <span class="ticket-arrow-symbol">──→</span>
                   </div>
                   <div class="station-box dest-box">
+                    <!-- 小児インク抜きスタンプ (着駅の直上・SVGマスク透過) -->
+                    <div class="ticket-child-stamp" id="ticket-child-stamp" style="display: none;">
+                      <svg width="22" height="22" viewBox="0 0 22 22">
+                        <mask id="child-mask">
+                          <rect width="22" height="22" fill="#ffffff" />
+                          <text x="11" y="16.5" font-family="'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif" font-weight="900" font-size="14.5" text-anchor="middle" fill="#000000">小</text>
+                        </mask>
+                        <rect width="22" height="22" fill="#111827" rx="1.5" mask="url(#child-mask)" />
+                      </svg>
+                    </div>
                     <span class="station-print-name" id="ticket-dest-name">新宿</span>
                   </div>
                 </div>
@@ -330,6 +336,11 @@
                   </div>
                   <div class="ticket-bottom-right">
                     <div class="fare-currency">￥<span class="fare-amount" id="ticket-base-fare">260</span></div>
+                    <!-- 学割携帯証明ブロック (発売額直下・帯に被る位置) -->
+                    <div class="ticket-student-cert" id="ticket-student-cert" style="display: none;">
+                      <div class="student-cert-line1">証明書 <span class="student-cert-box">学割</span></div>
+                      <div class="student-cert-line2">を携帯してください。</div>
+                    </div>
                   </div>
                 </div>
               </div>

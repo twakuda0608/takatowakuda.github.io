@@ -4931,6 +4931,32 @@
     return part1 + part2 + part3;
   }
 
+  // JR 6社別地紋記号
+  const MARS_COMPANY_MARKS = {
+    east: 'E',
+    central: 'C',
+    west: 'W',
+    hokkaido: '北',
+    shikoku: 'S',
+    kyushu: 'K'
+  };
+  const marsJimonCache = {};
+
+  function getMarsJimonDataUri(companyKey) {
+    const key = MARS_COMPANY_MARKS[companyKey] ? companyKey : 'east';
+    if (marsJimonCache[key]) return marsJimonCache[key];
+    const mark = MARS_COMPANY_MARKS[key];
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="24" viewBox="0 0 36 24">' +
+      '<path d="M0 6 Q9 0 18 6 T36 6 M0 18 Q9 12 18 18 T36 18 M0 12 Q9 6 18 12 T36 12 M0 0 L36 24 M0 24 L36 0" fill="none" stroke="rgba(45, 80, 65, 0.15)" stroke-width="0.6"/>' +
+      '<text x="9" y="8.5" font-family="\'Noto Sans JP\', -apple-system, sans-serif" font-weight="900" font-size="5" fill="rgba(40, 75, 60, 0.22)" text-anchor="middle">JR</text>' +
+      '<text x="27" y="20.5" font-family="\'Noto Sans JP\', -apple-system, sans-serif" font-weight="900" font-size="5" fill="rgba(40, 75, 60, 0.22)" text-anchor="middle">' + mark + '</text>' +
+      '<text x="18" y="14" font-family="\'Noto Sans JP\', -apple-system, sans-serif" font-weight="900" font-size="9" fill="rgba(255, 255, 255, 0.25)" text-anchor="middle" transform="rotate(-20 18 14)">JR</text>' +
+      '</svg>';
+    const uri = 'data:image/svg+xml,' + encodeURIComponent(svg);
+    marsJimonCache[key] = uri;
+    return uri;
+  }
+
   // マルス普通乗車券テキストコピー用のテキストを構築
   function buildTicketCopyText(result) {
     if (!result) return '';
@@ -4973,7 +4999,14 @@
       const ed = eDate.getDate();
       validityStr = `${m}月${d}日から${em}月${ed}日まで有効`;
     }
-    const stopoverStr = fr.stopoverAllowed ? '途中下車可能' : '下車前途無効';
+    let stopoverStr = '';
+    if (!fr.stopoverAllowed) {
+      stopoverStr = '下車前途無効';
+    } else if (fr.deptZoneApplied || fr.destZoneApplied) {
+      stopoverStr = '券面表示の都区市内各駅下車前途無効';
+    } else {
+      stopoverStr = '途中下車可能';
+    }
 
     return [
       '======================================',
@@ -5061,12 +5094,22 @@
       childBadge.style.display = (fareType === 'child') ? 'inline-flex' : 'none';
     }
 
+    const childStamp = document.getElementById('ticket-child-stamp');
+    if (childStamp) {
+      childStamp.style.display = (fareType === 'child') ? 'block' : 'none';
+    }
+
     const studentBadge = document.getElementById('ticket-student-badge');
     if (studentBadge) {
       studentBadge.style.display = (fareType === 'student') ? 'inline-block' : 'none';
     }
 
-    // 6. 有効期間・途中下車印字 (マルス券面仕様: 途中下車可能時は無印字、不可時のみ「下車前途無効」)
+    const studentCert = document.getElementById('ticket-student-cert');
+    if (studentCert) {
+      studentCert.style.display = (fareType === 'student' && isStudentEligible) ? 'block' : 'none';
+    }
+
+    // 6. 有効期間・途中下車印字 (マルス券面仕様: 途中下車可能時は無印字、ゾーン適用時は「券面表示の都区市内各駅下車前途無効」、不可時は「下車前途無効」)
     const dateStr = ROUTE_STATE.ticketDate || getLocalISODate();
     const [y, m, d] = dateStr.split('-').map(Number);
     const validDays = fr.validityDays || 1;
@@ -5086,16 +5129,19 @@
 
     const stopoverTextEl = document.getElementById('ticket-stopover-text');
     if (stopoverTextEl) {
-      if (fr.stopoverAllowed) {
-        stopoverTextEl.textContent = '';
-        stopoverTextEl.style.display = 'none';
-      } else {
+      if (!fr.stopoverAllowed) {
         stopoverTextEl.textContent = '下車前途無効';
         stopoverTextEl.style.display = 'block';
+      } else if (fr.deptZoneApplied || fr.destZoneApplied) {
+        stopoverTextEl.textContent = '券面表示の都区市内各駅下車前途無効';
+        stopoverTextEl.style.display = 'block';
+      } else {
+        stopoverTextEl.textContent = '';
+        stopoverTextEl.style.display = 'none';
       }
     }
 
-    // 7. 券サイズ（85mm / 120mm / 出札補充券）自動判定
+    // 7. 券サイズ（85mm / 120mm / 出札補充券）自動判定 & 所轄JR会社別地紋適用
     const marsCount = fr.marsRouteCount || (result.sections ? result.sections.length : 1);
     const marsStrLen = (result.marsString || '').length;
     const isMarsIssuable = fr.isMarsIssuable !== false && marsCount <= 16;
@@ -5103,6 +5149,13 @@
 
     const ticketCard = document.getElementById('mars-ticket-card');
     if (ticketCard) {
+      const deptSt = (typeof STATIONS !== 'undefined' && result.deptId && STATIONS[result.deptId])
+        ? STATIONS[result.deptId]
+        : (typeof STATIONS !== 'undefined' && result.deptName ? Object.values(STATIONS).find(s => s.name === result.deptName) : null);
+      const companyKey = (typeof getStationCompanyKey === 'function') ? getStationCompanyKey(deptSt) : 'east';
+      const jimonUri = getMarsJimonDataUri(companyKey);
+      ticketCard.style.setProperty('--mars-jimon-url', 'url("' + jimonUri + '")');
+
       if (is120mm) ticketCard.classList.add('is-120mm');
       else ticketCard.classList.remove('is-120mm');
 
@@ -5898,6 +5951,10 @@
     if (studentBadge) studentBadge.style.display = 'none';
     const childBadge = document.getElementById('ticket-child-badge');
     if (childBadge) childBadge.style.display = 'none';
+    const childStamp = document.getElementById('ticket-child-stamp');
+    if (childStamp) childStamp.style.display = 'none';
+    const studentCert = document.getElementById('ticket-student-cert');
+    if (studentCert) studentCert.style.display = 'none';
     const ruleTags = document.getElementById('rule-tags-container');
     if (ruleTags) ruleTags.innerHTML = '';
 
@@ -6198,6 +6255,8 @@
 
   if (typeof window !== 'undefined') {
     window.JR_APP = {
+      getMarsJimonDataUri,
+      getStationCompanyKey,
       buildKanZaiMark,
       formatStationHtml,
       formatStationText,
@@ -6246,6 +6305,8 @@
   }
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+      getMarsJimonDataUri,
+      getStationCompanyKey,
       buildKanZaiMark,
       formatStationHtml,
       formatStationText,

@@ -1821,11 +1821,10 @@ body.theme-dark .sheet-header.jr-station-sign {
 .mars-ticket-card {
   width: 100%;
   max-width: 420px;
-  min-height: 175px;
-  background-color: #e5f3eb;
-  background-image: 
-    repeating-linear-gradient(45deg, rgba(20, 83, 45, 0.045) 0, rgba(20, 83, 45, 0.045) 2px, transparent 2px, transparent 6px),
-    repeating-linear-gradient(-45deg, rgba(20, 83, 45, 0.035) 0, rgba(20, 83, 45, 0.035) 1px, transparent 1px, transparent 5px);
+  min-height: 214px;
+  background-color: rgb(208, 218, 207);
+  background-image: var(--mars-jimon-url);
+  background-repeat: repeat;
   border: none;
   border-radius: 4px;
   padding: 0;
@@ -1834,8 +1833,8 @@ body.theme-dark .sheet-header.jr-station-sign {
   box-shadow: 0 3px 12px rgba(15, 23, 42, 0.12);
   font-family: "SFMono-Regular", Consolas, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, monospace;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: 260fr 60fr 108fr;
   transition: all 0.25s ease;
   color: #111827;
 }
@@ -1843,44 +1842,41 @@ body.theme-dark .sheet-header.jr-station-sign {
 /* 120mm券モード (横長・多情報対応) */
 .mars-ticket-card.is-120mm {
   max-width: 520px;
-  min-height: 175px;
 }
 
 .ticket-inner-frame {
+  grid-row: 1;
   border: none !important;
   border-radius: 0;
   padding: 10px 14px 4px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  flex: 1;
-  min-height: 155px;
   box-sizing: border-box;
   background: transparent !important;
+  z-index: 2;
 }
 
-/* 券面中部の帯 (有効期間行の直下・発売日フッターの上側・左右端までフル幅貫通) */
+/* 券面中部の帯 (260:60:108 の 60fr・左右端までフル幅貫通・地紋連続) */
 .ticket-bottom-band {
+  grid-row: 2;
   width: 100%;
-  height: 11px;
-  background: #15803d;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(160, 205, 190, 0.6) 0%, rgba(172, 210, 197, 0.65) 50%, rgba(160, 205, 190, 0.6) 100%);
+  box-shadow: inset 0 1px 1px rgba(60, 110, 95, 0.12), inset 0 -1px 1px rgba(60, 110, 95, 0.12);
   flex-shrink: 0;
+  z-index: 1;
 }
 
-/* 券面上部ヘッダー (乗車券: 中央より少し左寄り・横線なし) */
+/* 券面上部ヘッダー (乗車券: 中央揃え・横線なし) */
 .ticket-header-row {
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
-  padding-left: 28%;
   border-bottom: none !important;
   padding-top: 2px;
   padding-bottom: 1px;
-}
-.ticket-title-wrapper {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  text-align: center;
 }
 .ticket-title {
   font-size: 13.5px;
@@ -1893,14 +1889,14 @@ body.theme-dark .sheet-header.jr-station-sign {
   display: inline-block;
 }
 
-/* 幹在識別記号行 (乗車券の直下・独立行) */
+/* 幹在識別記号行 (中央揃え・乗車券直下) */
 .ticket-shinkansen-row {
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
-  padding-left: 28%;
-  margin-top: 2px;
+  margin-top: 1px;
   margin-bottom: 2px;
+  text-align: center;
 }
 .ticket-shinkansen-mark {
   font-family: "SFMono-Regular", Consolas, "Courier New", monospace;
@@ -1909,32 +1905,7 @@ body.theme-dark .sheet-header.jr-station-sign {
   letter-spacing: 1.2px;
   color: #111827;
   line-height: 1;
-}
-
-.student-symbol-badge {
-  display: inline-block;
-  border: 1px solid #dc2626;
-  color: #dc2626;
-  font-size: 10px;
-  font-weight: 900;
-  padding: 1px 4px;
-  border-radius: 3px;
-  background: rgba(254, 226, 226, 0.7);
-  letter-spacing: 1px;
-}
-.child-symbol-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 17px;
-  height: 17px;
-  border: 1.5px solid #166534;
-  border-radius: 50%;
-  font-size: 10px;
-  font-weight: 900;
-  color: #166534;
-  background: rgba(220, 252, 231, 0.9);
-  line-height: 1;
+  text-align: center;
 }
 
 /* 発着駅表示行 (中央揃え) */
@@ -1951,6 +1922,22 @@ body.theme-dark .sheet-header.jr-station-sign {
   align-items: center;
   text-align: center;
 }
+.station-box.dest-box {
+  position: relative;
+}
+/* 小児インク抜きスタンプ (着駅の直上・SVGマスク透過) */
+.ticket-child-stamp {
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+  z-index: 2;
+  line-height: 1;
+}
+
 .station-print-name {
   font-size: 19px;
   font-weight: 900;
@@ -2036,11 +2023,13 @@ body.theme-dark .sheet-header.jr-station-sign {
   padding-bottom: 2px;
   border-top: none !important;
   gap: 8px;
+  position: relative;
 }
 .ticket-bottom-left {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  max-width: 62%;
 }
 .validity-date-line {
   font-size: 12px;
@@ -2049,10 +2038,12 @@ body.theme-dark .sheet-header.jr-station-sign {
   letter-spacing: 0.5px;
 }
 .stopover-line {
-  font-size: 11.5px;
+  font-size: 10px;
   font-weight: 900;
   color: #111827;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
+  line-height: 1.25;
+  word-break: break-all;
 }
 
 .ticket-bottom-right {
@@ -2060,6 +2051,7 @@ body.theme-dark .sheet-header.jr-station-sign {
   flex-direction: column;
   align-items: flex-end;
   text-align: right;
+  position: relative;
 }
 .fare-currency {
   font-size: 15px;
@@ -2073,8 +2065,36 @@ body.theme-dark .sheet-header.jr-station-sign {
   letter-spacing: 0.5px;
   color: #111827;
 }
-/* 券面フッター (発売日のみ・帯の下側余白・区切り線なし) */
+
+/* 学割携帯証明ブロック (発売額直下・帯に被る位置) */
+.ticket-student-cert {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 3;
+  text-align: left;
+  white-space: nowrap;
+  pointer-events: none;
+  font-size: 10px;
+  line-height: 1.25;
+  color: #111827;
+  font-weight: 700;
+}
+.student-cert-box {
+  display: inline-block;
+  border: 1px solid #111827;
+  padding: 0 2px;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1.1;
+  vertical-align: middle;
+  background: transparent;
+  margin-left: 2px;
+}
+
+/* 券面フッター (260:60:108 の 108fr、発売日のみ・帯の下側余白・区切り線なし) */
 .ticket-meta-footer {
+  grid-row: 3;
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -2085,6 +2105,8 @@ body.theme-dark .sheet-header.jr-station-sign {
   border-top: none !important;
   margin-top: 0;
   letter-spacing: 0.5px;
+  background: transparent;
+  z-index: 1;
 }
 .mars-count-pill {
   font-size: 10px;
