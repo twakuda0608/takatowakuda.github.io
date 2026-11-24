@@ -563,6 +563,10 @@ body.theme-light .view-presets {
   margin: 0 auto 12px;
 }
 
+.sheet-peek-hint {
+  display: none; /* PC画面では常に非表示 */
+}
+
 .btn-sheet-close {
   position: absolute;
   top: 14px;
@@ -971,11 +975,71 @@ body.theme-dark .sheet-header.jr-station-sign {
     bottom: 10px;
     width: auto;
     max-width: none;
-    padding: 16px;
+    padding: 12px 16px 14px;
     border-radius: 20px 20px 16px 16px;
+    max-height: 72dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
+    transition: max-height 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .sheet-handle {
     display: block;
+    width: 44px;
+    height: 5px;
+    background: var(--text-muted);
+    opacity: 0.45;
+    border-radius: 3px;
+    margin: 0 auto 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .station-sheet .sheet-header.jr-station-sign {
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .sheet-peek-hint {
+    display: none;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary, #0284c7);
+    margin-top: 8px;
+    padding: 4px 0;
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+    letter-spacing: 0.05em;
+  }
+  /* Peek (折りたたみ) 状態 */
+  .station-sheet.is-collapsed {
+    max-height: 185px;
+  }
+  .station-sheet.is-collapsed .sheet-header.jr-station-sign {
+    margin-bottom: 0;
+  }
+  .station-sheet.is-collapsed .sheet-body {
+    display: none !important;
+  }
+  .station-sheet.is-collapsed .sheet-peek-hint {
+    display: block !important;
+  }
+  /* Expanded (展開) 状態 */
+  .station-sheet:not(.is-collapsed) {
+    max-height: 72dvh;
+  }
+  .station-sheet:not(.is-collapsed) .sheet-body {
+    display: block;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+    margin-top: 10px;
+    padding-right: 4px;
+  }
+  .station-sheet:not(.is-collapsed) .sheet-peek-hint {
+    display: none !important;
   }
 
   .map-legend {

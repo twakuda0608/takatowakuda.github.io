@@ -102,7 +102,6 @@
   const linePolylines = new Map(); // 互換性用
   const stationMarkers = new Map(); // 互換性用
   let hoverPopup = null;
-  let activePinMarkers = [];
 
   // =======================================================
   // 1. 初期化
@@ -566,6 +565,7 @@
       drawBorders();
       updateMapLayers();
       setupMapInteractions();
+      updateResponsiveLayerZooms(true);
     });
   }
 
@@ -1524,35 +1524,6 @@
       });
     }
 
-    // --- C. 選択駅ハイライトレイヤーの準備 ---
-    if (!map.getSource("station-highlight-source")) {
-      map.addSource("station-highlight-source", {
-        type: "geojson",
-        data: {
-          type: "FeatureCollection",
-          features: []
-        }
-      });
-
-      map.addLayer({
-        id: "station-highlight-circle",
-        type: "circle",
-        source: "station-highlight-source",
-        paint: {
-          "circle-radius": [
-            "interpolate", ["linear"], ["zoom"],
-            6, 9,
-            10, 13,
-            14, 18
-          ],
-          "circle-color": "#3b82f6",
-          "circle-opacity": 0.35,
-          "circle-stroke-color": "#2563eb",
-          "circle-stroke-width": 2.5
-        }
-      });
-    }
-
     // --- D. 経路探索ハイライトレイヤーの準備 ---
     if (!map.getSource("route-source")) {
       map.addSource("route-source", {
@@ -1685,6 +1656,250 @@
         }
       });
     }
+
+    // --- E. 発・経由・着ピン WebGL レイヤーの準備 ---
+    if (!map.getSource("route-pins-source")) {
+      map.addSource("route-pins-source", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: []
+        }
+      });
+
+      map.addLayer({
+        id: "route-pins-circle",
+        type: "circle",
+        source: "route-pins-source",
+        paint: {
+          "circle-color": ["get", "color"],
+          "circle-radius": ["get", "radius"],
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": 2.5
+        }
+      });
+
+      map.addLayer({
+        id: "route-pins-label",
+        type: "symbol",
+        source: "route-pins-source",
+        layout: {
+          "text-field": ["get", "label"],
+          "text-font": ["Noto Sans Regular"],
+          "text-size": 12,
+          "text-anchor": "center",
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+          "icon-allow-overlap": true
+        },
+        paint: {
+          "text-color": "#ffffff",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 0.5
+        }
+      });
+
+      ['route-pins-circle', 'route-pins-label'].forEach(layerId => {
+        map.on('mouseenter', layerId, (e) => {
+          map.getCanvas().style.cursor = 'pointer';
+          if (e.features && e.features.length > 0) {
+            const f = e.features[0];
+            const coords = f.geometry.coordinates.slice();
+            const title = f.properties.title || '';
+            if (title && hoverPopup) {
+              hoverPopup.setLngLat(coords).setHTML(`<div class="station-hover-tooltip">${title}</div>`).addTo(map);
+            }
+          }
+        });
+        map.on('mouseleave', layerId, () => {
+          map.getCanvas().style.cursor = '';
+          if (hoverPopup) hoverPopup.remove();
+        });
+        map.on('click', layerId, (e) => {
+          if (e.features && e.features.length > 0) {
+            const stId = e.features[0].properties.stationId;
+            if (stId) selectStation(stId, false);
+          }
+        });
+      });
+    }
+  }
+
+  // =======================================================
+  // ヘルパー: 画面幅に応じた路線名ラベル透過度
+  // =======================================================
+  function getLineLabelsOpacityExpression() {
+    const isMobile = window.innerWidth <= 768;
+    return [
+      "interpolate", ["linear"], ["zoom"],
+      isMobile ? 5.2 : 6.5, 0,
+      isMobile ? 5.8 : 7.2, 0.88
+    ];
+  }
+
+  // =======================================================
+  // ヘルパー: レイヤーのレスポンシブ minzoom & プロパティ制御
+  // =======================================================
+  let currentZoomIsMobile = null;
+  function updateResponsiveLayerZooms(force = false) {
+    if (!map) return;
+    const isMobile = window.innerWidth <= 768;
+    if (!force && currentZoomIsMobile === isMobile) return;
+    currentZoomIsMobile = isMobile;
+
+    // 1. 最優先メガハブ駅 (Tier1)
+    const megaMin = isMobile ? 3.5 : 4.0;
+    ['major-mega-dots', 'major-mega-dot-colliders', 'major-mega-labels'].forEach(id => {
+      if (map.getLayer(id)) map.setLayerZoomRange(id, megaMin, 24);
+    });
+    if (map.getLayer('major-mega-dots')) {
+      map.setPaintProperty('major-mega-dots', 'circle-radius', [
+        'interpolate', ['linear'], ['zoom'],
+        megaMin, isMobile ? 3.0 : 3.2,
+        10, 4.4,
+        14, 6.0
+      ]);
+    }
+    if (map.getLayer('major-mega-labels')) {
+      map.setLayoutProperty('major-mega-labels', 'text-size', [
+        'interpolate', ['linear'], ['zoom'],
+        megaMin, 12.0,
+        9, 13.5,
+        14, 15.5
+      ]);
+    }
+
+    // 2. 路線名ラベル
+    const lineMin = isMobile ? 5.2 : 6.5;
+    if (map.getLayer('line-labels')) {
+      map.setLayerZoomRange('line-labels', lineMin, 24);
+      map.setLayoutProperty('line-labels', 'text-size', [
+        'interpolate', ['linear'], ['zoom'],
+        lineMin, 11.5,
+        12, 12.5,
+        15, 13.5
+      ]);
+      if (!STATE.selectedLineId && !ROUTE_STATE.lastResult) {
+        map.setPaintProperty('line-labels', 'text-opacity', getLineLabelsOpacityExpression());
+      }
+    }
+
+    // 3. 主要拠点駅 (Tier2)
+    const tier2Min = isMobile ? 5.5 : 7.0;
+    const tier2FadeEnd = isMobile ? 5.9 : 7.3;
+    ['major-tier2-dots', 'major-tier2-dot-colliders', 'major-tier2-labels'].forEach(id => {
+      if (map.getLayer(id)) map.setLayerZoomRange(id, tier2Min, 24);
+    });
+    if (map.getLayer('major-tier2-dots')) {
+      map.setPaintProperty('major-tier2-dots', 'circle-radius', [
+        'interpolate', ['linear'], ['zoom'],
+        tier2Min, isMobile ? 2.8 : 3.0,
+        10, 3.8,
+        14, 5.2
+      ]);
+    }
+    if (map.getLayer('major-tier2-labels')) {
+      map.setLayoutProperty('major-tier2-labels', 'text-size', [
+        'interpolate', ['linear'], ['zoom'],
+        tier2Min, 11.5,
+        11, 13.0,
+        15, 14.5
+      ]);
+      map.setPaintProperty('major-tier2-labels', 'text-opacity', [
+        'interpolate', ['linear'], ['zoom'],
+        tier2Min, 0,
+        tier2FadeEnd, 1.0
+      ]);
+    }
+
+    // 4. 一般駅の◯
+    const localDotsMin = isMobile ? 8.6 : 10.2;
+    ['local-station-dots', 'local-station-dot-colliders'].forEach(id => {
+      if (map.getLayer(id)) map.setLayerZoomRange(id, localDotsMin, 24);
+    });
+    if (map.getLayer('local-station-dots')) {
+      map.setPaintProperty('local-station-dots', 'circle-radius', [
+        'interpolate', ['linear'], ['zoom'],
+        localDotsMin, isMobile ? 2.6 : 2.8,
+        12, 3.6,
+        15, 4.8
+      ]);
+    }
+
+    // 5. 一般駅の名前ラベル
+    const localLabelsMin = isMobile ? 9.8 : 11.8;
+    const localFadeEnd = isMobile ? 10.2 : 12.1;
+    if (map.getLayer('local-station-labels')) {
+      map.setLayerZoomRange('local-station-labels', localLabelsMin, 24);
+      map.setLayoutProperty('local-station-labels', 'text-size', [
+        'interpolate', ['linear'], ['zoom'],
+        localLabelsMin, 11.5,
+        14, 12.5,
+        16, 13.5
+      ]);
+      map.setPaintProperty('local-station-labels', 'text-opacity', [
+        'interpolate', ['linear'], ['zoom'],
+        localLabelsMin, 0,
+        localFadeEnd, 1.0
+      ]);
+    }
+  }
+
+  // =======================================================
+  // ヘルパー: パネル・ヘッダーを考慮した可視領域パディング計算
+  // =======================================================
+  function getVisibleMapPadding(basePad = 60) {
+    if (!map) return { top: basePad, bottom: basePad, left: basePad, right: basePad };
+    const mapContainer = map.getContainer();
+    if (!mapContainer) return { top: basePad, bottom: basePad, left: basePad, right: basePad };
+
+    const mapRect = mapContainer.getBoundingClientRect();
+    const mapW = mapRect.width || window.innerWidth || 800;
+    const mapH = mapRect.height || window.innerHeight || 600;
+
+    let left = basePad;
+    let top = basePad;
+    let right = Math.max(basePad, 72);
+    let bottom = basePad;
+
+    // #route-panel の計測 (PC/タブレット幅で左側にある場合)
+    const routePanel = document.getElementById('route-panel');
+    if (routePanel) {
+      const pStyle = window.getComputedStyle(routePanel);
+      if (pStyle.display !== 'none' && pStyle.visibility !== 'hidden') {
+        const panelRect = routePanel.getBoundingClientRect();
+        if (panelRect.width > 0 && panelRect.width < mapW * 0.7) {
+          left = Math.round(panelRect.right - mapRect.left) + 36;
+        }
+      }
+    }
+
+    // 上部 .map-header の計測
+    const mapHeader = document.querySelector('.map-header');
+    if (mapHeader) {
+      const hStyle = window.getComputedStyle(mapHeader);
+      if (hStyle.display !== 'none' && hStyle.visibility !== 'hidden') {
+        const headerRect = mapHeader.getBoundingClientRect();
+        if (headerRect.height > 0) {
+          top = Math.max(top, Math.round(headerRect.bottom - mapRect.top) + 24);
+        }
+      }
+    }
+
+    // 上限クランプ（エラー防止: 幅・高さの 35% 以内）
+    const maxHorizPad = Math.floor(mapW * 0.35);
+    const maxVertPad = Math.floor(mapH * 0.35);
+
+    if (left + right >= mapW * 0.75) {
+      left = Math.min(left, maxHorizPad);
+      right = Math.min(right, maxHorizPad);
+    }
+    if (top + bottom >= mapH * 0.75) {
+      top = Math.min(top, maxVertPad);
+      bottom = Math.min(bottom, maxVertPad);
+    }
+
+    return { top, bottom, left, right };
   }
 
   // 互換性スタブ
@@ -1752,11 +1967,7 @@
           map.setPaintProperty('shinkansen-lines-dash', 'line-opacity', 1.0);
         }
         if (map.getLayer('line-labels')) {
-          map.setPaintProperty('line-labels', 'text-opacity', [
-            "interpolate", ["linear"], ["zoom"],
-            6.5, 0,
-            7.2, 0.88
-          ]);
+          map.setPaintProperty('line-labels', 'text-opacity', getLineLabelsOpacityExpression());
         }
       }
       return;
@@ -2045,31 +2256,21 @@
     }
 
     sheet.style.display = 'block';
+    if (window.innerWidth <= 768) {
+      sheet.classList.add('is-collapsed');
+    } else {
+      sheet.classList.remove('is-collapsed');
+    }
     updateStationMarkerSizes();
     updateLabelsVisibility();
-
-    const hlSource = map && map.getSource('station-highlight-source');
-    if (hlSource) {
-      hlSource.setData({
-        type: 'FeatureCollection',
-        features: [{
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'Point',
-            coordinates: [st.lng, st.lat]
-          }
-        }]
-      });
-    }
   }
 
   function closeStationSheet() {
     STATE.selectedStationId = null;
-    document.getElementById('station-sheet').style.display = 'none';
-    const hlSource = map && map.getSource('station-highlight-source');
-    if (hlSource) {
-      hlSource.setData({ type: 'FeatureCollection', features: [] });
+    const sheet = document.getElementById('station-sheet');
+    if (sheet) {
+      sheet.style.display = 'none';
+      sheet.classList.remove('is-collapsed');
     }
   }
 
@@ -2240,8 +2441,100 @@
   // =======================================================
   // 9. イベントハンドラー & コントロール
   // =======================================================
+  function setupStationSheetMobileInteractions() {
+    const sheet = document.getElementById('station-sheet');
+    if (!sheet) return;
+
+    let touchStartY = 0;
+    let touchStartX = 0;
+    let touchStartTime = 0;
+    let isSwiping = false;
+
+    // タップで開閉トグル
+    function toggleSheet(e) {
+      if (window.innerWidth > 768) return;
+      if (e.target.closest('button') || e.target.closest('.adj-link')) return;
+      if (sheet.classList.contains('is-collapsed')) {
+        sheet.classList.remove('is-collapsed');
+      } else {
+        sheet.classList.add('is-collapsed');
+      }
+    }
+
+    const header = sheet.querySelector('.sheet-header');
+    const handle = document.getElementById('sheet-handle');
+    const hint = document.getElementById('sheet-peek-hint');
+
+    [handle, hint].forEach(el => {
+      if (el) el.addEventListener('click', toggleSheet);
+    });
+    if (header) {
+      header.addEventListener('click', toggleSheet);
+    }
+
+    // タッチスワイプ操作
+    function onTouchStart(e) {
+      if (window.innerWidth > 768) return;
+      if (e.touches.length !== 1) return;
+      if (e.target.closest('button') || e.target.closest('.adj-link')) return;
+      touchStartY = e.touches[0].clientY;
+      touchStartX = e.touches[0].clientX;
+      touchStartTime = Date.now();
+      isSwiping = true;
+    }
+
+    function onTouchMove(e) {
+      if (!isSwiping || window.innerWidth > 768) return;
+      const curY = e.touches[0].clientY;
+      const curX = e.touches[0].clientX;
+      const diffY = curY - touchStartY;
+      const diffX = curX - touchStartX;
+
+      // 縦方向の動きが大きい場合、地図ドラッグ・スクロールを抑止
+      if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 6) {
+        if (e.cancelable) e.preventDefault();
+      }
+    }
+
+    function onTouchEnd(e) {
+      if (!isSwiping || window.innerWidth > 768) return;
+      isSwiping = false;
+      const endY = e.changedTouches[0].clientY;
+      const endX = e.changedTouches[0].clientX;
+      const diffY = endY - touchStartY;
+      const diffX = endX - touchStartX;
+
+      // スワイプ判定 (縦移動 30px 以上、かつ横移動より大きい)
+      if (Math.abs(diffY) >= 30 && Math.abs(diffY) > Math.abs(diffX)) {
+        if (diffY < 0) {
+          // 上スワイプ: 展開
+          sheet.classList.remove('is-collapsed');
+        } else {
+          // 下スワイプ
+          if (sheet.classList.contains('is-collapsed')) {
+            // Peek 状態でさらに下スワイプ -> 閉じる
+            closeStationSheet();
+          } else {
+            // 展開状態から下スワイプ -> Peek に戻る
+            sheet.classList.add('is-collapsed');
+          }
+        }
+        if (e.cancelable) e.preventDefault();
+      }
+    }
+
+    [handle, header, hint].forEach(el => {
+      if (el) {
+        el.addEventListener('touchstart', onTouchStart, { passive: true });
+        el.addEventListener('touchmove', onTouchMove, { passive: false });
+        el.addEventListener('touchend', onTouchEnd, { passive: false });
+      }
+    });
+  }
+
   function setupEventHandlers() {
     setupSearch();
+    setupStationSheetMobileInteractions();
 
     document.getElementById('btn-zoom-in').addEventListener('click', () => {
       map.zoomIn();
@@ -2267,6 +2560,7 @@
 
     window.addEventListener('resize', () => {
       updateLabelsVisibility();
+      updateResponsiveLayerZooms();
     });
   }
 
@@ -4548,7 +4842,7 @@
             }
           });
           if (minLng !== Infinity && map) {
-            map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 60, maxZoom: 13, duration: 800 });
+            map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: getVisibleMapPadding(60), maxZoom: 13, duration: 800 });
           }
         }
       });
@@ -4658,11 +4952,7 @@
       map.setPaintProperty('shinkansen-lines-dash', 'line-opacity', 1.0);
     }
     if (map.getLayer('line-labels')) {
-      map.setPaintProperty('line-labels', 'text-opacity', [
-        "interpolate", ["linear"], ["zoom"],
-        6.5, 0,
-        7.2, 0.88
-      ]);
+      map.setPaintProperty('line-labels', 'text-opacity', getLineLabelsOpacityExpression());
     }
     [...STATION_DOT_LAYERS, ...STATION_COLLIDER_LAYERS].forEach(id => {
       if (map.getLayer(id)) {
@@ -4683,10 +4973,13 @@
       });
     }
 
-    // 発・経由・着ピンマーカーを削除
-    if (activePinMarkers && activePinMarkers.length > 0) {
-      activePinMarkers.forEach(m => m.remove());
-      activePinMarkers = [];
+    // 発・経由・着ピン WebGL レイヤーをクリア
+    const pinsSource = map && map.getSource('route-pins-source');
+    if (pinsSource) {
+      pinsSource.setData({
+        type: 'FeatureCollection',
+        features: []
+      });
     }
 
     // 地図の通常スタイルおよび駅マーカーを復元
@@ -4719,7 +5012,7 @@
       });
       if (minLng !== Infinity) {
         map.fitBounds([[minLng, minLat], [maxLng, maxLat]], {
-          padding: 80,
+          padding: getVisibleMapPadding(60),
           maxZoom: 13,
           duration: 800
         });
@@ -4729,13 +5022,6 @@
 
   function drawRouteOnMap(result) {
     if (!map) return;
-
-    // 既存のピンを除去
-    if (activePinMarkers && activePinMarkers.length > 0) {
-      activePinMarkers.forEach(m => m.remove());
-      activePinMarkers = [];
-    }
-
     if (!result || !result.geometryLatlngs || result.geometryLatlngs.length === 0) return;
 
     ROUTE_STATE.lastResult = result;
@@ -4816,49 +5102,81 @@
       });
     }
 
-    // 3. 発駅ピン
+    // 3. 発・経由・着ピン (WebGL レイヤー route-pins-source へ登録)
+    const pinFeatures = [];
+
+    // 発駅ピン
     const deptSt = STATIONS[result.deptId];
     if (deptSt) {
-      const el = document.createElement('div');
-      el.className = 'route-map-pin dept-pin';
-      el.textContent = '発';
-      el.title = `発駅: ${deptSt.name}`;
-      const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([deptSt.lng, deptSt.lat])
-        .addTo(map);
-      activePinMarkers.push(marker);
+      pinFeatures.push({
+        type: 'Feature',
+        properties: {
+          pinType: 'dept',
+          label: '発',
+          title: `発駅: ${deptSt.name}`,
+          color: '#16a34a',
+          radius: 13,
+          stationId: result.deptId
+        },
+        geometry: {
+          type: 'Point',
+          coordinates: [deptSt.lng, deptSt.lat]
+        }
+      });
     }
 
-    // 4. 経由駅ピン
+    // 経由駅ピン
     if (result.viaIds && result.viaIds.length > 0) {
       result.viaIds.forEach((vId, idx) => {
         const vSt = STATIONS[vId];
         if (!vSt) return;
-        const el = document.createElement('div');
-        el.className = 'route-map-pin via-pin';
-        el.textContent = (idx + 1).toString();
-        el.title = `経由${idx + 1}: ${vSt.name}`;
-        const marker = new maplibregl.Marker({ element: el })
-          .setLngLat([vSt.lng, vSt.lat])
-          .addTo(map);
-        activePinMarkers.push(marker);
+        pinFeatures.push({
+          type: 'Feature',
+          properties: {
+            pinType: 'via',
+            label: (idx + 1).toString(),
+            title: `経由${idx + 1}: ${vSt.name}`,
+            color: '#0284c7',
+            radius: 12,
+            stationId: vId
+          },
+          geometry: {
+            type: 'Point',
+            coordinates: [vSt.lng, vSt.lat]
+          }
+        });
       });
     }
 
-    // 5. 着駅ピン
+    // 着駅ピン
     const destSt = STATIONS[result.destId];
     if (destSt) {
-      const el = document.createElement('div');
-      el.className = 'route-map-pin dest-pin';
-      el.textContent = '着';
-      el.title = `着駅: ${destSt.name}`;
-      const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([destSt.lng, destSt.lat])
-        .addTo(map);
-      activePinMarkers.push(marker);
+      pinFeatures.push({
+        type: 'Feature',
+        properties: {
+          pinType: 'dest',
+          label: '着',
+          title: `着駅: ${destSt.name}`,
+          color: '#dc2626',
+          radius: 13,
+          stationId: result.destId
+        },
+        geometry: {
+          type: 'Point',
+          coordinates: [destSt.lng, destSt.lat]
+        }
+      });
     }
 
-    // 6. 選択経路全体を画面内に自動フォーカス (FitBounds)
+    const pinsSource = map.getSource('route-pins-source');
+    if (pinsSource) {
+      pinsSource.setData({
+        type: 'FeatureCollection',
+        features: pinFeatures
+      });
+    }
+
+    // 4. 選択経路全体を画面内に自動フォーカス (FitBounds)
     if (result.geometryLatlngs.length >= 2) {
       let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
       result.geometryLatlngs.forEach(pt => {
@@ -4870,7 +5188,7 @@
       });
       if (minLng !== Infinity) {
         map.fitBounds([[minLng, minLat], [maxLng, maxLat]], {
-          padding: 80,
+          padding: getVisibleMapPadding(60),
           maxZoom: 13,
           duration: 800
         });
