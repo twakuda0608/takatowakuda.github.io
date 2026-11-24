@@ -3350,6 +3350,8 @@
       updateLabelsVisibility();
       updateResponsiveLayerZooms();
       updateSearchPlaceholder();
+      fitTicketRowWidth();
+      fitTicketViaWidth();
       const sheet = document.getElementById('station-sheet');
       if (sheet && sheet.style.display !== 'none') {
         if (window.innerWidth <= 768) {
@@ -5022,6 +5024,38 @@
     ].filter(Boolean).join('\n');
   }
 
+  // 券面幅安全ガード (発着駅長・経由長が溢れるのを防止)
+  function fitTicketRowWidth() {
+    const row = document.getElementById('ticket-stations-row');
+    if (!row) return;
+    row.style.transform = 'none';
+    const clientW = row.clientWidth;
+    const scrollW = row.scrollWidth;
+    if (scrollW > clientW && clientW > 0) {
+      const scale = Math.max(0.65, (clientW - 4) / scrollW);
+      row.style.transform = `scaleX(${scale.toFixed(3)})`;
+      row.style.transformOrigin = 'center center';
+    }
+  }
+
+  function fitTicketViaWidth() {
+    const viaRow = document.getElementById('ticket-via-row');
+    if (!viaRow) return;
+    viaRow.style.fontSize = '';
+    const clientW = viaRow.clientWidth;
+    const scrollW = viaRow.scrollWidth;
+    if (scrollW > clientW && clientW > 0) {
+      const ratio = clientW / scrollW;
+      if (ratio < 0.95) {
+        const card = document.getElementById('mars-ticket-card');
+        const cardWidth = card ? card.clientWidth : 420;
+        const u = cardWidth / 640;
+        const targetFont = Math.max(13 * u, Math.min(23 * u, 23 * u * ratio));
+        viaRow.style.fontSize = `${targetFont.toFixed(1)}px`;
+      }
+    }
+  }
+
   // 本格マルス券面 & 内訳カードの描画
   function renderMarsTicket(result) {
     if (!result) return;
@@ -5054,11 +5088,13 @@
 
     if (deptNameEl) deptNameEl.innerHTML = formatStationHtml(displayDept, fr.deptZoneApplied);
     if (destNameEl) destNameEl.innerHTML = formatStationHtml(displayDest, fr.destZoneApplied);
+    fitTicketRowWidth();
 
     // 4. 経由印字
     const viaTextEl = document.getElementById('ticket-via-text');
     if (viaTextEl) {
       viaTextEl.textContent = result.marsString || '(直通)';
+      fitTicketViaWidth();
     }
 
     // 5. 運賃計算とバッジ表示（大人・小児・学割）
@@ -5116,14 +5152,14 @@
     const validityTextEl = document.getElementById('ticket-validity-text');
     if (validityTextEl) {
       if (fr.isSuburbanOnly || validDays === 1) {
-        validityTextEl.textContent = `${m}月${d}日当日限り有効`;
+        validityTextEl.innerHTML = `<span class="v-num">${m}</span><span class="v-txt">月</span><span class="v-num">${d}</span><span class="v-txt">日当日限り有効</span>`;
       } else {
         const sDate = new Date(y, m - 1, d);
         const eDate = new Date(sDate);
         eDate.setDate(sDate.getDate() + validDays - 1);
         const em = eDate.getMonth() + 1;
         const ed = eDate.getDate();
-        validityTextEl.textContent = `${m}月${d}日から${em}月${ed}日まで有効`;
+        validityTextEl.innerHTML = `<span class="v-num">${m}</span><span class="v-txt">月</span><span class="v-num">${d}</span><span class="v-txt">日から</span><span class="v-num">${em}</span><span class="v-txt">月</span><span class="v-num">${ed}</span><span class="v-txt">日まで有効</span>`;
       }
     }
 
@@ -5955,6 +5991,10 @@
     if (childStamp) childStamp.style.display = 'none';
     const studentCert = document.getElementById('ticket-student-cert');
     if (studentCert) studentCert.style.display = 'none';
+    const stationsRow = document.getElementById('ticket-stations-row');
+    if (stationsRow) stationsRow.style.transform = 'none';
+    const viaRow = document.getElementById('ticket-via-row');
+    if (viaRow) viaRow.style.fontSize = '';
     const ruleTags = document.getElementById('rule-tags-container');
     if (ruleTags) ruleTags.innerHTML = '';
 
@@ -6255,6 +6295,8 @@
 
   if (typeof window !== 'undefined') {
     window.JR_APP = {
+      fitTicketRowWidth,
+      fitTicketViaWidth,
       getMarsJimonDataUri,
       getStationCompanyKey,
       buildKanZaiMark,
@@ -6305,6 +6347,8 @@
   }
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+      fitTicketRowWidth,
+      fitTicketViaWidth,
       getMarsJimonDataUri,
       getStationCompanyKey,
       buildKanZaiMark,

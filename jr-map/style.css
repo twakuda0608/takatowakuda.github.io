@@ -1818,103 +1818,120 @@ body.theme-dark .sheet-header.jr-station-sign {
   margin-bottom: 8px;
 }
 
+/* 本格マルス普通乗車券カード (640 × 430 座標系・コンテナクエリスケーリング) */
+.mars-ticket-wrapper {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  container-type: inline-size;
+}
+
 .mars-ticket-card {
   width: 100%;
   max-width: 420px;
-  min-height: 214px;
+  aspect-ratio: 640 / 430;
+  position: relative;
+  --u: calc(100cqw / 640);
   background-color: rgb(208, 218, 207);
   background-image: var(--mars-jimon-url);
   background-repeat: repeat;
+  background-size: calc(36 * var(--u)) calc(24 * var(--u));
   border: none;
-  border-radius: 4px;
+  border-radius: calc(6 * var(--u));
   padding: 0;
-  position: relative;
   overflow: hidden;
-  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 calc(3 * var(--u)) calc(12 * var(--u)) rgba(15, 23, 42, 0.12);
   font-family: "SFMono-Regular", Consolas, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, monospace;
   box-sizing: border-box;
-  display: grid;
-  grid-template-rows: 260fr 60fr 108fr;
-  transition: all 0.25s ease;
   color: #111827;
+  transition: max-width 0.25s ease;
 }
 
-/* 120mm券モード (横長・多情報対応) */
+/* 120mm券モード (多情報対応) */
 .mars-ticket-card.is-120mm {
   max-width: 520px;
 }
 
-.ticket-inner-frame {
-  grid-row: 1;
-  border: none !important;
-  border-radius: 0;
-  padding: 10px 14px 4px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  box-sizing: border-box;
-  background: transparent !important;
-  z-index: 2;
-}
-
-/* 券面中部の帯 (260:60:108 の 60fr・左右端までフル幅貫通・地紋連続) */
+/* 1. 帯 (#ticket-bottom-band: y=260〜320, h=60, フル幅貫通, z-index: 1) */
 .ticket-bottom-band {
-  grid-row: 2;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(180deg, rgba(160, 205, 190, 0.6) 0%, rgba(172, 210, 197, 0.65) 50%, rgba(160, 205, 190, 0.6) 100%);
-  box-shadow: inset 0 1px 1px rgba(60, 110, 95, 0.12), inset 0 -1px 1px rgba(60, 110, 95, 0.12);
-  flex-shrink: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(260 * var(--u));
+  height: calc(60 * var(--u));
+  background: linear-gradient(180deg, rgba(145, 198, 180, 0.6) 0%, rgba(172, 210, 197, 0.72) 50%, rgba(145, 198, 180, 0.6) 100%);
+  box-shadow: inset 0 calc(1 * var(--u)) calc(1 * var(--u)) rgba(60, 110, 95, 0.1), inset 0 calc(-1 * var(--u)) calc(1 * var(--u)) rgba(60, 110, 95, 0.1);
   z-index: 1;
+  pointer-events: none;
 }
 
-/* 券面上部ヘッダー (乗車券: 中央揃え・横線なし) */
+/* 2. 乗車券 (x=240 中央揃え, y=40, h=30) */
 .ticket-header-row {
+  position: absolute;
+  left: calc(240 * var(--u));
+  transform: translateX(-50%);
+  top: calc(40 * var(--u));
+  height: calc(30 * var(--u));
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  z-index: 2;
   border-bottom: none !important;
-  padding-top: 2px;
-  padding-bottom: 1px;
-  text-align: center;
+  margin: 0;
+  padding: 0;
 }
 .ticket-title {
-  font-size: 13.5px;
+  font-size: calc(30 * var(--u));
   font-weight: 900;
   color: #111827;
-  letter-spacing: 2px;
-  border-bottom: 1.5px solid #111827;
-  padding-bottom: 1px;
-  line-height: 1.1;
+  letter-spacing: calc(4 * var(--u));
+  border-bottom: max(1px, calc(2 * var(--u))) solid #111827;
+  line-height: 1;
+  padding-bottom: calc(1 * var(--u));
   display: inline-block;
 }
 
-/* 幹在識別記号行 (中央揃え・乗車券直下) */
+/* 2. 幹在識別記号 (x=240 中央揃え, y=76, h=18) */
 .ticket-shinkansen-row {
+  position: absolute;
+  left: calc(240 * var(--u));
+  transform: translateX(-50%);
+  top: calc(76 * var(--u));
+  height: calc(18 * var(--u));
   display: flex;
-  justify-content: center;
   align-items: center;
-  margin-top: 1px;
-  margin-bottom: 2px;
-  text-align: center;
+  justify-content: center;
+  white-space: nowrap;
+  z-index: 2;
+  margin: 0;
+  padding: 0;
 }
 .ticket-shinkansen-mark {
   font-family: "SFMono-Regular", Consolas, "Courier New", monospace;
-  font-size: 11px;
+  font-size: calc(18 * var(--u));
   font-weight: 700;
-  letter-spacing: 1.2px;
+  letter-spacing: calc(1 * var(--u));
   color: #111827;
   line-height: 1;
   text-align: center;
 }
 
-/* 発着駅表示行 (中央揃え) */
+/* 3. 発着駅表示行 (y=112〜160, h=48, left=32, right=32) */
 .ticket-stations-row {
+  position: absolute;
+  top: calc(112 * var(--u));
+  height: calc(48 * var(--u));
+  left: calc(32 * var(--u));
+  right: calc(32 * var(--u));
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 0;
-  gap: 16px;
+  gap: calc(14 * var(--u));
+  white-space: nowrap;
+  z-index: 2;
+  padding: 0;
+  margin: 0;
 }
 .station-box {
   display: flex;
@@ -1925,28 +1942,16 @@ body.theme-dark .sheet-header.jr-station-sign {
 .station-box.dest-box {
   position: relative;
 }
-/* 小児インク抜きスタンプ (着駅の直上・SVGマスク透過) */
-.ticket-child-stamp {
-  position: absolute;
-  bottom: calc(100% + 2px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 22px;
-  height: 22px;
-  pointer-events: none;
-  z-index: 2;
-  line-height: 1;
-}
-
 .station-print-name {
-  font-size: 19px;
+  font-size: calc(48 * var(--u));
   font-weight: 900;
   color: #111827;
-  letter-spacing: 1.5px;
-  line-height: 1.2;
+  letter-spacing: calc(2 * var(--u));
+  line-height: 1;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: calc(3 * var(--u));
+  white-space: nowrap;
 }
 
 /* 特定都区市内・山手線内シンボルマーク (正方形1文字マーク: 福, 区, 山 等) */
@@ -1954,27 +1959,27 @@ body.theme-dark .sheet-header.jr-station-sign {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
-  font-size: 11px;
+  width: calc(32 * var(--u));
+  height: calc(32 * var(--u));
+  font-size: calc(20 * var(--u));
   font-weight: 900;
   line-height: 1;
-  border-radius: 2px;
+  border-radius: calc(3 * var(--u));
   box-sizing: border-box;
   vertical-align: middle;
-  margin-right: 4px;
+  margin-right: calc(4 * var(--u));
   letter-spacing: 0;
   flex-shrink: 0;
 }
 .zone-symbol-badge.yamanote {
   background: #ffffff;
   color: #111827;
-  border: 1.5px solid #111827;
+  border: calc(1.5 * var(--u)) solid #111827;
 }
 .zone-symbol-badge.city {
   background: #111827;
   color: #ffffff;
-  border: 1.5px solid #111827;
+  border: calc(1.5 * var(--u)) solid #111827;
 }
 
 .ticket-arrow-wrapper {
@@ -1983,130 +1988,186 @@ body.theme-dark .sheet-header.jr-station-sign {
   justify-content: center;
 }
 .ticket-arrow-symbol {
-  font-size: 16px;
+  font-size: calc(32 * var(--u));
   font-weight: 900;
   color: #111827;
-  letter-spacing: -1px;
+  letter-spacing: calc(-2 * var(--u));
   line-height: 1;
 }
 
-/* 経由欄 (地紋に直接印字) */
+/* 4. 小児インク抜きスタンプ (着駅の直上・SVGマスク透過: y=64〜106, w=42, h=42) */
+.ticket-child-stamp {
+  position: absolute;
+  bottom: calc(100% + calc(6 * var(--u)));
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(42 * var(--u));
+  height: calc(42 * var(--u));
+  pointer-events: none;
+  z-index: 2;
+  line-height: 1;
+}
+
+/* 5. 経由印字 (x=50, y=165〜190, h=25, font-size=23) */
 .ticket-via-row {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 2px 0;
-  font-size: 11.5px;
-  line-height: 1.35;
-  color: #111827;
-  word-break: break-all;
+  position: absolute;
+  left: calc(50 * var(--u));
+  right: calc(24 * var(--u));
+  top: calc(165 * var(--u));
+  height: calc(25 * var(--u));
+  font-size: calc(23 * var(--u));
+  line-height: calc(25 * var(--u));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   display: flex;
-  gap: 2px;
+  align-items: center;
+  gap: calc(2 * var(--u));
+  z-index: 2;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
 }
 .ticket-via-prefix {
   font-weight: 800;
   color: #111827;
   white-space: nowrap;
+  font-size: calc(23 * var(--u));
 }
 .ticket-via-content {
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: calc(0.5 * var(--u));
   color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* 有効期間・途中下車・運賃行 (区切り線なし) */
-.ticket-bottom-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding-top: 4px;
-  padding-bottom: 2px;
-  border-top: none !important;
-  gap: 8px;
-  position: relative;
-}
-.ticket-bottom-left {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  max-width: 62%;
-}
+/* 6. 有効期間 (x=70, top=190, h=30) */
 .validity-date-line {
-  font-size: 12px;
-  font-weight: 800;
-  color: #111827;
-  letter-spacing: 0.5px;
+  position: absolute;
+  left: calc(70 * var(--u));
+  top: calc(190 * var(--u));
+  height: calc(30 * var(--u));
+  display: flex;
+  align-items: flex-end;
+  white-space: nowrap;
+  z-index: 2;
+  margin: 0;
+  padding: 0;
 }
-.stopover-line {
-  font-size: 10px;
+.validity-date-line .v-num {
+  font-size: calc(30 * var(--u));
+  line-height: 1;
   font-weight: 900;
   color: #111827;
-  letter-spacing: 0.5px;
-  line-height: 1.25;
-  word-break: break-all;
+  letter-spacing: calc(0.5 * var(--u));
+}
+.validity-date-line .v-txt {
+  font-size: calc(23 * var(--u));
+  line-height: 1;
+  font-weight: 800;
+  color: #111827;
+  padding-bottom: calc(1 * var(--u));
+  letter-spacing: calc(0.5 * var(--u));
 }
 
-.ticket-bottom-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  text-align: right;
-  position: relative;
+/* 7. 途中下車文言 (x=70, top=227, font-size=18) */
+.stopover-line {
+  position: absolute;
+  left: calc(70 * var(--u));
+  top: calc(227 * var(--u));
+  font-size: calc(18 * var(--u));
+  font-weight: 900;
+  color: #111827;
+  letter-spacing: calc(0.5 * var(--u));
+  line-height: 1.1;
+  white-space: nowrap;
+  max-width: calc(380 * var(--u));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 2;
+  margin: 0;
+  padding: 0;
 }
-.fare-currency {
-  font-size: 15px;
+
+/* 8. 発売額 (right=36, top=206, z-index=2) */
+.ticket-fare-box {
+  position: absolute;
+  right: calc(36 * var(--u));
+  top: calc(206 * var(--u));
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
+}
+.ticket-fare-box .fare-currency {
+  font-size: calc(28 * var(--u));
   font-weight: 900;
   color: #111827;
   line-height: 1;
+  margin-right: calc(2 * var(--u));
 }
-.fare-amount {
-  font-size: 21px;
+.ticket-fare-box .fare-amount {
+  font-size: calc(42 * var(--u));
   font-weight: 900;
-  letter-spacing: 0.5px;
+  letter-spacing: calc(1 * var(--u));
   color: #111827;
+  line-height: 1;
 }
 
-/* 学割携帯証明ブロック (発売額直下・帯に被る位置) */
+/* 9. 学割携帯証明ブロック (right=28, top=258, z-index=3, 帯に被る位置) */
 .ticket-student-cert {
   position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
+  right: calc(28 * var(--u));
+  top: calc(258 * var(--u));
   z-index: 3;
   text-align: left;
   white-space: nowrap;
   pointer-events: none;
-  font-size: 10px;
-  line-height: 1.25;
+  font-size: calc(18 * var(--u));
+  line-height: 1.3;
   color: #111827;
   font-weight: 700;
+  margin: 0;
+  padding: 0;
 }
 .student-cert-box {
   display: inline-block;
   border: 1px solid #111827;
-  padding: 0 2px;
-  font-size: 9px;
+  padding: 0 calc(3 * var(--u));
+  font-size: calc(16 * var(--u));
   font-weight: 900;
   line-height: 1.1;
   vertical-align: middle;
   background: transparent;
-  margin-left: 2px;
+  margin-left: calc(3 * var(--u));
 }
 
-/* 券面フッター (260:60:108 の 108fr、発売日のみ・帯の下側余白・区切り線なし) */
+/* 10. 券面フッター (x=50, top=342, 帯の下側余白) */
 .ticket-meta-footer {
-  grid-row: 3;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  font-size: 10px;
+  position: absolute;
+  left: calc(50 * var(--u));
+  top: calc(342 * var(--u));
+  font-size: calc(18 * var(--u));
   font-weight: 700;
-  color: #374151;
-  padding: 4px 14px 6px;
-  border-top: none !important;
-  margin-top: 0;
-  letter-spacing: 0.5px;
+  color: #111827;
+  letter-spacing: calc(0.5 * var(--u));
   background: transparent;
-  z-index: 1;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+.ticket-issue-date {
+  font-size: calc(18 * var(--u));
+  font-weight: 800;
+  color: #111827;
 }
 .mars-count-pill {
   font-size: 10px;
