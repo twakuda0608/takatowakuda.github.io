@@ -82,8 +82,11 @@
 
     <!-- 駅詳細ボトムシート / カード -->
     <div id="station-sheet" class="station-sheet" style="display: none;">
-      <div class="sheet-handle" id="sheet-handle"></div>
-      <button type="button" class="btn-sheet-close" id="btn-sheet-close" aria-label="閉">✕</button>
+      <div class="sheet-top-bar" id="sheet-top-bar">
+        <div class="sheet-top-spacer"></div>
+        <div class="sheet-handle" id="sheet-handle"></div>
+        <button type="button" class="btn-sheet-close" id="btn-sheet-close" aria-label="閉">✕</button>
+      </div>
       
       <div class="sheet-header jr-station-sign">
         <div class="jr-sign-top">
@@ -100,15 +103,16 @@
         <div class="station-en" id="sheet-en">Tokyo</div>
       </div>
 
-      <div class="sheet-peek-hint" id="sheet-peek-hint">▲ 路線・操作を表示</div>
-
       <div class="sheet-body">
-        <div class="section-title">乗り入れ路線</div>
+        <div class="section-title sheet-lines-section-title">乗り入れ路線</div>
         <div class="station-lines" id="sheet-lines">
           <!-- 路線バッジを動的配置 -->
         </div>
 
-        <div class="section-title">隣接駅</div>
+        <div class="section-title sheet-adjacents-section-title" id="sheet-adjacents-title">
+          <span class="title-pc">隣接駅</span>
+          <span class="title-mobile">乗り入れ路線・隣接駅</span>
+        </div>
         <div class="adjacent-stations" id="sheet-adjacents">
           <!-- 前後の駅リスト -->
         </div>
@@ -124,6 +128,7 @@
 
     <!-- マルス経路探索パネル -->
     <div id="route-panel" class="route-panel" style="display: none;">
+      <div class="route-sheet-handle" id="route-sheet-handle"></div>
       <div class="route-panel-header">
         <div class="route-panel-title">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
@@ -137,8 +142,20 @@
       </div>
 
       <div class="route-panel-body">
+        <!-- スマホ結果表示時のサマリーバー -->
+        <div id="route-mobile-summary-bar" class="route-mobile-summary-bar" style="display: none;">
+          <div class="route-summary-info">
+            <span class="route-summary-icon">経路</span>
+            <span class="route-summary-text" id="route-summary-text">東京 → 新宿</span>
+          </div>
+          <div class="route-summary-actions">
+            <button type="button" id="btn-route-modify" class="btn-secondary btn-sm">条件変更</button>
+            <button type="button" id="btn-route-summary-clear" class="btn-icon btn-sm" aria-label="クリア" title="クリア">✕</button>
+          </div>
+        </div>
+
         <!-- 駅入力セクション -->
-        <div class="route-inputs">
+        <div class="route-inputs" id="route-inputs-container">
           <!-- 発駅 -->
           <div class="route-input-row dept-row">
             <span class="route-node-icon dept-icon">発</span>

@@ -554,23 +554,29 @@ body.theme-light .view-presets {
   }
 }
 
-.sheet-handle {
-  display: none; /* スマホ用プルバー */
-  width: 36px;
-  height: 4px;
-  background: var(--panel-border);
-  border-radius: 2px;
-  margin: 0 auto 12px;
+.sheet-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  margin-bottom: 6px;
 }
 
-.sheet-peek-hint {
-  display: none; /* PC画面では常に非表示 */
+.sheet-top-spacer {
+  display: none;
+}
+
+.sheet-handle {
+  display: none; /* スマホ用プルバー */
+  width: 44px;
+  height: 5px;
+  background: var(--panel-border);
+  border-radius: 3px;
+  margin: 0 auto;
 }
 
 .btn-sheet-close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
+  position: static;
   width: 28px;
   height: 28px;
   border: none;
@@ -583,6 +589,7 @@ body.theme-light .view-presets {
   justify-content: center;
   font-size: 13px;
   transition: all 0.1s ease;
+  flex-shrink: 0;
 }
 .btn-sheet-close:hover {
   color: var(--text-main);
@@ -609,7 +616,7 @@ body.theme-dark .sheet-header.jr-station-sign {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 4px;
-  padding-right: 24px; /* 閉じるボタンと干渉しない余白 */
+  padding-right: 0; /* 閉じるボタンが上部バーへ移動したため余白ゼロ */
 }
 
 .jr-sign-top .station-pref {
@@ -763,6 +770,9 @@ body.theme-dark .sheet-header.jr-station-sign {
   gap: 4px;
   font-size: 12px;
 }
+.title-mobile {
+  display: none;
+}
 .adj-row {
   display: flex;
   align-items: center;
@@ -770,6 +780,29 @@ body.theme-dark .sheet-header.jr-station-sign {
   padding: 4px 8px;
   background: var(--card-hover);
   border-radius: 6px;
+  gap: 8px;
+}
+.adj-line-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.adj-stations {
+  font-size: 12px;
+  text-align: right;
+  flex: 1;
+  min-width: 0;
+  word-break: break-all;
+}
+.adj-terminal, .adj-none {
+  font-size: 10px;
+  color: var(--text-muted);
 }
 .adj-link {
   color: var(--brand-blue);
@@ -942,22 +975,35 @@ body.theme-dark .sheet-header.jr-station-sign {
 ======================================================= */
 @media (max-width: 768px) {
   .map-header {
-    top: 10px;
+    top: 6px;
     left: 10px;
     right: 10px;
     width: calc(100% - 20px);
     max-width: none;
-    padding: 6px 12px;
-    padding-left: 48px;
-    gap: 10px;
+    min-height: 40px;
+    padding: 3px 6px 3px 56px;
+    gap: 6px;
+    align-items: center;
   }
   
   .header-left {
     flex-shrink: 0;
   }
   
+  .site-branding {
+    gap: 0;
+    margin-right: 2px;
+  }
+  
+  .badge-jr {
+    padding: 3px 6px;
+    font-size: 11px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  
   .header-title {
-    font-size: 0.95rem;
+    display: none !important;
   }
   
   .header-search {
@@ -965,24 +1011,55 @@ body.theme-dark .sheet-header.jr-station-sign {
     min-width: 0;
   }
   .search-box {
-    padding: 5px 10px;
-    font-size: 13px;
+    padding: 4px 8px;
+    font-size: 12px;
+    gap: 5px;
+  }
+  .search-box input {
+    font-size: 12px;
+  }
+  .btn-route-toggle {
+    padding: 6px 9px;
+    margin-left: 4px;
+    flex-shrink: 0;
   }
 
   .station-sheet {
+    position: fixed;
     left: 10px;
     right: 10px;
     bottom: 10px;
     width: auto;
     max-width: none;
-    padding: 12px 16px 14px;
-    border-radius: 20px 20px 16px 16px;
+    height: auto;
     max-height: 72dvh;
+    padding: 8px 14px 12px;
+    border-radius: 20px 20px 16px 16px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     box-sizing: border-box;
-    transition: max-height 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.25);
+    z-index: 1005;
+    will-change: transform;
+    touch-action: none;
+    animation: none !important;
+  }
+  .sheet-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 4px;
+    flex-shrink: 0;
+    cursor: grab;
+  }
+  .sheet-top-spacer {
+    display: block;
+    width: 28px;
+    height: 28px;
+    visibility: hidden;
+    flex-shrink: 0;
   }
   .sheet-handle {
     display: block;
@@ -991,55 +1068,68 @@ body.theme-dark .sheet-header.jr-station-sign {
     background: var(--text-muted);
     opacity: 0.45;
     border-radius: 3px;
-    margin: 0 auto 10px;
-    cursor: pointer;
+    margin: 0;
+    cursor: grab;
     flex-shrink: 0;
   }
   .station-sheet .sheet-header.jr-station-sign {
-    cursor: pointer;
-    user-select: none;
+    margin-top: 0;
+    margin-bottom: 8px;
     flex-shrink: 0;
-  }
-  .sheet-peek-hint {
-    display: none;
-    text-align: center;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--primary, #0284c7);
-    margin-top: 8px;
-    padding: 4px 0;
-    cursor: pointer;
+    cursor: grab;
     user-select: none;
-    flex-shrink: 0;
-    letter-spacing: 0.05em;
   }
-  /* Peek (折りたたみ) 状態 */
-  .station-sheet.is-collapsed {
-    max-height: 185px;
-  }
-  .station-sheet.is-collapsed .sheet-header.jr-station-sign {
-    margin-bottom: 0;
-  }
-  .station-sheet.is-collapsed .sheet-body {
-    display: none !important;
-  }
-  .station-sheet.is-collapsed .sheet-peek-hint {
+  .station-sheet .sheet-body {
     display: block !important;
-  }
-  /* Expanded (展開) 状態 */
-  .station-sheet:not(.is-collapsed) {
-    max-height: 72dvh;
-  }
-  .station-sheet:not(.is-collapsed) .sheet-body {
-    display: block;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    flex: 1;
-    margin-top: 10px;
+    flex: 0 1 auto;
+    min-height: 0;
+    margin-top: 2px;
     padding-right: 4px;
+    touch-action: pan-y;
   }
-  .station-sheet:not(.is-collapsed) .sheet-peek-hint {
+  .sheet-lines-section-title,
+  #sheet-lines {
     display: none !important;
+  }
+  .title-pc {
+    display: none !important;
+  }
+  .title-mobile {
+    display: inline !important;
+  }
+  .adjacent-stations {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .adj-row {
+    padding: 3px 6px;
+    gap: 6px;
+  }
+  .adj-line-badge {
+    font-size: 10.5px;
+    padding: 2px 5px;
+  }
+  .adj-stations {
+    font-size: 11px;
+  }
+  .sheet-actions {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  .sheet-actions button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 6px 4px;
+    font-size: 11px;
+    text-align: center;
+    white-space: nowrap;
   }
 
   .map-legend {
@@ -1154,6 +1244,13 @@ body.theme-dark .sheet-header.jr-station-sign {
   flex-direction: column;
   overflow: hidden;
   animation: routePanelFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.route-sheet-handle {
+  display: none;
+}
+.route-mobile-summary-bar {
+  display: none !important;
 }
 
 @keyframes routePanelFadeIn {
@@ -2270,8 +2367,8 @@ body.theme-dark .sheet-header.jr-station-sign {
   background: #dc2626;
 }
 
-/* スマホ対応 */
-@media (max-width: 640px) {
+/* スマホ対応 (経路探索パネル) */
+@media (max-width: 768px) {
   .btn-route-toggle span {
     display: none;
   }
@@ -2280,12 +2377,132 @@ body.theme-dark .sheet-header.jr-station-sign {
   }
 
   .route-panel {
-    top: 64px;
+    top: 58px;
     left: 8px;
     right: 8px;
     width: auto;
     max-width: none;
-    max-height: calc(100dvh - 80px);
+    max-height: calc(100dvh - 70px);
+  }
+
+  /* 検索結果表示モード (画面下半分のボトムシート) */
+  .route-panel.has-result {
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    box-shadow: 0 -6px 28px rgba(0, 0, 0, 0.35) !important;
+    z-index: 1010;
+    display: flex;
+    flex-direction: column;
+    transition: height 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: height;
+  }
+
+  /* Half (標準・初期値 約 46dvh) */
+  .route-panel.has-result.mobile-sheet-half {
+    height: 46dvh !important;
+    max-height: 46dvh !important;
+  }
+
+  /* Full (展開 約 82dvh) */
+  .route-panel.has-result.mobile-sheet-full {
+    height: 82dvh !important;
+    max-height: 82dvh !important;
+  }
+
+  /* ドラッグハンドル */
+  .route-sheet-handle {
+    display: block;
+    width: 44px;
+    height: 5px;
+    background: var(--text-muted);
+    opacity: 0.45;
+    border-radius: 3px;
+    margin: 8px auto 4px;
+    cursor: grab;
+    flex-shrink: 0;
+  }
+
+  /* 結果表示時は通常ヘッダーおよび入力フォームを折りたたみ */
+  .route-panel.has-result:not(.is-editing) .route-panel-header {
+    display: none !important;
+  }
+  .route-panel.has-result:not(.is-editing) .route-inputs,
+  .route-panel.has-result:not(.is-editing) .route-options-container,
+  .route-panel.has-result:not(.is-editing) .route-buttons {
+    display: none !important;
+  }
+
+  /* サマリーバー */
+  .route-panel.has-result:not(.is-editing) .route-mobile-summary-bar {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--card-bg, rgba(255, 255, 255, 0.08));
+    border-bottom: 1px solid var(--panel-border, rgba(0, 0, 0, 0.1));
+    margin-bottom: 6px;
+    flex-shrink: 0;
+    cursor: grab;
+  }
+
+  .route-summary-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .route-summary-icon {
+    font-size: 10px;
+    background: var(--primary, #0284c7);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .route-summary-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-main);
+  }
+
+  .route-summary-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  /* 条件変更中の通常パネル再表示 */
+  .route-panel.has-result.is-editing {
+    top: 58px !important;
+    bottom: auto !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    height: auto !important;
+    max-height: calc(100dvh - 70px) !important;
+    border-radius: var(--radius-lg) !important;
+  }
+  .route-panel.has-result.is-editing .route-sheet-handle {
+    display: none !important;
+  }
+  .route-panel.has-result.is-editing .route-panel-header {
+    display: flex !important;
+  }
+  .route-panel.has-result.is-editing .route-inputs,
+  .route-panel.has-result.is-editing .route-options-container,
+  .route-panel.has-result.is-editing .route-buttons {
+    display: flex !important;
   }
 }
 

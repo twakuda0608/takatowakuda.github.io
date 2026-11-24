@@ -1409,6 +1409,34 @@
         }
       });
 
+      // 選択中駅の青塗りつぶし点レイヤー (駅◯直上・駅名ラベル直下)
+      if (!map.getSource("selected-station-source")) {
+        map.addSource("selected-station-source", {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: []
+          }
+        });
+
+        map.addLayer({
+          id: "selected-station-dot",
+          type: "circle",
+          source: "selected-station-source",
+          paint: {
+            "circle-color": "#2563eb",
+            "circle-stroke-color": "#ffffff",
+            "circle-stroke-width": 2.2,
+            "circle-radius": [
+              "interpolate", ["linear"], ["zoom"],
+              4, 5.5,
+              10, 6.5,
+              14, 7.5
+            ]
+          }
+        });
+      }
+
       // 7. 一般駅の名前ラベル (zoom 11.8〜)
       map.addLayer({
         id: "local-station-labels",
@@ -1846,6 +1874,61 @@
   }
 
   // =======================================================
+  // ヘルパー: 選択中駅のハイライト (青塗りつぶし点 & 駅名青強調)
+  // =======================================================
+  function updateSelectedStationHighlight(stId, st) {
+    if (!map) return;
+    // 1. 青塗りつぶし点
+    const selSource = map.getSource('selected-station-source');
+    if (selSource) {
+      selSource.setData({
+        type: 'FeatureCollection',
+        features: (st && stId) ? [{
+          type: 'Feature',
+          properties: { id: stId },
+          geometry: {
+            type: 'Point',
+            coordinates: [st.lng, st.lat]
+          }
+        }] : []
+      });
+    }
+
+    // 2. 駅名ラベルの文字色強調
+    const defaultColors = {
+      'local-station-labels': '#1e293b',
+      'major-tier2-labels': '#0f172a',
+      'major-mega-labels': '#0f172a'
+    };
+    ['major-mega-labels', 'major-tier2-labels', 'local-station-labels'].forEach(layerId => {
+      if (!map.getLayer(layerId)) return;
+      const defColor = defaultColors[layerId] || '#0f172a';
+      if (stId) {
+        map.setPaintProperty(layerId, 'text-color', [
+          'case',
+          ['==', ['get', 'id'], stId], '#1d4ed8',
+          defColor
+        ]);
+      } else {
+        map.setPaintProperty(layerId, 'text-color', defColor);
+      }
+    });
+  }
+
+  // =======================================================
+  // ヘルパー: 画面幅に応じた検索プレースホルダー切り替え
+  // =======================================================
+  function updateSearchPlaceholder() {
+    const searchInput = document.getElementById('station-search');
+    if (!searchInput) return;
+    if (window.innerWidth <= 768) {
+      searchInput.placeholder = '駅名を検索';
+    } else {
+      searchInput.placeholder = '駅名を検索 (例: 新宿, tokyo)';
+    }
+  }
+
+  // =======================================================
   // ヘルパー: パネル・ヘッダーを考慮した可視領域パディング計算
   // =======================================================
   function getVisibleMapPadding(basePad = 60) {
@@ -1862,14 +1945,23 @@
     let right = Math.max(basePad, 72);
     let bottom = basePad;
 
-    // #route-panel の計測 (PC/タブレット幅で左側にある場合)
+    const isMobile = window.innerWidth <= 768;
     const routePanel = document.getElementById('route-panel');
+    let isMobileResultSheet = false;
+
+    // #route-panel の計測
     if (routePanel) {
       const pStyle = window.getComputedStyle(routePanel);
       if (pStyle.display !== 'none' && pStyle.visibility !== 'hidden') {
         const panelRect = routePanel.getBoundingClientRect();
-        if (panelRect.width > 0 && panelRect.width < mapW * 0.7) {
+        if (!isMobile && panelRect.width > 0 && panelRect.width < mapW * 0.7) {
+          // PC / タブレット (左側配置)
           left = Math.round(panelRect.right - mapRect.left) + 36;
+        } else if (isMobile && routePanel.classList.contains('has-result') && !routePanel.classList.contains('is-editing')) {
+          // スマホ (下部ボトムシート)
+          isMobileResultSheet = true;
+          const pHeight = (panelRect.height > 50) ? panelRect.height : Math.round(mapH * 0.46);
+          bottom = Math.round(pHeight) + 24;
         }
       }
     }
@@ -1886,20 +1978,70 @@
       }
     }
 
-    // 上限クランプ（エラー防止: 幅・高さの 35% 以内）
+    // 上限クランプ（エラー防止）: スマホ結果モード時は bottom が mapH * 0.62 まで許容
     const maxHorizPad = Math.floor(mapW * 0.35);
-    const maxVertPad = Math.floor(mapH * 0.35);
+    const maxBottomPad = Math.floor(mapH * (isMobileResultSheet ? 0.62 : 0.35));
+    const maxTopPad = Math.floor(mapH * (isMobileResultSheet ? 0.25 : 0.35));
 
     if (left + right >= mapW * 0.75) {
       left = Math.min(left, maxHorizPad);
       right = Math.min(right, maxHorizPad);
     }
-    if (top + bottom >= mapH * 0.75) {
-      top = Math.min(top, maxVertPad);
-      bottom = Math.min(bottom, maxVertPad);
+    if (top + bottom >= mapH * (isMobileResultSheet ? 0.85 : 0.75)) {
+      top = Math.min(top, maxTopPad);
+      bottom = Math.min(bottom, maxBottomPad);
     }
 
     return { top, bottom, left, right };
+  }
+
+  // =======================================================
+  // ヘルパー: 駅フォーカス時の可視領域オフセット計算 ([0, offsetY])
+  // =======================================================
+  function getStationCenterOffset() {
+    if (!map) return [0, 0];
+    const mapContainer = map.getContainer();
+    if (!mapContainer) return [0, 0];
+
+    const mapRect = mapContainer.getBoundingClientRect();
+    if (window.innerWidth > 768) {
+      return [0, 0];
+    }
+
+    let visibleTop = 0;
+    const header = document.querySelector('.map-header');
+    if (header) {
+      const hStyle = window.getComputedStyle(header);
+      if (hStyle.display !== 'none' && hStyle.visibility !== 'hidden') {
+        const headerRect = header.getBoundingClientRect();
+        visibleTop = Math.max(0, Math.round(headerRect.bottom - mapRect.top) + 8);
+      }
+    }
+
+    let visibleBottom = mapRect.height;
+    const sheet = document.getElementById('station-sheet');
+    if (sheet) {
+      const sStyle = window.getComputedStyle(sheet);
+      if (sStyle.display !== 'none' && sStyle.visibility !== 'hidden') {
+        const sheetRect = sheet.getBoundingClientRect();
+        if (sheetRect.top < mapRect.bottom) {
+          visibleBottom = Math.round(sheetRect.top - mapRect.top) - 8;
+        }
+      }
+    }
+
+    if (visibleBottom <= visibleTop + 40) {
+      visibleBottom = Math.max(visibleTop + 40, Math.round(mapRect.height * 0.45));
+    }
+
+    const targetY = (visibleTop + visibleBottom) / 2;
+    const mapCenterY = mapRect.height / 2;
+    let offsetY = Math.round(targetY - mapCenterY);
+
+    const maxAbsOffset = Math.round(mapRect.height * 0.42);
+    offsetY = Math.max(-maxAbsOffset, Math.min(maxAbsOffset, offsetY));
+
+    return [0, offsetY];
   }
 
   // 互換性スタブ
@@ -1910,14 +2052,69 @@
   function setupLineLabels() {}
   function getZoomLayout() { return { placedLineSlots: [] }; }
   // =======================================================
+  // 5.0 全路線の向きを「公式起点 (0.0km) → 終点」へ正規化
+  // =======================================================
+  function normalizeLineStationOrders() {
+    const kilos = window.JR_OFFICIAL_KILOS;
+    if (!kilos || !LINES) return [];
+
+    const reversedList = [];
+
+    function getChainDirection(stIds, line) {
+      const lineKilos = (kilos[line.id] || kilos[line.name] || (line.marsCode ? kilos[line.marsCode] : null)) || line.stationKilos;
+      if (!lineKilos) return 1;
+
+      let firstK = null, lastK = null;
+      for (let i = 0; i < stIds.length; i++) {
+        const id = stIds[i];
+        const name = STATIONS[id] ? STATIONS[id].name : id;
+        const k = (lineKilos[id] !== undefined) ? lineKilos[id] : lineKilos[name];
+        if (k !== undefined) { firstK = k; break; }
+      }
+      for (let i = stIds.length - 1; i >= 0; i--) {
+        const id = stIds[i];
+        const name = STATIONS[id] ? STATIONS[id].name : id;
+        const k = (lineKilos[id] !== undefined) ? lineKilos[id] : lineKilos[name];
+        if (k !== undefined) { lastK = k; break; }
+      }
+      if (firstK !== null && lastK !== null && firstK > lastK) return -1;
+      return 1;
+    }
+
+    LINES.forEach(line => {
+      if (line._isNormalized) return;
+      line._isNormalized = true;
+
+      if (line.stations && getChainDirection(line.stations, line) === -1) {
+        reversedList.push({ id: line.id, name: line.name });
+        line.stations.reverse();
+      }
+
+      if (line.branches) {
+        line.branches.forEach((b) => {
+          if (getChainDirection(b, line) === -1) {
+            b.reverse();
+          }
+        });
+      }
+    });
+
+    return reversedList;
+  }
+
+  // =======================================================
   // 5. インデックス作成 (隣接駅の計算)
   // =======================================================
   const adjacentIndex = new Map();
 
   function buildAdjacentStationsIndex() {
+    normalizeLineStationOrders();
+
+    adjacentIndex.clear();
     LINES.forEach(line => {
       const chains = [line.stations, ...(line.branches || [])];
       chains.forEach(stIds => {
+        if (!stIds || stIds.length === 0) return;
         for (let i = 0; i < stIds.length; i++) {
           const cur = stIds[i];
           if (!adjacentIndex.has(cur)) {
@@ -1925,8 +2122,19 @@
           }
           const adj = adjacentIndex.get(cur);
 
-          const prev = i > 0 ? stIds[i - 1] : (line.isLoop ? stIds[stIds.length - 2] : null);
-          const next = i < stIds.length - 1 ? stIds[i + 1] : (line.isLoop ? stIds[1] : null);
+          let prev = null;
+          if (i > 0) {
+            prev = stIds[i - 1];
+          } else if (line.isLoop && stIds.length > 2) {
+            prev = (stIds[stIds.length - 1] === stIds[0]) ? stIds[stIds.length - 2] : stIds[stIds.length - 1];
+          }
+
+          let next = null;
+          if (i < stIds.length - 1) {
+            next = stIds[i + 1];
+          } else if (line.isLoop && stIds.length > 2) {
+            next = (stIds[stIds.length - 1] === stIds[0]) ? stIds[1] : stIds[0];
+          }
 
           if (!adj[line.id]) {
             adj[line.id] = {
@@ -1944,6 +2152,16 @@
         }
       });
     });
+
+    // 環状線 (山手線) の品川・田端端点の両方向接続補正
+    if (adjacentIndex.has('shinagawa') && adjacentIndex.get('shinagawa')['yamanote']) {
+      const adj = adjacentIndex.get('shinagawa')['yamanote'];
+      if (!adj.prev.includes('takanawa-gateway')) adj.prev.unshift('takanawa-gateway');
+    }
+    if (adjacentIndex.has('tabata') && adjacentIndex.get('tabata')['yamanote']) {
+      const adj = adjacentIndex.get('tabata')['yamanote'];
+      if (!adj.next.includes('nishi-nippori')) adj.next.push('nishi-nippori');
+    }
   }
 
   // =======================================================
@@ -2130,19 +2348,11 @@
   // =======================================================
   // 7. 駅詳細選択 & ボトムシート
   // =======================================================
-  function selectStation(stId, shouldPan = true) {
+  function selectStation(stId, shouldPan = true, options = {}) {
     const st = STATIONS[stId];
     if (!st) return;
 
     STATE.selectedStationId = stId;
-
-    if (shouldPan) {
-      map.flyTo({
-        center: [st.lng, st.lat],
-        zoom: Math.max(map.getZoom(), 12.5),
-        duration: 600
-      });
-    }
 
     const sheet = document.getElementById('station-sheet');
     const prefEl = document.getElementById('sheet-pref');
@@ -2194,83 +2404,161 @@
     }
 
     const linesContainer = document.getElementById('sheet-lines');
-    linesContainer.innerHTML = '';
-    (st.lines || []).forEach(lId => {
-      const line = LINES.find(l => l.id === lId);
-      if (!line) return;
-      const badge = document.createElement('div');
-      badge.className = 'line-badge-item';
-      badge.style.background = line.color;
-      badge.style.color = line.textColor || '#fff';
-      badge.innerHTML = `${line.code ? `<span class="line-badge-code">${line.code}</span>` : ''} <span>${line.name}</span>`;
-      linesContainer.appendChild(badge);
-    });
-
-    const adjContainer = document.getElementById('sheet-adjacents');
-    adjContainer.innerHTML = '';
-    const adjInfo = adjacentIndex.get(stId) || {};
-
-    let hasAdj = false;
-    Object.keys(adjInfo).forEach(lId => {
-      const line = LINES.find(l => l.id === lId);
-      const info = adjInfo[lId];
-      if (!line || !info) return;
-
-      const prevList = Array.isArray(info.prev) ? info.prev : (info.prev ? [info.prev] : []);
-      const nextList = Array.isArray(info.next) ? info.next : (info.next ? [info.next] : []);
-
-      if (prevList.length === 0 && nextList.length === 0) return;
-      hasAdj = true;
-
-      const prevHtml = prevList
-        .map(id => STATIONS[id] ? `<span class="adj-link" data-id="${id}">${getStationUiName(STATIONS[id])}</span>` : '')
-        .filter(Boolean)
-        .join('・');
-
-      const nextHtml = nextList
-        .map(id => STATIONS[id] ? `<span class="adj-link" data-id="${id}">${getStationUiName(STATIONS[id])}</span>` : '')
-        .filter(Boolean)
-        .join('・');
-
-      const row = document.createElement('div');
-      row.className = 'adj-row';
-      row.innerHTML = `
-        <span style="color:${line.color};font-weight:700;">${line.name}</span>
-        <div>
-          ${prevHtml ? `← ${prevHtml}` : ''}
-          ${prevHtml && nextHtml ? ' / ' : ''}
-          ${nextHtml ? `${nextHtml} →` : ''}
-        </div>
-      `;
-      row.querySelectorAll('.adj-link').forEach(link => {
-        link.addEventListener('click', (e) => {
-          const nextId = e.target.getAttribute('data-id');
-          if (nextId) selectStation(nextId);
-        });
+    if (linesContainer) {
+      linesContainer.innerHTML = '';
+      (st.lines || []).forEach(lId => {
+        const line = LINES.find(l => l.id === lId);
+        if (!line) return;
+        const badge = document.createElement('div');
+        badge.className = 'line-badge-item';
+        badge.style.background = line.color;
+        badge.style.color = line.textColor || '#fff';
+        badge.innerHTML = `${line.code ? `<span class="line-badge-code">${line.code}</span>` : ''} <span>${line.name}</span>`;
+        linesContainer.appendChild(badge);
       });
-      adjContainer.appendChild(row);
-    });
-
-    if (!hasAdj) {
-      adjContainer.innerHTML = '<span style="color:var(--text-muted);font-size:11px;">起点・終点または単独駅です</span>';
     }
 
-    sheet.style.display = 'block';
+    // 乗り入れ路線・隣接駅の統合一覧
+    const adjContainer = document.getElementById('sheet-adjacents');
+    if (adjContainer) {
+      adjContainer.innerHTML = '';
+      const adjInfo = adjacentIndex.get(stId) || {};
+      const stationLines = st.lines || [];
+
+      if (stationLines.length === 0) {
+        adjContainer.innerHTML = '<span class="adj-none" style="color:var(--text-muted);font-size:11px;">起点・終点または単独駅です</span>';
+      } else {
+        stationLines.forEach(lId => {
+          const line = LINES.find(l => l.id === lId);
+          if (!line) return;
+          const info = adjInfo[lId];
+
+          const prevList = info && Array.isArray(info.prev) ? info.prev : (info && info.prev ? [info.prev] : []);
+          const nextList = info && Array.isArray(info.next) ? info.next : (info && info.next ? [info.next] : []);
+
+          const isLoop = !!(line.isLoop || line.id === 'yamanote');
+
+          let linkContent = '';
+          if (prevList.length === 0 && nextList.length === 0) {
+            linkContent = '<span class="adj-none">単独区間</span>';
+          } else {
+            const prevHtml = prevList
+              .map(id => STATIONS[id] ? `<span class="adj-link" data-id="${id}">${getStationUiName(STATIONS[id])}</span>` : '')
+              .filter(Boolean)
+              .join('・');
+
+            const nextHtml = nextList
+              .map(id => STATIONS[id] ? `<span class="adj-link" data-id="${id}">${getStationUiName(STATIONS[id])}</span>` : '')
+              .filter(Boolean)
+              .join('・');
+
+            if (isLoop) {
+              if (prevHtml && nextHtml) {
+                linkContent = `← ${prevHtml} / ${nextHtml} →`;
+              } else if (prevHtml) {
+                linkContent = `← ${prevHtml}`;
+              } else if (nextHtml) {
+                linkContent = `${nextHtml} →`;
+              }
+            } else {
+              if (prevHtml && nextHtml) {
+                linkContent = `← ${prevHtml} / ${nextHtml} →`;
+              } else if (prevHtml) {
+                linkContent = `← ${prevHtml} <span class="adj-terminal">(終点)</span>`;
+              } else if (nextHtml) {
+                linkContent = `<span class="adj-terminal">(起点)</span> ${nextHtml} →`;
+              }
+            }
+          }
+
+          const row = document.createElement('div');
+          row.className = 'adj-row';
+          row.innerHTML = `
+            <span class="line-badge-item adj-line-badge" style="background:${line.color};color:${line.textColor || '#fff'};">
+              ${line.code ? `<span class="line-badge-code">${line.code}</span>` : ''}<span>${line.name}</span>
+            </span>
+            <div class="adj-stations">
+              ${linkContent}
+            </div>
+          `;
+
+          row.querySelectorAll('.adj-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+              const nextId = e.target.getAttribute('data-id');
+              if (nextId) selectStation(nextId, true, { preserveExpanded: true });
+            });
+          });
+          adjContainer.appendChild(row);
+        });
+      }
+    }
+
+    updateSelectedStationHighlight(stId, st);
+
     if (window.innerWidth <= 768) {
-      sheet.classList.add('is-collapsed');
+      // 1. スマホ幅: visibility: hidden で即時配置しレイアウトを同期確定
+      sheet.style.transition = 'none';
+      sheet.style.visibility = 'hidden';
+      sheet.style.display = 'flex';
+      sheet.style.transform = 'translateY(0px)';
+
+      // 2. 同期的に計測
+      const sheetRect = sheet.getBoundingClientRect();
+      const header = sheet.querySelector('.sheet-header');
+      const headerRect = header ? header.getBoundingClientRect() : null;
+      const peekVisibleHeight = headerRect ? Math.round(headerRect.bottom - sheetRect.top) : 165;
+      const peekY = Math.max(0, Math.round(sheetRect.height - peekVisibleHeight));
+      sheet.dataset.peekY = peekY;
+
+      // 3. 展開維持 (preserveExpanded) かどうかの判定
+      const keepExpanded = (options && options.preserveExpanded === true) &&
+                           sheet.classList.contains('is-expanded');
+
+      const targetY = keepExpanded ? 0 : peekY;
+      sheet.style.transform = `translateY(${targetY}px)`;
+      sheet.dataset.currentY = targetY;
+
+      if (keepExpanded) {
+        sheet.classList.add('is-expanded');
+        sheet.classList.remove('is-peek');
+      } else {
+        sheet.classList.add('is-peek');
+        sheet.classList.remove('is-expanded');
+      }
+
+      // 4. 可視化
+      sheet.style.visibility = 'visible';
     } else {
-      sheet.classList.remove('is-collapsed');
+      sheet.style.display = 'block';
+      sheet.style.visibility = 'visible';
+      sheet.style.transition = '';
+      sheet.style.transform = '';
+      sheet.classList.remove('is-peek', 'is-expanded');
     }
+
     updateStationMarkerSizes();
     updateLabelsVisibility();
+
+    // 5. カメラを可視領域中央へ移動 (シート位置・可視領域が確定した後に実行)
+    if (shouldPan) {
+      map.flyTo({
+        center: [st.lng, st.lat],
+        zoom: Math.max(map.getZoom(), 12.5),
+        offset: getStationCenterOffset(),
+        duration: 600
+      });
+    }
   }
 
   function closeStationSheet() {
     STATE.selectedStationId = null;
+    updateSelectedStationHighlight(null, null);
     const sheet = document.getElementById('station-sheet');
     if (sheet) {
       sheet.style.display = 'none';
-      sheet.classList.remove('is-collapsed');
+      sheet.style.transform = '';
+      sheet.style.transition = '';
+      sheet.classList.remove('is-peek', 'is-expanded');
     }
   }
 
@@ -2445,96 +2733,217 @@
     const sheet = document.getElementById('station-sheet');
     if (!sheet) return;
 
-    let touchStartY = 0;
-    let touchStartX = 0;
-    let touchStartTime = 0;
-    let isSwiping = false;
+    let isDragging = false;
+    let startY = 0;
+    let startTranslateY = 0;
+    let lastY = 0;
+    let lastTime = 0;
+    let moved = false;
 
-    // タップで開閉トグル
-    function toggleSheet(e) {
-      if (window.innerWidth > 768) return;
-      if (e.target.closest('button') || e.target.closest('.adj-link')) return;
-      if (sheet.classList.contains('is-collapsed')) {
-        sheet.classList.remove('is-collapsed');
+    function snapTo(targetY) {
+      sheet.style.transition = 'transform 0.26s cubic-bezier(0.22, 1, 0.36, 1)';
+      sheet.style.transform = `translateY(${targetY}px)`;
+      sheet.dataset.currentY = targetY;
+      if (targetY === 0) {
+        sheet.classList.add('is-expanded');
+        sheet.classList.remove('is-peek');
       } else {
-        sheet.classList.add('is-collapsed');
+        sheet.classList.add('is-peek');
+        sheet.classList.remove('is-expanded');
       }
     }
 
-    const header = sheet.querySelector('.sheet-header');
-    const handle = document.getElementById('sheet-handle');
-    const hint = document.getElementById('sheet-peek-hint');
-
-    [handle, hint].forEach(el => {
-      if (el) el.addEventListener('click', toggleSheet);
-    });
-    if (header) {
-      header.addEventListener('click', toggleSheet);
-    }
-
-    // タッチスワイプ操作
     function onTouchStart(e) {
       if (window.innerWidth > 768) return;
       if (e.touches.length !== 1) return;
       if (e.target.closest('button') || e.target.closest('.adj-link')) return;
+
+      const touch = e.touches[0];
+      startY = touch.clientY;
+      lastY = touch.clientY;
+      lastTime = performance.now();
+      moved = false;
+
+      const peekY = parseFloat(sheet.dataset.peekY) || 200;
+      let curY = parseFloat(sheet.dataset.currentY);
+      if (isNaN(curY)) {
+        curY = peekY;
+      }
+      startTranslateY = curY;
+      sheet.style.transition = 'none';
+      isDragging = true;
+    }
+
+    function onTouchMove(e) {
+      if (!isDragging || window.innerWidth > 768) return;
+      const touch = e.touches[0];
+      const deltaY = touch.clientY - startY;
+      if (Math.abs(deltaY) > 6) {
+        moved = true;
+      }
+
+      const peekY = parseFloat(sheet.dataset.peekY) || 200;
+      let nextY = startTranslateY + deltaY;
+      nextY = Math.max(0, Math.min(peekY, nextY));
+
+      sheet.style.transform = `translateY(${nextY}px)`;
+      sheet.dataset.currentY = nextY;
+
+      lastY = touch.clientY;
+      lastTime = performance.now();
+
+      if (e.cancelable) e.preventDefault();
+    }
+
+    function onTouchEnd(e) {
+      if (!isDragging || window.innerWidth > 768) return;
+      isDragging = false;
+
+      const peekY = parseFloat(sheet.dataset.peekY) || 200;
+      const curY = parseFloat(sheet.dataset.currentY) || 0;
+
+      // タップ判定 (移動量 < 8px)
+      if (!moved) {
+        if (curY >= peekY * 0.5) {
+          snapTo(0);
+        } else {
+          snapTo(peekY);
+        }
+        return;
+      }
+
+      // スワイプ速度 (フリック) 判定
+      const endY = e.changedTouches[0] ? e.changedTouches[0].clientY : lastY;
+      const elapsed = Math.max(1, performance.now() - lastTime);
+      const velocity = (endY - lastY) / elapsed; // px/ms
+
+      if (velocity < -0.3) {
+        // 高速上スワイプ -> Expanded
+        snapTo(0);
+      } else if (velocity > 0.3) {
+        // 高速下スワイプ -> Peek
+        snapTo(peekY);
+      } else {
+        // 位置判定 (50% 閾値)
+        if (curY < peekY * 0.5) {
+          snapTo(0);
+        } else {
+          snapTo(peekY);
+        }
+      }
+    }
+
+    const topBar = document.getElementById('sheet-top-bar');
+    const header = sheet.querySelector('.sheet-header');
+    const handle = document.getElementById('sheet-handle');
+
+    [topBar, header, handle].forEach(el => {
+      if (!el) return;
+      el.addEventListener('touchstart', onTouchStart, { passive: true });
+      el.addEventListener('touchmove', onTouchMove, { passive: false });
+      el.addEventListener('touchend', onTouchEnd, { passive: false });
+      el.addEventListener('touchcancel', () => {
+        if (isDragging) {
+          isDragging = false;
+          const peekY = parseFloat(sheet.dataset.peekY) || 200;
+          snapTo(peekY);
+        }
+      });
+    });
+  }
+
+  // =======================================================
+  // スマホ経路検索ボトムシート (ハーフ/フル展開 & サマリーバー操作)
+  // =======================================================
+  function setupRouteSheetMobileInteractions() {
+    const panel = document.getElementById('route-panel');
+    const handle = document.getElementById('route-sheet-handle');
+    const summaryBar = document.getElementById('route-mobile-summary-bar');
+    const btnModify = document.getElementById('btn-route-modify');
+    const btnSummaryClear = document.getElementById('btn-route-summary-clear');
+
+    if (!panel) return;
+
+    if (btnModify) {
+      btnModify.addEventListener('click', (e) => {
+        e.stopPropagation();
+        panel.classList.add('is-editing');
+      });
+    }
+
+    if (btnSummaryClear) {
+      btnSummaryClear.addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearRouteEngineUI();
+      });
+    }
+
+    function toggleRouteSheetHeight() {
+      if (!panel.classList.contains('has-result') || panel.classList.contains('is-editing')) return;
+      if (panel.classList.contains('mobile-sheet-full')) {
+        panel.classList.remove('mobile-sheet-full');
+        panel.classList.add('mobile-sheet-half');
+      } else {
+        panel.classList.remove('mobile-sheet-half');
+        panel.classList.add('mobile-sheet-full');
+      }
+    }
+
+    let touchStartY = 0;
+    let isSwiping = false;
+
+    function onTouchStart(e) {
+      if (window.innerWidth > 768) return;
+      if (!panel.classList.contains('has-result') || panel.classList.contains('is-editing')) return;
+      if (e.target.closest('button')) return;
+      if (e.touches.length !== 1) return;
       touchStartY = e.touches[0].clientY;
-      touchStartX = e.touches[0].clientX;
-      touchStartTime = Date.now();
       isSwiping = true;
     }
 
     function onTouchMove(e) {
       if (!isSwiping || window.innerWidth > 768) return;
       const curY = e.touches[0].clientY;
-      const curX = e.touches[0].clientX;
       const diffY = curY - touchStartY;
-      const diffX = curX - touchStartX;
-
-      // 縦方向の動きが大きい場合、地図ドラッグ・スクロールを抑止
-      if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 6) {
-        if (e.cancelable) e.preventDefault();
+      if (Math.abs(diffY) > 6 && e.cancelable) {
+        e.preventDefault();
       }
     }
 
     function onTouchEnd(e) {
       if (!isSwiping || window.innerWidth > 768) return;
       isSwiping = false;
-      const endY = e.changedTouches[0].clientY;
-      const endX = e.changedTouches[0].clientX;
+      const endY = e.changedTouches[0] ? e.changedTouches[0].clientY : touchStartY;
       const diffY = endY - touchStartY;
-      const diffX = endX - touchStartX;
 
-      // スワイプ判定 (縦移動 30px 以上、かつ横移動より大きい)
-      if (Math.abs(diffY) >= 30 && Math.abs(diffY) > Math.abs(diffX)) {
-        if (diffY < 0) {
-          // 上スワイプ: 展開
-          sheet.classList.remove('is-collapsed');
-        } else {
-          // 下スワイプ
-          if (sheet.classList.contains('is-collapsed')) {
-            // Peek 状態でさらに下スワイプ -> 閉じる
-            closeStationSheet();
-          } else {
-            // 展開状態から下スワイプ -> Peek に戻る
-            sheet.classList.add('is-collapsed');
-          }
-        }
-        if (e.cancelable) e.preventDefault();
+      if (Math.abs(diffY) < 8) {
+        toggleRouteSheetHeight();
+      } else if (diffY < -30) {
+        panel.classList.remove('mobile-sheet-half');
+        panel.classList.add('mobile-sheet-full');
+      } else if (diffY > 30) {
+        panel.classList.remove('mobile-sheet-full');
+        panel.classList.add('mobile-sheet-half');
       }
     }
 
-    [handle, header, hint].forEach(el => {
-      if (el) {
-        el.addEventListener('touchstart', onTouchStart, { passive: true });
-        el.addEventListener('touchmove', onTouchMove, { passive: false });
-        el.addEventListener('touchend', onTouchEnd, { passive: false });
-      }
+    [handle, summaryBar].forEach(el => {
+      if (!el) return;
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('button')) return;
+        toggleRouteSheetHeight();
+      });
+      el.addEventListener('touchstart', onTouchStart, { passive: true });
+      el.addEventListener('touchmove', onTouchMove, { passive: false });
+      el.addEventListener('touchend', onTouchEnd, { passive: false });
     });
   }
 
   function setupEventHandlers() {
     setupSearch();
     setupStationSheetMobileInteractions();
+    setupRouteSheetMobileInteractions();
+    updateSearchPlaceholder();
 
     document.getElementById('btn-zoom-in').addEventListener('click', () => {
       map.zoomIn();
@@ -2552,7 +2961,13 @@
     document.getElementById('btn-focus-station').addEventListener('click', () => {
       if (STATE.selectedStationId) {
         const st = STATIONS[STATE.selectedStationId];
-        if (st) map.easeTo({ center: [st.lng, st.lat], duration: 400 });
+        if (st) {
+          map.easeTo({
+            center: [st.lng, st.lat],
+            offset: getStationCenterOffset(),
+            duration: 400
+          });
+        }
       }
     });
 
@@ -2561,6 +2976,26 @@
     window.addEventListener('resize', () => {
       updateLabelsVisibility();
       updateResponsiveLayerZooms();
+      updateSearchPlaceholder();
+      const sheet = document.getElementById('station-sheet');
+      if (sheet && sheet.style.display !== 'none') {
+        if (window.innerWidth <= 768) {
+          const sheetHeight = sheet.offsetHeight || sheet.getBoundingClientRect().height;
+          const header = sheet.querySelector('.sheet-header');
+          const sheetRect = sheet.getBoundingClientRect();
+          const headerRect = header ? header.getBoundingClientRect() : null;
+          const peekVisibleHeight = headerRect ? Math.round(headerRect.bottom - sheetRect.top) : 165;
+          const peekY = Math.max(0, sheetHeight - peekVisibleHeight);
+          sheet.dataset.peekY = peekY;
+          if (sheet.classList.contains('is-peek')) {
+            sheet.style.transform = `translateY(${peekY}px)`;
+            sheet.dataset.currentY = peekY;
+          }
+        } else {
+          sheet.style.transform = '';
+          sheet.style.transition = '';
+        }
+      }
     });
   }
 
@@ -3642,6 +4077,11 @@
 
     if (closeBtn) {
       closeBtn.addEventListener('click', () => {
+        const panel = document.getElementById('route-panel');
+        if (panel && panel.classList.contains('is-editing') && panel.classList.contains('has-result')) {
+          panel.classList.remove('is-editing');
+          return;
+        }
         toggleRoutePanel(false);
       });
     }
@@ -4851,6 +5291,28 @@
 
     resultContainer.style.display = 'block';
 
+    // スマホ結果表示モード (ボトムシート Half 展開 & サマリーバー更新)
+    const routePanel = document.getElementById('route-panel');
+    if (routePanel) {
+      if (window.innerWidth <= 768) {
+        routePanel.classList.add('has-result', 'mobile-sheet-half');
+        routePanel.classList.remove('mobile-sheet-full', 'is-editing');
+        const summaryText = document.getElementById('route-summary-text');
+        if (summaryText) {
+          const viaNames = viaStIds.map(id => STATIONS[id] ? getStationUiName(STATIONS[id]) : '').filter(Boolean);
+          let text = `${getStationUiName(deptSt)} → `;
+          if (viaNames.length > 0) {
+            text += `(${viaNames.join('・')}) → `;
+          }
+          text += getStationUiName(destSt);
+          summaryText.textContent = text;
+          summaryText.title = text;
+        }
+      } else {
+        routePanel.classList.remove('has-result', 'mobile-sheet-half', 'mobile-sheet-full', 'is-editing');
+      }
+    }
+
     // 地図上にハイライト描画
     drawRouteOnMap(result);
 
@@ -4935,6 +5397,11 @@
         b.classList.remove('active');
       }
     });
+
+    const routePanel = document.getElementById('route-panel');
+    if (routePanel) {
+      routePanel.classList.remove('has-result', 'mobile-sheet-half', 'mobile-sheet-full', 'is-editing');
+    }
 
     clearRouteMapLayers();
     setSearchButtonEnabled(true);
@@ -5222,6 +5689,7 @@
       getRouteState: () => ROUTE_STATE,
       getState: () => STATE,
       selectStation,
+      getAdjacentIndex: () => adjacentIndex,
       selectLine,
       closeLineBanner,
       getStationEnName,
