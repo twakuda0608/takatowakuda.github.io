@@ -594,7 +594,7 @@
       detourLineIds: new Set(['tohoku-main', 'yamanote', 'keihin-tohoku']),
       shortcutLineId: 'tohoku-main',
       shortcutKm: 7.4,
-      detourKm: 7.4
+      detourKm: 7.6
     }
   ];
 

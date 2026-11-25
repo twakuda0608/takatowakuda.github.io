@@ -193,6 +193,19 @@
     "hokkaido-hakodate-sawara": {"大沼":0,"st-fred":0,"鹿部":14.6,"st-rr61":14.6,"渡島沼尻":20.4,"st-ea73qs":20.4,"渡島砂原":25.3,"st-ea8z2q":25.3,"掛澗":29,"st-hjz0":29,"尾白内":31.9,"st-e2zqe":31.9,"東森":33.5,"st-i659":33.5,"森":35.3,"st-kq6":35.3}
   };
 
+  const OFFICIAL_EDGE_DISTANCES = {
+    "tohoku-main": {
+      "nippori-oku": 2.6,
+      "oku-nippori": 2.6,
+      "日暮里-尾久": 2.6,
+      "尾久-日暮里": 2.6,
+      "oku-akabane": 5.0,
+      "akabane-oku": 5.0,
+      "尾久-赤羽": 5.0,
+      "赤羽-尾久": 5.0
+    }
+  };
+
   function applyOfficialKilos(lines) {
     if (!lines) return;
     lines.forEach(line => {
@@ -200,11 +213,16 @@
       if (official) {
         line.stationKilos = official;
       }
+      const edgeDists = OFFICIAL_EDGE_DISTANCES[line.id];
+      if (edgeDists) {
+        line.edgeDistances = Object.assign({}, line.edgeDistances || {}, edgeDists);
+      }
     });
   }
 
   if (typeof window !== "undefined") {
     window.JR_OFFICIAL_KILOS = OFFICIAL_STATION_KILOS;
+    window.JR_OFFICIAL_EDGE_DISTANCES = OFFICIAL_EDGE_DISTANCES;
     window.applyOfficialKilos = applyOfficialKilos;
     if (window.JR_LINES) {
       applyOfficialKilos(window.JR_LINES);
@@ -215,6 +233,7 @@
     module.exports = {
       OFFICIAL_STATION_KILOS,
       BATCH1_STATION_KILOS: OFFICIAL_STATION_KILOS,
+      OFFICIAL_EDGE_DISTANCES,
       applyOfficialKilos
     };
   }

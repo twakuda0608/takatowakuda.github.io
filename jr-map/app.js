@@ -631,6 +631,9 @@
       // 3. 駅・ピンにヒットしなかった場合は余白クリックとしてシートおよび路線バナーを閉じる（路線クリック誤爆なし）
       closeStationSheet();
       closeLineBanner();
+      if (ROUTE_STATE.selectedSectionIdx !== -1) {
+        clearSectionHighlight();
+      }
     });
 
     // カーソル & ホバーツールチップ (全駅ドット & 全駅名ラベル)
@@ -1697,6 +1700,66 @@
           "line-opacity": 0.95
         }
       });
+
+      // --- D-2. 選択路線区間専用ハイライトレイヤーの準備 ---
+      if (!map.getSource("route-section-focus-source")) {
+        map.addSource("route-section-focus-source", {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: []
+          }
+        });
+
+        map.addLayer({
+          id: "route-section-focus-glow",
+          type: "line",
+          source: "route-section-focus-source",
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-color": "#fb923c",
+            "line-width": 20,
+            "line-blur": 6,
+            "line-opacity": 0.75
+          }
+        });
+
+        map.addLayer({
+          id: "route-section-focus-casing",
+          type: "line",
+          source: "route-section-focus-source",
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-color": "#ffffff",
+            "line-width": 13,
+            "line-opacity": 0.95
+          }
+        });
+
+        map.addLayer({
+          id: "route-section-focus-core",
+          type: "line",
+          source: "route-section-focus-source",
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-color": "#ea580c",
+            "line-width": 8,
+            "line-opacity": 1.0
+          }
+        });
+
+        map.addLayer({
+          id: "route-section-focus-shine",
+          type: "line",
+          source: "route-section-focus-source",
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-color": "#ffedd5",
+            "line-width": 2.5,
+            "line-opacity": 0.9
+          }
+        });
+      }
     }
 
     // --- E. 発・経由・着ピン WebGL レイヤーの準備 ---
@@ -3319,6 +3382,7 @@
     setupSearch();
     setupStationSheetMobileInteractions();
     setupRouteSheetMobileInteractions();
+    setupTicketViaTooltipInteractions();
     initAreaPresetMenu();
     updateSearchPlaceholder();
 
@@ -3404,6 +3468,8 @@
     activeRouteLayers: [],
     activePinLayers: [],
     lastResult: null,
+    selectedSectionIdx: -1, // 選択・強調表示中の路線区間インデックス
+    sectionFocusMarkers: [], // 強調表示中の始終点マーカー配列
     currentFareType: 'adult',    // 'adult' | 'child' | 'student'
     ticketDate: getLocalISODate()
   };
@@ -5036,14 +5102,111 @@
     const clientW = row.clientWidth;
     const scrollW = row.scrollWidth;
     if (scrollW > clientW && clientW > 0) {
-      const scale = Math.max(0.65, (clientW - 4) / scrollW);
+      const scale = Math.max(0.55, (clientW - 4) / scrollW);
       row.style.transform = `scaleX(${scale.toFixed(3)})`;
       row.style.transformOrigin = 'center center';
     }
   }
 
-  function fitTicketViaWidth() {
+  // マルス券面「経由」全文ツールチップ制御
+  function getOrCreateTicketViaTooltip() {
+    let tooltip = document.getElementById('ticket-via-tooltip');
+    if (!tooltip) {
+      tooltip = document.createElement('div');
+      tooltip.id = 'ticket-via-tooltip';
+      tooltip.className = 'ticket-via-tooltip';
+      document.body.appendChild(tooltip);
+    }
+    return tooltip;
+  }
+
+  function showTicketViaTooltip(viaRow) {
+    if (!viaRow || !viaRow.classList.contains('is-truncated')) return;
+    const text = viaRow.getAttribute('data-full-via');
+    if (!text) return;
+
+    const tooltip = getOrCreateTicketViaTooltip();
+    tooltip.textContent = text;
+    tooltip.style.display = 'block';
+    tooltip.style.visibility = 'hidden';
+
+    const rect = viaRow.getBoundingClientRect();
+    const tooltipWidth = tooltip.offsetWidth;
+    const tooltipHeight = tooltip.offsetHeight;
+
+    let left = rect.left + rect.width / 2 - tooltipWidth / 2;
+    left = Math.max(12, Math.min(window.innerWidth - tooltipWidth - 12, left));
+
+    let top = rect.top - tooltipHeight - 8;
+    // 画面上端に近ければ直下へ配置
+    if (top < 12) {
+      top = rect.bottom + 8;
+    }
+
+    tooltip.style.left = `${Math.round(left)}px`;
+    tooltip.style.top = `${Math.round(top)}px`;
+    tooltip.style.visibility = '';
+    tooltip.classList.add('is-visible');
+  }
+
+  function hideTicketViaTooltip() {
+    const tooltip = document.getElementById('ticket-via-tooltip');
+    if (tooltip) {
+      tooltip.classList.remove('is-visible');
+      tooltip.style.display = 'none';
+    }
+  }
+
+  function toggleTicketViaTooltip(viaRow) {
+    const tooltip = document.getElementById('ticket-via-tooltip');
+    if (tooltip && tooltip.classList.contains('is-visible')) {
+      hideTicketViaTooltip();
+    } else {
+      showTicketViaTooltip(viaRow);
+    }
+  }
+
+  function setupTicketViaTooltipInteractions() {
     const viaRow = document.getElementById('ticket-via-row');
+    if (!viaRow) return;
+
+    // PC: ホバーで即時表示
+    viaRow.addEventListener('mouseenter', () => {
+      if (viaRow.classList.contains('is-truncated')) {
+        showTicketViaTooltip(viaRow);
+      }
+    });
+    viaRow.addEventListener('mouseleave', () => {
+      hideTicketViaTooltip();
+    });
+
+    // スマホ / クリック: タップで開閉
+    viaRow.addEventListener('click', (e) => {
+      if (viaRow.classList.contains('is-truncated')) {
+        e.stopPropagation();
+        toggleTicketViaTooltip(viaRow);
+      }
+    });
+
+    // 画面外タップ / クリックで閉じる
+    document.addEventListener('pointerdown', (e) => {
+      if (!viaRow.contains(e.target)) {
+        hideTicketViaTooltip();
+      }
+    });
+
+    // 親パネルスクロールやウィンドウ操作時に即座に閉じる
+    const panelBody = document.querySelector('.route-panel-body');
+    if (panelBody) {
+      panelBody.addEventListener('scroll', hideTicketViaTooltip, { passive: true });
+    }
+    window.addEventListener('scroll', hideTicketViaTooltip, { passive: true });
+    window.addEventListener('resize', hideTicketViaTooltip, { passive: true });
+  }
+
+  function fitTicketViaWidth(fullViaString) {
+    const viaRow = document.getElementById('ticket-via-row');
+    const viaTextEl = document.getElementById('ticket-via-text');
     if (!viaRow) return;
     viaRow.style.fontSize = '';
     const clientW = viaRow.clientWidth;
@@ -5058,6 +5221,26 @@
         viaRow.style.fontSize = `${targetFont.toFixed(1)}px`;
       }
     }
+
+    // ネイティブ title 属性は二重表示防止のため除去
+    viaRow.removeAttribute('title');
+    if (viaTextEl) viaTextEl.removeAttribute('title');
+
+    // レンダリング・フォント反映後に正確に省略有無を計測
+    requestAnimationFrame(() => {
+      const isTruncated = (viaRow.scrollWidth > viaRow.clientWidth + 1) ||
+                          (viaTextEl && viaTextEl.scrollWidth > viaTextEl.clientWidth + 1);
+      if (isTruncated) {
+        viaRow.classList.add('is-truncated');
+        const rawText = fullViaString || (ROUTE_STATE.lastResult && ROUTE_STATE.lastResult.marsString) || (viaTextEl ? viaTextEl.textContent : '') || '';
+        const fullVia = rawText.startsWith('経由：') ? rawText : `経由：${rawText}`;
+        viaRow.setAttribute('data-full-via', fullVia);
+      } else {
+        viaRow.classList.remove('is-truncated');
+        viaRow.removeAttribute('data-full-via');
+        hideTicketViaTooltip();
+      }
+    });
   }
 
   // 本格マルス券面 & 内訳カードの描画
@@ -5106,8 +5289,9 @@
     // 4. 経由印字
     const viaTextEl = document.getElementById('ticket-via-text');
     if (viaTextEl) {
-      viaTextEl.textContent = result.marsString || '(直通)';
-      fitTicketViaWidth();
+      const marsStr = result.marsString || '(直通)';
+      viaTextEl.textContent = marsStr;
+      fitTicketViaWidth(marsStr);
     }
 
     // 5. 運賃計算とバッジ表示（大人・小児・学割）
@@ -5415,6 +5599,7 @@
         }, 50);
       }
     } else {
+      hideTicketViaTooltip();
       panel.style.display = 'none';
       panel.style.transform = '';
       panel.style.transition = '';
@@ -5562,12 +5747,44 @@
             }
           }
         }
-      } else if (e.key === 'Tab') {
-        if (isDropdownOpen && selectedIndex >= 0 && selectedIndex < currentMatches.length) {
-          const targetSt = currentMatches[selectedIndex];
+      } else if (e.key === 'Tab' && !e.shiftKey) {
+        if (isDropdownOpen && currentMatches.length > 0) {
+          const targetSt = (selectedIndex >= 0 && selectedIndex < currentMatches.length)
+            ? currentMatches[selectedIndex]
+            : currentMatches[0];
           onSelectCallback(targetSt);
           dropdownEl.style.display = 'none';
-          // Tabのデフォルト挙動により次の入力欄へ自然にフォーカス移動する
+        }
+
+        // 経由駅入力欄の場合の Tab 連続追加・フォーカス制御
+        if (inputEl.classList.contains('route-via-input')) {
+          e.preventDefault();
+          const viaInputs = Array.from(document.querySelectorAll('.route-via-input'));
+          const destInput = document.getElementById('route-dest-input');
+          const isFilled = !!(inputEl.getAttribute('data-id') || inputEl.value.trim());
+
+          if (isFilled) {
+            const currentIdx = viaInputs.indexOf(inputEl);
+            if (currentIdx === viaInputs.length - 1) {
+              // 最後の経由駅欄であれば、新規経由駅欄を自動追加して即座に focus
+              const newRow = addViaStationRow();
+              markInputChanged();
+              if (newRow) {
+                const nextInput = newRow.querySelector('.route-via-input');
+                if (nextInput) nextInput.focus();
+              }
+            } else if (currentIdx >= 0 && currentIdx < viaInputs.length - 1) {
+              // 次の経由駅欄が既に存在する場合、削除ボタン等を飛ばして次の経由駅 input へ focus
+              viaInputs[currentIdx + 1].focus();
+            } else if (destInput) {
+              destInput.focus();
+            }
+          } else {
+            // 空のまま Tab を押した場合: 新規追加せず着駅入力欄へスムーズに移動
+            if (destInput) {
+              destInput.focus();
+            }
+          }
         }
       } else if (e.key === 'Escape') {
         if (isDropdownOpen) {
@@ -5871,12 +6088,11 @@
     // 区間一覧を描画
     const sectionsList = document.getElementById('route-sections-list');
     sectionsList.innerHTML = '';
-    result.sections.forEach((sec) => {
+    result.sections.forEach((sec, secIdx) => {
       const item = document.createElement('div');
       const isDup = sec.isDuplicate;
       item.className = 'route-section-item' + (isDup ? ' is-duplicate' : '');
-      item.style.cursor = 'pointer';
-      item.title = isDup ? 'クリックで重複区間へ移動' : 'クリックでこの区間を表示';
+      item.title = 'クリックでこの区間を地図上で強調表示';
 
       item.innerHTML = `
         <div class="route-section-bar" style="background:${isDup ? '#dc2626' : (sec.lineColor || '#0284c7')};"></div>
@@ -5891,25 +6107,7 @@
       `;
 
       item.addEventListener('click', () => {
-        if (isDup && result.duplicatePolylines && result.duplicatePolylines.length > 0) {
-          focusDuplicateSections(result);
-          return;
-        }
-        if (sec.stations && sec.stations.length > 0) {
-          let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
-          sec.stations.forEach(id => {
-            const st = STATIONS[id];
-            if (st) {
-              if (st.lng < minLng) minLng = st.lng;
-              if (st.lng > maxLng) maxLng = st.lng;
-              if (st.lat < minLat) minLat = st.lat;
-              if (st.lat > maxLat) maxLat = st.lat;
-            }
-          });
-          if (minLng !== Infinity && map) {
-            map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: getVisibleMapPadding(60), maxZoom: 13, duration: 800 });
-          }
-        }
+        highlightRouteSection(secIdx);
       });
       sectionsList.appendChild(item);
     });
@@ -6007,7 +6205,12 @@
     const stationsRow = document.getElementById('ticket-stations-row');
     if (stationsRow) stationsRow.style.transform = 'none';
     const viaRow = document.getElementById('ticket-via-row');
-    if (viaRow) viaRow.style.fontSize = '';
+    if (viaRow) {
+      viaRow.style.fontSize = '';
+      viaRow.classList.remove('is-truncated');
+      viaRow.removeAttribute('data-full-via');
+    }
+    hideTicketViaTooltip();
     const ruleTags = document.getElementById('rule-tags-container');
     if (ruleTags) ruleTags.innerHTML = '';
 
@@ -6064,6 +6267,7 @@
   }
 
   function clearRouteMapLayers() {
+    clearSectionHighlight();
     ROUTE_STATE.lastResult = null;
 
     // 経路ハイライト GeoJSON をクリア
@@ -6086,6 +6290,177 @@
 
     // 地図の通常スタイルおよび駅マーカーを復元
     resetAllMapStyles();
+  }
+
+  // 全体ルートレイヤーの透明度制御 (区間強調時は薄く減光)
+  function setRouteLayersDimmed(dimmed) {
+    if (!map) return;
+    const opGlow = dimmed ? 0.18 : 0.7;
+    const opCore = dimmed ? 0.28 : 1.0;
+    const opShine = dimmed ? 0.22 : 0.95;
+    const opShinkansenGlow = dimmed ? 0.18 : 0.75;
+    const opDuplicateGlow = dimmed ? 0.20 : 0.8;
+
+    const layerMap = [
+      { id: 'route-glow', op: opGlow },
+      { id: 'route-core', op: opCore },
+      { id: 'route-shine', op: opShine },
+      { id: 'route-shinkansen-glow', op: opShinkansenGlow },
+      { id: 'route-shinkansen-core', op: opCore },
+      { id: 'route-shinkansen-stripe', op: opShine },
+      { id: 'route-duplicate-glow', op: opDuplicateGlow },
+      { id: 'route-duplicate-core', op: opCore },
+      { id: 'route-duplicate-stripe', op: opShine }
+    ];
+
+    layerMap.forEach(({ id, op }) => {
+      if (map.getLayer(id)) {
+        map.setPaintProperty(id, 'line-opacity', op);
+      }
+    });
+  }
+
+  // 選択路線区間の強調ハイライト解除
+  function clearSectionHighlight() {
+    ROUTE_STATE.selectedSectionIdx = -1;
+
+    // 全体ルートの透明度を元に戻す
+    setRouteLayersDimmed(false);
+
+    // 強調ハイライト GeoJSON をクリア
+    const focusSource = map && map.getSource('route-section-focus-source');
+    if (focusSource) {
+      focusSource.setData({
+        type: 'FeatureCollection',
+        features: []
+      });
+    }
+
+    // 始終点マーカーをクリア
+    if (ROUTE_STATE.sectionFocusMarkers && ROUTE_STATE.sectionFocusMarkers.length > 0) {
+      ROUTE_STATE.sectionFocusMarkers.forEach(m => {
+        try { m.remove(); } catch (e) {}
+      });
+      ROUTE_STATE.sectionFocusMarkers = [];
+    }
+
+    // カードの選択状態・バッジを除去
+    const items = document.querySelectorAll('.route-section-item');
+    items.forEach(item => {
+      item.classList.remove('is-selected');
+      const badge = item.querySelector('.section-focus-badge');
+      if (badge) badge.remove();
+    });
+  }
+
+  // 選択路線区間の強調ハイライト表示
+  function highlightRouteSection(secIdx) {
+    if (!map || !ROUTE_STATE.lastResult) return;
+    const result = ROUTE_STATE.lastResult;
+    const sections = result.sections || [];
+    const sec = sections[secIdx];
+    if (!sec) return;
+
+    // 同じカードをクリックした場合は解除 (トグル操作)
+    if (ROUTE_STATE.selectedSectionIdx === secIdx) {
+      clearSectionHighlight();
+      return;
+    }
+
+    // まず前回の選択をクリア
+    clearSectionHighlight();
+    ROUTE_STATE.selectedSectionIdx = secIdx;
+
+    // 1. 全体ルートハイライト層を減光
+    setRouteLayersDimmed(true);
+
+    // 2. リストカードの見た目を更新 (is-selected 付与 & 強調表示中バッジ)
+    const items = document.querySelectorAll('.route-section-item');
+    if (items[secIdx]) {
+      items[secIdx].classList.add('is-selected');
+      const lineNameEl = items[secIdx].querySelector('.route-section-line-name');
+      if (lineNameEl && !lineNameEl.querySelector('.section-focus-badge')) {
+        const badge = document.createElement('span');
+        badge.className = 'section-focus-badge';
+        badge.textContent = '強調表示中';
+        lineNameEl.appendChild(badge);
+      }
+      items[secIdx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
+    // 3. 該当区間の実線路ポリライン座標の取得 & GeoJSON 描画
+    let coords = [];
+    if (sec.coords && sec.coords.length >= 2) {
+      coords = sec.coords.map(pt => [pt[1], pt[0]]);
+    } else if (sec.stations && sec.stations.length >= 2) {
+      sec.stations.forEach(stId => {
+        const st = STATIONS[stId];
+        if (st) coords.push([st.lng, st.lat]);
+      });
+    }
+
+    const focusSource = map.getSource('route-section-focus-source');
+    if (focusSource && coords.length >= 2) {
+      focusSource.setData({
+        type: 'FeatureCollection',
+        features: [{
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'LineString',
+            coordinates: coords
+          }
+        }]
+      });
+    }
+
+    // 4. 始点駅・終点駅の専用マーカー＋駅名ラベル (オレンジドット＋白枠ピルラベル)
+    const endpointIds = [sec.from, sec.to].filter(Boolean);
+    endpointIds.forEach((stId) => {
+      const st = STATIONS[stId];
+      if (!st) return;
+
+      const el = document.createElement('div');
+      el.className = 'section-endpoint-marker';
+      el.innerHTML = `
+        <div class="section-endpoint-dot"></div>
+        <div class="section-endpoint-pill">${getStationUiName(st)}</div>
+      `;
+
+      try {
+        const marker = new maplibregl.Marker({
+          element: el,
+          anchor: 'bottom'
+        })
+        .setLngLat([st.lng, st.lat])
+        .addTo(map);
+
+        ROUTE_STATE.sectionFocusMarkers.push(marker);
+      } catch (e) {
+        console.warn('Marker creation failed:', e);
+      }
+    });
+
+    // 5. 該当区間のバウンディングボックスへ map.fitBounds でズーム & パン移動
+    const fitCoords = coords.length > 0 ? coords : endpointIds.map(id => [STATIONS[id].lng, STATIONS[id].lat]).filter(p => p[0] && p[1]);
+    if (fitCoords.length > 0) {
+      let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
+      fitCoords.forEach(pt => {
+        const lng = pt[0], lat = pt[1];
+        if (lng < minLng) minLng = lng;
+        if (lng > maxLng) maxLng = lng;
+        if (lat < minLat) minLat = lat;
+        if (lat > maxLat) maxLat = lat;
+      });
+
+      if (minLng !== Infinity) {
+        map.fitBounds([[minLng, minLat], [maxLng, maxLat]], {
+          padding: getVisibleMapPadding(60),
+          maxZoom: 14.5,
+          duration: 800
+        });
+      }
+    }
   }
 
   // 重複区間への自動フォーカス (ズーム & パン)
@@ -6124,6 +6499,7 @@
 
   function drawRouteOnMap(result) {
     if (!map) return;
+    clearSectionHighlight();
     if (!result || !result.geometryLatlngs || result.geometryLatlngs.length === 0) return;
 
     ROUTE_STATE.lastResult = result;
@@ -6310,10 +6686,14 @@
     window.JR_APP = {
       fitTicketRowWidth,
       fitTicketViaWidth,
+      showTicketViaTooltip,
+      hideTicketViaTooltip,
+      getOrCreateTicketViaTooltip,
       getMarsJimonDataUri,
       getStationCompanyKey,
       buildKanZaiMark,
       renderMarsTicket,
+      buildTicketCopyText,
       formatStationHtml,
       formatStationText,
       calcDirectShinkansenDistance,
@@ -6367,6 +6747,7 @@
       getStationCompanyKey,
       buildKanZaiMark,
       renderMarsTicket,
+      buildTicketCopyText,
       formatStationHtml,
       formatStationText,
       buildTicketCopyText,

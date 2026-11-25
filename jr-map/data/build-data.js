@@ -1055,16 +1055,6 @@
     "color": "#f15a22",
     "type": "local",
     "stations": [
-      "tokyo",
-      "kanda",
-      "ochanomizu",
-      "suidobashi",
-      "iidabashi",
-      "st-e0sqr",
-      "yotsuya",
-      "shinanomachi",
-      "st-b4u1sy",
-      "yoyogi",
       "shinjuku",
       "okubo",
       "higashi-nakano",
@@ -1124,6 +1114,19 @@
       "okaya",
       "st-6bjeqe",
       "shiojiri"
+    ],
+    "branches": [
+      [
+        "kanda",
+        "ochanomizu",
+        "suidobashi",
+        "iidabashi",
+        "st-e0sqr",
+        "yotsuya",
+        "shinanomachi",
+        "st-b4u1sy",
+        "yoyogi"
+      ]
     ],
     "en": "Chuo Main Line",
     "description": "東京〜甲府〜塩尻を結ぶ主要幹線"
@@ -7211,7 +7214,7 @@
         "st-ehsj"
       ],
       [
-        "ueno",
+        "nippori",
         "oku",
         "akabane"
       ]
@@ -7220,7 +7223,15 @@
     "description": "東京〜宇都宮〜仙台〜盛岡を結ぶ東北の大動脈",
     "edgeDistances": {
       "st-ck7h3-omiya": 1.6,
-      "北与野-大宮": 1.6
+      "北与野-大宮": 1.6,
+      "nippori-oku": 2.6,
+      "oku-nippori": 2.6,
+      "日暮里-尾久": 2.6,
+      "尾久-日暮里": 2.6,
+      "oku-akabane": 5.0,
+      "akabane-oku": 5.0,
+      "尾久-赤羽": 5.0,
+      "赤羽-尾久": 5.0
     }
   },
   {
@@ -33176,7 +33187,6 @@
     "lng": 139.76667,
     "pref": "東京都",
     "lines": [
-      "chuo-main",
       "tokaido",
       "keiyo",
       "tohoku-main",
@@ -46678,8 +46688,8 @@
     "name": "浅草橋",
     "kana": "あさくさばし",
     "en": "Asakusabashi",
-    "lat": 35.69683,
-    "lng": 139.78552,
+    "lat": 35.6974,
+    "lng": 139.786,
     "pref": "東京都",
     "lines": [
       "sobu-main"
@@ -50850,8 +50860,8 @@
     "name": "尾久",
     "kana": "おく",
     "en": "Oku",
-    "lat": 35.74688,
-    "lng": 139.75373,
+    "lat": 35.7468,
+    "lng": 139.7546,
     "pref": "東京都",
     "lines": [
       "tohoku-main"

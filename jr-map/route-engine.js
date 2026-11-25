@@ -1850,6 +1850,296 @@
     return CACHED_PARALLEL_EDGE_MAP;
   }
 
+  /**
+   * 実物マルス経由印字フォーマッタ (JRマルス券面印字仕様完全準拠)
+   * fareRules (特定都区市内・山手線内・第70条適用結果) 確定後に呼び出される
+   */
+  function buildMarsTicketViaString(lineRuns, fareRules, deptName, destName, stations, fullSegments, options = {}) {
+    if (!lineRuns || lineRuns.length === 0) {
+      return { marsFormatString: '(直通)', marsNamesList: ['(直通)'] };
+    }
+
+    let FareRulesDataLocal = null;
+    if (typeof window !== 'undefined' && window.JR_FARE_RULES_DATA) {
+      FareRulesDataLocal = window.JR_FARE_RULES_DATA;
+    } else if (typeof require !== 'undefined') {
+      try {
+        FareRulesDataLocal = require('./data/fare-rules-data.js');
+      } catch (e) {}
+    }
+
+    let FareEngineLocal = null;
+    if (typeof window !== 'undefined' && window.JR_FARE_ENGINE) {
+      FareEngineLocal = window.JR_FARE_ENGINE;
+    } else if (typeof require !== 'undefined') {
+      try {
+        FareEngineLocal = require('./fare-engine.js');
+      } catch (e) {}
+    }
+
+    const SPECIFIC_CITY_ZONES = (FareRulesDataLocal && FareRulesDataLocal.SPECIFIC_CITY_ZONES) || {};
+    const isStationInZone = (FareEngineLocal && FareEngineLocal.isStationInZone) || ((stId, stName, zone, stMap) => {
+      if (!zone || !zone.stationNames || !zone.stationNames.has(stName)) return false;
+      return true;
+    });
+
+    // 1. 中央東線（チユト：東京〜塩尻）の統合ルール
+    const runs = lineRuns.map(r => ({
+      ...r,
+      stationIds: [...(r.stationIds || [])],
+      segments: [...(r.segments || [])]
+    }));
+
+    for (let i = 0; i < runs.length; i++) {
+      const r = runs[i];
+      const fSt = stations[r.from];
+      const tSt = stations[r.to];
+      const fName = fSt ? fSt.name : r.from;
+      const tName = tSt ? tSt.name : r.to;
+
+      if (r.lineId === 'tohoku-main') {
+        const isTokyoKanda = (fName === '東京' && tName === '神田') || (fName === '神田' && tName === '東京');
+        if (isTokyoKanda) {
+          const prev = runs[i - 1];
+          const next = runs[i + 1];
+          const prevIsChuo = prev && prev.lineId === 'chuo-main';
+          const nextIsChuo = next && next.lineId === 'chuo-main';
+          if (prevIsChuo || nextIsChuo) {
+            r.marsName = '中央東';
+          }
+        }
+      } else if (r.lineId === 'yamanote') {
+        const isYoyogiShinjuku = (fName === '代々木' && tName === '新宿') || (fName === '新宿' && tName === '代々木');
+        if (isYoyogiShinjuku) {
+          const prev = runs[i - 1];
+          const next = runs[i + 1];
+          const prevIsChuo = prev && prev.lineId === 'chuo-main';
+          const nextIsChuo = next && next.lineId === 'chuo-main';
+          if (prevIsChuo || nextIsChuo) {
+            r.marsName = '中央東';
+          }
+        }
+      }
+    }
+
+    // 隣接同一マルス名ランの事前マージ
+    const preMergedRuns = [];
+    for (let i = 0; i < runs.length; i++) {
+      const r = runs[i];
+      if (preMergedRuns.length > 0) {
+        const last = preMergedRuns[preMergedRuns.length - 1];
+        if (last.marsName === r.marsName && !last.isShinkansen && !r.isShinkansen) {
+          last.to = r.to;
+          last.stationIds.push(...r.stationIds.slice(1));
+          continue;
+        }
+      }
+      preMergedRuns.push({ ...r, stationIds: [...r.stationIds] });
+    }
+
+    // 2. 旅規第70条太線区間（東京付近）通過時の印字省略ルール
+    const RULE_70_STATION_NAMES = new Set([
+      '東京', '有楽町', '新橋', '浜松町', '田町', '高輪ゲートウェイ', '品川', '大崎', '五反田', '目黒', '恵比寿',
+      '渋谷', '原宿', '代々木', '新宿', '新大久保', '高田馬場', '目白', '池袋', '大塚', '巣鴨', '駒込', '田端',
+      '西日暮里', '日暮里', '鶯谷', '上野', '御徒町', '秋葉原', '神田',
+      '板橋', '十条', '赤羽', '尾久',
+      '御茶ノ水', '水道橋', '飯田橋', '市ケ谷', '市ヶ谷', '四ツ谷', '信濃町', '千駄ケ谷', '千駄ヶ谷',
+      '浅草橋', '両国', '錦糸町', '新日本橋', '馬喰町'
+    ]);
+
+    let filteredRuns = [...preMergedRuns];
+    if (!RULE_70_STATION_NAMES.has(deptName) && !RULE_70_STATION_NAMES.has(destName)) {
+      const isRule70OmitCandidate = (r) => {
+        if (r.isShinkansen) return false;
+        const allIn70 = r.stationIds.every(id => {
+          const name = stations[id] ? stations[id].name : id;
+          return RULE_70_STATION_NAMES.has(name);
+        });
+        if (!allIn70) return false;
+        if (r.lineId === 'yamanote') return true;
+        if (r.lineId === 'akabane-line') return true;
+        if (r.lineId === 'sobu-main') return true;
+        if (r.lineId === 'tokaido') return true;
+        if (r.lineId === 'tohoku-main') return true;
+        return false;
+      };
+
+      const remaining = filteredRuns.filter(r => !isRule70OmitCandidate(r));
+      if (remaining.length > 0) {
+        filteredRuns = remaining;
+      }
+    }
+
+    // 3. 特定都区市内・東京山手線内（deptZoneApplied / destZoneApplied）完結区間の省略ルール
+    let deptZone = null;
+    let destZone = null;
+    if (fareRules) {
+      const getZoneObj = (applied, zoneName) => {
+        if (!applied) return null;
+        if (fareRules.deptZone && fareRules.deptZone.displayName === zoneName) return fareRules.deptZone;
+        if (fareRules.destZone && fareRules.destZone.displayName === zoneName) return fareRules.destZone;
+        for (const z of Object.values(SPECIFIC_CITY_ZONES)) {
+          if (z.displayName === zoneName || z.id === applied || z.name === zoneName) return z;
+        }
+        return null;
+      };
+
+      deptZone = getZoneObj(fareRules.deptZoneApplied, fareRules.displayDeptName);
+      destZone = getZoneObj(fareRules.destZoneApplied, fareRules.displayDestName);
+
+      // 発側の先頭から連続するゾーン内完結在来線ランの省略 (直後が新幹線ランの場合)
+      if (deptZone) {
+        while (filteredRuns.length > 1) {
+          const first = filteredRuns[0];
+          if (first.isShinkansen) break;
+          const nextIsShinkansen = filteredRuns[1] && filteredRuns[1].isShinkansen;
+          if (!nextIsShinkansen) break;
+
+          const allInZone = first.stationIds.every(id => {
+            const name = stations[id] ? stations[id].name : id;
+            return isStationInZone(id, name, deptZone, stations);
+          });
+          if (allInZone) {
+            filteredRuns.shift();
+          } else {
+            break;
+          }
+        }
+      }
+
+      // 着側の末尾から連続するゾーン内完結在来線ランの省略 (直前が新幹線ランの場合)
+      if (destZone) {
+        while (filteredRuns.length > 1) {
+          const last = filteredRuns[filteredRuns.length - 1];
+          if (last.isShinkansen) break;
+          const prevIsShinkansen = filteredRuns[filteredRuns.length - 2] && filteredRuns[filteredRuns.length - 2].isShinkansen;
+          if (!prevIsShinkansen) break;
+
+          const allInZone = last.stationIds.every(id => {
+            const name = stations[id] ? stations[id].name : id;
+            return isStationInZone(id, name, destZone, stations);
+          });
+          if (allInZone) {
+            filteredRuns.pop();
+          } else {
+            break;
+          }
+        }
+      }
+    }
+
+    // 4. 連続する新幹線ランの統合
+    const finalMergedRuns = [];
+    for (let i = 0; i < filteredRuns.length; i++) {
+      const r = filteredRuns[i];
+      if (r.isShinkansen &&
+          finalMergedRuns.length > 0 &&
+          finalMergedRuns[finalMergedRuns.length - 1].isShinkansen &&
+          finalMergedRuns[finalMergedRuns.length - 1].to === r.from &&
+          finalMergedRuns[finalMergedRuns.length - 1].from !== r.to) {
+        finalMergedRuns[finalMergedRuns.length - 1].to = r.to;
+        finalMergedRuns[finalMergedRuns.length - 1].stationIds.push(...r.stationIds.slice(1));
+      } else {
+        finalMergedRuns.push({ ...r, stationIds: [...r.stationIds] });
+      }
+    }
+
+    // 5. マルス経由線リストの組み立て（発着駅・中心駅の新幹線駅名省略）
+    const deptCenterName = (fareRules && fareRules.deptZone) ? fareRules.deptZone.centerName : ((fareRules && (fareRules.displayDeptName === '東京都区内' || fareRules.displayDeptName === '東京山手線内')) ? '東京' : null);
+    const destCenterName = (fareRules && fareRules.destZone) ? fareRules.destZone.centerName : ((fareRules && (fareRules.displayDestName === '東京都区内' || fareRules.displayDestName === '東京山手線内')) ? '東京' : ((fareRules && fareRules.displayDestName === '京都市内') ? '京都' : null));
+
+    // 同一線区並行コリドー判定ヘルパー
+    function isSameLineConventional(prevRun, shinkansenRun) {
+      if (!prevRun || !shinkansenRun || !prevRun.lineId || !shinkansenRun.lineId) return false;
+      // 東北本線 -> 東北新幹線
+      if (prevRun.lineId === 'tohoku-main' && shinkansenRun.lineId.startsWith('shinkansen-tohoku')) return true;
+      // 東海道本線 -> 東海道新幹線
+      if ((prevRun.lineId === 'tokaido' || prevRun.lineId === 'tokai-tokaido' || prevRun.lineId === 'tokaido-west') && shinkansenRun.lineId === 'shinkansen-tokaido') return true;
+      // 山陽本線 -> 山陽新幹線
+      if (prevRun.lineId === 'sanyo-main' && shinkansenRun.lineId === 'shinkansen-sanyo') return true;
+      // 鹿児島本線 -> 九州新幹線
+      if (prevRun.lineId.includes('kagoshima') && shinkansenRun.lineId.includes('kyushu')) return true;
+      return false;
+    }
+
+    const marsNamesList = [];
+    for (let i = 0; i < finalMergedRuns.length; i++) {
+      const r = finalMergedRuns[i];
+      const deptSt = getMarsStationName(r.from, stations);
+      const destSt = getMarsStationName(r.to, stations);
+
+      if (r.isShinkansen) {
+        const isFirstRun = (i === 0);
+        const isLastRun = (i === finalMergedRuns.length - 1);
+
+        // 乗車駅 (deptSt) の印字判定
+        let omitDeptStation = false;
+        if (isFirstRun) {
+          // 先頭が新幹線区間であり、かつ実発駅または発側ゾーン中心駅または発側ゾーン内新幹線駅と一致
+          const isDeptInZone = deptZone && isStationInZone(r.from, deptSt, deptZone, stations);
+          if (deptSt === deptName || (deptCenterName && deptSt === deptCenterName) || isDeptInZone) {
+            omitDeptStation = true;
+          }
+        } else {
+          // 先頭ではない場合: 直前の在来線と同一線区並行接続であれば省略
+          const prevRun = finalMergedRuns[i - 1];
+          if (isSameLineConventional(prevRun, r)) {
+            omitDeptStation = true;
+          }
+        }
+
+        if (!omitDeptStation) {
+          if (marsNamesList.length === 0 || marsNamesList[marsNamesList.length - 1] !== deptSt) {
+            marsNamesList.push(deptSt);
+          }
+        }
+
+        // 新幹線
+        marsNamesList.push('新幹線');
+
+        // 降車駅 (destSt) の印字判定
+        let omitDestStation = false;
+        if (isLastRun) {
+          // 末尾が新幹線区間であり、かつ実着駅または着側ゾーン中心駅または着側ゾーン内新幹線駅と一致
+          const isDestInZone = destZone && isStationInZone(r.to, destSt, destZone, stations);
+          if (destSt === destName || (destCenterName && destSt === destCenterName) || isDestInZone) {
+            omitDestStation = true;
+          }
+        }
+
+        if (!omitDestStation) {
+          marsNamesList.push(destSt);
+        }
+      } else {
+        // 在来線区間
+        if (marsNamesList.length === 0 || marsNamesList[marsNamesList.length - 1] !== r.marsName) {
+          marsNamesList.push(r.marsName);
+        }
+      }
+    }
+
+    // 6. 隣接同一マルス名の圧縮とフォールバック
+    const compressedList = [];
+    for (const name of marsNamesList) {
+      if (compressedList.length === 0 || compressedList[compressedList.length - 1] !== name) {
+        compressedList.push(name);
+      }
+    }
+
+    if (compressedList.length === 0) {
+      if (lineRuns.length > 0) {
+        compressedList.push(lineRuns[0].marsName);
+      } else {
+        compressedList.push('(直通)');
+      }
+    }
+
+    return {
+      marsFormatString: compressedList.join('・'),
+      marsNamesList: compressedList
+    };
+  }
+
   // マルチストップルート探索メインAPI
   function searchMarsRoute(...args) {
     let graph, tracks, stations, stops, options;
@@ -1870,6 +2160,11 @@
       graph = cachedGraph;
       stations = cachedStations || options.stations || (typeof window !== 'undefined' ? window.JR_STATIONS : {}) || {};
       tracks = options.tracks || (typeof window !== 'undefined' ? window.JR_TRACKS : null);
+      if (!tracks && typeof require !== 'undefined') {
+        try {
+          tracks = require('./data/tracks.js');
+        } catch (e) {}
+      }
     } else {
       graph = args[0];
       tracks = args[1];
@@ -2583,6 +2878,7 @@
           from: seg.from,
           to: seg.to,
           stationIds: [seg.from, seg.to],
+          segments: [seg],
           distTenths: segTenths,
           dist: segTenths / 10,
           hasDuplicate: !!seg.isDuplicate,
@@ -2592,6 +2888,8 @@
         const last = lineRuns[lineRuns.length - 1];
         last.to = seg.to;
         last.stationIds.push(seg.to);
+        if (!last.segments) last.segments = [];
+        last.segments.push(seg);
         last.distTenths += segTenths;
         last.dist = last.distTenths / 10;
         if (seg.isDuplicate) last.hasDuplicate = true;
@@ -2740,22 +3038,35 @@
     }
 
     // UI用セクション一覧
-    const sections = lineRuns.map(r => ({
-      lineId: r.lineId,
-      lineName: r.lineName,
-      marsName: r.marsName,
-      lineColor: r.color,
-      isShinkansen: r.isShinkansen,
-      from: r.from,
-      to: r.to,
-      deptName: (stations[r.from] && stations[r.from].name) || r.from,
-      destName: (stations[r.to] && stations[r.to].name) || r.to,
-      km: Math.round(r.dist * 10) / 10,
-      stationCount: r.stationIds.length,
-      stations: r.stationIds,
-      isDuplicate: !!r.hasDuplicate,
-      isEstimated: !!r.isEstimated
-    }));
+    const sections = lineRuns.map(r => {
+      const secCoords = [];
+      (r.segments || []).forEach(seg => {
+        if (seg.coords && seg.coords.length > 0) {
+          if (secCoords.length > 0) {
+            secCoords.push(...seg.coords.slice(1));
+          } else {
+            secCoords.push(...seg.coords);
+          }
+        }
+      });
+      return {
+        lineId: r.lineId,
+        lineName: r.lineName,
+        marsName: r.marsName,
+        lineColor: r.color,
+        isShinkansen: r.isShinkansen,
+        from: r.from,
+        to: r.to,
+        deptName: (stations[r.from] && stations[r.from].name) || r.from,
+        destName: (stations[r.to] && stations[r.to].name) || r.to,
+        km: Math.round(r.dist * 10) / 10,
+        stationCount: r.stationIds.length,
+        stations: r.stationIds,
+        coords: secCoords,
+        isDuplicate: !!r.hasDuplicate,
+        isEstimated: !!r.isEstimated
+      };
+    });
 
     // 通過するユニークな路線IDのリスト
     const passedLineIds = Array.from(new Set(fullSegments.map(s => s.lineId)));
@@ -2943,6 +3254,19 @@
       }, stations, cachedLines || [], options);
     }
 
+    // 実物マルス経由印字フォーマッタの適用 (fareRules 確定後)
+    let finalMarsString = marsFormatString;
+    let finalMarsNamesList = marsNamesList;
+    try {
+      const ticketVia = buildMarsTicketViaString(lineRuns, fareRules, deptName, destName, stations, fullSegments, options);
+      if (ticketVia && ticketVia.marsFormatString) {
+        finalMarsString = ticketVia.marsFormatString;
+        finalMarsNamesList = ticketVia.marsNamesList;
+      }
+    } catch (e) {
+      console.warn('buildMarsTicketViaString failed, falling back:', e);
+    }
+
     return {
       success: true,
       deptId: deptId,
@@ -2950,7 +3274,7 @@
       deptName: deptName,
       destName: destName,
       viaIds: viaIds,
-      marsString: marsFormatString,
+      marsString: finalMarsString,
       totalKm: effectiveTotalKm,
       directShortestKm: directShortestKm,
       actualKm: Math.round(totalDist * 10) / 10,
@@ -2972,8 +3296,8 @@
       // 従来互換フィールド
       isOneWay: !hasDuplicate,
       stops: stops,
-      marsFormat: marsFormatString,
-      marsNamesList: marsNamesList,
+      marsFormat: finalMarsString,
+      marsNamesList: finalMarsNamesList,
       totalDist: effectiveTotalKm,
       lineRuns: lineRuns,
       allStationIds: allStationIds,
@@ -2993,6 +3317,7 @@
     getLineTrackGraph,
     findTrackShortestPath,
     offsetLineMeters,
+    buildMarsTicketViaString,
     searchMarsRoute
   };
 

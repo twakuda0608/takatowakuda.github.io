@@ -697,7 +697,7 @@
         } else if (corridor.id === 'art69::kashii-hakata') {
           passesDetour = subSegments.some(seg => corridor.detourLineIds.has(seg.lineId));
         } else if (corridor.id === 'art69::nippori-akabane') {
-          passesDetour = false; // 同一キロのため短縮なし
+          passesDetour = subStationNames.has('尾久');
         } else {
           passesDetour = subSegments.some(seg => corridor.detourLineIds.has(seg.lineId));
         }
@@ -1564,6 +1564,8 @@
       displayDestName: zoneResult.displayDestName,
       deptZoneApplied: zoneResult.deptApplied,
       destZoneApplied: zoneResult.destApplied,
+      deptZone: zoneResult.deptZone,
+      destZone: zoneResult.destZone,
       deptBorderStationId: zoneResult.deptBorderStationId,
       destBorderStationId: zoneResult.destBorderStationId,
 
