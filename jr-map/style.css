@@ -2039,6 +2039,13 @@ body.theme-dark .sheet-header.jr-station-sign {
   white-space: nowrap;
   font-size: calc(23 * var(--u));
 }
+.ticket-via-row.is-truncated {
+  cursor: help;
+}
+.ticket-via-row.is-truncated:hover .ticket-via-content {
+  text-decoration: underline dotted #64748b;
+  text-underline-offset: calc(2 * var(--u));
+}
 .ticket-via-content {
   font-weight: 700;
   letter-spacing: calc(0.5 * var(--u));
@@ -2046,6 +2053,32 @@ body.theme-dark .sheet-header.jr-station-sign {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* マルス券面「経由」省略時の全文ツールチップ (body直下固定配置) */
+.ticket-via-tooltip {
+  position: fixed;
+  z-index: 2000;
+  pointer-events: none;
+  background: rgba(15, 23, 42, 0.95);
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 8px 10px;
+  border-radius: 8px;
+  max-width: min(340px, calc(100vw - 24px));
+  word-break: break-all;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, visibility 0.15s ease, transform 0.15s ease;
+  transform: translateY(2px);
+}
+.ticket-via-tooltip.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 
 /* 6. 有効期間 (x=70, top=190, h=30) */
@@ -2386,8 +2419,8 @@ body.theme-dark .sheet-header.jr-station-sign {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 220px;
-  overflow-y: auto;
+  max-height: none;
+  overflow-y: visible;
   padding-right: 2px;
 }
 

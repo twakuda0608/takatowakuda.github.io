@@ -854,153 +854,60 @@
     const isDeptYamanote = isStationInZoneLocal(deptId, deptStationName, yamanoteZone);
     const isDestYamanote = isStationInZoneLocal(destId, destStationName, yamanoteZone);
 
-    // 同一都市圏内相互発着の除外（単駅扱い）
-    if (deptCityZone && destCityZone && deptCityZone.id === destCityZone.id) {
-      return {
-        displayDeptName: deptStationName,
-        displayDestName: destStationName,
-        fareBasisKm: totalKm,
-        deptZone: null,
-        destZone: null,
-        deptApplied: false,
-        destApplied: false,
-        deptDelta: 0,
-        destDelta: 0,
-        deptBorderStationId: null,
-        destBorderStationId: null,
-        deptBorderDist: 0,
-        destBorderDist: 0
-      };
-    }
-
     const segments = fullSegments || [];
 
-    // 経路上の全駅名リスト
-    const passedNames = [];
-    segments.forEach(seg => {
-      const f = stations[seg.from] ? stations[seg.from].name : seg.from;
-      const t = stations[seg.to] ? stations[seg.to].name : seg.to;
-      if (passedNames.length === 0 || passedNames[passedNames.length - 1] !== f) passedNames.push(f);
-      passedNames.push(t);
-    });
+    // ゾーン遷移状態の圧縮列 (['IN', 'OUT', 'IN'] 等) を取得
+    function getZoneTransitions(zone) {
+      if (!zone || segments.length === 0) return [];
+      const allSts = [segments[0].from, ...segments.map(s => s.to)];
+      const transitions = [];
+      allSts.forEach(stId => {
+        const stName = stations[stId] ? stations[stId].name : stId;
+        const inZ = isStationInZoneLocal(stId, stName, zone);
+        const state = inZ ? 'IN' : 'OUT';
+        if (transitions.length === 0 || transitions[transitions.length - 1] !== state) {
+          transitions.push(state);
+        }
+      });
+      return transitions;
+    }
 
-    // ゾーン再進入チェック (旅規第86条・第87条ただし書: ゾーン外に出て再び入る場合は単駅扱い)
-    function checkReentry(zone) {
+    // ゾーン再通過（第86条・第87条ただし書）判定
+    // IN -> OUT -> IN -> OUT 等、ゾーンを出て再び入ってまた抜ける場合は適用除外
+    function isZoneReentry(zone, isDept, isDest) {
       if (!zone || segments.length === 0) return false;
-      let state = 0; // 0: 初期(未進入), 1: ゾーン内, 2: ゾーン外離脱
+      const trans = getZoneTransitions(zone);
+      if (trans.length <= 1) return false;
 
-      // 発駅（segments[0].from）から順に全ノードを走査
-      const firstFromId = segments[0].from;
-      const firstFromName = stations[firstFromId] ? stations[firstFromId].name : firstFromId;
-      if (isStationInZoneLocal(firstFromId, firstFromName, zone)) {
-        state = 1;
-      }
-
-      for (let i = 0; i < segments.length; i++) {
-        const toId = segments[i].to;
-        const toName = stations[toId] ? stations[toId].name : toId;
-        const inZone = isStationInZoneLocal(toId, toName, zone);
-        if (state === 0 && inZone) state = 1;
-        else if (state === 1 && !inZone) state = 2;
-        else if (state === 2 && inZone) return true; // 再進入検出
+      if (isDept && isDest) {
+        // 同一ゾーン発着: ['IN', 'OUT', 'IN'] は再通過ではない (正常)
+        // 長さ > 3 (例: ['IN', 'OUT', 'IN', 'OUT', ...]) は再通過 (除外)
+        return trans.length > 3;
+      } else if (isDept) {
+        // 発駅側ゾーン: ['IN', 'OUT'] は正常
+        // 長さ > 2 (例: ['IN', 'OUT', 'IN', ...]) は再進入・再通過 (除外)
+        return trans.length > 2;
+      } else if (isDest) {
+        // 着駅側ゾーン: ['OUT', 'IN'] は正常
+        // 長さ > 2 (例: ['OUT', 'IN', 'OUT', 'IN', ...] や ['IN', ...]) は再進入・再通過 (除外)
+        return trans.length > 2;
       }
       return false;
     }
 
-    let candidateDeptZone = deptCityZone || (isDeptYamanote ? yamanoteZone : null);
-    let candidateDestZone = destCityZone || (isDestYamanote ? yamanoteZone : null);
+    // 発側境界駅・補正キロの算出
+    function calcDeptBorder(zone) {
+      let deptBorderStationId = null;
+      let distDeptToBorder = 0;
+      let deptDelta = 0;
+      let deptCenterKm = totalKm;
 
-    if (candidateDeptZone && checkReentry(candidateDeptZone)) {
-      candidateDeptZone = null;
-    }
-    if (candidateDestZone && checkReentry(candidateDestZone)) {
-      candidateDestZone = null;
-    }
-
-    let deptDelta = 0;
-    let destDelta = 0;
-    let deptApplied = false;
-    let destApplied = false;
-    let displayDeptName = deptStationName;
-    let displayDestName = destStationName;
-    let deptBorderStationId = null;
-    let destBorderStationId = null;
-    let distDeptToBorder = 0;
-    let distBorderToDest = 0;
-
-    // 着駅側ゾーン計算
-    let destCenterKm = totalKm;
-    if (candidateDestZone) {
-      const centerKey = candidateDestZone.id;
-      const centerStationId = candidateDestZone.centerId;
-      const centerName = candidateDestZone.centerName;
-
-      if (destStationName === centerName) {
-        destDelta = 0;
-        destCenterKm = totalKm;
-        destBorderStationId = destId;
-      } else {
-        // ゾーン外からゾーン内に入る境界駅を特定
-        let cumDist = 0;
-        for (let i = 0; i < segments.length; i++) {
-          const seg = segments[i];
-          const segDist = seg.dist !== undefined ? seg.dist : (seg.km || 0);
-          const fName = stations[seg.from] ? stations[seg.from].name : seg.from;
-          const tName = stations[seg.to] ? stations[seg.to].name : seg.to;
-
-          const isFromInZone = isStationInZoneLocal(seg.from, fName, candidateDestZone);
-          const isToInZone = isStationInZoneLocal(seg.to, tName, candidateDestZone);
-
-          if (!isFromInZone && isToInZone) {
-            destBorderStationId = seg.to;
-            distBorderToDest = totalKm - (cumDist + segDist);
-            break;
-          } else if (isFromInZone && destBorderStationId === null) {
-            destBorderStationId = seg.from;
-            distBorderToDest = totalKm - cumDist;
-            break;
-          }
-          cumDist += segDist;
-        }
-
-        if (destBorderStationId) {
-          const borderStName = stations[destBorderStationId] ? stations[destBorderStationId].name : destBorderStationId;
-          let borderToCenter = 0;
-          if (centerName === borderStName) {
-            borderToCenter = 0;
-          } else if (candidateDestZone.id === 'osaka' && borderStName === '新大阪') {
-            borderToCenter = 3.8;
-          } else {
-            borderToCenter = getBorderToCenterDistance(centerKey, destBorderStationId, graph, centerStationId);
-          }
-          destDelta = borderToCenter - distBorderToDest;
-          destCenterKm = totalKm + destDelta;
-        }
-      }
-
-      if (candidateDestZone.id !== 'yamanote' && destCenterKm >= 201) {
-        destApplied = true;
-        displayDestName = candidateDestZone.displayName;
-      } else if (isDestYamanote && destCenterKm >= 101 && destCenterKm <= 200) {
-        destApplied = true;
-        displayDestName = yamanoteZone.displayName;
-        candidateDestZone = yamanoteZone;
-      }
-    }
-
-    // 発駅側ゾーン計算
-    let deptCenterKm = totalKm;
-    if (candidateDeptZone) {
-      const centerKey = candidateDeptZone.id;
-      const centerStationId = candidateDeptZone.centerId;
-      const centerName = candidateDeptZone.centerName;
-
-      if (deptStationName === centerName) {
+      if (deptStationName === zone.centerName) {
         deptDelta = 0;
         deptCenterKm = totalKm;
         deptBorderStationId = deptId;
+        distDeptToBorder = 0;
       } else {
-        // ゾーン内からゾーン外に出る境界駅を特定
         let cumDist = 0;
         for (let i = 0; i < segments.length; i++) {
           const seg = segments[i];
@@ -1008,11 +915,10 @@
           const fName = stations[seg.from] ? stations[seg.from].name : seg.from;
           const tName = stations[seg.to] ? stations[seg.to].name : seg.to;
 
-          const isFromInZone = isStationInZoneLocal(seg.from, fName, candidateDeptZone);
-          const isToInZone = isStationInZoneLocal(seg.to, tName, candidateDeptZone);
+          const isFromInZone = isStationInZoneLocal(seg.from, fName, zone);
+          const isToInZone = isStationInZoneLocal(seg.to, tName, zone);
           const isShinkansen = seg.isShinkansen || (seg.lineId && seg.lineId.startsWith('shinkansen-'));
 
-          // 在来線ゾーン内から新幹線に乗車する場合、新幹線の乗車駅がゾーン境界（中心駅接続）となる
           if (isFromInZone && isShinkansen) {
             deptBorderStationId = seg.from;
             distDeptToBorder = cumDist;
@@ -1030,25 +936,187 @@
         if (deptBorderStationId) {
           const borderStName = stations[deptBorderStationId] ? stations[deptBorderStationId].name : deptBorderStationId;
           let borderToCenter = 0;
-          if (centerName === borderStName) {
+          if (zone.centerName === borderStName) {
             borderToCenter = 0;
-          } else if (centerKey === 'tokyo' && borderStName === '赤羽') {
+          } else if (zone.id === 'tokyo' && borderStName === '赤羽') {
             borderToCenter = 13.2;
           } else {
-            borderToCenter = getBorderToCenterDistance(centerKey, deptBorderStationId, graph, centerStationId);
+            borderToCenter = getBorderToCenterDistance(zone.id, deptBorderStationId, graph, zone.centerId);
           }
           deptDelta = borderToCenter - distDeptToBorder;
           deptCenterKm = totalKm + deptDelta;
         }
       }
+      return { deptBorderStationId, distDeptToBorder, deptDelta, deptCenterKm };
+    }
 
-      if (candidateDeptZone.id !== 'yamanote' && deptCenterKm >= 201) {
-        deptApplied = true;
-        displayDeptName = candidateDeptZone.displayName;
-      } else if (isDeptYamanote && deptCenterKm >= 101 && deptCenterKm <= 200) {
-        deptApplied = true;
-        displayDeptName = yamanoteZone.displayName;
-        candidateDeptZone = yamanoteZone;
+    // 着側境界駅・補正キロの算出 (終点側から逆走査)
+    function calcDestBorder(zone) {
+      let destBorderStationId = null;
+      let distBorderToDest = 0;
+      let destDelta = 0;
+      let destCenterKm = totalKm;
+
+      if (destStationName === zone.centerName) {
+        destDelta = 0;
+        destCenterKm = totalKm;
+        destBorderStationId = destId;
+        distBorderToDest = 0;
+      } else {
+        let cumDistBack = 0;
+        for (let i = segments.length - 1; i >= 0; i--) {
+          const seg = segments[i];
+          const segDist = seg.dist !== undefined ? seg.dist : (seg.km || 0);
+          const fName = stations[seg.from] ? stations[seg.from].name : seg.from;
+          const tName = stations[seg.to] ? stations[seg.to].name : seg.to;
+
+          const isFromInZone = isStationInZoneLocal(seg.from, fName, zone);
+          const isToInZone = isStationInZoneLocal(seg.to, tName, zone);
+          const isShinkansen = seg.isShinkansen || (seg.lineId && seg.lineId.startsWith('shinkansen-'));
+
+          if (isToInZone && isShinkansen) {
+            destBorderStationId = seg.to;
+            distBorderToDest = cumDistBack;
+            break;
+          }
+
+          if (isToInZone && !isFromInZone) {
+            destBorderStationId = seg.to;
+            distBorderToDest = cumDistBack;
+            break;
+          }
+          cumDistBack += segDist;
+        }
+
+        if (!destBorderStationId && segments.length > 0) {
+          destBorderStationId = segments[0].from;
+          distBorderToDest = totalKm;
+        }
+
+        if (destBorderStationId) {
+          const borderStName = stations[destBorderStationId] ? stations[destBorderStationId].name : destBorderStationId;
+          let borderToCenter = 0;
+          if (zone.centerName === borderStName) {
+            borderToCenter = 0;
+          } else if (zone.id === 'osaka' && borderStName === '新大阪') {
+            borderToCenter = 3.8;
+          } else {
+            borderToCenter = getBorderToCenterDistance(zone.id, destBorderStationId, graph, zone.centerId);
+          }
+          destDelta = borderToCenter - distBorderToDest;
+          destCenterKm = totalKm + destDelta;
+        }
+      }
+      return { destBorderStationId, distBorderToDest, destDelta, destCenterKm };
+    }
+
+    let deptDelta = 0;
+    let destDelta = 0;
+    let deptApplied = false;
+    let destApplied = false;
+    let displayDeptName = deptStationName;
+    let displayDestName = destStationName;
+    let deptBorderStationId = null;
+    let destBorderStationId = null;
+    let distDeptToBorder = 0;
+    let distBorderToDest = 0;
+    let candidateDeptZone = null;
+    let candidateDestZone = null;
+
+    const isSameCityZone = !!(deptCityZone && destCityZone && deptCityZone.id === destCityZone.id);
+    const isSameYamanote = !!(isDeptYamanote && isDestYamanote);
+
+    // A. 同一特定都区市内発着 (第86条)
+    const isRe = isZoneReentry(deptCityZone, true, true);
+    const trans = deptCityZone ? getZoneTransitions(deptCityZone) : [];
+    if (isSameCityZone && !isZoneReentry(deptCityZone, true, true)) {
+      const trans = getZoneTransitions(deptCityZone);
+      if (trans.length === 3 && trans[0] === 'IN' && trans[1] === 'OUT' && trans[2] === 'IN') {
+        const dInfo = calcDeptBorder(deptCityZone);
+        const aInfo = calcDestBorder(deptCityZone);
+        const centerFareKm = totalKm + dInfo.deptDelta + aInfo.destDelta;
+        if (centerFareKm > 200.0) {
+          deptApplied = true;
+          destApplied = true;
+          candidateDeptZone = deptCityZone;
+          candidateDestZone = deptCityZone;
+          displayDeptName = deptCityZone.displayName;
+          displayDestName = deptCityZone.displayName;
+          deptDelta = dInfo.deptDelta;
+          destDelta = aInfo.destDelta;
+          deptBorderStationId = dInfo.deptBorderStationId;
+          destBorderStationId = aInfo.destBorderStationId;
+          distDeptToBorder = dInfo.distDeptToBorder;
+          distBorderToDest = aInfo.distBorderToDest;
+        }
+      }
+    }
+
+    // B. 同一東京山手線内発着 (第87条) (都区市内が未適用の場合)
+    if (!deptApplied && !destApplied && isSameYamanote && !isZoneReentry(yamanoteZone, true, true)) {
+      const trans = getZoneTransitions(yamanoteZone);
+      if (trans.length === 3 && trans[0] === 'IN' && trans[1] === 'OUT' && trans[2] === 'IN') {
+        const dInfo = calcDeptBorder(yamanoteZone);
+        const aInfo = calcDestBorder(yamanoteZone);
+        const centerFareKm = totalKm + dInfo.deptDelta + aInfo.destDelta;
+        if (centerFareKm > 100.0 && centerFareKm <= 200.0) {
+          deptApplied = true;
+          destApplied = true;
+          candidateDeptZone = yamanoteZone;
+          candidateDestZone = yamanoteZone;
+          displayDeptName = yamanoteZone.displayName;
+          displayDestName = yamanoteZone.displayName;
+          deptDelta = dInfo.deptDelta;
+          destDelta = aInfo.destDelta;
+          deptBorderStationId = dInfo.deptBorderStationId;
+          destBorderStationId = aInfo.destBorderStationId;
+          distDeptToBorder = dInfo.distDeptToBorder;
+          distBorderToDest = aInfo.distBorderToDest;
+        }
+      }
+    }
+
+    // C. 異なるゾーンまたは片側ゾーン発着
+    if (!deptApplied && !destApplied && !isSameCityZone) {
+      let rawDeptZone = deptCityZone || (isDeptYamanote ? yamanoteZone : null);
+      let rawDestZone = destCityZone || (isDestYamanote ? yamanoteZone : null);
+
+      if (rawDeptZone && !isZoneReentry(rawDeptZone, true, false)) {
+        const dInfo = calcDeptBorder(rawDeptZone);
+        if (rawDeptZone.id !== 'yamanote' && dInfo.deptCenterKm > 200.0) {
+          deptApplied = true;
+          candidateDeptZone = rawDeptZone;
+          displayDeptName = rawDeptZone.displayName;
+          deptDelta = dInfo.deptDelta;
+          deptBorderStationId = dInfo.deptBorderStationId;
+          distDeptToBorder = dInfo.distDeptToBorder;
+        } else if (isDeptYamanote && dInfo.deptCenterKm > 100.0 && dInfo.deptCenterKm <= 200.0) {
+          deptApplied = true;
+          candidateDeptZone = yamanoteZone;
+          displayDeptName = yamanoteZone.displayName;
+          deptDelta = dInfo.deptDelta;
+          deptBorderStationId = dInfo.deptBorderStationId;
+          distDeptToBorder = dInfo.distDeptToBorder;
+        }
+      }
+
+      if (rawDestZone && !isZoneReentry(rawDestZone, false, true)) {
+        const aInfo = calcDestBorder(rawDestZone);
+        if (rawDestZone.id !== 'yamanote' && aInfo.destCenterKm > 200.0) {
+          destApplied = true;
+          candidateDestZone = rawDestZone;
+          displayDestName = rawDestZone.displayName;
+          destDelta = aInfo.destDelta;
+          destBorderStationId = aInfo.destBorderStationId;
+          distBorderToDest = aInfo.distBorderToDest;
+        } else if (isDestYamanote && aInfo.destCenterKm > 100.0 && aInfo.destCenterKm <= 200.0) {
+          destApplied = true;
+          candidateDestZone = yamanoteZone;
+          displayDestName = yamanoteZone.displayName;
+          destDelta = aInfo.destDelta;
+          destBorderStationId = aInfo.destBorderStationId;
+          distBorderToDest = aInfo.distBorderToDest;
+        }
       }
     }
 
