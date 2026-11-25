@@ -4863,7 +4863,7 @@
 
   function buildKanZaiMark(result) {
     if (!result || !result.fullSegments || result.fullSegments.length === 0) {
-      return '・・・・・・・・・・・・';
+      return '';
     }
 
     const linesData = (typeof LINES !== 'undefined' && Array.isArray(LINES) && LINES.length > 0)
@@ -4926,6 +4926,10 @@
       }
     });
 
+    if (!b1Sh && !b1Z && !b2Sh && !b2Z && !b3Sh && !b3Z) {
+      return '';
+    }
+
     const part1 = b1Sh ? '■■■■' : (b1Z ? '□□□□' : '・・・・');
     const part2 = b2Sh ? '■■■■' : (b2Z ? '□□□□' : '・・・・');
     const part3 = b3Sh ? '■■■■' : (b3Z ? '□□□□' : '・・・・');
@@ -4949,9 +4953,9 @@
     if (marsJimonCache[key]) return marsJimonCache[key];
     const mark = MARS_COMPANY_MARKS[key];
     const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="24" viewBox="0 0 36 24">' +
-      '<path d="M0 6 Q9 0 18 6 T36 6 M0 18 Q9 12 18 18 T36 18 M0 12 Q9 6 18 12 T36 12 M0 0 L36 24 M0 24 L36 0" fill="none" stroke="rgba(45, 80, 65, 0.15)" stroke-width="0.6"/>' +
-      '<text x="9" y="8.5" font-family="\'Noto Sans JP\', -apple-system, sans-serif" font-weight="900" font-size="5" fill="rgba(40, 75, 60, 0.22)" text-anchor="middle">JR</text>' +
-      '<text x="27" y="20.5" font-family="\'Noto Sans JP\', -apple-system, sans-serif" font-weight="900" font-size="5" fill="rgba(40, 75, 60, 0.22)" text-anchor="middle">' + mark + '</text>' +
+      '<path d="M0 6 Q9 0 18 6 T36 6 M0 18 Q9 12 18 18 T36 18 M0 12 Q9 6 18 12 T36 12 M0 0 L36 24 M0 24 L36 0" fill="none" stroke="rgba(120, 165, 148, 0.35)" stroke-width="0.6"/>' +
+      '<text x="9" y="8.5" font-family="\'Noto Sans JP\', -apple-system, sans-serif" font-weight="900" font-size="5" fill="rgba(120, 165, 148, 0.40)" text-anchor="middle">JR</text>' +
+      '<text x="27" y="20.5" font-family="\'Noto Sans JP\', -apple-system, sans-serif" font-weight="900" font-size="5" fill="rgba(120, 165, 148, 0.40)" text-anchor="middle">' + mark + '</text>' +
       '<text x="18" y="14" font-family="\'Noto Sans JP\', -apple-system, sans-serif" font-weight="900" font-size="9" fill="rgba(255, 255, 255, 0.25)" text-anchor="middle" transform="rotate(-20 18 14)">JR</text>' +
       '</svg>';
     const uri = 'data:image/svg+xml,' + encodeURIComponent(svg);
@@ -5074,9 +5078,18 @@
       }
     }
 
+    const kanzaiMark = buildKanZaiMark(result);
     const shinkansenMarkEl = document.getElementById('ticket-shinkansen-mark');
     if (shinkansenMarkEl) {
-      shinkansenMarkEl.textContent = buildKanZaiMark(result);
+      shinkansenMarkEl.textContent = kanzaiMark;
+      shinkansenMarkEl.style.display = kanzaiMark ? 'block' : 'none';
+    }
+    if (typeLabel) {
+      if (kanzaiMark) {
+        typeLabel.classList.add('no-underline');
+      } else {
+        typeLabel.classList.remove('no-underline');
+      }
     }
 
     // 2. 発着駅表示（特定都区市内・山手線内ゾーン名優先、それ以外はマルス正式略号）
@@ -6300,6 +6313,7 @@
       getMarsJimonDataUri,
       getStationCompanyKey,
       buildKanZaiMark,
+      renderMarsTicket,
       formatStationHtml,
       formatStationText,
       calcDirectShinkansenDistance,
@@ -6352,6 +6366,7 @@
       getMarsJimonDataUri,
       getStationCompanyKey,
       buildKanZaiMark,
+      renderMarsTicket,
       formatStationHtml,
       formatStationText,
       buildTicketCopyText,
