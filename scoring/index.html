@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>採点カウンター | 試験採点ツール</title>
+  <link rel="icon" type="image/jpeg" href="/Wave.jpg">
+  <link rel="apple-touch-icon" href="/Wave.jpg">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5XPYDMQ921"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-5XPYDMQ921');
+  </script>
+  <link rel="stylesheet" href="/common.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="page-header">
+    <span class="page-header-title">採点カウンター</span>
+  </header>
+
+  <div class="wrap">
+    <main class="page-card scorer-card">
+      <!-- 統計サマリーエリア -->
+      <section class="summary-section">
+        <div class="rate-card">
+          <span class="rate-caption">正解率</span>
+          <div class="rate-display">
+            <span id="accuracy-rate" class="rate-num">0</span>
+            <span class="rate-percent">%</span>
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-box stat-box-total">
+            <span class="stat-title">採点数</span>
+            <span id="total-count" class="stat-value">0</span>
+          </div>
+          <div class="stat-box stat-box-correct">
+            <span class="stat-title"><span class="badge-icon-correct">〇</span> 正解</span>
+            <span id="correct-count" class="stat-value">0</span>
+          </div>
+          <div class="stat-box stat-box-wrong">
+            <span class="stat-title"><span class="badge-icon-wrong">✕</span> 不正解</span>
+            <span id="wrong-count" class="stat-value">0</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- マル・バツ判定ボタン -->
+      <section class="buttons-section">
+        <button id="btn-correct" class="judge-btn correct-btn" type="button" aria-label="正解">
+          <span class="btn-ripple"></span>
+          <div class="btn-icon-wrap">
+            <svg viewBox="0 0 100 100" class="symbol-circle" aria-hidden="true">
+              <circle cx="50" cy="50" r="38" stroke="currentColor" stroke-width="11" fill="none" />
+            </svg>
+          </div>
+          <span class="btn-label">正解</span>
+          <span class="key-guide">1 / Enter</span>
+        </button>
+
+        <button id="btn-wrong" class="judge-btn wrong-btn" type="button" aria-label="不正解">
+          <span class="btn-ripple"></span>
+          <div class="btn-icon-wrap">
+            <svg viewBox="0 0 100 100" class="symbol-cross" aria-hidden="true">
+              <line x1="22" y1="22" x2="78" y2="78" stroke="currentColor" stroke-width="11" stroke-linecap="round" />
+              <line x1="78" y1="22" x2="22" y2="78" stroke="currentColor" stroke-width="11" stroke-linecap="round" />
+            </svg>
+          </div>
+          <span class="btn-label">不正解</span>
+          <span class="key-guide">2 / Space</span>
+        </button>
+      </section>
+
+      <!-- ツールバー -->
+      <section class="toolbar-section">
+        <div class="toolbar-left">
+          <button id="btn-undo" class="tool-btn" type="button" disabled title="直前の1問を取り消し">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 14 4 9 9 4" />
+              <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
+            </svg>
+            <span>取消</span>
+          </button>
+          <button id="btn-sound" class="tool-btn" type="button" title="効果音のオン/オフ">
+            <svg id="icon-sound-on" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+            </svg>
+            <svg id="icon-sound-off" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+              <line x1="23" y1="9" x2="17" y2="15" />
+              <line x1="17" y1="9" x2="23" y2="15" />
+            </svg>
+            <span id="sound-label">音声</span>
+          </button>
+        </div>
+        <div class="toolbar-right">
+          <button id="btn-reset" class="tool-btn reset-btn" type="button" title="採点結果を初期化">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10" />
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+            </svg>
+            <span>リセット</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 採点履歴 -->
+      <section class="history-section">
+        <div class="history-title-row">
+          <span class="history-heading">採点履歴</span>
+          <span id="history-badge" class="history-badge">0問</span>
+        </div>
+        <div id="history-container" class="history-container">
+          <div id="history-empty" class="history-empty">〇または✕を押すとここに履歴が並びます</div>
+          <div id="history-list" class="history-list"></div>
+        </div>
+        <div class="copy-actions">
+          <button id="btn-copy-all" class="copy-btn" type="button" disabled title="正解数/採点数と全問の結果をコピー">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+            <span>全結果コピー</span>
+          </button>
+          <button id="btn-copy-wrong" class="copy-btn" type="button" disabled title="不正解の問題番号のみをカンマ区切りでコピー">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+            <span>不正解のみコピー</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- キーボードショートカットガイド -->
+      <footer class="guide-bar">
+        <span class="guide-title">操作補助:</span>
+        <span class="guide-item"><kbd>1</kbd> / <kbd>Enter</kbd> 〇</span>
+        <span class="guide-sep">•</span>
+        <span class="guide-item"><kbd>2</kbd> / <kbd>Space</kbd> ✕</span>
+        <span class="guide-sep">•</span>
+        <span class="guide-item"><kbd>Z</kbd> 取消</span>
+        <span class="guide-sep">•</span>
+        <span class="guide-item"><kbd>R</kbd> リセット</span>
+      </footer>
+    </main>
+  </div>
+
+  <!-- リセット確認モーダル -->
+  <div id="confirm-modal" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-content">
+      <h2 id="modal-title" class="modal-heading">リセット確認</h2>
+      <p class="modal-desc">現在の採点結果をすべて消去して初期化しますか？</p>
+      <div class="modal-actions">
+        <button id="modal-btn-cancel" class="modal-btn secondary" type="button">中止</button>
+        <button id="modal-btn-confirm" class="modal-btn danger" type="button">リセット</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="/common.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

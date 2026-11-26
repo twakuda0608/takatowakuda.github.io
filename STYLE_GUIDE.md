@@ -43,6 +43,7 @@
 | `/timer/` | タイマー | カレンダー連動・時給/経過時間収益計算 | Google Calendar API |
 | `/learn/` | 学習ポータル | プログラミング・IT知識を図解するインタラクティブ集 | SVG / Canvas / DOM アニメーション |
 | `/fll2025/` | FLL 2025 | ロボットゲームのミッション点数計算 & タイマー | Vanilla JS |
+| `/scoring/` | 採点カウンター | 試験・テストのマルバツ採点と正解率リアルタイム計算 | Vanilla JS, Web Audio API |
 
 ---
 
