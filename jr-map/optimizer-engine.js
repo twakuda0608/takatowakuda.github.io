@@ -700,7 +700,7 @@
     
     // 計算時間の安全ガード（絶対フリーズ防止）
     const startTime = Date.now();
-    const TIME_BUDGET_MS = 600;
+    const TIME_BUDGET_MS = 500;
     const checkTimeBudget = () => (Date.now() - startTime) > TIME_BUDGET_MS;
 
     // 実キロ程を反映した内部グラフの構築（キャッシュ再利用）
@@ -890,7 +890,7 @@
               }]
             });
           }
-        } else if (res.fareRules.isSuburbanOnly === true && res.totalKm >= 95) {
+        } else if (preferStopover && res.fareRules.isSuburbanOnly === true && res.totalKm >= 95) {
           // 大都市近郊区間特例で途中下車不可になっている場合：新幹線1区間組み込みバイパスを試行（上位最大2件を登録）
           const bypasses = findSuburbanBypassesWithShinkansen(deptId, order, destId, res, stations, cachedSearch, { fareType, checkTimeBudget });
           for (const bypass of bypasses) {
@@ -956,7 +956,7 @@
             let bypassDetails = null;
 
             // 近郊区間解除バイパス
-            if (resMain && resMain.success && resMain.fareRules && resMain.fareRules.isSuburbanOnly === true && resMain.totalKm >= 95) {
+            if (preferStopover && resMain && resMain.success && resMain.fareRules && resMain.fareRules.isSuburbanOnly === true && resMain.totalKm >= 95) {
               const bypass = trySuburbanBypassWithShinkansen(deptId, [j.id], destId, resMain, stations, cachedSearch, { fareType, checkTimeBudget });
               if (bypass) {
                 resMain = bypass.routeResult;
@@ -1039,6 +1039,7 @@
           const isStubStation = vSt && vSt.lines && vSt.lines.length <= 1;
           if (hasDirectOneWay && !isStubStation) continue;
 
+          let bypassFoundForStation = false;
           const juncs = junctionMap.get(vId) || [];
           for (const j of juncs) {
             if (checkTimeBudget()) break;
@@ -1053,11 +1054,12 @@
             let isBypassed = false;
             let bypassDetails = null;
 
-            if (resMain && resMain.success && resMain.fareRules && resMain.fareRules.isSuburbanOnly === true && resMain.totalKm >= 95) {
+            if (preferStopover && !bypassFoundForStation && resMain && resMain.success && resMain.fareRules && resMain.fareRules.isSuburbanOnly === true && resMain.totalKm >= 95) {
               const bypass = trySuburbanBypassWithShinkansen(deptId, mainStops, destId, resMain, stations, cachedSearch, { fareType, checkTimeBudget });
               if (bypass) {
                 resMain = bypass.routeResult;
                 isBypassed = true;
+                bypassFoundForStation = true;
                 bypassDetails = getShinkansenBypassDetails(bypass.pair.fromId, bypass.pair.toId, bypass.pair.name, resMain.fareRules.validityDays, stations);
               }
             }
@@ -1275,7 +1277,7 @@
               let res = cachedSearch(s_i, mid, s_j, { searchMode: 'oneway' });
               let isBypassed = false;
               let bypassDetails = null;
-              if (res && res.success && res.fareRules && res.fareRules.isSuburbanOnly === true && res.totalKm >= 90) {
+              if (preferStopover && res && res.success && res.fareRules && res.fareRules.isSuburbanOnly === true && res.totalKm >= 90) {
                 const bypass = trySuburbanBypassWithShinkansen(s_i, mid, s_j, res, stations, cachedSearch, { fareType, checkTimeBudget });
                 if (bypass) {
                   res = bypass.routeResult;
