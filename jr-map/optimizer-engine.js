@@ -280,11 +280,13 @@
   /**
    * 現実的な途中下車アップグレード判定
    * 通常最安（baselineFare）の +35% 以内、または +￥1,500 以内であれば優先昇格対象
+   * （完全別線新幹線バイパス等の特急券込み実質運賃 effectiveFare に基づいて判定）
    */
   function isReasonableStopoverUpgrade(plan, baselineFare) {
     if (!plan || !plan.isStopoverFriendly) return false;
     const maxAllowedFare = Math.max(baselineFare * 1.35, baselineFare + 1500);
-    return plan.totalFare <= maxAllowedFare;
+    const costToEvaluate = (plan.effectiveFare !== undefined) ? plan.effectiveFare : plan.totalFare;
+    return costToEvaluate <= maxAllowedFare;
   }
 
   /**
@@ -337,6 +339,7 @@
 
     const maxLegCost = Math.max(baseRoute.totalKm * 2.2, 250);
     const baseFare = getTicketPrice(baseRoute.fareRules, options.fareType || 'adult');
+    const isIdealBypass = (b) => Number.isFinite(baseFare) && b.fare <= baseFare && b.routeResult.totalKm <= baseRoute.totalKm * 1.15 && !b.isSeparate && b.isSingleCompany;
 
     const bypassCandidates = [];
 
@@ -376,16 +379,17 @@
                 bypassRes.shinkansenSegments = [{ fromId: pair.fromId, toId: pair.toId }];
                 bypassRes.forceShinkansenOnlyInSegments = true;
                 bypassRes.viaIds = midStops;
-                bypassCandidates.push({
+                const candidateObj = {
                   pair,
                   routeResult: bypassRes,
                   fare: fare,
                   isSingleCompany: isSingleCo,
                   isSeparate: isSep
-                });
+                };
+                bypassCandidates.push(candidateObj);
 
                 // 早期リターン（理想的なバイパス）
-                if (fare <= baseFare && !isSep && isSingleCo) {
+                if (isIdealBypass(candidateObj)) {
                   break;
                 }
               }
@@ -396,7 +400,7 @@
     }
 
     // 理想的なバイパスが見つかった場合は早期終了
-    if (bypassCandidates.some(b => b.fare <= baseFare && !b.isSeparate && b.isSingleCompany)) {
+    if (bypassCandidates.some(isIdealBypass)) {
       return bypassCandidates.slice(0, 2);
     }
 
@@ -406,9 +410,9 @@
     if (hasTokyoArea) {
       insertCandidatePatterns.push(
         { fromId: 'tokyo', toId: 'ueno', name: '東京〜上野', insertVias: ['tokyo', 'ueno'] },
-        { fromId: 'tokyo', toId: 'ueno', name: '東京〜上野（東北新幹線）', insertVias: ['shinagawa', 'tokyo', 'ueno'] },
         { fromId: 'ueno', toId: 'tokyo', name: '上野〜東京', insertVias: ['ueno', 'tokyo'] },
         { fromId: 'ueno', toId: 'tokyo', name: '上野〜東京（東北新幹線）', insertVias: ['nippori', 'ueno', 'tokyo'] },
+        { fromId: 'tokyo', toId: 'ueno', name: '東京〜上野（東北新幹線）', insertVias: ['shinagawa', 'tokyo', 'ueno'] },
         { fromId: 'shinagawa', toId: 'tokyo', name: '品川〜東京', insertVias: ['shinagawa', 'tokyo'] },
         { fromId: 'tokyo', toId: 'shinagawa', name: '東京〜品川', insertVias: ['tokyo', 'shinagawa'] },
         { fromId: 'ueno', toId: 'omiya', name: '上野〜大宮', insertVias: ['ueno', 'omiya'] },
@@ -453,13 +457,13 @@
       const insertVias = pat.insertVias;
 
       // 経由駅への挿入位置の最適化:
-      // midStops が空なら [0] のみ、1駅以上なら迂回増分最小の 1箇所だけ を選定
-      let bestPos = 0;
+      // midStops が空なら [0] のみ、1駅以上なら迂回増分（detour）が小さい上位2箇所を選定
+      let insertPositions = [0];
       if (midStops.length > 0) {
-        let minDetour = Infinity;
         const fullSequence = [deptId, ...midStops, destId];
         const p1 = stations[pat.fromId];
         const p2 = stations[pat.toId];
+        const detours = [];
         for (let k = 0; k <= midStops.length; k++) {
           const u = fullSequence[k];
           const v = fullSequence[k + 1];
@@ -467,14 +471,14 @@
           const stV = stations[v];
           if (stU && stV && p1 && p2) {
             const detour = calcDistKm(stU, p1) + calcDistKm(p1, p2) + calcDistKm(p2, stV) - calcDistKm(stU, stV);
-            if (detour < minDetour) {
-              minDetour = detour;
-              bestPos = k;
-            }
+            detours.push({ pos: k, detour });
+          } else {
+            detours.push({ pos: k, detour: 9999 });
           }
         }
+        detours.sort((a, b) => a.detour - b.detour);
+        insertPositions = detours.slice(0, 2).map(d => d.pos);
       }
-      const insertPositions = [bestPos];
 
       for (const pos of insertPositions) {
         const candMid = [...midStops.slice(0, pos), ...insertVias, ...midStops.slice(pos)];
@@ -499,16 +503,17 @@
               bypassRes.shinkansenSegments = [seg];
               bypassRes.forceShinkansenOnlyInSegments = true;
               bypassRes.viaIds = candMid;
-              bypassCandidates.push({
+              const candidateObj = {
                 pair: { fromId: pat.fromId, toId: pat.toId, name: pat.name },
                 routeResult: bypassRes,
                 fare: fare,
                 isSingleCompany: isSingleCo,
                 isSeparate: isSep
-              });
+              };
+              bypassCandidates.push(candidateObj);
 
               // 早期リターン（理想的なバイパスが見つかったら即終了）
-              if (fare <= baseFare && !isSep && isSingleCo) {
+              if (isIdealBypass(candidateObj)) {
                 break;
               }
             }
@@ -517,7 +522,7 @@
       }
 
       // 理想的バイパスが見つかっていればパターンループも終了
-      if (bypassCandidates.some(b => b.fare <= baseFare && !b.isSeparate && b.isSingleCompany)) {
+      if (bypassCandidates.some(isIdealBypass)) {
         break;
       }
     }
@@ -533,8 +538,14 @@
       }
     }
 
-    // ソート: 運賃昇順 -> 特急券不要の同一線扱い区間優先 -> JR単社完結優先 -> 営業キロ昇順
+    // 各候補の実質コスト（特急券込み）を付与
+    for (const b of uniqueBypasses.values()) {
+      b.effectiveFare = b.fare + (b.isSeparate ? 870 : 0);
+    }
+
+    // ソート: 実質コスト昇順 -> 運賃昇順 -> 同一線扱い優先 -> 営業キロ昇順
     const sorted = Array.from(uniqueBypasses.values()).sort((a, b) => {
+      if (a.effectiveFare !== b.effectiveFare) return a.effectiveFare - b.effectiveFare;
       if (a.fare !== b.fare) return a.fare - b.fare;
       if (a.isSeparate !== b.isSeparate) return a.isSeparate ? 1 : -1;
       if (a.isSingleCompany !== b.isSingleCompany) return a.isSingleCompany ? -1 : 1;
@@ -700,7 +711,7 @@
     
     // 計算時間の安全ガード（絶対フリーズ防止）
     const startTime = Date.now();
-    const TIME_BUDGET_MS = 500;
+    const TIME_BUDGET_MS = 1500;
     const checkTimeBudget = () => (Date.now() - startTime) > TIME_BUDGET_MS;
 
     // 実キロ程を反映した内部グラフの構築（キャッシュ再利用）
@@ -890,7 +901,7 @@
               }]
             });
           }
-        } else if (preferStopover && res.fareRules.isSuburbanOnly === true && res.totalKm >= 95) {
+        } else if (res.fareRules.isSuburbanOnly === true && res.totalKm >= 95) {
           // 大都市近郊区間特例で途中下車不可になっている場合：新幹線1区間組み込みバイパスを試行（上位最大2件を登録）
           const bypasses = findSuburbanBypassesWithShinkansen(deptId, order, destId, res, stations, cachedSearch, { fareType, checkTimeBudget });
           for (const bypass of bypasses) {
@@ -924,211 +935,6 @@
         }
       }
     });
-
-    // 戦略3: 本線一筆書き ＋ 分岐駅からの「別途往復（ヒゲ分離）」戦略
-    if (cleanVisitIds.length >= 1 && !checkTimeBudget()) {
-      const junctionMap = new Map();
-      cleanVisitIds.forEach(vId => {
-        const vSt = stations[vId];
-        const isStubStation = vSt && vSt.lines && vSt.lines.length <= 1;
-        if (cleanVisitIds.length <= 3 || isStubStation) {
-          const juncs = findNearbyJunctions(internalGraph, vId, stations, lines).slice(0, 2);
-          junctionMap.set(vId, juncs);
-        }
-      });
-
-      const evaluatedBranchSets = new Set();
-      const branchOrders = visitOrders.slice(0, 1);
-      branchOrders.forEach(order => {
-        if (checkTimeBudget()) return;
-        // 1駅のみの往復（例: 東京発・行きたい駅 ['京都']・returnToStart: true）の場合のジャンクション大回り
-        if (order.length === 1 && returnToStart) {
-          const vId = order[0];
-          const juncs = junctionMap.get(vId) || [];
-          for (const j of juncs) {
-            if (checkTimeBudget()) break;
-            const branchKey = `${deptId}::${j.id}::${destId}::${vId}`;
-            if (evaluatedBranchSets.has(branchKey)) continue;
-            evaluatedBranchSets.add(branchKey);
-
-            let resMain = cachedSearch(deptId, [j.id], destId, { searchMode: 'oneway' });
-            let isBypassed = false;
-            let bypassDetails = null;
-
-            // 近郊区間解除バイパス
-            if (preferStopover && resMain && resMain.success && resMain.fareRules && resMain.fareRules.isSuburbanOnly === true && resMain.totalKm >= 95) {
-              const bypass = trySuburbanBypassWithShinkansen(deptId, [j.id], destId, resMain, stations, cachedSearch, { fareType, checkTimeBudget });
-              if (bypass) {
-                resMain = bypass.routeResult;
-                isBypassed = true;
-                bypassDetails = getShinkansenBypassDetails(bypass.pair.fromId, bypass.pair.toId, bypass.pair.name, resMain.fareRules.validityDays, stations);
-              }
-            }
-
-            if (resMain && resMain.success && resMain.isOneWayTrip && resMain.fareRules) {
-              if (canStopoverAll(resMain, [j.id], stations)) {
-                const mainFare = getTicketPrice(resMain.fareRules, fareType);
-                const resBranch = cachedSearch(j.id, [], vId, { searchMode: 'shortest' });
-                if (resBranch && resBranch.success && resBranch.fareRules) {
-                  const branchOneWayFare = getTicketPrice(resBranch.fareRules, fareType);
-                  const branchRoundFare = branchOneWayFare * 2;
-                  const total = mainFare + branchRoundFare;
-                  const vName = (stations[vId] && stations[vId].name) || vId;
-                  const jName = j.name;
-
-                  const tags = ['一筆書き＋途中下車', `分岐駅往復分離（${jName}⇄${vName}）`];
-                  if (isBypassed && bypassDetails) {
-                    tags.unshift(bypassDetails.tag);
-                  } else if (isBypassed) {
-                    tags.unshift('新幹線1区間組み込み（近郊区間脱出）');
-                  }
-
-                  let note = `${jName}駅で途中下車し、${jName}⇄${vName}は別途往復乗車券（${branchRoundFare}円）を購入するとお得になります。`;
-                  if (isBypassed && bypassDetails) {
-                    note += ` ${bypassDetails.summaryNote}`;
-                  }
-
-                  candidatePlans.push({
-                    title: `大回り一筆書き＋分岐往復（2枚構成）`,
-                    strategyTags: tags,
-                    totalFare: total,
-                    totalKm: Math.round((resMain.totalKm + resBranch.totalKm * 2) * 10) / 10,
-                    ticketCount: 2,
-                    summaryNote: note,
-                    tickets: [
-                      {
-                        role: 'main',
-                        label: '乗車券①（本線・一周一筆書き）',
-                        quantity: 1,
-                        unitFare: mainFare,
-                        subtotalFare: mainFare,
-                        stopoverStations: [jName],
-                        extensionDropStation: null,
-                        shinkansenSegments: resMain.shinkansenSegments || [],
-                        forceShinkansenOnlyInSegments: !!resMain.forceShinkansenOnlyInSegments,
-                        viaIds: resMain.viaIds || [j.id],
-                        routeResult: resMain,
-                        description: (isBypassed && bypassDetails) ? bypassDetails.description : ''
-                      },
-                      {
-                        role: 'branch-roundtrip',
-                        label: `乗車券②（別途往復：${jName} ⇄ ${vName}）`,
-                        quantity: 2,
-                        unitFare: branchOneWayFare,
-                        subtotalFare: branchRoundFare,
-                        stopoverStations: [vName],
-                        extensionDropStation: null,
-                        routeResult: resBranch
-                      }
-                    ]
-                  });
-                }
-              }
-            }
-          }
-        }
-
-        // 複数駅でのヒゲ分離探索
-        const directOneWayRes = cachedSearch(deptId, order, destId, { searchMode: 'oneway' });
-        const hasDirectOneWay = (directOneWayRes && directOneWayRes.success && directOneWayRes.isOneWayTrip);
-
-        for (let i = 0; i < order.length; i++) {
-          if (checkTimeBudget()) break;
-          const vId = order[i];
-          const vSt = stations[vId];
-          const isStubStation = vSt && vSt.lines && vSt.lines.length <= 1;
-          if (hasDirectOneWay && !isStubStation) continue;
-
-          let bypassFoundForStation = false;
-          const juncs = junctionMap.get(vId) || [];
-          for (const j of juncs) {
-            if (checkTimeBudget()) break;
-            const mainStops = [...order];
-            mainStops[i] = j.id;
-
-            const branchKey = `${deptId}::${mainStops.join(',')}::${destId}::${vId}::${j.id}`;
-            if (evaluatedBranchSets.has(branchKey)) continue;
-            evaluatedBranchSets.add(branchKey);
-
-            let resMain = cachedSearch(deptId, mainStops, destId, { searchMode: 'oneway' });
-            let isBypassed = false;
-            let bypassDetails = null;
-
-            if (preferStopover && !bypassFoundForStation && resMain && resMain.success && resMain.fareRules && resMain.fareRules.isSuburbanOnly === true && resMain.totalKm >= 95) {
-              const bypass = trySuburbanBypassWithShinkansen(deptId, mainStops, destId, resMain, stations, cachedSearch, { fareType, checkTimeBudget });
-              if (bypass) {
-                resMain = bypass.routeResult;
-                isBypassed = true;
-                bypassFoundForStation = true;
-                bypassDetails = getShinkansenBypassDetails(bypass.pair.fromId, bypass.pair.toId, bypass.pair.name, resMain.fareRules.validityDays, stations);
-              }
-            }
-
-            if (resMain && resMain.success && resMain.isOneWayTrip && resMain.fareRules) {
-              if (canStopoverAll(resMain, mainStops, stations)) {
-                const mainFare = getTicketPrice(resMain.fareRules, fareType);
-                const resBranch = cachedSearch(j.id, [], vId, { searchMode: 'shortest' });
-                if (resBranch && resBranch.success && resBranch.fareRules) {
-                  const branchOneWayFare = getTicketPrice(resBranch.fareRules, fareType);
-                  const branchRoundFare = branchOneWayFare * 2;
-                  const total = mainFare + branchRoundFare;
-                  const vName = (stations[vId] && stations[vId].name) || vId;
-                  const jName = j.name;
-
-                  const stopoverNames = mainStops.map(id => (stations[id] && stations[id].name) || id);
-                  const tags = ['一筆書き＋途中下車', `分岐駅往復分離（${jName}⇄${vName}）`];
-                  if (isBypassed && bypassDetails) {
-                    tags.unshift(bypassDetails.tag);
-                  } else if (isBypassed) {
-                    tags.unshift('新幹線1区間組み込み（近郊区間脱出）');
-                  }
-
-                  let note = `${jName}で途中下車し、${jName}⇄${vName}は別途往復乗車券（${branchRoundFare}円）を購入すると最安になります。`;
-                  if (isBypassed && bypassDetails) {
-                    note += ` ${bypassDetails.summaryNote}`;
-                  }
-
-                  candidatePlans.push({
-                    title: `一筆書き＋分岐駅往復（2枚構成）`,
-                    strategyTags: tags,
-                    totalFare: total,
-                    totalKm: Math.round((resMain.totalKm + resBranch.totalKm * 2) * 10) / 10,
-                    ticketCount: 2,
-                    summaryNote: note,
-                    tickets: [
-                      {
-                        role: 'main',
-                        label: returnToStart ? '乗車券①（本線・一周一筆書き）' : '乗車券①（本線・片道一筆書き）',
-                        quantity: 1,
-                        unitFare: mainFare,
-                        subtotalFare: mainFare,
-                        stopoverStations: stopoverNames,
-                        extensionDropStation: null,
-                        shinkansenSegments: resMain.shinkansenSegments || [],
-                        forceShinkansenOnlyInSegments: !!resMain.forceShinkansenOnlyInSegments,
-                        viaIds: resMain.viaIds || mainStops,
-                        routeResult: resMain,
-                        description: (isBypassed && bypassDetails) ? bypassDetails.description : ''
-                      },
-                      {
-                        role: 'branch-roundtrip',
-                        label: `乗車券②（別途往復：${jName} ⇄ ${vName}）`,
-                        quantity: 2,
-                        unitFare: branchOneWayFare,
-                        subtotalFare: branchRoundFare,
-                        stopoverStations: [vName],
-                        extensionDropStation: null,
-                        routeResult: resBranch
-                      }
-                    ]
-                  });
-                }
-              }
-            }
-          }
-        }
-      });
-    }
 
     // 戦略4: 101km超え ＆ 大都市近郊区間脱出の「先買い（延長購入）」戦略
     // ※単純片道（cleanVisitIdsが空でdestIdあり）でも動作するように拡張
@@ -1277,7 +1083,7 @@
               let res = cachedSearch(s_i, mid, s_j, { searchMode: 'oneway' });
               let isBypassed = false;
               let bypassDetails = null;
-              if (preferStopover && res && res.success && res.fareRules && res.fareRules.isSuburbanOnly === true && res.totalKm >= 90) {
+              if (res && res.success && res.fareRules && res.fareRules.isSuburbanOnly === true && res.totalKm >= 90) {
                 const bypass = trySuburbanBypassWithShinkansen(s_i, mid, s_j, res, stations, cachedSearch, { fareType, checkTimeBudget });
                 if (bypass) {
                   res = bypass.routeResult;
@@ -1349,11 +1155,246 @@
       });
     }
 
+    // 戦略3: 本線一筆書き ＋ 分岐駅からの「別途往復（ヒゲ分離）」戦略
+    if (cleanVisitIds.length >= 1 && !checkTimeBudget()) {
+      const junctionMap = new Map();
+      cleanVisitIds.forEach(vId => {
+        const vSt = stations[vId];
+        const isStubStation = vSt && vSt.lines && vSt.lines.length <= 1;
+        if (cleanVisitIds.length <= 3 || isStubStation) {
+          const juncs = findNearbyJunctions(internalGraph, vId, stations, lines).slice(0, 2);
+          junctionMap.set(vId, juncs);
+        }
+      });
+
+      const evaluatedBranchSets = new Set();
+      const branchOrders = visitOrders.slice(0, 2);
+      branchOrders.forEach(order => {
+        if (checkTimeBudget()) return;
+        // 1駅のみの往復（例: 東京発・行きたい駅 ['京都']・returnToStart: true）の場合のジャンクション大回り
+        if (order.length === 1 && returnToStart) {
+          const vId = order[0];
+          const juncs = junctionMap.get(vId) || [];
+          for (const j of juncs) {
+            if (checkTimeBudget()) break;
+            const branchKey = `${deptId}::${j.id}::${destId}::${vId}`;
+            if (evaluatedBranchSets.has(branchKey)) continue;
+            evaluatedBranchSets.add(branchKey);
+
+            let resMain = cachedSearch(deptId, [j.id], destId, { searchMode: 'oneway' });
+            let isBypassed = false;
+            let bypassDetails = null;
+
+            // 近郊区間解除バイパス
+            if (resMain && resMain.success && resMain.fareRules && resMain.fareRules.isSuburbanOnly === true && resMain.totalKm >= 95) {
+              const bypass = trySuburbanBypassWithShinkansen(deptId, [j.id], destId, resMain, stations, cachedSearch, { fareType, checkTimeBudget });
+              if (bypass) {
+                resMain = bypass.routeResult;
+                isBypassed = true;
+                bypassDetails = getShinkansenBypassDetails(bypass.pair.fromId, bypass.pair.toId, bypass.pair.name, resMain.fareRules.validityDays, stations);
+              }
+            }
+
+            if (resMain && resMain.success && resMain.isOneWayTrip && resMain.fareRules) {
+              if (canStopoverAll(resMain, [j.id], stations)) {
+                const mainFare = getTicketPrice(resMain.fareRules, fareType);
+                const resBranch = cachedSearch(j.id, [], vId, { searchMode: 'shortest' });
+                if (resBranch && resBranch.success && resBranch.fareRules) {
+                  const branchOneWayFare = getTicketPrice(resBranch.fareRules, fareType);
+                  const branchRoundFare = branchOneWayFare * 2;
+                  const total = mainFare + branchRoundFare;
+                  const vName = (stations[vId] && stations[vId].name) || vId;
+                  const jName = j.name;
+
+                  const tags = ['一筆書き＋途中下車', `分岐駅往復分離（${jName}⇄${vName}）`];
+                  if (isBypassed && bypassDetails) {
+                    tags.unshift(bypassDetails.tag);
+                  } else if (isBypassed) {
+                    tags.unshift('新幹線1区間組み込み（近郊区間脱出）');
+                  }
+
+                  let note = `${jName}駅で途中下車し、${jName}⇄${vName}は別途往復乗車券（${branchRoundFare}円）を購入するとお得になります。`;
+                  if (isBypassed && bypassDetails) {
+                    note += ` ${bypassDetails.summaryNote}`;
+                  }
+
+                  candidatePlans.push({
+                    title: `大回り一筆書き＋分岐往復（2枚構成）`,
+                    strategyTags: tags,
+                    totalFare: total,
+                    totalKm: Math.round((resMain.totalKm + resBranch.totalKm * 2) * 10) / 10,
+                    ticketCount: 2,
+                    summaryNote: note,
+                    tickets: [
+                      {
+                        role: 'main',
+                        label: '乗車券①（本線・一周一筆書き）',
+                        quantity: 1,
+                        unitFare: mainFare,
+                        subtotalFare: mainFare,
+                        stopoverStations: [jName],
+                        extensionDropStation: null,
+                        shinkansenSegments: resMain.shinkansenSegments || [],
+                        forceShinkansenOnlyInSegments: !!resMain.forceShinkansenOnlyInSegments,
+                        viaIds: resMain.viaIds || [j.id],
+                        routeResult: resMain,
+                        description: (isBypassed && bypassDetails) ? bypassDetails.description : ''
+                      },
+                      {
+                        role: 'branch-roundtrip',
+                        label: `乗車券②（別途往復：${jName} ⇄ ${vName}）`,
+                        quantity: 2,
+                        unitFare: branchOneWayFare,
+                        subtotalFare: branchRoundFare,
+                        stopoverStations: [vName],
+                        extensionDropStation: null,
+                        routeResult: resBranch
+                      }
+                    ]
+                  });
+                }
+              }
+            }
+          }
+        }
+
+        // 複数駅でのヒゲ分離探索
+        const directOneWayRes = cachedSearch(deptId, order, destId, { searchMode: 'oneway' });
+        const hasDirectOneWay = (directOneWayRes && directOneWayRes.success && directOneWayRes.isOneWayTrip);
+
+        for (let i = 0; i < order.length; i++) {
+          if (checkTimeBudget()) break;
+          const vId = order[i];
+          const vSt = stations[vId];
+          const isStubStation = vSt && vSt.lines && vSt.lines.length <= 1;
+          if (hasDirectOneWay && !isStubStation) continue;
+
+          let bypassFoundForStation = false;
+          const juncs = junctionMap.get(vId) || [];
+          for (const j of juncs) {
+            if (checkTimeBudget()) break;
+            const mainStops = [...order];
+            mainStops[i] = j.id;
+
+            const branchKey = `${deptId}::${mainStops.join(',')}::${destId}::${vId}::${j.id}`;
+            if (evaluatedBranchSets.has(branchKey)) continue;
+            evaluatedBranchSets.add(branchKey);
+
+            let resMain = cachedSearch(deptId, mainStops, destId, { searchMode: 'oneway' });
+
+            const mainVariants = [];
+            if (resMain && resMain.success && resMain.fareRules) {
+              if (resMain.fareRules.isSuburbanOnly === true && resMain.totalKm >= 95) {
+                const bypasses = findSuburbanBypassesWithShinkansen(deptId, mainStops, destId, resMain, stations, cachedSearch, { fareType, checkTimeBudget });
+                for (const bypass of bypasses) {
+                  const bDetails = getShinkansenBypassDetails(bypass.pair.fromId, bypass.pair.toId, bypass.pair.name, bypass.routeResult.fareRules.validityDays, stations);
+                  mainVariants.push({
+                    res: bypass.routeResult,
+                    isBypassed: true,
+                    bypassDetails: bDetails
+                  });
+                }
+              }
+              if (mainVariants.length === 0 || resMain.fareRules.isSuburbanOnly === false) {
+                mainVariants.push({
+                  res: resMain,
+                  isBypassed: false,
+                  bypassDetails: null
+                });
+              }
+            }
+
+            for (const variant of mainVariants) {
+              const curMain = variant.res;
+              const isBypassed = variant.isBypassed;
+              const bypassDetails = variant.bypassDetails;
+
+              if (curMain && curMain.success && curMain.isOneWayTrip && curMain.fareRules) {
+                if (canStopoverAll(curMain, mainStops, stations)) {
+                  const mainFare = getTicketPrice(curMain.fareRules, fareType);
+                  const resBranch = cachedSearch(j.id, [], vId, { searchMode: 'shortest' });
+                  if (resBranch && resBranch.success && resBranch.fareRules) {
+                    const branchOneWayFare = getTicketPrice(resBranch.fareRules, fareType);
+                    const branchRoundFare = branchOneWayFare * 2;
+                    const total = mainFare + branchRoundFare;
+                    const vName = (stations[vId] && stations[vId].name) || vId;
+                    const jName = j.name;
+
+                    const stopoverNames = mainStops.map(id => (stations[id] && stations[id].name) || id);
+                    const tags = ['一筆書き＋途中下車', `分岐駅往復分離（${jName}⇄${vName}）`];
+                    if (isBypassed && bypassDetails) {
+                      tags.unshift(bypassDetails.tag);
+                    } else if (isBypassed) {
+                      tags.unshift('新幹線1区間組み込み（近郊区間脱出）');
+                    }
+
+                    let note = `${jName}で途中下車し、${jName}⇄${vName}は別途往復乗車券（${branchRoundFare}円）を購入すると最安になります。`;
+                    if (isBypassed && bypassDetails) {
+                      note += ` ${bypassDetails.summaryNote}`;
+                    }
+
+                    candidatePlans.push({
+                      title: `一筆書き＋分岐駅往復（2枚構成）`,
+                      strategyTags: tags,
+                      totalFare: total,
+                      totalKm: Math.round((curMain.totalKm + resBranch.totalKm * 2) * 10) / 10,
+                      ticketCount: 2,
+                      summaryNote: note,
+                      tickets: [
+                        {
+                          role: 'main',
+                          label: returnToStart ? '乗車券①（本線・一周一筆書き）' : '乗車券①（本線・片道一筆書き）',
+                          quantity: 1,
+                          unitFare: mainFare,
+                          subtotalFare: mainFare,
+                          stopoverStations: stopoverNames,
+                          extensionDropStation: null,
+                          shinkansenSegments: curMain.shinkansenSegments || [],
+                          forceShinkansenOnlyInSegments: !!curMain.forceShinkansenOnlyInSegments,
+                          viaIds: curMain.viaIds || mainStops,
+                          routeResult: curMain,
+                          description: (isBypassed && bypassDetails) ? bypassDetails.description : ''
+                        },
+                        {
+                          role: 'branch-roundtrip',
+                          label: `乗車券②（別途往復：${jName} ⇄ ${vName}）`,
+                          quantity: 2,
+                          unitFare: branchOneWayFare,
+                          subtotalFare: branchRoundFare,
+                          stopoverStations: [vName],
+                          extensionDropStation: null,
+                          routeResult: resBranch
+                        }
+                      ]
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
     // プランの属性評価・正規化シグネチャによる重複排除
     const uniquePlansMap = new Map();
     candidatePlans.forEach(p => {
       if (p.totalFare === Infinity) return;
       
+      // 別途特急券が必要な完全別線新幹線バイパスが含まれているか判定
+      let requiresExpressTicket = false;
+      if (p.tickets && p.tickets.length > 0) {
+        for (const t of p.tickets) {
+          const segs = t.shinkansenSegments || (t.routeResult && t.routeResult.shinkansenSegments) || [];
+          if (segs.some(s => isSeparateShinkansenBypassPair(s.fromId, s.toId))) {
+            requiresExpressTicket = true;
+            break;
+          }
+        }
+      }
+      p.requiresExpressTicket = requiresExpressTicket;
+      p.effectiveFare = requiresExpressTicket ? (p.totalFare + 870) : p.totalFare;
+
       // 途中下車フレンドリー判定
       // 全チケットで途中下車可能、または途中下車可能チケットを含み訪問駅で途中下車できる
       const isStopoverFriendly = p.tickets.every(t => {
@@ -1375,7 +1416,7 @@
         const to = t.destId || (r ? r.destId : '');
         return `${from}_${to}_${t.unitFare}_${t.quantity}_${stopover}_${mars || lineChain}`;
       }).join('|');
-      const sigKey = `${p.totalFare}::${ticketSig}`;
+      const sigKey = `${p.totalFare}::${p.effectiveFare}::${ticketSig}`;
 
       if (!uniquePlansMap.has(sigKey)) {
         uniquePlansMap.set(sigKey, p);
@@ -1394,19 +1435,27 @@
         if (aReasonable !== bReasonable) {
           return aReasonable ? -1 : 1;
         }
+        if (a.effectiveFare !== b.effectiveFare) {
+          return a.effectiveFare - b.effectiveFare;
+        }
+        if (a.totalFare !== b.totalFare) {
+          return a.totalFare - b.totalFare;
+        }
         if (a.isStopoverFriendly !== b.isStopoverFriendly) {
           return a.isStopoverFriendly ? -1 : 1;
         }
-        if (a.totalFare !== b.totalFare) return a.totalFare - b.totalFare;
         if (a.ticketCount !== b.ticketCount) return a.ticketCount - b.ticketCount;
         return a.totalKm - b.totalKm;
       });
 
-      // ユーザー比較のため、絶対最安プランが上位3案に含まれていない場合は3案目に保持する
-      const absoluteCheapestPlan = allUniquePlans.slice().sort((a, b) => a.totalFare - b.totalFare)[0];
+      // ユーザー比較のため、実質最安（または絶対最安）プランが上位3案に含まれていない場合は3案目に保持する
+      const absoluteCheapestPlan = allUniquePlans.slice().sort((a, b) => {
+        if (a.effectiveFare !== b.effectiveFare) return a.effectiveFare - b.effectiveFare;
+        return a.totalFare - b.totalFare;
+      })[0];
       if (absoluteCheapestPlan && sortedPlans.length > 0) {
         const top3 = sortedPlans.slice(0, maxPlans);
-        if (!top3.some(p => p.totalFare === absoluteCheapestPlan.totalFare)) {
+        if (!top3.some(p => p.totalFare === absoluteCheapestPlan.totalFare && p.effectiveFare === absoluteCheapestPlan.effectiveFare)) {
           if (sortedPlans.length >= maxPlans) {
             sortedPlans[maxPlans - 1] = absoluteCheapestPlan;
           }
@@ -1415,7 +1464,12 @@
     } else {
       // 最安最優先モード
       sortedPlans = allUniquePlans.slice().sort((a, b) => {
-        if (a.totalFare !== b.totalFare) return a.totalFare - b.totalFare;
+        if (a.effectiveFare !== b.effectiveFare) {
+          return a.effectiveFare - b.effectiveFare;
+        }
+        if (a.totalFare !== b.totalFare) {
+          return a.totalFare - b.totalFare;
+        }
         if (a.isStopoverFriendly !== b.isStopoverFriendly) {
           return a.isStopoverFriendly ? -1 : 1;
         }
@@ -1497,6 +1551,7 @@
   // エクスポート
   const OptimizerEngine = {
     findCheapestTicketPlan,
+    findSuburbanBypassesWithShinkansen,
     getTicketPrice,
     canStopoverAll,
     findNearbyJunctions,

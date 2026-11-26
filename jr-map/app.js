@@ -4879,9 +4879,6 @@
       chkCheapestPreferStopover.addEventListener('change', (e) => {
         ROUTE_STATE.cheapestPreferStopover = e.target.checked;
         markInputChanged();
-        if (ROUTE_STATE.searchMode === 'cheapest' && ROUTE_STATE.cheapestPlanResult) {
-          executeRouteSearch();
-        }
       });
     }
 
@@ -6601,8 +6598,16 @@
 
     if (mode === 'cheapest') {
       ROUTE_STATE.searchMode = 'cheapest';
-      if (params.get('ret') === '0') ROUTE_STATE.cheapestReturn = false;
-      if (params.get('auto') === '0') ROUTE_STATE.cheapestAutoOrder = false;
+      if (params.get('ret') === '0') {
+        ROUTE_STATE.cheapestReturn = false;
+        const chkReturn = document.getElementById('chk-cheapest-return');
+        if (chkReturn) chkReturn.checked = false;
+      }
+      if (params.get('auto') === '0') {
+        ROUTE_STATE.cheapestAutoOrder = false;
+        const chkAuto = document.getElementById('chk-cheapest-auto-order');
+        if (chkAuto) chkAuto.checked = false;
+      }
       if (params.get('stopover') === '1') {
         ROUTE_STATE.cheapestPreferStopover = true;
         const chkStopover = document.getElementById('chk-cheapest-prefer-stopover');
@@ -7318,6 +7323,7 @@
 
       // URL同期
       syncRouteToUrl({
+        success: true,
         deptId: deptSt.id,
         destId: destSt ? destSt.id : deptSt.id,
         viaIds: viaStIds,
@@ -8027,8 +8033,14 @@
     // 新幹線区間指定と手動入力のリセット
     ROUTE_STATE.useShinkansen = false;
     ROUTE_STATE.cheapestPreferStopover = false;
+    ROUTE_STATE.cheapestReturn = true;
+    ROUTE_STATE.cheapestAutoOrder = true;
     const chkCheapestPreferStopover = document.getElementById('chk-cheapest-prefer-stopover');
     if (chkCheapestPreferStopover) chkCheapestPreferStopover.checked = false;
+    const chkCheapestReturn = document.getElementById('chk-cheapest-return');
+    if (chkCheapestReturn) chkCheapestReturn.checked = true;
+    const chkCheapestAutoOrder = document.getElementById('chk-cheapest-auto-order');
+    if (chkCheapestAutoOrder) chkCheapestAutoOrder.checked = true;
     ROUTE_STATE.searchMode = 'shortest';
     ROUTE_STATE.shinkansenSegments = [];
     ROUTE_STATE.currentFareType = 'adult';
