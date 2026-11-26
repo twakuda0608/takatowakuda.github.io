@@ -1809,13 +1809,13 @@ body.theme-dark .sheet-header.jr-station-sign {
   text-align: center;
 }
 
-/* 3. 発着駅表示行 (y=112〜160, h=48, left=64, right=64 - 左右に正方形「区」マーク1個分ずつの余白厳密確保、内側有効幅512u) */
+/* 3. 発着駅表示行 (y=112〜160, h=48, left=50, right=50 - 経由x=50と揃え、左右各50u余白厳密確保、内側有効幅540u) */
 .ticket-stations-row {
   position: absolute;
   top: calc(112 * var(--u));
   height: calc(48 * var(--u));
-  left: calc(64 * var(--u));
-  right: calc(64 * var(--u));
+  left: calc(50 * var(--u));
+  right: calc(50 * var(--u));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1825,18 +1825,21 @@ body.theme-dark .sheet-header.jr-station-sign {
   margin: 0;
 }
 .ticket-stations-inner {
-  display: inline-flex;
+  width: 100%;
+  display: grid;
+  grid-template-columns: calc(236 * var(--u)) calc(68 * var(--u)) calc(236 * var(--u));
   align-items: center;
-  justify-content: center;
-  gap: calc(14 * var(--u));
   white-space: nowrap;
-  transform-origin: center center;
 }
 .station-box {
+  width: 100%;
+  min-width: 0;
+  height: calc(48 * var(--u));
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
+  justify-content: center;
+  overflow: visible;
+  position: relative;
 }
 .station-box.dest-box {
   position: relative;
@@ -1845,12 +1848,33 @@ body.theme-dark .sheet-header.jr-station-sign {
   font-size: calc(48 * var(--u));
   font-weight: 900;
   color: #111827;
-  letter-spacing: calc(2 * var(--u));
+  letter-spacing: 0;
   line-height: 1;
   display: inline-flex;
   align-items: center;
-  gap: calc(3 * var(--u));
+  justify-content: center;
   white-space: nowrap;
+  transform-origin: center center;
+}
+
+/* 均等割り付け (少文字: 2〜4文字) */
+.station-chars-spread {
+  display: inline-flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.station-chars-spread.len-2 {
+  width: calc(160 * var(--u));
+}
+.station-chars-spread.len-3 {
+  width: calc(196 * var(--u));
+}
+.station-chars-spread.len-4 {
+  width: calc(216 * var(--u));
+}
+.st-char {
+  display: inline-block;
+  line-height: 1;
 }
 
 /* 特定都区市内・山手線内シンボルマーク (正方形1文字マーク: 福, 区, 山 等) */
@@ -1866,7 +1890,7 @@ body.theme-dark .sheet-header.jr-station-sign {
   border-radius: calc(3 * var(--u));
   box-sizing: border-box;
   vertical-align: middle;
-  margin-right: calc(4 * var(--u));
+  margin-right: calc(2 * var(--u));
   letter-spacing: 0;
   flex-shrink: 0;
 }
@@ -1885,13 +1909,13 @@ body.theme-dark .sheet-header.jr-station-sign {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  height: 100%;
 }
-.ticket-arrow-symbol {
-  font-size: calc(32 * var(--u));
-  font-weight: 900;
-  color: #111827;
-  letter-spacing: calc(-2 * var(--u));
-  line-height: 1;
+.ticket-arrow-svg {
+  width: calc(28 * var(--u));
+  height: calc(21 * var(--u));
+  display: block;
 }
 
 /* 4. 小児インク抜きスタンプ (着駅の直上・SVGマスク透過: y=64〜106, w=42, h=42) */

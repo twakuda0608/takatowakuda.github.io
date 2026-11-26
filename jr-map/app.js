@@ -5139,6 +5139,11 @@
       const zm = ZONE_SYMBOL_MAP[name];
       return `<span class="zone-symbol-badge ${zm.type}">${zm.char}</span>${name}`;
     }
+    const hasBrackets = name.includes('(') || name.includes(')') || name.includes('（') || name.includes('）');
+    if (!hasBrackets && name.length >= 2 && name.length <= 4) {
+      const chars = Array.from(name).map(c => `<span class="st-char">${c}</span>`).join('');
+      return `<span class="station-chars-spread len-${name.length}">${chars}</span>`;
+    }
     return name;
   }
 
@@ -5338,19 +5343,33 @@
     ].filter(Boolean).join('\n');
   }
 
-  // 券面幅安全ガード (発着駅長・経由長が溢れるのを防止、左右64u余白厳密維持)
-  function fitTicketRowWidth() {
-    const row = document.getElementById('ticket-stations-row');
-    const inner = document.getElementById('ticket-stations-inner') || row;
-    if (!row || !inner) return;
-    inner.style.transform = '';
-    const available = row.clientWidth;
-    const content = inner.scrollWidth;
-    if (content > available && available > 0) {
-      const scale = Math.max(0.45, available / content);
-      inner.style.transform = `scale(${scale.toFixed(3)})`;
-      inner.style.transformOrigin = 'center center';
+  // 発駅・着駅スロットの長体圧縮 (236u 超過時のみ scaleX 圧縮、内側有効幅 540u & 中央矢印 x=320 固定維持)
+  function fitStationSlot(el) {
+    if (!el) return;
+    el.style.transform = '';
+    const parent = el.closest('.station-box') || el.parentElement;
+    const slotWidth = parent ? parent.clientWidth : 0;
+    const contentWidth = el.scrollWidth;
+    if (slotWidth > 0 && contentWidth > slotWidth) {
+      const ratio = slotWidth / contentWidth;
+      if (ratio >= 0.52) {
+        el.style.transform = `scaleX(${ratio.toFixed(3)})`;
+      } else {
+        const sx = 0.52;
+        const sy = (ratio / 0.52).toFixed(3);
+        el.style.transform = `scale(${sx}, ${sy})`;
+      }
+      el.style.transformOrigin = 'center center';
     }
+  }
+
+  function fitTicketRowWidth() {
+    const inner = document.getElementById('ticket-stations-inner');
+    if (inner) inner.style.transform = '';
+    const deptName = document.getElementById('ticket-dept-name');
+    const destName = document.getElementById('ticket-dest-name');
+    if (deptName) fitStationSlot(deptName);
+    if (destName) fitStationSlot(destName);
   }
 
   // マルス券面「経由」全文ツールチップ制御
@@ -5913,13 +5932,9 @@
       ctx.stroke();
     }
 
-    // 4. 発着駅名行 (中央揃え・──→ 矢印・有効幅 512u 自動縮小)
-    // left=64 〜 right=576（有効幅 512）の中央 x=320, y=136 を基準
+    // 4. 発着駅名行 (3カラム構造: 発駅スロット x=168, 中央ブロック矢印 x=320, 着駅スロット x=472)
     const displayDept = fr.deptZoneApplied ? fr.displayDeptName : getStationMarsName(result.deptId || result.deptName);
     const displayDest = fr.destZoneApplied ? fr.displayDestName : getStationMarsName(result.destId || result.destName);
-
-    const deptZoneInfo = fr.deptZoneApplied ? (ZONE_SYMBOL_MAP[displayDept] || null) : null;
-    const destZoneInfo = fr.destZoneApplied ? (ZONE_SYMBOL_MAP[displayDest] || null) : null;
 
     function drawRoundedRectPath(c, x, y, w, h, r) {
       c.beginPath();
@@ -5935,115 +5950,120 @@
       c.closePath();
     }
 
-    ctx.font = '900 48px "Noto Sans JP", sans-serif';
-    const deptTextW = ctx.measureText(displayDept).width;
-    const destTextW = ctx.measureText(displayDest).width;
+    function drawStationSlot(stationName, isZone, slotCenterX) {
+      const slotCenterY = 136;
+      const slotWidth = 236;
+      const hasBrackets = stationName.includes('(') || stationName.includes(')') || stationName.includes('（') || stationName.includes('）');
+      const isSpread = !isZone && !hasBrackets && stationName.length >= 2 && stationName.length <= 4;
 
-    const deptBadgeW = deptZoneInfo ? 36 : 0;
-    const destBadgeW = destZoneInfo ? 36 : 0;
+      if (isSpread) {
+        // 目標幅: 2文字 160, 3文字 196, 4文字 216
+        const targetW = stationName.length === 2 ? 160 : (stationName.length === 3 ? 196 : 216);
+        const chars = Array.from(stationName);
+        const n = chars.length;
+        ctx.font = '900 48px "Noto Sans JP", sans-serif';
+        ctx.fillStyle = '#111827';
+        ctx.textBaseline = 'middle';
 
-    const deptBlockW = deptBadgeW + deptTextW;
-    const destBlockW = destBadgeW + destTextW;
+        const charWidths = chars.map(c => ctx.measureText(c).width);
+        const sumCharW = charWidths.reduce((a, b) => a + b, 0);
+        const gap = (n > 1) ? Math.max(0, (targetW - sumCharW) / (n - 1)) : 0;
+        const actualW = Math.max(targetW, sumCharW);
+        let curX = slotCenterX - actualW / 2;
 
-    ctx.font = '900 32px "Noto Sans JP", sans-serif';
-    const arrowStr = '──→';
-    const arrowW = ctx.measureText(arrowStr).width;
-    const gap = 14;
+        ctx.textAlign = 'left';
+        for (let i = 0; i < n; i++) {
+          ctx.fillText(chars[i], curX, slotCenterY);
+          curX += charWidths[i] + gap;
+        }
+      } else {
+        // 1文字、ゾーンマーク付き、または5文字以上（文字間0詰め＋長体圧縮）
+        const zoneInfo = isZone ? (ZONE_SYMBOL_MAP[stationName] || null) : null;
+        const badgeW = zoneInfo ? 32 : 0;
+        const badgeGap = zoneInfo ? 2 : 0;
 
-    const totalStationsWidth = deptBlockW + gap + arrowW + gap + destBlockW;
-    const maxStationsWidth = 512;
-    const stationScale = (totalStationsWidth > maxStationsWidth)
-      ? Math.max(0.45, maxStationsWidth / totalStationsWidth)
-      : 1.0;
+        ctx.font = '900 48px "Noto Sans JP", sans-serif';
+        const textW = ctx.measureText(stationName).width;
+        const naturalW = (zoneInfo ? badgeW + badgeGap : 0) + textW;
 
-    let destCenterX = 320;
+        let scaleX = 1.0;
+        let scaleY = 1.0;
+        if (naturalW > slotWidth) {
+          const ratio = slotWidth / naturalW;
+          if (ratio >= 0.52) {
+            scaleX = ratio;
+          } else {
+            scaleX = 0.52;
+            scaleY = ratio / 0.52;
+          }
+        }
 
+        ctx.save();
+        ctx.translate(slotCenterX, slotCenterY);
+        ctx.scale(scaleX, scaleY);
+
+        let curX = -naturalW / 2;
+
+        if (zoneInfo) {
+          const bX = curX;
+          const bY = -16;
+          drawRoundedRectPath(ctx, bX, bY, 32, 32, 3);
+          if (zoneInfo.type === 'city') {
+            ctx.fillStyle = '#111827';
+            ctx.fill();
+            ctx.font = '900 20px "Noto Sans JP", sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(zoneInfo.char, bX + 16, 0);
+          } else {
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.strokeStyle = '#111827';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.font = '900 20px "Noto Sans JP", sans-serif';
+            ctx.fillStyle = '#111827';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(zoneInfo.char, bX + 16, 0);
+          }
+          curX += badgeW + badgeGap;
+        }
+
+        ctx.font = '900 48px "Noto Sans JP", sans-serif';
+        ctx.fillStyle = '#111827';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(stationName, curX, 0);
+        ctx.restore();
+      }
+    }
+
+    // 発駅スロット (中心 x = 168)
+    drawStationSlot(displayDept, fr.deptZoneApplied, 168);
+
+    // 中央マルス風ブロック矢印 (中心 x = 320, y = 136, 28 × 21)
     ctx.save();
-    ctx.translate(320, 136);
-    ctx.scale(stationScale, stationScale);
-
-    const startX = -totalStationsWidth / 2;
-    let curX = startX;
-
-    if (deptZoneInfo) {
-      const bX = curX;
-      const bY = -16;
-      drawRoundedRectPath(ctx, bX, bY, 32, 32, 3);
-      if (deptZoneInfo.type === 'city') {
-        ctx.fillStyle = '#111827';
-        ctx.fill();
-        ctx.font = '900 20px "Noto Sans JP", sans-serif';
-        ctx.fillStyle = '#ffffff';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(deptZoneInfo.char, bX + 16, 0);
-      } else {
-        ctx.fillStyle = '#ffffff';
-        ctx.fill();
-        ctx.strokeStyle = '#111827';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.font = '900 20px "Noto Sans JP", sans-serif';
-        ctx.fillStyle = '#111827';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(deptZoneInfo.char, bX + 16, 0);
-      }
-      curX += 36;
-    }
-
-    ctx.font = '900 48px "Noto Sans JP", sans-serif';
+    ctx.translate(306, 125.5);
+    ctx.scale(28 / 32, 21 / 24);
+    ctx.beginPath();
+    ctx.moveTo(2, 8.5);
+    ctx.lineTo(18, 8.5);
+    ctx.lineTo(18, 3);
+    ctx.lineTo(30, 12);
+    ctx.lineTo(18, 21);
+    ctx.lineTo(18, 15.5);
+    ctx.lineTo(2, 15.5);
+    ctx.closePath();
     ctx.fillStyle = '#111827';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(displayDept, curX, 0);
-    curX += deptTextW + gap;
-
-    ctx.font = '900 32px "Noto Sans JP", sans-serif';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(arrowStr, curX, 0);
-    curX += arrowW + gap;
-
-    const destBlockStartX = curX;
-
-    if (destZoneInfo) {
-      const bX = curX;
-      const bY = -16;
-      drawRoundedRectPath(ctx, bX, bY, 32, 32, 3);
-      if (destZoneInfo.type === 'city') {
-        ctx.fillStyle = '#111827';
-        ctx.fill();
-        ctx.font = '900 20px "Noto Sans JP", sans-serif';
-        ctx.fillStyle = '#ffffff';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(destZoneInfo.char, bX + 16, 0);
-      } else {
-        ctx.fillStyle = '#ffffff';
-        ctx.fill();
-        ctx.strokeStyle = '#111827';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.font = '900 20px "Noto Sans JP", sans-serif';
-        ctx.fillStyle = '#111827';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(destZoneInfo.char, bX + 16, 0);
-      }
-      curX += 36;
-    }
-
-    ctx.font = '900 48px "Noto Sans JP", sans-serif';
-    ctx.fillStyle = '#111827';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(displayDest, curX, 0);
-
-    destCenterX = 320 + stationScale * (destBlockStartX + destBlockW / 2);
+    ctx.fill();
     ctx.restore();
 
-    // 5. 小児インク抜きスタンプ (2倍解像度オフスクリーン Canvas 84 × 84、論理サイズ 42 × 42)
+    // 着駅スロット (中心 x = 472)
+    drawStationSlot(displayDest, fr.destZoneApplied, 472);
+
+    // 5. 小児インク抜きスタンプ (着駅スロット中央 x=472 の直上 x=451, y=64、論理サイズ 42 × 42)
     if (fareType === 'child') {
       const stampCanvas = document.createElement('canvas');
       stampCanvas.width = 84;
@@ -6058,7 +6078,7 @@
       sctx.textAlign = 'center';
       sctx.textBaseline = 'middle';
       sctx.fillText('小', 21, 21);
-      ctx.drawImage(stampCanvas, destCenterX - 21, 64, 42, 42);
+      ctx.drawImage(stampCanvas, 451, 64, 42, 42);
     }
 
     // 6. 経由 (x = 50, y = 182)
@@ -6582,6 +6602,11 @@
           delete panel.dataset.currentY;
         }
         delete panel.dataset.actionEditing;
+      }
+
+      if (ROUTE_STATE.lastResult) {
+        fitTicketRowWidth();
+        fitTicketViaWidth(ROUTE_STATE.lastResult.marsString || '(直通)');
       }
 
       // 新幹線候補チップを最新の入力/探索ルートに合わせて更新
@@ -7157,6 +7182,10 @@
       }
     }
 
+    // 初回検索時・表示直後の券面幅および経由幅安全計算
+    fitTicketRowWidth();
+    fitTicketViaWidth(result.marsString || '(直通)');
+
     // 地図上にハイライト描画
     drawRouteOnMap(result);
 
@@ -7229,6 +7258,10 @@
     if (stationsRow) stationsRow.style.transform = 'none';
     const stationsInner = document.getElementById('ticket-stations-inner');
     if (stationsInner) stationsInner.style.transform = '';
+    const deptName = document.getElementById('ticket-dept-name');
+    if (deptName) deptName.style.transform = '';
+    const destName = document.getElementById('ticket-dest-name');
+    if (destName) destName.style.transform = '';
     const viaRow = document.getElementById('ticket-via-row');
     if (viaRow) {
       viaRow.style.fontSize = '';
