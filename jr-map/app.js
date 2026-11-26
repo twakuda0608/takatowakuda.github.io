@@ -4512,6 +4512,14 @@
     const lineEl = document.getElementById('shinkansen-select-line');
     if (!fromSelect || !toSelect) return;
 
+    // 非表示の新幹線セレクタ更新の遅延評価:
+    // cheapestモードのとき、またはパネルが非表示のときは重い探索をスキップ
+    const shinkansenSegsPanel = document.getElementById('shinkansen-segments-panel');
+    const isPanelVisible = shinkansenSegsPanel && shinkansenSegsPanel.style.display !== 'none';
+    if (ROUTE_STATE.searchMode === 'cheapest' || !isPanelVisible) {
+      return;
+    }
+
     const stationList = getRelevantShinkansenStationList();
 
     // 候補が2駅未満（新幹線区間なし、または未入力時）の場合はセレクトとボタンを完全無効化
@@ -4848,8 +4856,12 @@
         ROUTE_STATE.cheapestReturn = e.target.checked;
         const destRow = document.querySelector('.route-input-row.dest-row');
         const swapRow = document.querySelector('.route-swap-row');
+        const destInput = document.getElementById('route-dest-input');
         if (destRow) destRow.style.display = ROUTE_STATE.cheapestReturn ? 'none' : 'flex';
         if (swapRow) swapRow.style.display = ROUTE_STATE.cheapestReturn ? 'none' : 'flex';
+        if (ROUTE_STATE.cheapestReturn && destInput) {
+          clearStationInputValue(destInput);
+        }
         markInputChanged();
       });
     }
@@ -4898,6 +4910,9 @@
         const isOpen = shinkansenSegsPanel.style.display !== 'none';
         shinkansenSegsPanel.style.display = isOpen ? 'none' : 'flex';
         toggleShinkansenSegsBtn.textContent = isOpen ? '特定区間新幹線指定 ▼' : '特定区間新幹線指定 ▲';
+        if (!isOpen) {
+          updateShinkansenSelectors();
+        }
       });
     }
 
@@ -6831,29 +6846,61 @@
           const deptInput = document.getElementById('route-dept-input');
           const destInput = document.getElementById('route-dest-input');
           const viaInputs = Array.from(document.querySelectorAll('.route-via-input'));
+          const searchBtn = document.getElementById('btn-search-route');
+
+          const isCheapest = ROUTE_STATE.searchMode === 'cheapest';
+          const isCheapestReturn = isCheapest && ROUTE_STATE.cheapestReturn;
+          const destRow = document.querySelector('.route-input-row.dest-row');
+          const isDestRowVisible = !destRow || destRow.style.display !== 'none';
 
           const hasDept = deptInput && (deptInput.getAttribute('data-id') || deptInput.value.trim());
-          const hasDest = destInput && (destInput.getAttribute('data-id') || destInput.value.trim());
+          const hasDest = !isCheapestReturn && isDestRowVisible && destInput && (destInput.getAttribute('data-id') || destInput.value.trim());
 
-          // 発駅と着駅の両方が入力済みであれば、即座に経路探索を実行
-          if (hasDept && hasDest) {
-            executeRouteSearch();
-          } else if (!hasDept && deptInput) {
-            deptInput.focus();
-          } else if (!hasDest && destInput) {
-            destInput.focus();
-          } else if (inputEl === deptInput) {
-            if (viaInputs.length > 0) {
-              viaInputs[0].focus();
-            } else if (destInput) {
-              destInput.focus();
+          if (isCheapest) {
+            // 最安きっぷモード: 入力中の勝手な自動暴発を防止し、順次フォーカス移動または検索ボタンへフォーカス
+            if (inputEl.classList.contains('route-via-input')) {
+              const currentIdx = viaInputs.indexOf(inputEl);
+              if (currentIdx >= 0 && currentIdx < viaInputs.length - 1) {
+                viaInputs[currentIdx + 1].focus();
+              } else if (!isCheapestReturn && destInput && (!destInput.getAttribute('data-id') && !destInput.value.trim())) {
+                destInput.focus();
+              } else if (searchBtn) {
+                searchBtn.focus();
+              }
+            } else if (inputEl === deptInput) {
+              if (viaInputs.length > 0) {
+                viaInputs[0].focus();
+              } else if (!isCheapestReturn && destInput) {
+                destInput.focus();
+              } else if (searchBtn) {
+                searchBtn.focus();
+              }
+            } else if (inputEl === destInput) {
+              if (searchBtn) {
+                searchBtn.focus();
+              }
             }
-          } else if (inputEl.classList.contains('route-via-input')) {
-            const currentIdx = viaInputs.indexOf(inputEl);
-            if (currentIdx >= 0 && currentIdx < viaInputs.length - 1) {
-              viaInputs[currentIdx + 1].focus();
-            } else if (destInput) {
+          } else {
+            // 通常探索モード: 発駅と着駅の両方が入力済みであれば、即座に経路探索を実行
+            if (hasDept && hasDest) {
+              executeRouteSearch();
+            } else if (!hasDept && deptInput) {
+              deptInput.focus();
+            } else if (!hasDest && destInput) {
               destInput.focus();
+            } else if (inputEl === deptInput) {
+              if (viaInputs.length > 0) {
+                viaInputs[0].focus();
+              } else if (destInput) {
+                destInput.focus();
+              }
+            } else if (inputEl.classList.contains('route-via-input')) {
+              const currentIdx = viaInputs.indexOf(inputEl);
+              if (currentIdx >= 0 && currentIdx < viaInputs.length - 1) {
+                viaInputs[currentIdx + 1].focus();
+              } else if (destInput) {
+                destInput.focus();
+              }
             }
           }
         }

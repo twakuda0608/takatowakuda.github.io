@@ -454,6 +454,14 @@
   let cachedStations = null;
   let cachedLines = null;
 
+  // キャッシュ済みグラフの取得（存在すればそのまま返し、なければ構築）
+  function getGraph(arg1, arg2) {
+    if (cachedGraph) {
+      return cachedGraph;
+    }
+    return buildGraph(arg1, arg2);
+  }
+
   // グラフ構築
   function buildGraph(arg1, arg2) {
     let lines, stations;
@@ -723,6 +731,7 @@
   function findLeg(graph, startId, endId, options = {}) {
     const allowShinkansen = (options.useShinkansen !== undefined) ? options.useShinkansen : (options.allowShinkansen !== false);
     const forbiddenStations = options.forbiddenStations || new Set();
+    const maxCost = (options.maxCost !== undefined) ? options.maxCost : options.maxLegCost;
 
     const dist = new Map();
     const prev = new Map();
@@ -738,6 +747,11 @@
       const curr = pq.pop();
       const currKey = curr.id + '::' + curr.marsName;
 
+      // 探索距離上限による打ち切り
+      if (typeof maxCost === 'number' && curr.d > maxCost) {
+        break;
+      }
+
       if (curr.id === endId) {
         bestEndState = currKey;
         break;
@@ -749,6 +763,7 @@
       for (const edge of neighbors) {
         if (!allowShinkansen && edge.isShinkansen) continue;
         if (options.forceShinkansen && !edge.isShinkansen) continue;
+        if (typeof maxCost === 'number' && (curr.d + edge.dist) > maxCost) continue;
         if (forbiddenStations.has(edge.to)) {
           // 新幹線エッジの通過は、在来線側の将来駅制約等でブロックしない（新幹線で途中駅を通過後、在来線で同じ駅に接続した際に8の字交差として正しく重複検知するため）
           if (!edge.isShinkansen) {
@@ -2303,7 +2318,7 @@
     // 重複区間なし（一筆書き）探索におけるバックトラック・代替経路探索
     // 前半レグの最短経路が後半レグの唯一のアクセス路を塞いでしまった場合に、
     // 原因となった路線・エッジを特定して前レグの別ルートを再探索する
-    const MAX_BACKTRACK_ATTEMPTS = 8;
+    const MAX_BACKTRACK_ATTEMPTS = (options && typeof options.maxBacktrackAttempts === 'number') ? options.maxBacktrackAttempts : 8;
     let attemptCount = 0;
     let fullLegs = null;
     let lastStuckOrigin = null;
@@ -2445,7 +2460,8 @@
           forbiddenStations: legForbiddenStations,
           forbiddenLines: legForbiddenLines[i],
           forbiddenEdges: legForbiddenEdgesMerged,
-          requireOneWay: requireOneWay
+          requireOneWay: requireOneWay,
+          maxCost: (options.maxCost !== undefined) ? options.maxCost : options.maxLegCost
         };
 
         let leg = null;
@@ -3478,6 +3494,8 @@
     getMarsLineName,
     getMarsStationName,
     buildGraph,
+    getGraph,
+    getCachedGraph: getGraph,
     findLeg,
     getSegmentCoords,
     getLineTrackGraph,
