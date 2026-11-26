@@ -7,10 +7,10 @@
   'use strict';
 
   // --- 定数 & 状態管理 ---
-  const STATIONS = window.JR_STATIONS || {};
-  const LINES = window.JR_LINES || [];
-  const CATEGORIES = window.JR_CATEGORIES || [];
-  const TOPO = window.JR_TOPO || null;
+  const STATIONS = (typeof window !== 'undefined' && window.JR_STATIONS) ? window.JR_STATIONS : ((typeof require !== 'undefined') ? (require('./data/build-data.js').JR_STATIONS || {}) : {});
+  const LINES = (typeof window !== 'undefined' && window.JR_LINES) ? window.JR_LINES : ((typeof require !== 'undefined') ? (require('./data/build-data.js').JR_LINES || []) : []);
+  const CATEGORIES = (typeof window !== 'undefined' && window.JR_CATEGORIES) ? window.JR_CATEGORIES : [];
+  const TOPO = (typeof window !== 'undefined' && window.JR_TOPO) ? window.JR_TOPO : null;
 
   const STATE = {
     currentCategory: 'all',
@@ -566,6 +566,13 @@
       updateMapLayers();
       setupMapInteractions();
       updateResponsiveLayerZooms(true);
+
+      // URLからの経路自動復元 (ディープリンク)
+      setTimeout(() => {
+        if (typeof restoreRouteFromUrl === 'function') {
+          restoreRouteFromUrl();
+        }
+      }, 100);
     });
   }
 
@@ -2472,10 +2479,72 @@
     return line.color;
   }
 
+  let pickToastTimer = null;
+  function showToast(msg, duration = 1600) {
+    let toast = document.getElementById('pick-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'pick-toast';
+      toast.className = 'copy-toast';
+      toast.style.position = 'fixed';
+      toast.style.bottom = '80px';
+      toast.style.left = '50%';
+      toast.style.transform = 'translateX(-50%)';
+      toast.style.zIndex = '9999';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    clearTimeout(pickToastTimer);
+    pickToastTimer = setTimeout(() => {
+      toast.style.display = 'none';
+    }, duration);
+  }
+
+  function handleMapPickStation(stId) {
+    const st = STATIONS[stId];
+    if (!st) return;
+
+    const deptInput = document.getElementById('route-dept-input');
+    const destInput = document.getElementById('route-dest-input');
+    const deptId = deptInput ? deptInput.getAttribute('data-id') : null;
+    const destId = destInput ? destInput.getAttribute('data-id') : null;
+    let feedback = '';
+
+    if (!deptId && (!deptInput || !deptInput.value.trim())) {
+      setStationInputValue(deptInput, st);
+      feedback = `発駅に設定：${st.name}`;
+    } else if (!destId && (!destInput || !destInput.value.trim())) {
+      setStationInputValue(destInput, st);
+      feedback = `着駅に設定：${st.name}`;
+    } else {
+      const viaContainer = document.getElementById('route-via-container');
+      const viaInputs = viaContainer ? Array.from(viaContainer.querySelectorAll('.route-station-input')) : [];
+      let targetInput = viaInputs.find(inp => !inp.getAttribute('data-id') && !inp.value.trim());
+      if (!targetInput) {
+        addViaField();
+        const updatedInputs = viaContainer ? Array.from(viaContainer.querySelectorAll('.route-station-input')) : [];
+        targetInput = updatedInputs[updatedInputs.length - 1];
+      }
+      if (targetInput) {
+        setStationInputValue(targetInput, st);
+      }
+      feedback = `経由駅に追加：${st.name}`;
+    }
+
+    markInputChanged();
+    updateShinkansenCandidateChips();
+    showToast(feedback);
+  }
+
   // =======================================================
   // 7. 駅詳細選択 & ボトムシート
   // =======================================================
   function selectStation(stId, shouldPan = true, options = {}) {
+    if (ROUTE_STATE.mapPickMode && ROUTE_STATE.isOpen) {
+      handleMapPickStation(stId);
+      return;
+    }
     const st = STATIONS[stId];
     if (!st) return;
 
@@ -3518,6 +3587,7 @@
   // =======================================================
   const ROUTE_STATE = {
     isOpen: false,
+    mapPickMode: false,
     useShinkansen: false,
     searchMode: 'shortest',
     shinkansenSegments: [], // [{ fromId, toId, fromName, toName, km, lineId }]
@@ -4635,19 +4705,33 @@
 
         if (deptId || deptVal) {
           // 1. 発駅が選択済みなら着駅にコピー
-          destInput.value = deptInput.value;
-          if (deptId) {
-            destInput.setAttribute('data-id', deptId);
+          const targetSt = (deptId && typeof STATIONS !== 'undefined' && STATIONS[deptId])
+            ? STATIONS[deptId]
+            : (typeof STATIONS !== 'undefined' ? Object.values(STATIONS).find(s => s.name === deptVal) : null);
+          if (targetSt) {
+            setStationInputValue(destInput, targetSt);
           } else {
-            destInput.removeAttribute('data-id');
+            destInput.value = deptInput.value;
+            if (deptId) {
+              destInput.setAttribute('data-id', deptId);
+            } else {
+              destInput.removeAttribute('data-id');
+            }
           }
         } else if (destId || destVal) {
           // 2. 発駅が空で着駅だけ選択済みなら発駅に着駅をコピー
-          deptInput.value = destInput.value;
-          if (destId) {
-            deptInput.setAttribute('data-id', destId);
+          const targetSt = (destId && typeof STATIONS !== 'undefined' && STATIONS[destId])
+            ? STATIONS[destId]
+            : (typeof STATIONS !== 'undefined' ? Object.values(STATIONS).find(s => s.name === destVal) : null);
+          if (targetSt) {
+            setStationInputValue(deptInput, targetSt);
           } else {
-            deptInput.removeAttribute('data-id');
+            deptInput.value = destInput.value;
+            if (destId) {
+              deptInput.setAttribute('data-id', destId);
+            } else {
+              deptInput.removeAttribute('data-id');
+            }
           }
         } else {
           // 3. どちらも空のときは発駅へフォーカス
@@ -4729,6 +4813,14 @@
       shinkansenChk.addEventListener('change', (e) => {
         ROUTE_STATE.useShinkansen = e.target.checked;
         markInputChanged();
+      });
+    }
+
+    // 地図クリックで駅追加チェックボックス
+    const mapPickChk = document.getElementById('chk-map-pick-mode');
+    if (mapPickChk) {
+      mapPickChk.addEventListener('change', (e) => {
+        setMapPickMode(e.target.checked);
       });
     }
 
@@ -4910,6 +5002,45 @@
         }
       });
     }
+
+    // URL共有ボタン
+    const shareBtn = document.getElementById('btn-share-route');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        const url = window.location.href;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(() => {
+            showCopyToast('URLをコピーしました');
+          }).catch(() => {
+            copyFallback(url, shareBtn);
+            showCopyToast('URLをコピーしました');
+          });
+        } else {
+          copyFallback(url, shareBtn);
+          showCopyToast('URLをコピーしました');
+        }
+      });
+    }
+
+    // マルス券面画像保存 (PNG) ボタン
+    const savePngBtn = document.getElementById('btn-save-ticket-png');
+    if (savePngBtn) {
+      savePngBtn.addEventListener('click', () => {
+        if (!ROUTE_STATE.lastResult) return;
+        exportMarsTicketPng(ROUTE_STATE.lastResult);
+      });
+    }
+
+    // 履歴消去ボタン
+    const clearHistoryBtn = document.getElementById('btn-clear-history');
+    if (clearHistoryBtn) {
+      clearHistoryBtn.addEventListener('click', () => {
+        clearAllHistory();
+      });
+    }
+
+    // 初期履歴描画
+    renderRouteHistory();
 
     // 駅詳細シート内のアクションボタン (発駅設定 / 経由追加 / 着駅設定)
     function prepareRoutePanelForStationAction() {
@@ -5636,10 +5767,22 @@
         tags.push({ text: 'JR複数社跨ぎ', cls: 'tag-success' });
       }
 
+      // 新在別線・完全別線・選択乗車バッジ (旅規第16条の2, 第157条)
+      if (result.parallelRuleBadges && result.parallelRuleBadges.length > 0) {
+        result.parallelRuleBadges.forEach(b => {
+          let cls = 'tag-primary';
+          if (b.type === 'shin-zai-bessen') cls = 'tag-success';
+          else if (b.type === 'full-separate') cls = 'tag-accent';
+          else if (b.type === 'optional-riding') cls = 'tag-primary';
+          tags.push({ text: b.label, detail: b.detail, cls: cls });
+        });
+      }
+
       tags.forEach(t => {
         const span = document.createElement('span');
         span.className = `rule-tag ${t.cls}`;
         span.textContent = t.text;
+        if (t.detail) span.title = t.detail;
         ruleTagsContainer.appendChild(span);
       });
     }
@@ -5655,6 +5798,646 @@
         kiloWarnElem.textContent = '';
         kiloWarnElem.style.display = 'none';
       }
+    }
+  }
+
+  // コピートースト表示ヘルパー
+  function showCopyToast(msg) {
+    const copyToast = document.getElementById('copy-toast');
+    if (copyToast) {
+      copyToast.textContent = msg;
+      copyToast.style.display = 'inline-block';
+      copyToast.classList.add('show');
+      setTimeout(() => {
+        copyToast.classList.remove('show');
+        setTimeout(() => {
+          copyToast.style.display = 'none';
+          copyToast.textContent = 'コピー完了';
+        }, 300);
+      }, 1800);
+    }
+  }
+
+  // マルス普通乗車券面の高解像度 PNG 画像生成・保存 (純粋 Canvas 2D 描画)
+  function exportMarsTicketPng(result) {
+    if (!result) return;
+    const fr = result.fareRules || {};
+    const fareType = ROUTE_STATE.currentFareType || 'adult';
+    const deptSt = (typeof STATIONS !== 'undefined' && result.deptId && STATIONS[result.deptId])
+      ? STATIONS[result.deptId]
+      : (typeof STATIONS !== 'undefined' && result.deptName ? Object.values(STATIONS).find(s => s.name === result.deptName) : null);
+    const companyKey = (typeof getStationCompanyKey === 'function') ? getStationCompanyKey(deptSt) : 'east';
+
+    // 2倍解像度 Canvas (1280 × 860、基準座標系 640 × 430)
+    const canvas = document.createElement('canvas');
+    canvas.width = 1280;
+    canvas.height = 860;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(2, 2);
+
+    // 1. 券面ベース背景
+    ctx.fillStyle = 'rgb(236, 243, 237)';
+    ctx.fillRect(0, 0, 640, 430);
+
+    // 地紋タイルパターン (オフスクリーン Canvas 72 × 48)
+    const patternCanvas = document.createElement('canvas');
+    patternCanvas.width = 72;
+    patternCanvas.height = 48;
+    const pctx = patternCanvas.getContext('2d');
+    pctx.scale(2, 2);
+    const markChar = MARS_COMPANY_MARKS[companyKey] || 'E';
+
+    pctx.strokeStyle = 'rgba(120, 165, 148, 0.35)';
+    pctx.lineWidth = 0.6;
+    pctx.beginPath();
+    pctx.moveTo(0, 0); pctx.lineTo(36, 24);
+    pctx.moveTo(0, 24); pctx.lineTo(36, 0);
+    pctx.moveTo(0, 6); pctx.quadraticCurveTo(9, 0, 18, 6); pctx.quadraticCurveTo(27, 12, 36, 6);
+    pctx.moveTo(0, 12); pctx.quadraticCurveTo(9, 6, 18, 12); pctx.quadraticCurveTo(27, 18, 36, 12);
+    pctx.moveTo(0, 18); pctx.quadraticCurveTo(9, 12, 18, 18); pctx.quadraticCurveTo(27, 24, 36, 18);
+    pctx.stroke();
+
+    pctx.font = '900 5px "Noto Sans JP", sans-serif';
+    pctx.fillStyle = 'rgba(120, 165, 148, 0.40)';
+    pctx.textAlign = 'center';
+    pctx.textBaseline = 'middle';
+    pctx.fillText('JR', 9, 8.5);
+    pctx.fillText(markChar, 27, 20.5);
+
+    pctx.save();
+    pctx.translate(18, 14);
+    pctx.rotate(-20 * Math.PI / 180);
+    pctx.font = '900 9px "Noto Sans JP", sans-serif';
+    pctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+    pctx.fillText('JR', 0, 0);
+    pctx.restore();
+
+    const pattern = ctx.createPattern(patternCanvas, 'repeat');
+    if (pattern) {
+      ctx.fillStyle = pattern;
+      ctx.fillRect(0, 0, 640, 430);
+    }
+
+    // 2. 濃い緑の帯 (y = 260〜320, h = 60)
+    const bandGrad = ctx.createLinearGradient(0, 260, 0, 320);
+    bandGrad.addColorStop(0, 'rgba(172, 210, 197, 0.65)');
+    bandGrad.addColorStop(1, 'rgba(150, 195, 180, 0.65)');
+    ctx.fillStyle = bandGrad;
+    ctx.fillRect(0, 260, 640, 60);
+
+    // 3. 券種タイトル & 幹在識別記号
+    const kanzaiMark = buildKanZaiMark(result);
+    ctx.fillStyle = '#0f172a';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '800 28px "Noto Sans JP", sans-serif';
+    ctx.fillText('乗車券', 240, 52);
+
+    if (kanzaiMark) {
+      ctx.font = '800 13px "Noto Sans JP", sans-serif';
+      ctx.fillText(kanzaiMark, 240, 74);
+    } else {
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.moveTo(192, 64);
+      ctx.lineTo(288, 64);
+      ctx.stroke();
+    }
+
+    // 4. 発着駅名 (y = 112〜160, 左右余白 64u の内側 512u へ自動スケール)
+    const displayDept = fr.deptZoneApplied ? fr.displayDeptName : getStationMarsName(result.deptId || result.deptName);
+    const displayDest = fr.destZoneApplied ? fr.displayDestName : getStationMarsName(result.destId || result.destName);
+
+    ctx.textBaseline = 'middle';
+    const drawStationWithZone = (rawText, isZone, x, y, align) => {
+      ctx.textAlign = align;
+      let text = rawText;
+      let zoneChar = '';
+      if (isZone && (text.startsWith('［') || text.startsWith('['))) {
+        zoneChar = text.charAt(1);
+        text = text.slice(3);
+      }
+      ctx.font = '800 34px "Noto Sans JP", sans-serif';
+      if (!zoneChar) {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillText(text, x, y);
+      } else {
+        const textWidth = ctx.measureText(text).width;
+        const boxSize = 26;
+        if (align === 'left') {
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x, y - boxSize / 2, boxSize, boxSize);
+          ctx.font = '800 18px "Noto Sans JP", sans-serif';
+          ctx.fillStyle = '#0f172a';
+          ctx.textAlign = 'center';
+          ctx.fillText(zoneChar, x + boxSize / 2, y);
+
+          ctx.font = '800 34px "Noto Sans JP", sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText(text, x + boxSize + 6, y);
+        } else {
+          ctx.fillStyle = '#0f172a';
+          ctx.fillText(text, x, y);
+
+          const boxX = x - textWidth - boxSize - 6;
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(boxX, y - boxSize / 2, boxSize, boxSize);
+          ctx.font = '800 18px "Noto Sans JP", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(zoneChar, boxX + boxSize / 2, y);
+        }
+      }
+    };
+
+    drawStationWithZone(displayDept, fr.deptZoneApplied, 64, 138, 'left');
+    ctx.textAlign = 'center';
+    ctx.font = '700 30px "Noto Sans JP", sans-serif';
+    ctx.fillStyle = '#0f172a';
+    ctx.fillText('→', 320, 138);
+    drawStationWithZone(displayDest, fr.destZoneApplied, 576, 138, 'right');
+
+    // 5. 小児スタンプ (インクなし・地紋透かし)
+    if (fareType === 'child') {
+      const stampCanvas = document.createElement('canvas');
+      stampCanvas.width = 34;
+      stampCanvas.height = 34;
+      const sctx = stampCanvas.getContext('2d');
+      sctx.fillStyle = '#0f172a';
+      sctx.fillRect(0, 0, 34, 34);
+      sctx.globalCompositeOperation = 'destination-out';
+      sctx.font = '900 22px "Noto Sans JP", sans-serif';
+      sctx.textAlign = 'center';
+      sctx.textBaseline = 'middle';
+      sctx.fillText('小', 17, 17);
+      ctx.drawImage(stampCanvas, 460, 56);
+    }
+
+    // 6. 経由 (x = 50, y = 182)
+    const marsStr = result.marsString || '(直通)';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.font = '700 17px "Noto Sans JP", sans-serif';
+    ctx.fillStyle = '#0f172a';
+    let viaLine = `経由：${marsStr}`;
+    if (ctx.measureText(viaLine).width > 540) {
+      ctx.font = '700 14px "Noto Sans JP", sans-serif';
+      while (ctx.measureText(viaLine + '...').width > 540 && viaLine.length > 5) {
+        viaLine = viaLine.slice(0, -1);
+      }
+      viaLine += '...';
+    }
+    ctx.fillText(viaLine, 50, 182);
+
+    // 7. 有効期間 (x = 70, 数字 28px / 漢字かな 20px 底辺揃え)
+    const dateStr = ROUTE_STATE.ticketDate || getLocalISODate();
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const validDays = fr.validityDays || 1;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#0f172a';
+    const baseDateY = 224;
+
+    if (fr.isSuburbanOnly || validDays === 1) {
+      let curX = 70;
+      ctx.font = '800 28px "Noto Sans JP", sans-serif';
+      ctx.fillText(`${m}`, curX, baseDateY);
+      curX += ctx.measureText(`${m}`).width + 2;
+      ctx.font = '700 20px "Noto Sans JP", sans-serif';
+      ctx.fillText('月', curX, baseDateY);
+      curX += ctx.measureText('月').width + 4;
+      ctx.font = '800 28px "Noto Sans JP", sans-serif';
+      ctx.fillText(`${d}`, curX, baseDateY);
+      curX += ctx.measureText(`${d}`).width + 2;
+      ctx.font = '700 20px "Noto Sans JP", sans-serif';
+      ctx.fillText('日当日限り有効', curX, baseDateY);
+    } else {
+      const sDate = new Date(y, m - 1, d);
+      const eDate = new Date(sDate);
+      eDate.setDate(sDate.getDate() + validDays - 1);
+      const em = eDate.getMonth() + 1;
+      const ed = eDate.getDate();
+
+      let curX = 70;
+      ctx.font = '800 28px "Noto Sans JP", sans-serif';
+      ctx.fillText(`${m}`, curX, baseDateY);
+      curX += ctx.measureText(`${m}`).width + 2;
+      ctx.font = '700 20px "Noto Sans JP", sans-serif';
+      ctx.fillText('月', curX, baseDateY);
+      curX += ctx.measureText('月').width + 4;
+      ctx.font = '800 28px "Noto Sans JP", sans-serif';
+      ctx.fillText(`${d}`, curX, baseDateY);
+      curX += ctx.measureText(`${d}`).width + 2;
+      ctx.font = '700 20px "Noto Sans JP", sans-serif';
+      ctx.fillText('日から', curX, baseDateY);
+      curX += ctx.measureText('日から').width + 4;
+      ctx.font = '800 28px "Noto Sans JP", sans-serif';
+      ctx.fillText(`${em}`, curX, baseDateY);
+      curX += ctx.measureText(`${em}`).width + 2;
+      ctx.font = '700 20px "Noto Sans JP", sans-serif';
+      ctx.fillText('月', curX, baseDateY);
+      curX += ctx.measureText('月').width + 4;
+      ctx.font = '800 28px "Noto Sans JP", sans-serif';
+      ctx.fillText(`${ed}`, curX, baseDateY);
+      curX += ctx.measureText(`${ed}`).width + 2;
+      ctx.font = '700 20px "Noto Sans JP", sans-serif';
+      ctx.fillText('日まで有効', curX, baseDateY);
+    }
+
+    // 8. 途中下車文言
+    ctx.textBaseline = 'middle';
+    ctx.font = '700 13px "Noto Sans JP", sans-serif';
+    ctx.fillStyle = '#0f172a';
+    if (!fr.stopoverAllowed) {
+      ctx.fillText('下車前途無効', 70, 248);
+    } else if (fr.deptZoneApplied || fr.destZoneApplied) {
+      ctx.fillText('券面表示の都区市内各駅下車前途無効', 70, 248);
+    }
+
+    // 9. 発売額 (右端 604)
+    const adultFare = fr.adultFare || fr.baseFare || 0;
+    const childFare = fr.childFare !== undefined ? fr.childFare : Math.floor(adultFare / 2 / 10) * 10;
+    const isStudentEligible = fr.isStudentEligible !== undefined ? fr.isStudentEligible : ((fr.fareBasisKm || result.totalKm) > 100.0);
+    const studentFare = isStudentEligible ? (fr.studentFare !== undefined ? fr.studentFare : Math.floor(adultFare * 0.8 / 10) * 10) : adultFare;
+    let displayFare = adultFare;
+    if (fareType === 'child') displayFare = childFare;
+    else if (fareType === 'student') displayFare = studentFare;
+
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '800 42px "Noto Sans JP", sans-serif';
+    const fareStr = displayFare.toLocaleString();
+    ctx.fillText(fareStr, 604, 242);
+    const fareWidth = ctx.measureText(fareStr).width;
+    ctx.font = '700 26px "Noto Sans JP", sans-serif';
+    ctx.fillText('￥', 604 - fareWidth - 6, 242);
+
+    // 10. 学割選択かつ100km超
+    if (fareType === 'student' && isStudentEligible) {
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#0f172a';
+      ctx.font = '700 12px "Noto Sans JP", sans-serif';
+      ctx.fillText('証明書 [学割]', 450, 286);
+      ctx.fillText('を携帯してください。', 450, 306);
+    }
+
+    // 11. 発売日
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.font = '800 17px "Noto Sans JP", sans-serif';
+    ctx.fillStyle = '#0f172a';
+    const mStr = m < 10 ? `-${m}` : `${m}`;
+    const dStr = d < 10 ? `-${d}` : `${d}`;
+    ctx.fillText(`${y}.${mStr}.${dStr}`, 50, 342);
+
+    // ダウンロード
+    const cleanDept = displayDept.replace(/［.*?］|\[.*?\]/g, '');
+    const cleanDest = displayDest.replace(/［.*?］|\[.*?\]/g, '');
+    const fileName = `jr-ticket_${cleanDept}_${cleanDest}.png`;
+    const triggerDownload = (url) => {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showCopyToast('画像を保存しました');
+    };
+
+    if (canvas.toBlob) {
+      canvas.toBlob(blob => {
+        if (!blob) {
+          triggerDownload(canvas.toDataURL('image/png'));
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        triggerDownload(url);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }, 'image/png');
+    } else {
+      triggerDownload(canvas.toDataURL('image/png'));
+    }
+  }
+
+  // 探索履歴管理 (localStorage: jr_map_route_history_v1)
+  const HISTORY_STORAGE_KEY = 'jr_map_route_history_v1';
+  function loadRouteHistory() {
+    try {
+      const json = localStorage.getItem(HISTORY_STORAGE_KEY);
+      return json ? JSON.parse(json) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveRouteHistory(result) {
+    if (!result || !result.success) return;
+    try {
+      const history = loadRouteHistory();
+      const deptMars = getStationMarsName(result.deptId || result.deptName);
+      const destMars = getStationMarsName(result.destId || result.destName);
+      const viaMarsList = (result.viaIds || []).map(id => getStationMarsName(id));
+      const fr = result.fareRules || {};
+      const fare = fr.adultFare || fr.baseFare || 0;
+
+      const item = {
+        deptId: result.deptId,
+        destId: result.destId,
+        viaIds: result.viaIds || [],
+        deptName: deptMars,
+        destName: destMars,
+        viaNames: viaMarsList,
+        mode: ROUTE_STATE.searchMode,
+        useShinkansen: ROUTE_STATE.useShinkansen,
+        shsegs: (ROUTE_STATE.shinkansenSegments || []).map(s => ({ fromId: s.fromId, toId: s.toId })),
+        fareType: ROUTE_STATE.currentFareType || 'adult',
+        fare: fare,
+        km: result.totalKm,
+        timestamp: Date.now()
+      };
+
+      const existingIdx = history.findIndex(h =>
+        h.deptId === item.deptId &&
+        h.destId === item.destId &&
+        JSON.stringify(h.viaIds) === JSON.stringify(item.viaIds) &&
+        h.useShinkansen === item.useShinkansen &&
+        h.mode === item.mode
+      );
+      if (existingIdx >= 0) {
+        history.splice(existingIdx, 1);
+      }
+      history.unshift(item);
+      if (history.length > 10) history.length = 10;
+      localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+      renderRouteHistory();
+    } catch (e) {
+      console.warn('Failed to save route history:', e);
+    }
+  }
+
+  function renderRouteHistory() {
+    const details = document.getElementById('route-history-details');
+    const summary = document.getElementById('route-history-summary');
+    const list = document.getElementById('route-history-list');
+    if (!details || !summary || !list) return;
+
+    const history = loadRouteHistory();
+    if (!history || history.length === 0) {
+      details.style.display = 'none';
+      return;
+    }
+
+    details.style.display = 'block';
+    summary.textContent = `最近の履歴 (${history.length}件)`;
+    list.innerHTML = '';
+
+    history.forEach((h, idx) => {
+      const itemEl = document.createElement('div');
+      itemEl.className = 'route-history-item';
+
+      const mainEl = document.createElement('div');
+      mainEl.className = 'route-history-main';
+
+      const titleEl = document.createElement('div');
+      titleEl.className = 'route-history-title';
+      let titleText = `${h.deptName} → ${h.destName}`;
+      if (h.viaNames && h.viaNames.length > 0) {
+        titleText = `${h.deptName} → (${h.viaNames.join('・')}) → ${h.destName}`;
+      }
+      titleEl.textContent = titleText;
+
+      const subEl = document.createElement('div');
+      subEl.className = 'route-history-sub';
+      const modeStr = h.mode === 'oneway' ? '重複なし' : '最短';
+      const shStr = h.useShinkansen ? '新幹線ON' : '在来線';
+      const kmStr = h.km !== undefined ? `${h.km.toFixed(1)}km` : '';
+      const fareStr = h.fare ? `￥${h.fare.toLocaleString()}` : '';
+      subEl.textContent = [modeStr, shStr, kmStr, fareStr].filter(Boolean).join(' · ');
+
+      mainEl.appendChild(titleEl);
+      mainEl.appendChild(subEl);
+      mainEl.addEventListener('click', () => {
+        applyHistoryItem(h);
+      });
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'btn-history-del';
+      delBtn.textContent = '✕';
+      delBtn.title = 'この履歴を削除';
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteHistoryItem(idx);
+      });
+
+      itemEl.appendChild(mainEl);
+      itemEl.appendChild(delBtn);
+      list.appendChild(itemEl);
+    });
+  }
+
+  function applyHistoryItem(h) {
+    if (!h || typeof STATIONS === 'undefined') return;
+    const fromSt = STATIONS[h.deptId];
+    const toSt = STATIONS[h.destId];
+    if (!fromSt || !toSt) return;
+
+    const deptInput = document.getElementById('route-dept-input');
+    if (deptInput) setStationInputValue(deptInput, fromSt);
+
+    const viaContainer = document.getElementById('route-via-container');
+    if (viaContainer) viaContainer.innerHTML = '';
+    if (h.viaIds && h.viaIds.length > 0) {
+      h.viaIds.forEach(vId => {
+        const vSt = STATIONS[vId];
+        if (vSt) {
+          addViaField();
+          const viaInputs = viaContainer ? viaContainer.querySelectorAll('.route-station-input') : [];
+          if (viaInputs.length > 0) {
+            setStationInputValue(viaInputs[viaInputs.length - 1], vSt);
+          }
+        }
+      });
+    }
+
+    const destInput = document.getElementById('route-dest-input');
+    if (destInput) setStationInputValue(destInput, toSt);
+
+    ROUTE_STATE.searchMode = h.mode || 'shortest';
+    const shortestBtn = document.getElementById('btn-mode-shortest');
+    const onewayBtn = document.getElementById('btn-mode-oneway');
+    if (ROUTE_STATE.searchMode === 'oneway') {
+      if (shortestBtn) shortestBtn.classList.remove('active');
+      if (onewayBtn) onewayBtn.classList.add('active');
+    } else {
+      if (shortestBtn) shortestBtn.classList.add('active');
+      if (onewayBtn) onewayBtn.classList.remove('active');
+    }
+
+    ROUTE_STATE.useShinkansen = !!h.useShinkansen;
+    const shChk = document.getElementById('chk-use-shinkansen');
+    if (shChk) shChk.checked = ROUTE_STATE.useShinkansen;
+
+    ROUTE_STATE.shinkansenSegments = [];
+    if (h.shsegs && Array.isArray(h.shsegs)) {
+      h.shsegs.forEach(s => {
+        if (s.fromId && s.toId && STATIONS[s.fromId] && STATIONS[s.toId]) {
+          addShinkansenSegment(s.fromId, s.toId);
+        }
+      });
+    }
+
+    ROUTE_STATE.currentFareType = h.fareType || 'adult';
+    const fareBtns = document.querySelectorAll('.fare-type-btn');
+    fareBtns.forEach(b => {
+      if (b.getAttribute('data-type') === ROUTE_STATE.currentFareType) b.classList.add('active');
+      else b.classList.remove('active');
+    });
+
+    executeRouteSearch();
+  }
+
+  function deleteHistoryItem(idx) {
+    const history = loadRouteHistory();
+    if (idx >= 0 && idx < history.length) {
+      history.splice(idx, 1);
+      localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+      renderRouteHistory();
+    }
+  }
+
+  function clearAllHistory() {
+    localStorage.removeItem(HISTORY_STORAGE_KEY);
+    renderRouteHistory();
+  }
+
+  // URL同期 (ディープリンク)
+  function syncRouteToUrl(result) {
+    if (!result || !result.success) return;
+    const params = new URLSearchParams();
+    if (result.deptId) params.set('from', result.deptId);
+    if (result.destId) params.set('to', result.destId);
+    if (result.viaIds && result.viaIds.length > 0) {
+      params.set('via', result.viaIds.join(','));
+    }
+    const mode = (result.options && result.options.mode) || ROUTE_STATE.searchMode;
+    if (mode && mode !== 'shortest') {
+      params.set('mode', mode);
+    }
+    const sh = (result.options && result.options.useShinkansen !== undefined) ? result.options.useShinkansen : ROUTE_STATE.useShinkansen;
+    if (sh) {
+      params.set('sh', '1');
+    }
+    const shsegs = (result.options && result.options.shinkansenSegments) || ROUTE_STATE.shinkansenSegments;
+    if (shsegs && shsegs.length > 0) {
+      const segStrs = shsegs.map(s => `${s.fromId}:${s.toId}`);
+      params.set('shsegs', segStrs.join(','));
+    }
+    const fareType = result.selectedFareType || ROUTE_STATE.currentFareType;
+    if (fareType && fareType !== 'adult') {
+      params.set('fare', fareType);
+    }
+    const query = params.toString();
+    const newUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+    window.history.replaceState({ jrRoute: true }, '', newUrl);
+  }
+
+  function restoreRouteFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const fromId = params.get('from');
+    const toId = params.get('to');
+    if (!fromId || !toId || typeof STATIONS === 'undefined') return false;
+
+    const fromSt = STATIONS[fromId];
+    const toSt = STATIONS[toId];
+    if (!fromSt || !toSt) return false;
+
+    const deptInput = document.getElementById('route-dept-input');
+    if (deptInput) setStationInputValue(deptInput, fromSt);
+
+    const viaContainer = document.getElementById('route-via-container');
+    if (viaContainer) viaContainer.innerHTML = '';
+    const viaParam = params.get('via');
+    if (viaParam) {
+      const viaIds = viaParam.split(',').map(s => s.trim()).filter(Boolean);
+      viaIds.forEach(vId => {
+        const vSt = STATIONS[vId];
+        if (vSt) {
+          addViaField();
+          const viaInputs = viaContainer ? viaContainer.querySelectorAll('.route-station-input') : [];
+          if (viaInputs.length > 0) {
+            setStationInputValue(viaInputs[viaInputs.length - 1], vSt);
+          }
+        }
+      });
+    }
+
+    const destInput = document.getElementById('route-dest-input');
+    if (destInput) setStationInputValue(destInput, toSt);
+
+    const mode = params.get('mode');
+    if (mode === 'oneway') {
+      ROUTE_STATE.searchMode = 'oneway';
+      const shortestBtn = document.getElementById('btn-mode-shortest');
+      const onewayBtn = document.getElementById('btn-mode-oneway');
+      if (shortestBtn) shortestBtn.classList.remove('active');
+      if (onewayBtn) onewayBtn.classList.add('active');
+    } else {
+      ROUTE_STATE.searchMode = 'shortest';
+      const shortestBtn = document.getElementById('btn-mode-shortest');
+      const onewayBtn = document.getElementById('btn-mode-oneway');
+      if (shortestBtn) shortestBtn.classList.add('active');
+      if (onewayBtn) onewayBtn.classList.remove('active');
+    }
+
+    const sh = params.get('sh');
+    ROUTE_STATE.useShinkansen = (sh === '1');
+    const shChk = document.getElementById('chk-use-shinkansen');
+    if (shChk) shChk.checked = ROUTE_STATE.useShinkansen;
+
+    ROUTE_STATE.shinkansenSegments = [];
+    const shsegs = params.get('shsegs');
+    if (shsegs) {
+      const pairs = shsegs.split(',').map(p => p.trim()).filter(Boolean);
+      pairs.forEach(pair => {
+        const [fId, tId] = pair.split(':');
+        if (fId && tId && STATIONS[fId] && STATIONS[tId]) {
+          addShinkansenSegment(fId, tId);
+        }
+      });
+    }
+
+    const fare = params.get('fare');
+    if (fare === 'child' || fare === 'student') {
+      ROUTE_STATE.currentFareType = fare;
+      const fareBtns = document.querySelectorAll('.fare-type-btn');
+      fareBtns.forEach(b => {
+        if (b.getAttribute('data-type') === fare) b.classList.add('active');
+        else b.classList.remove('active');
+      });
+    } else {
+      ROUTE_STATE.currentFareType = 'adult';
+    }
+
+    toggleRoutePanel(true);
+    setTimeout(() => {
+      executeRouteSearch();
+    }, 50);
+    return true;
+  }
+
+  function setMapPickMode(enabled) {
+    ROUTE_STATE.mapPickMode = !!enabled;
+    const chk = document.getElementById('chk-map-pick-mode');
+    if (chk) chk.checked = ROUTE_STATE.mapPickMode;
+    const mapEl = document.getElementById('map');
+    if (mapEl) {
+      if (ROUTE_STATE.mapPickMode) mapEl.classList.add('is-map-pick-mode');
+      else mapEl.classList.remove('is-map-pick-mode');
     }
   }
 
@@ -5709,6 +6492,9 @@
         }, 50);
       }
     } else {
+      if (ROUTE_STATE.mapPickMode) {
+        setMapPickMode(false);
+      }
       hideTicketViaTooltip();
       panel.style.display = 'none';
       panel.style.transform = '';
@@ -6192,6 +6978,10 @@
 
     ROUTE_STATE.lastResult = result;
 
+    // URLクエリ同期 & 探索履歴保存
+    syncRouteToUrl(result);
+    saveRouteHistory(result);
+
     // 本格マルス券面 & 内訳カードを描画
     renderMarsTicket(result);
 
@@ -6290,6 +7080,10 @@
     ROUTE_STATE.lastResult = null;
     pairReversedMap.clear();
 
+    try {
+      window.history.replaceState({}, '', window.location.pathname);
+    } catch (e) {}
+
     const shinkansenChk = document.getElementById('chk-use-shinkansen');
     if (shinkansenChk) shinkansenChk.checked = false;
 
@@ -6314,6 +7108,8 @@
     if (studentCert) studentCert.style.display = 'none';
     const stationsRow = document.getElementById('ticket-stations-row');
     if (stationsRow) stationsRow.style.transform = 'none';
+    const stationsInner = document.getElementById('ticket-stations-inner');
+    if (stationsInner) stationsInner.style.transform = '';
     const viaRow = document.getElementById('ticket-via-row');
     if (viaRow) {
       viaRow.style.fontSize = '';
@@ -6829,7 +7625,6 @@
       getRouteState: () => ROUTE_STATE,
       getState: () => STATE,
       selectStation,
-      closeStationSheet,
       getAdjacentIndex: () => adjacentIndex,
       selectLine,
       closeLineBanner,
@@ -6847,9 +7642,13 @@
       getZoomLayoutCache: () => new Map(),
       getCanShowAllCircles: () => true,
       isMajorStation,
-      snapRouteSheet,
-      getRouteSheetDimensions,
-      getVisibleMapPadding
+      exportMarsTicketPng,
+      syncRouteToUrl,
+      restoreRouteFromUrl,
+      loadRouteHistory,
+      saveRouteHistory,
+      setMapPickMode,
+      handleMapPickStation
     };
   }
   if (typeof module !== 'undefined' && module.exports) {
@@ -6863,7 +7662,6 @@
       buildTicketCopyText,
       formatStationHtml,
       formatStationText,
-      buildTicketCopyText,
       getRouteState: () => ROUTE_STATE,
       calcDirectShinkansenDistance,
       calcShinkansenDistance,
@@ -6878,7 +7676,14 @@
       closeStationSheet,
       snapRouteSheet,
       getRouteSheetDimensions,
-      getVisibleMapPadding
+      getVisibleMapPadding,
+      exportMarsTicketPng,
+      syncRouteToUrl,
+      restoreRouteFromUrl,
+      loadRouteHistory,
+      saveRouteHistory,
+      setMapPickMode,
+      handleMapPickStation
     };
   }
 })();

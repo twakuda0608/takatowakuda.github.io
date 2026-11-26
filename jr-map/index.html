@@ -220,6 +220,10 @@
               <input type="checkbox" id="chk-use-shinkansen">
               <span>新幹線利用</span>
             </label>
+            <label class="route-checkbox-label">
+              <input type="checkbox" id="chk-map-pick-mode">
+              <span>地図クリックで駅追加</span>
+            </label>
             <button type="button" id="btn-toggle-shinkansen-segments" class="btn-text-action">特定区間新幹線指定 ▼</button>
           </div>
 
@@ -276,6 +280,17 @@
           <button type="button" id="btn-search-route" class="btn-search-route">経路探索</button>
           <button type="button" id="btn-clear-route" class="btn-clear-route">クリア</button>
         </div>
+
+        <!-- 探索履歴（直近10件） -->
+        <details id="route-history-details" class="route-history-details" style="display: none;">
+          <summary id="route-history-summary" class="route-history-summary">最近の履歴 (0件)</summary>
+          <div class="route-history-body">
+            <div id="route-history-list" class="route-history-list"></div>
+            <div class="route-history-footer">
+              <button type="button" id="btn-clear-history" class="btn-clear-history">履歴消去</button>
+            </div>
+          </div>
+        </details>
 
         <!-- 探索結果表示エリア -->
         <div id="route-result-container" class="route-result-container" style="display: none;">
@@ -352,7 +367,7 @@
               <!-- 8. 学割携帯証明ブロック (right=28, y=258, z-index=3) -->
               <div class="ticket-student-cert" id="ticket-student-cert" style="display: none;">
                 <div class="student-cert-line1">証明書 <span class="student-cert-box">学割</span></div>
-                <div class="student-cert-line2">を携帯してください</div>
+                <div class="student-cert-line2">を携帯してください。</div>
               </div>
 
               <!-- 9. 濃い緑の帯 (y=260〜320, h=60, z-index=1, 左右端まで貫通) -->
@@ -377,6 +392,8 @@
               </div>
               <div class="summary-action-group">
                 <button type="button" class="btn-copy-ticket" id="btn-copy-ticket" aria-label="券面テキストコピー">コピー</button>
+                <button type="button" class="btn-copy-ticket" id="btn-share-route" aria-label="URL共有">URL共有</button>
+                <button type="button" class="btn-copy-ticket" id="btn-save-ticket-png" aria-label="画像保存">画像保存</button>
                 <span id="copy-toast" class="copy-toast" style="display: none;">コピー完了</span>
               </div>
             </div>

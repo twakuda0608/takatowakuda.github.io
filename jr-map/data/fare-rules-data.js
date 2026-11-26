@@ -358,7 +358,7 @@
         '大崎', '五反田', '目黒', '恵比寿', '渋谷', '原宿', '代々木', '新宿',
         '新大久保', '高田馬場', '目白', '池袋', '大塚', '巣鴨', '駒込', '田端',
         '西日暮里', '日暮里', '鶯谷', '上野', '御徒町', '秋葉原', '神田',
-        '御茶ノ水', '水道橋', '飯田橋', '市ヶ谷', '四ツ谷', '信濃町', '千駄ヶ谷'
+        '御茶ノ水', '水道橋', '飯田橋', '市ヶ谷', '市ケ谷', '四ツ谷', '信濃町', '千駄ヶ谷', '千駄ケ谷'
       ])
     },
 
@@ -374,8 +374,8 @@
         '大崎', '五反田', '目黒', '恵比寿', '渋谷', '原宿', '代々木', '新宿',
         '新大久保', '高田馬場', '目白', '池袋', '大塚', '巣鴨', '駒込', '田端',
         '西日暮里', '日暮里', '鶯谷', '上野', '御徒町', '秋葉原', '神田',
-        '御茶ノ水', '水道橋', '飯田橋', '市ヶ谷', '四ツ谷', '信濃町', '千駄ヶ谷',
-        '大久保', '東中野', '中野', '高円寺', '阿佐ヶ谷', '荻窪', '西荻窪',
+        '御茶ノ水', '水道橋', '飯田橋', '市ヶ谷', '市ケ谷', '四ツ谷', '信濃町', '千駄ヶ谷', '千駄ケ谷',
+        '大久保', '東中野', '中野', '高円寺', '阿佐ヶ谷', '阿佐ケ谷', '荻窪', '西荻窪',
         '浅草橋', '両国', '錦糸町', '亀戸', '平井', '新小岩', '小岩', '新日本橋', '馬喰町',
         '八丁堀', '越中島', '潮見', '新木場', '葛西臨海公園',
         '大井町', '大森', '蒲田', '西大井',
@@ -543,6 +543,7 @@
     {
       id: 'art69::mihara-kaitaichi',
       name: '三原〜海田市（呉線迂回）',
+      company: 'west',
       endStationNames: ['三原', '海田市'],
       detourLineIds: new Set(['kure-line']),
       shortcutLineId: 'sanyo-main',
@@ -552,6 +553,7 @@
     {
       id: 'art69::akabane-omiya',
       name: '赤羽〜大宮（埼京線迂回）',
+      company: 'east',
       endStationNames: ['赤羽', '大宮'],
       detourLineIds: new Set(['tohoku-main']),
       detourStationNames: new Set(['武蔵浦和']),
@@ -562,6 +564,7 @@
     {
       id: 'art69::iwakuni-kushigahama',
       name: '岩国〜櫛ケ浜（山陽本線柳井迂回）',
+      company: 'west',
       endStationNames: ['岩国', '櫛ケ浜'],
       detourLineIds: new Set(['sanyo-main']),
       detourStationNames: new Set(['柳井']),
@@ -572,6 +575,7 @@
     {
       id: 'art69::shinosaka-amagasaki',
       name: '新大阪〜尼崎（東西線・おおさか東線迂回）',
+      company: 'west',
       endStationNames: ['新大阪', '尼崎'],
       detourLineIds: new Set(['osaka-higashi', 'jr-tozai', 'katamachi-line']),
       shortcutLineId: 'tokaido-west',
@@ -581,6 +585,7 @@
     {
       id: 'art69::kashii-hakata',
       name: '香椎〜博多（香椎線・篠栗線迂回）',
+      company: 'kyushu',
       endStationNames: ['香椎', '博多'],
       detourLineIds: new Set(['kyushu-kashii', 'kyushu-sasaguri']),
       shortcutLineId: 'kyushu-kagoshima',
@@ -590,11 +595,23 @@
     {
       id: 'art69::nippori-akabane',
       name: '日暮里〜赤羽（尾久経由・田端経由同一扱い）',
+      company: 'east',
       endStationNames: ['日暮里', '赤羽'],
       detourLineIds: new Set(['tohoku-main', 'yamanote', 'keihin-tohoku']),
       shortcutLineId: 'tohoku-main',
       shortcutKm: 7.4,
       detourKm: 7.6
+    },
+    {
+      id: 'art69::shinagawa-tsurumi',
+      name: '品川〜鶴見（品鶴線迂回）',
+      company: 'east',
+      endStationNames: ['品川', '鶴見'],
+      detourLineIds: new Set(['tokaido']),
+      detourStationNames: new Set(['武蔵小杉', '西大井', '新川崎']),
+      shortcutLineId: 'tokaido',
+      shortcutKm: 14.9,
+      detourKm: 17.8
     }
   ];
 

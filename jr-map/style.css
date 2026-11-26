@@ -62,13 +62,11 @@ html, body {
 }
 
 /* デフォルトのズームコントロール非表示 (自前コントロールを使用) */
-.leaflet-control-zoom,
 .maplibregl-ctrl-zoom {
   display: none !important;
 }
 
 /* 著作権表記を控えめに */
-.leaflet-control-attribution,
 .maplibregl-ctrl-attrib {
   font-size: 10px !important;
   background: rgba(0, 0, 0, 0.4) !important;
@@ -76,7 +74,6 @@ html, body {
   border-radius: 4px;
   padding: 2px 6px !important;
 }
-.leaflet-control-attribution a,
 .maplibregl-ctrl-attrib a {
   color: #ccc !important;
 }
@@ -388,94 +385,6 @@ body.theme-light .view-presets {
   background: var(--brand-blue);
   color: #fff;
   box-shadow: 0 2px 6px rgba(0, 120, 215, 0.35);
-}
-
-/* =======================================================
-   フィルターバー (カテゴリータブ & 路線チップ)
-======================================================= */
-.filter-bar {
-  position: absolute;
-  top: 72px;
-  left: 12px;
-  right: 12px;
-  z-index: 990;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  pointer-events: none; /* 下の地図をクリック可能にし、内側のボタンだけイベント有効化 */
-}
-
-.category-tabs, .line-chips {
-  pointer-events: auto;
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: none;
-}
-.category-tabs::-webkit-scrollbar, .line-chips::-webkit-scrollbar {
-  display: none;
-}
-
-.cat-tab {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--panel-border);
-  background: var(--panel-bg);
-  color: var(--text-muted);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 20px;
-  cursor: pointer;
-  white-space: nowrap;
-  box-shadow: var(--shadow-subtle);
-  transition: all 0.15s ease;
-}
-.cat-tab:hover {
-  color: var(--text-main);
-  background: var(--card-hover);
-}
-.cat-tab.active {
-  background: var(--text-main);
-  color: var(--bg-current);
-  border-color: var(--text-main);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-
-/* 路線チップ */
-.line-chip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--panel-border);
-  background: var(--panel-bg);
-  color: var(--text-main);
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 16px;
-  cursor: pointer;
-  white-space: nowrap;
-  box-shadow: var(--shadow-subtle);
-  transition: all 0.15s ease;
-}
-.line-chip .line-color-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
-}
-.line-chip:hover {
-  transform: translateY(-1px);
-}
-.line-chip.active {
-  border-color: var(--chip-color, var(--brand-blue));
-  box-shadow: 0 0 10px var(--chip-color, var(--brand-blue));
-  font-weight: 800;
 }
 
 /* =======================================================
@@ -1217,48 +1126,6 @@ body.theme-dark .sheet-header.jr-station-sign {
 }
 
 /* =======================================================
-   路線名マップラベル (Google Maps風・線路曲線追従 SVG TextPath)
-   ======================================================= */
-.leaflet-line-labels-container {
-  pointer-events: none;
-}
-
-.svg-line-text {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Hiragino Sans", "Meiryo", sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: normal;
-  fill: #475569; /* 薄く落ち着いたスレートグレー (Google Maps風) */
-  stroke: #ffffff; /* 白いヘイロー・フチ取り */
-  stroke-width: 3.5px;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  paint-order: stroke fill;
-  pointer-events: none;
-  opacity: 0.85;
-  user-select: none;
-}
-
-.svg-line-text.shinkansen-text {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: normal;
-  fill: #334155;
-  stroke-width: 4px;
-  opacity: 0.9;
-}
-
-.svg-line-text.active-line-text {
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: normal;
-  fill: #0284c7 !important;
-  stroke: #ffffff !important;
-  stroke-width: 4.5px;
-  opacity: 1 !important;
-}
-
-/* =======================================================
    マルス経路探索パネル & 券面カード
    ======================================================= */
 .btn-route-toggle {
@@ -1835,19 +1702,14 @@ body.theme-dark .sheet-header.jr-station-sign {
 
 /* =======================================================
    本物マルス普通乗車券面 (85mm / 120mm / 補充券)
+   (640 × 430 座標系・コンテナクエリスケーリング)
 ======================================================= */
 .mars-ticket-wrapper {
   width: 100%;
+  max-width: 420px;
+  margin: 0 auto 8px auto;
   display: flex;
   justify-content: center;
-  margin-bottom: 8px;
-}
-
-/* 本格マルス普通乗車券カード (640 × 430 座標系・コンテナクエリスケーリング) */
-.mars-ticket-wrapper {
-  width: 100%;
-  max-width: 420px;
-  margin: 0 auto;
   container-type: inline-size;
 }
 
@@ -2501,36 +2363,6 @@ body.theme-dark .sheet-header.jr-station-sign {
   vertical-align: middle;
 }
 
-/* 区間強調表示の始終点ピンマーカー */
-.section-endpoint-marker {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  pointer-events: none;
-  z-index: 10;
-  user-select: none;
-}
-.section-endpoint-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #ea580c;
-  border: 2.5px solid #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-}
-.section-endpoint-pill {
-  margin-top: 3px;
-  font-size: 11px;
-  font-weight: 800;
-  color: #0f172a;
-  background: #ffffff;
-  border: 1.5px solid #ea580c;
-  border-radius: 9999px;
-  padding: 2px 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  white-space: nowrap;
-}
-
 .route-section-bar {
   width: 4px;
   height: 28px;
@@ -2619,68 +2451,6 @@ body.theme-dark .sheet-header.jr-station-sign {
 #btn-set-dest:hover {
   border-color: #dc2626;
   color: #dc2626;
-}
-
-/* ルート探索用ハイライト線 (Leaflet Polyline) */
-.route-glow-path {
-  filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.8));
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-/* 重複区間ハイライト線 (赤色警告) */
-.route-duplicate-path {
-  filter: drop-shadow(0 0 8px rgba(220, 38, 38, 0.85));
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.route-duplicate-core {
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-/* 新幹線区間ハイライト線 (濃紺ロイヤルブルー + 白高速ストライプ破線) */
-.route-shinkansen-glow {
-  filter: drop-shadow(0 0 9px rgba(37, 99, 235, 0.85));
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.route-shinkansen-core {
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.route-shinkansen-stripe {
-  stroke-linecap: butt;
-  stroke-linejoin: round;
-}
-
-/* ルート探索用マップピンマーカー */
-.route-map-pin {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  color: #ffffff;
-  font-weight: 800;
-  font-size: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-  border: 2px solid #ffffff;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-.route-map-pin:hover {
-  transform: scale(1.15);
-}
-.route-map-pin.dept-pin {
-  background: #16a34a;
-}
-.route-map-pin.via-pin {
-  background: #0284c7;
-}
-.route-map-pin.dest-pin {
-  background: #dc2626;
 }
 
 /* スマホ対応 (経路探索パネル) */
@@ -2883,66 +2653,6 @@ body.theme-dark .sheet-header.jr-station-sign {
 .btn-secondary.btn-sm:active,
 #btn-route-modify:active {
   background: #cbd5e1;
-}
-
-/* マルス券面 運賃・料金ブロック */
-.ticket-fare-block {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid #bbf7d0;
-  border-radius: 8px;
-  padding: 8px 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.fare-label {
-  font-size: 13px;
-  color: #166534;
-  font-weight: 700;
-}
-.fare-value {
-  font-size: 16px;
-  font-weight: 800;
-  color: #15803d;
-  font-feature-settings: "tnum";
-}
-
-/* 旅規ルール (有効日数・途中下車) ブロック */
-.ticket-rules-block {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid #bbf7d0;
-  border-radius: 8px;
-  padding: 6px 10px;
-}
-.rule-badge-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.rule-badge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 6px;
-  background: #f1f5f9;
-  color: #475569;
-}
-.rule-badge.badge-success {
-  background: #dcfce7;
-  color: #15803d;
-  border: 1px solid #86efac;
-}
-.rule-badge.badge-neutral {
-  background: #e2e8f0;
-  color: #475569;
-}
-.rule-badge.badge-shinkansen {
-  background: #e0f2fe;
-  color: #0284c7;
-  border: 1px solid #7dd3fc;
 }
 
 /* 特定区間新幹線指定パネル */
@@ -3234,12 +2944,6 @@ body.theme-dark .sheet-header.jr-station-sign {
   box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.4);
 }
 
-/* ルート描画専用 Pane (前面にあってもマウス操作を一切妨げない) */
-.leaflet-routePane-pane,
-.leaflet-pane.leaflet-routePane-pane {
-  pointer-events: none !important;
-}
-
 /* =======================================================
    同名駅インライン・ゴーストサフィックス
    ======================================================= */
@@ -3323,4 +3027,106 @@ body.theme-light .search-input-wrapper .ghost-pref {
 .station-input-ghost-overlay.is-focused .ghost-pref {
   color: #94a3b8 !important;
   opacity: 0.55 !important;
+}
+
+/* =======================================================
+   地図クリック駅追加モード & 探索履歴 UI
+   ======================================================= */
+#map.is-map-pick-mode,
+#map.is-map-pick-mode .maplibregl-canvas {
+  cursor: crosshair !important;
+}
+
+.route-history-details {
+  margin-top: 8px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  font-size: 12px;
+  overflow: hidden;
+}
+.route-history-summary {
+  padding: 6px 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+  background: rgba(0, 0, 0, 0.02);
+}
+.route-history-summary:hover {
+  color: var(--text-main);
+}
+.route-history-body {
+  padding: 6px 10px;
+}
+.route-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+.route-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.route-history-item:hover {
+  background: var(--card-hover);
+}
+.route-history-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.route-history-title {
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.route-history-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.btn-history-del {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 12px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
+.btn-history-del:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+.route-history-footer {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--panel-border);
+  text-align: right;
+}
+.btn-clear-history {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.btn-clear-history:hover {
+  color: #ef4444;
+  text-decoration: underline;
 }

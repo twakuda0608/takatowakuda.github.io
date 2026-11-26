@@ -623,6 +623,20 @@
   // 2026年3月14日改定: 東海道新幹線（東京〜熱海間）および山陽新幹線（新下関〜博多間）は並行在来線と完全別線
   const TOKAIDO_SHINKANSEN_SEPARATE_STATIONS = new Set(['tokyo', 'shinagawa', 'shin-yokohama', 'odawara', 'atami']);
   const SANYO_SHINKANSEN_SEPARATE_STATIONS = new Set(['shin-shimonoseki', 'kokura', 'hakata']);
+  const TOKAIDO_CONV_SEPARATE_NAMES = new Set([
+    '東京', '有楽町', '新橋', '浜松町', '田町', '高輪ゲートウェイ', '品川',
+    '大井町', '大森', '蒲田', '川崎', '鶴見', '新子安', '東神奈川', '横浜',
+    '保土ケ谷', '東戸塚', '戸塚', '大船', '藤沢', '辻堂', '茅ケ崎', '平塚',
+    '大磯', '二宮', '国府津', '鴨宮', '小田原', '早川', '根府川', '真鶴', '湯河原', '熱海',
+    '西大井', '武蔵小杉', '新川崎'
+  ]);
+  const SANYO_CONV_SEPARATE_NAMES = new Set([
+    '新下関', '幡生', '下関', '門司港', '小森江', '門司', '小倉', '西小倉',
+    '九州工大前', '戸畑', '枝光', 'スペースワールド', '八幡', '黒崎', '陣原', '折尾',
+    '水巻', '遠賀川', '海老津', '教育大前', '赤間', '東郷', '東福間', '福間',
+    '千鳥', '古賀', 'ししぶ', '新宮中央', '福工大前', '九産大前', '香椎', '千早',
+    '箱崎', '吉塚', '博多'
+  ]);
 
   function isSeparateShinkansen(seg) {
     if (!seg) return false;
@@ -662,6 +676,49 @@
     return isSeparateShinkansen(seg);
   }
 
+  // 優先度キュー (MinHeap: item.d 昇順)
+  class MinHeap {
+    constructor() { this.heap = []; }
+    push(item) {
+      this.heap.push(item);
+      this._bubbleUp(this.heap.length - 1);
+    }
+    pop() {
+      if (this.heap.length === 0) return null;
+      const top = this.heap[0];
+      const bottom = this.heap.pop();
+      if (this.heap.length > 0) {
+        this.heap[0] = bottom;
+        this._sinkDown(0);
+      }
+      return top;
+    }
+    size() { return this.heap.length; }
+    _bubbleUp(i) {
+      while (i > 0) {
+        const p = (i - 1) >> 1;
+        if (this.heap[i].d < this.heap[p].d) {
+          [this.heap[i], this.heap[p]] = [this.heap[p], this.heap[i]];
+          i = p;
+        } else break;
+      }
+    }
+    _sinkDown(i) {
+      const len = this.heap.length;
+      while (true) {
+        let left = (i << 1) + 1;
+        let right = left + 1;
+        let smallest = i;
+        if (left < len && this.heap[left].d < this.heap[smallest].d) smallest = left;
+        if (right < len && this.heap[right].d < this.heap[smallest].d) smallest = right;
+        if (smallest !== i) {
+          [this.heap[i], this.heap[smallest]] = [this.heap[smallest], this.heap[i]];
+          i = smallest;
+        } else break;
+      }
+    }
+  }
+
   // 単一レグ探索 (状態空間ダイクストラ法: stationId + marsName)
   function findLeg(graph, startId, endId, options = {}) {
     const allowShinkansen = (options.useShinkansen !== undefined) ? options.useShinkansen : (options.allowShinkansen !== false);
@@ -669,14 +726,16 @@
 
     const dist = new Map();
     const prev = new Map();
-    const pq = [{ id: startId, marsName: '', isShinkansen: false, d: 0 }];
+    const pq = new MinHeap();
+    pq.push({ id: startId, marsName: '', isShinkansen: false, d: 0 });
     dist.set(startId + '::', 0);
+
+    const parallelEdgeMap = options.requireOneWay ? getSameLineParallelEdgeMap(cachedStations, cachedLines) : null;
 
     let bestEndState = null;
 
-    while (pq.length > 0) {
-      pq.sort((a, b) => a.d - b.d);
-      const curr = pq.shift();
+    while (pq.size() > 0) {
+      const curr = pq.pop();
       const currKey = curr.id + '::' + curr.marsName;
 
       if (curr.id === endId) {
@@ -721,8 +780,7 @@
 
         // 単一レグ探索における原則同一線コリドー（isParagraph2 === false）の同レグ内折り返し禁止
         // （例：米原〜京都の新幹線を利用後に京都〜山科の在来線へ折り返すなどの並行逆走を抑止）
-        if (options.requireOneWay) {
-          const parallelEdgeMap = getSameLineParallelEdgeMap(cachedStations, cachedLines);
+        if (options.requireOneWay && parallelEdgeMap) {
           const stU = (cachedStations && cachedStations[curr.id]) || (typeof window !== 'undefined' && window.JR_STATIONS && window.JR_STATIONS[curr.id]);
           const stV = (cachedStations && cachedStations[edge.to]) || (typeof window !== 'undefined' && window.JR_STATIONS && window.JR_STATIONS[edge.to]);
           const nU = stU ? stU.name : curr.id;
@@ -1071,48 +1129,8 @@
     return graph;
   }
 
-  // 優先度キュー (MinHeap)
-  class TrackMinHeap {
-    constructor() { this.heap = []; }
-    push(item) {
-      this.heap.push(item);
-      this._bubbleUp(this.heap.length - 1);
-    }
-    pop() {
-      if (this.heap.length === 0) return null;
-      const top = this.heap[0];
-      const bottom = this.heap.pop();
-      if (this.heap.length > 0) {
-        this.heap[0] = bottom;
-        this._sinkDown(0);
-      }
-      return top;
-    }
-    size() { return this.heap.length; }
-    _bubbleUp(i) {
-      while (i > 0) {
-        const p = (i - 1) >> 1;
-        if (this.heap[i].d < this.heap[p].d) {
-          [this.heap[i], this.heap[p]] = [this.heap[p], this.heap[i]];
-          i = p;
-        } else break;
-      }
-    }
-    _sinkDown(i) {
-      const len = this.heap.length;
-      while (true) {
-        let left = (i << 1) + 1;
-        let right = left + 1;
-        let smallest = i;
-        if (left < len && this.heap[left].d < this.heap[smallest].d) smallest = left;
-        if (right < len && this.heap[right].d < this.heap[smallest].d) smallest = right;
-        if (smallest !== i) {
-          [this.heap[i], this.heap[smallest]] = [this.heap[smallest], this.heap[i]];
-          i = smallest;
-        } else break;
-      }
-    }
-  }
+  // 優先度キュー (MinHeap: TrackMinHeap 互換エイリアス)
+  const TrackMinHeap = MinHeap;
 
   // 点 P から線分 A-B への最近傍射影点を計算
   function projectPointToSegment(p, a, b) {
@@ -2948,44 +2966,6 @@
     });
     const unregisteredLines = Array.from(unregisteredLinesSet);
 
-    // マルス経由線表記の生成 (例: 東海道・山手・中央東 / 新幹線区間は「東京・新幹線・博多」等)
-    // 連続する新幹線区間 (東海道新幹線〜山陽新幹線、東北新幹線〜北海道新幹線等) は1つの新幹線乗車区間に統合
-    const mergedMarsRuns = [];
-    for (let i = 0; i < lineRuns.length; i++) {
-      const r = lineRuns[i];
-      if (r.isShinkansen &&
-          mergedMarsRuns.length > 0 &&
-          mergedMarsRuns[mergedMarsRuns.length - 1].isShinkansen &&
-          mergedMarsRuns[mergedMarsRuns.length - 1].to === r.from &&
-          mergedMarsRuns[mergedMarsRuns.length - 1].from !== r.to) {
-        mergedMarsRuns[mergedMarsRuns.length - 1].to = r.to;
-      } else {
-        mergedMarsRuns.push({ ...r });
-      }
-    }
-
-    const marsNamesList = [];
-    for (let i = 0; i < mergedMarsRuns.length; i++) {
-      const r = mergedMarsRuns[i];
-      const deptSt = getMarsStationName(r.from, stations);
-      const destSt = getMarsStationName(r.to, stations);
-
-      if (r.isShinkansen) {
-        // 新幹線区間: 直前がその乗車駅でなければ乗換駅を追加し、「新幹線」、降車駅を表記
-        if (marsNamesList.length === 0 || marsNamesList[marsNamesList.length - 1] !== deptSt) {
-          marsNamesList.push(deptSt);
-        }
-        marsNamesList.push('新幹線');
-        marsNamesList.push(destSt);
-      } else {
-        // 在来線区間
-        if (marsNamesList.length === 0 || marsNamesList[marsNamesList.length - 1] !== r.marsName) {
-          marsNamesList.push(r.marsName);
-        }
-      }
-    }
-    const marsFormatString = marsNamesList.join('・');
-
     // 総距離 (0.1km単位の整数で合算してから10で割ることで浮動小数点誤差を完全防止)
     const totalDistTenths = fullSegments.reduce((sum, s) => sum + Math.round(s.dist * 10), 0);
     const totalDist = totalDistTenths / 10;
@@ -3296,9 +3276,9 @@
       }, stations, cachedLines || [], options);
     }
 
-    // 実物マルス経由印字フォーマッタの適用 (fareRules 確定後)
-    let finalMarsString = marsFormatString;
-    let finalMarsNamesList = marsNamesList;
+    // 実物マルス経由印字フォーマッタの適用（唯一の経由文字列生成元）
+    let finalMarsString = '';
+    let finalMarsNamesList = [];
     try {
       const ticketVia = buildMarsTicketViaString(lineRuns, fareRules, deptName, destName, stations, fullSegments, options);
       if (ticketVia && ticketVia.marsFormatString) {
@@ -3307,6 +3287,97 @@
       }
     } catch (e) {
       console.warn('buildMarsTicketViaString failed, falling back:', e);
+      finalMarsNamesList = lineRuns.map(r => r.marsName || r.lineName).filter(Boolean);
+      finalMarsString = finalMarsNamesList.join('・');
+    }
+
+    // 適用特例バッジ (parallelRuleBadges) の生成
+    const parallelRuleBadges = [];
+    if (!hasDuplicate) {
+      // 1. 完全別線区間 (東京〜熱海、新下関〜博多)
+      const hasTokaidoShinkansenSep = fullSegments.some(s => getSeparateShinkansenTrackType(s) === 'tokaido-shinkansen');
+      const hasTokaidoConvSep = fullSegments.some(s => {
+        if (s.lineId !== 'tokaido') return false;
+        const n1 = stations[s.from]?.name || s.from;
+        const n2 = stations[s.to]?.name || s.to;
+        return TOKAIDO_CONV_SEPARATE_NAMES.has(n1) || TOKAIDO_CONV_SEPARATE_NAMES.has(n2);
+      });
+      if (hasTokaidoShinkansenSep && hasTokaidoConvSep) {
+        parallelRuleBadges.push({
+          type: 'full-separate',
+          label: '完全別線適用（東京〜熱海）',
+          detail: '運賃水準差により新幹線と在来線が完全別線扱い（選択乗車不可）'
+        });
+      }
+
+      const hasSanyoShinkansenSep = fullSegments.some(s => getSeparateShinkansenTrackType(s) === 'sanyo-shinkansen-west');
+      const hasSanyoConvSep = fullSegments.some(s => {
+        if (s.lineId !== 'sanyo-main' && s.lineId !== 'kyushu-kagoshima') return false;
+        const n1 = stations[s.from]?.name || s.from;
+        const n2 = stations[s.to]?.name || s.to;
+        return SANYO_CONV_SEPARATE_NAMES.has(n1) || SANYO_CONV_SEPARATE_NAMES.has(n2);
+      });
+      if (hasSanyoShinkansenSep && hasSanyoConvSep) {
+        parallelRuleBadges.push({
+          type: 'full-separate',
+          label: '完全別線適用（新下関〜博多）',
+          detail: '運賃水準差により新幹線と在来線が完全別線扱い（選択乗車不可）'
+        });
+      }
+
+      // 2. 新在別線適用 (旅規第16条の2 第2項 15区間) & 3. 選択乗車可能区間 (旅規第157条)
+      const optionalRidingNames = [];
+      SAME_LINE_PARALLEL_CORRIDORS.forEach(c => {
+        if (!c.isParagraph2) return;
+        const hasShinkansen = (corridorShinkansenMap.get(c.id) || 0) > 0;
+        const hasConventional = (corridorConventionalMap.get(c.id) || 0) > 0;
+        const corridorName = `${c.endpoints[0]}〜${c.endpoints[1]}`;
+
+        if (hasShinkansen && hasConventional) {
+          // 両方通過し、途中駅発着または他線接続で成立した場合
+          const endSet = new Set(c.endpoints);
+          const intermediateStations = new Set();
+          c.shinkansenStations.forEach(name => { if (!endSet.has(name)) intermediateStations.add(name); });
+          c.conventionalStations.forEach(name => { if (!endSet.has(name)) intermediateStations.add(name); });
+          const cond1 = intermediateStations.has(deptName) || intermediateStations.has(destName);
+          let cond2 = false;
+          const isLineInCorridor = (lid) => (c.shinkansenLines.has(lid) || c.conventionalLines.has(lid));
+          for (let k = 0; k < fullSegments.length - 1; k++) {
+            const s1 = fullSegments[k];
+            const s2 = fullSegments[k + 1];
+            const transSt = stations[s1.to];
+            const transName = transSt ? transSt.name : s1.to;
+            if (intermediateStations.has(transName)) {
+              if ((isLineInCorridor(s1.lineId) && !isLineInCorridor(s2.lineId)) ||
+                  (!isLineInCorridor(s1.lineId) && isLineInCorridor(s2.lineId))) {
+                cond2 = true;
+                break;
+              }
+            }
+          }
+          if (cond1 || cond2) {
+            parallelRuleBadges.push({
+              type: 'shin-zai-bessen',
+              label: `新在別線適用（${corridorName}）`,
+              detail: '旅規第16条の2第2項により途中駅発着・他線接続のため新幹線と在来線を別線として扱い一筆書き成立'
+            });
+          }
+        } else if (hasShinkansen || hasConventional) {
+          // 片側のみ通過（選択乗車可能区間）
+          optionalRidingNames.push(corridorName);
+        }
+      });
+
+      if (optionalRidingNames.length > 0) {
+        const displayNames = optionalRidingNames.length > 3
+          ? `${optionalRidingNames.slice(0, 3).join('・')} 等`
+          : optionalRidingNames.join('・');
+        parallelRuleBadges.push({
+          type: 'optional-riding',
+          label: `選択乗車可（${displayNames}）`,
+          detail: '旅規第157条により並行する新幹線・在来線のどちらの経路も選択乗車可能'
+        });
+      }
     }
 
     return {
@@ -3327,6 +3398,7 @@
       article70Applied: isArticle70Applied,
       article70ShortenKm: article70ShortenKm,
       fareRules: fareRules,
+      parallelRuleBadges: parallelRuleBadges,
       sections: sections,
       fullSegments: fullSegments,
       geometryLatlngs: cleanPolylineSpikes(geometryLatlngs),

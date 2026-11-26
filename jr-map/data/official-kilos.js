@@ -16,7 +16,7 @@
     "yamanote": {"品川":0,"大崎":2,"五反田":2.9,"目黒":4.1,"恵比寿":5.6,"渋谷":7.2,"原宿":8.4,"代々木":9.9,"新宿":10.6,"新大久保":11.9,"高田馬場":13.3,"目白":14.2,"池袋":15.4,"大塚":17.2,"巣鴨":18.3,"駒込":19,"田端":20.6,"shinagawa":0,"osaki":2,"gotanda":2.9,"meguro":4.1,"ebisu":5.6,"shibuya":7.2,"harajuku":8.4,"yoyogi":9.9,"shinjuku":10.6,"shin-okubo":11.9,"takadanobaba":13.3,"mejiro":14.2,"ikebukuro":15.4,"otsuka":17.2,"sugamo":18.3,"komagome":19,"tabata":20.6},
     "negishi-line": {"横浜":0,"桜木町":2,"関内":3,"石川町":3.8,"山手":5,"根岸":7.1,"磯子":9.5,"新杉田":11.1,"洋光台":14.1,"港南台":16,"本郷台":18.5,"大船":22.1,"yokohama":0,"sakuragicho":2,"kannai":3,"ishikawacho":3.8,"yamate":5,"negishi":7.1,"isogo":9.5,"shin-sugita":11.1,"yokodai":14.1,"konandai":16,"hongodai":18.5,"ofuna":22.1},
     "akabane-line": {"池袋":0,"板橋":1.8,"十条":3.5,"赤羽":5.5,"ikebukuro":0,"itabashi":1.8,"jujo":3.5,"akabane":5.5},
-    "tokaido": {"東京":0,"有楽町":0.8,"新橋":1.9,"浜松町":3.1,"田町":4.6,"高輪ゲートウェイ":5.9,"品川":6.8,"西大井":9.9,"nishi-oi":9.9,"新川崎":19.0,"shin-kawasaki":19.0,"羽沢横浜国大":28.1,"st-aqqxtt":28.1,"大井町":9.2,"oimachi":9.2,"大森":11.4,"omori":11.4,"蒲田":14.4,"kamata":14.4,"川崎":18.2,"kawasaki":18.2,"鶴見":21.7,"tsurumi":21.7,"新子安":24.8,"shin-koyasu":24.8,"東神奈川":27.2,"higashi-kanagawa":27.2,"横浜":28.8,"yokohama":28.8,"保土ケ谷":31.8,"保土ヶ谷":31.8,"hodogaya":31.8,"東戸塚":36.7,"higashi-totsuka":36.7,"戸塚":40.9,"大船":46.5,"藤沢":51.1,"辻堂":54.8,"茅ケ崎":58.6,"茅ヶ崎":58.6,"chigasaki":58.6,"平塚":63.8,"大磯":67.8,"二宮":73.1,"国府津":77.7,"鴨宮":80.8,"小田原":83.9,"早川":86,"根府川":90.4,"真鶴":95.8,"湯河原":99.1,"熱海":104.6,"tokyo":0,"yurakucho":0.8,"shimbashi":1.9,"hamamatsucho":3.1,"tamachi":4.6,"takanawa-gateway":5.9,"shinagawa":6.8,"kawasaki":18.2,"yokohama":28.8,"totsuka":40.9,"ofuna":46.5,"fujisawa":51.1,"tsujido":54.8,"chigasaki":58.6,"hiratsuka":63.8,"oiso":67.8,"ninomiya":73.1,"kozu":77.7,"kamonomiya":80.8,"odawara":83.9,"hayakawa":86,"nebukawa":90.4,"manazuru":95.8,"yugawara":99.1,"atami":104.6},
+    "tokaido": {"東京":0,"有楽町":0.8,"新橋":1.9,"浜松町":3.1,"田町":4.6,"高輪ゲートウェイ":5.9,"品川":6.8,"西大井":10.4,"nishi-oi":10.4,"武蔵小杉":16.8,"musashi-kosugi":16.8,"新川崎":19.5,"shin-kawasaki":19.5,"羽沢横浜国大":33.4,"st-aqqxtt":33.4,"大井町":9.2,"oimachi":9.2,"大森":11.4,"omori":11.4,"蒲田":14.4,"kamata":14.4,"川崎":18.2,"kawasaki":18.2,"鶴見":21.7,"tsurumi":21.7,"新子安":24.8,"shin-koyasu":24.8,"東神奈川":27.2,"higashi-kanagawa":27.2,"横浜":28.8,"yokohama":28.8,"保土ケ谷":31.8,"保土ヶ谷":31.8,"hodogaya":31.8,"東戸塚":36.7,"higashi-totsuka":36.7,"戸塚":40.9,"大船":46.5,"藤沢":51.1,"辻堂":54.8,"茅ケ崎":58.6,"茅ヶ崎":58.6,"chigasaki":58.6,"平塚":63.8,"大磯":67.8,"二宮":73.1,"国府津":77.7,"鴨宮":80.8,"小田原":83.9,"早川":86,"根府川":90.4,"真鶴":95.8,"湯河原":99.1,"熱海":104.6,"tokyo":0,"yurakucho":0.8,"shimbashi":1.9,"hamamatsucho":3.1,"tamachi":4.6,"takanawa-gateway":5.9,"shinagawa":6.8,"kawasaki":18.2,"yokohama":28.8,"totsuka":40.9,"ofuna":46.5,"fujisawa":51.1,"tsujido":54.8,"chigasaki":58.6,"hiratsuka":63.8,"oiso":67.8,"ninomiya":73.1,"kozu":77.7,"kamonomiya":80.8,"odawara":83.9,"hayakawa":86,"nebukawa":90.4,"manazuru":95.8,"yugawara":99.1,"atami":104.6},
     "yokosuka-line": {"大船":0,"北鎌倉":2.3,"鎌倉":4.5,"逗子":8.4,"東逗子":10.4,"田浦":13.8,"横須賀":15.9,"衣笠":19.3,"久里浜":23.9,"ofuna":0,"kita-kamakura":2.3,"kamakura":4.5,"zushi":8.4,"higashi-zushi":10.4,"taura":13.8,"yokosuka":15.9,"kinugasa":19.3,"kurihama":23.9},
     "yokohama-line": {"東神奈川":0,"大口":2.2,"菊名":4.8,"新横浜":6.1,"小机":7.8,"鴨居":10.9,"中山":13.5,"十日市場":15.9,"長津田":17.9,"成瀬":20.2,"町田":22.9,"古淵":25.7,"淵野辺":28.4,"矢部":29.2,"相模原":31,"橋本":33.8,"相原":35.7,"八王子みなみ野":38.6,"片倉":41,"八王子":42.6,"hachioji":42.6,"katakura":41,"hachiojiminamino":38.6,"aihara":35.7,"hashimoto":33.8,"sagamihara":31,"yabe":29.2,"fuchinobe":28.4,"kobuchi":25.7,"machida":22.9,"naruse":20.2,"nagatsuta":17.9,"tokaichiba":15.9,"nakayama":13.5,"kamoi":10.9,"kozukue":7.8,"shin-yokohama":6.1,"kikuna":4.8,"oguchi":2.2,"higashi-kanagawa":0},
     "nambu": {"川崎":0,"尻手":1.7,"八丁畷":3.1,"st-cb875":3.1,"川崎新町":4.1,"st-c8bpy3":4.1,"小田栄":4.8,"st-e1xcz":4.8,"浜川崎":5.8,"矢向":2.6,"鹿島田":4.1,"平間":5.3,"向河原":6.6,"武蔵小杉":7.5,"武蔵中原":9.2,"武蔵新城":10.5,"武蔵溝ノ口":12.7,"津田山":13.9,"久地":14.9,"宿河原":16.2,"登戸":17.3,"中野島":19.5,"稲田堤":20.8,"矢野口":22.4,"稲城長沼":24.1,"南多摩":25.5,"府中本町":27.9,"分倍河原":28.8,"西府":29.6,"st-nwn1":29.6,"谷保":30.3,"矢川":31.5,"西国立":34.3,"立川":35.5,"tachikawa":35.5,"nishi-kunitachi":34.3,"yagawa":31.5,"yaho":30.3,"bubaigawara":28.8,"fuchuhommachi":27.9,"minamitama":25.5,"inaginaganuma":24.1,"yanokuchi":22.4,"inadazutsumi":20.8,"nakanoshima":19.5,"noborito":17.3,"shukugawara":16.2,"kuji":14.9,"tsudayama":13.9,"musashi-mizonokuchi":12.7,"musashi-shinjo":10.5,"musashi-nakahara":9.2,"musashi-kosugi":7.5,"mukaigawara":6.6,"hirama":5.3,"kashimada":4.1,"yako":2.6,"shitte":1.7,"kawasaki":0},
@@ -194,6 +194,28 @@
   };
 
   const OFFICIAL_EDGE_DISTANCES = {
+    "tokaido": {
+      "shinagawa-nishi-oi": 3.6,
+      "nishi-oi-shinagawa": 3.6,
+      "品川-西大井": 3.6,
+      "西大井-品川": 3.6,
+      "nishi-oi-musashi-kosugi": 6.4,
+      "musashi-kosugi-nishi-oi": 6.4,
+      "西大井-武蔵小杉": 6.4,
+      "武蔵小杉-西大井": 6.4,
+      "musashi-kosugi-shin-kawasaki": 2.7,
+      "shin-kawasaki-musashi-kosugi": 2.7,
+      "武蔵小杉-新川崎": 2.7,
+      "新川崎-武蔵小杉": 2.7,
+      "shin-kawasaki-tsurumi": 5.1,
+      "tsurumi-shin-kawasaki": 5.1,
+      "新川崎-鶴見": 5.1,
+      "鶴見-新川崎": 5.1,
+      "musashi-kosugi-st-aqqxtt": 16.6,
+      "st-aqqxtt-musashi-kosugi": 16.6,
+      "武蔵小杉-羽沢横浜国大": 16.6,
+      "羽沢横浜国大-武蔵小杉": 16.6
+    },
     "tohoku-main": {
       "nippori-oku": 2.6,
       "oku-nippori": 2.6,

@@ -287,13 +287,12 @@
         'ome-line', 'shinetsu-takasaki', 'kawagoe-line', 'agatsuma-line',
         'karasuyama-line', 'kashima-line', 'togane-line', 'kururi-line', 'ryomo-line',
         'mito-line', 'nikko-line', 'hachiko-line', 'uchibo-line', 'sotobo-line', 'narita-line',
-        'sobu-main', 'itsukaichi-line', 'chuo-tatsuno', 'shinonoi-line'
+        'sobu-main', 'itsukaichi-line', 'chuo-main', 'chuo-tatsuno', 'shinonoi-line'
       ]),
       boundedLines: {
         'tohoku-main': { from: '東京', to: '黒磯' },
         'joban': { from: '日暮里', to: '浪江' },
         'joetsu-line': { from: '高崎', to: '水上' },
-        'chuo-main': { from: '東京', to: '塩尻' },
         'koumi-line': { from: '小淵沢', to: '野辺山' },
         'suigun-line': { from: '水戸', to: '常陸大子' },
         'oito-line': { from: '松本', to: '白馬' }
@@ -420,7 +419,7 @@
             const branchHasStation = (stationName) => b.some(id => targetStations[id] && targetStations[id].name === stationName);
 
             if (lineId === 'tohoku-main') {
-              if (areaKey === 'tokyo' && branchHasStation('武蔵浦和')) {
+              if (areaKey === 'tokyo' && (branchHasStation('武蔵浦和') || branchHasStation('尾久'))) {
                 b.forEach(id => stationSet.add(id));
               } else if (areaKey === 'sendai' && branchHasStation('利府')) {
                 b.forEach(id => stationSet.add(id));
@@ -533,7 +532,7 @@
     }
     detail += ' 【特定都区市内・山手線内特例】特定都区市内または東京山手線内発着の乗車券は、そのゾーン内の駅では途中下車できません（ゾーン外では何度でも途中下車可能）。';
     if (hasTokaidoShinkansen) {
-      detail += ' 【東海道新幹線別線化（2026年3月改定）】東京〜新大阪間の東海道新幹線（JR東海）と東海道本線は別線扱いとなり、別線相互の乗り分けが可能です。';
+      detail += ' 【東海道新幹線別線化（2026年3月改定）】東京〜熱海間の東海道新幹線（JR東海）と東海道本線は完全別線扱いとなり、別線相互の乗り分けが可能です。';
     }
 
     return {
@@ -698,6 +697,8 @@
           passesDetour = subSegments.some(seg => corridor.detourLineIds.has(seg.lineId));
         } else if (corridor.id === 'art69::nippori-akabane') {
           passesDetour = subStationNames.has('尾久');
+        } else if (corridor.id === 'art69::shinagawa-tsurumi') {
+          passesDetour = subStationNames.has('武蔵小杉') || subStationNames.has('西大井') || subStationNames.has('新川崎');
         } else {
           passesDetour = subSegments.some(seg => corridor.detourLineIds.has(seg.lineId));
         }
@@ -710,6 +711,7 @@
             appliedCorridors.push({
               id: corridor.id,
               name: corridor.name,
+              company: corridor.company,
               detourKm: actualDetourKm,
               shortcutKm: corridor.shortcutKm,
               shortenKm: shorten
@@ -1238,6 +1240,19 @@
       return null;
     }
 
+    if (!stations || Object.keys(stations).length === 0) {
+      if (typeof window !== 'undefined' && (window.STATIONS || window.JR_STATIONS)) {
+        stations = window.STATIONS || window.JR_STATIONS;
+      } else if (typeof require !== 'undefined') {
+        try {
+          stations = require('./data/build-data.js').JR_STATIONS;
+        } catch (e) {
+          try { stations = require('./jr-map/data/build-data.js').JR_STATIONS; } catch (e2) {}
+        }
+      }
+    }
+    stations = stations || {};
+
     const totalKm = routeResult.totalKm || 0;
     const sections = routeResult.sections || [];
     const fullSegments = routeResult.fullSegments || sections;
@@ -1304,6 +1319,28 @@
     const art69Result = evaluateArticle69Rules(fullSegments, sections, stations);
     let effectiveTrunkKm = trunkKm + art69Result.trunkDelta;
     let effectiveLocalKm = localKm + art69Result.localDelta;
+
+    // 旅規第69条短縮キロを該当会社別営業キロへ反映
+    if (art69Result.appliedCorridors && art69Result.appliedCorridors.length > 0) {
+      art69Result.appliedCorridors.forEach(c => {
+        const sKm = c.shortenKm || 0;
+        if (sKm > 0) {
+          if (c.company === 'east') {
+            eastKm = Math.max(0, Math.round((eastKm - sKm) * 10) / 10);
+          } else if (c.company === 'west') {
+            westKm = Math.max(0, Math.round((westKm - sKm) * 10) / 10);
+          } else if (c.company === 'kyushu') {
+            kyushuKm = Math.max(0, Math.round((kyushuKm - sKm) * 10) / 10);
+          } else if (c.company === 'central') {
+            centralKm = Math.max(0, Math.round((centralKm - sKm) * 10) / 10);
+          } else if (c.company === 'hokkaido') {
+            hokkaidoKm = Math.max(0, Math.round((hokkaidoKm - sKm) * 10) / 10);
+          } else if (c.company === 'shikoku') {
+            shikokuKm = Math.max(0, Math.round((shikokuKm - sKm) * 10) / 10);
+          }
+        }
+      });
+    }
 
     // 旅規第70条 (東京付近特定区間短縮)
     // 第70条太線区間はすべてJR東日本の幹線であるため、幹線キロおよびJR東日本営業キロから短縮差分を控除
