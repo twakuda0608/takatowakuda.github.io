@@ -3312,7 +3312,7 @@
 
       const hasSanyoShinkansenSep = fullSegments.some(s => getSeparateShinkansenTrackType(s) === 'sanyo-shinkansen-west');
       const hasSanyoConvSep = fullSegments.some(s => {
-        if (s.lineId !== 'sanyo-main' && s.lineId !== 'kyushu-kagoshima') return false;
+        if (s.lineId !== 'sanyo-main' && s.lineId !== 'kyushu-kagoshima' && s.lineId !== 'kyushu-sanyo') return false;
         const n1 = stations[s.from]?.name || s.from;
         const n2 = stations[s.to]?.name || s.to;
         return SANYO_CONV_SEPARATE_NAMES.has(n1) || SANYO_CONV_SEPARATE_NAMES.has(n2);
@@ -3326,6 +3326,7 @@
       }
 
       // 2. 新在別線適用 (旅規第16条の2 第2項 15区間) & 3. 選択乗車可能区間 (旅規第157条)
+      const allStationNames = new Set(allStationIds.map(id => stations[id]?.name || id));
       const optionalRidingNames = [];
       SAME_LINE_PARALLEL_CORRIDORS.forEach(c => {
         if (!c.isParagraph2) return;
@@ -3363,8 +3364,10 @@
             });
           }
         } else if (hasShinkansen || hasConventional) {
-          // 片側のみ通過（選択乗車可能区間）
-          optionalRidingNames.push(corridorName);
+          // 片側のみ通過（選択乗車可能区間: 当該区間の両端駅を両方通過している場合のみ対象）
+          if (allStationNames.has(c.endpoints[0]) && allStationNames.has(c.endpoints[1])) {
+            optionalRidingNames.push(corridorName);
+          }
         }
       });
 

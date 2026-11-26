@@ -1560,8 +1560,9 @@ body.theme-dark .sheet-header.jr-station-sign {
 
 .route-options {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
   padding: 2px 4px;
   font-size: 13px;
   color: #334155;
@@ -2204,6 +2205,7 @@ body.theme-dark .sheet-header.jr-station-sign {
 
 .summary-action-group {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
 }

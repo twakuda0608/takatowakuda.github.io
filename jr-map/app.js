@@ -2522,11 +2522,8 @@
       const viaInputs = viaContainer ? Array.from(viaContainer.querySelectorAll('.route-station-input')) : [];
       let targetInput = viaInputs.find(inp => !inp.getAttribute('data-id') && !inp.value.trim());
       if (!targetInput) {
-        addViaField();
-        const updatedInputs = viaContainer ? Array.from(viaContainer.querySelectorAll('.route-station-input')) : [];
-        targetInput = updatedInputs[updatedInputs.length - 1];
-      }
-      if (targetInput) {
+        addViaStationRow(st);
+      } else {
         setStationInputValue(targetInput, st);
       }
       feedback = `経由駅に追加：${st.name}`;
@@ -3737,7 +3734,11 @@
     markInputChanged();
   }
 
-  function addShinkansenSegment(fromSt, toSt) {
+  function addShinkansenSegment(fromStOrId, toStOrId) {
+    if (!fromStOrId || !toStOrId) return;
+    const fromSt = typeof fromStOrId === 'string' ? (typeof STATIONS !== 'undefined' ? STATIONS[fromStOrId] : null) : fromStOrId;
+    const toSt = typeof toStOrId === 'string' ? (typeof STATIONS !== 'undefined' ? STATIONS[toStOrId] : null) : toStOrId;
+    if (!fromSt || !toSt) return;
     if (!ROUTE_STATE.shinkansenSegments) ROUTE_STATE.shinkansenSegments = [];
     const exists = ROUTE_STATE.shinkansenSegments.some(s => s.fromId === fromSt.id && s.toId === toSt.id);
     if (!exists) {
@@ -4954,6 +4955,7 @@
         ROUTE_STATE.currentFareType = btn.getAttribute('data-type') || 'adult';
         if (ROUTE_STATE.lastResult) {
           renderMarsTicket(ROUTE_STATE.lastResult);
+          syncRouteToUrl(ROUTE_STATE.lastResult);
         }
       });
     });
@@ -5880,99 +5882,183 @@
 
     // 2. 濃い緑の帯 (y = 260〜320, h = 60)
     const bandGrad = ctx.createLinearGradient(0, 260, 0, 320);
-    bandGrad.addColorStop(0, 'rgba(172, 210, 197, 0.65)');
-    bandGrad.addColorStop(1, 'rgba(150, 195, 180, 0.65)');
+    bandGrad.addColorStop(0, 'rgba(172, 210, 197, 0.2)');
+    bandGrad.addColorStop(0.2, 'rgba(172, 210, 197, 0.65)');
+    bandGrad.addColorStop(0.8, 'rgba(172, 210, 197, 0.65)');
+    bandGrad.addColorStop(1, 'rgba(172, 210, 197, 0.2)');
     ctx.fillStyle = bandGrad;
     ctx.fillRect(0, 260, 640, 60);
 
-    // 3. 券種タイトル & 幹在識別記号
+    // 3. 券面タイトル・下線・幹在識別記号
+    // 「乗車券」は x = 240, y = 55 (フォント 30px)
     const kanzaiMark = buildKanZaiMark(result);
-    ctx.fillStyle = '#0f172a';
+    ctx.fillStyle = '#111827';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = '800 28px "Noto Sans JP", sans-serif';
-    ctx.fillText('乗車券', 240, 52);
+    ctx.font = '900 30px "Noto Sans JP", sans-serif';
+    ctx.fillText('乗車券', 240, 55);
 
     if (kanzaiMark) {
-      ctx.font = '800 13px "Noto Sans JP", sans-serif';
-      ctx.fillText(kanzaiMark, 240, 74);
+      // 幹在識別記号は x = 240, y = 85 (等幅 18px)
+      ctx.font = '700 18px "SFMono-Regular", Consolas, "Courier New", monospace';
+      ctx.fillText(kanzaiMark, 240, 85);
     } else {
-      ctx.lineWidth = 2.5;
-      ctx.strokeStyle = '#0f172a';
+      // 幹在識別記号が無いときだけタイトル幅に合わせた黒下線を描画
+      const titleWidth = ctx.measureText('乗車券').width;
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#111827';
       ctx.beginPath();
-      ctx.moveTo(192, 64);
-      ctx.lineTo(288, 64);
+      ctx.moveTo(240 - titleWidth / 2 - 2, 73);
+      ctx.lineTo(240 + titleWidth / 2 + 2, 73);
       ctx.stroke();
     }
 
-    // 4. 発着駅名 (y = 112〜160, 左右余白 64u の内側 512u へ自動スケール)
+    // 4. 発着駅名行 (中央揃え・──→ 矢印・有効幅 512u 自動縮小)
+    // left=64 〜 right=576（有効幅 512）の中央 x=320, y=136 を基準
     const displayDept = fr.deptZoneApplied ? fr.displayDeptName : getStationMarsName(result.deptId || result.deptName);
     const displayDest = fr.destZoneApplied ? fr.displayDestName : getStationMarsName(result.destId || result.destName);
 
-    ctx.textBaseline = 'middle';
-    const drawStationWithZone = (rawText, isZone, x, y, align) => {
-      ctx.textAlign = align;
-      let text = rawText;
-      let zoneChar = '';
-      if (isZone && (text.startsWith('［') || text.startsWith('['))) {
-        zoneChar = text.charAt(1);
-        text = text.slice(3);
-      }
-      ctx.font = '800 34px "Noto Sans JP", sans-serif';
-      if (!zoneChar) {
-        ctx.fillStyle = '#0f172a';
-        ctx.fillText(text, x, y);
+    const deptZoneInfo = fr.deptZoneApplied ? (ZONE_SYMBOL_MAP[displayDept] || null) : null;
+    const destZoneInfo = fr.destZoneApplied ? (ZONE_SYMBOL_MAP[displayDest] || null) : null;
+
+    function drawRoundedRectPath(c, x, y, w, h, r) {
+      c.beginPath();
+      c.moveTo(x + r, y);
+      c.lineTo(x + w - r, y);
+      c.quadraticCurveTo(x + w, y, x + w, y + r);
+      c.lineTo(x + w, y + h - r);
+      c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      c.lineTo(x + r, y + h);
+      c.quadraticCurveTo(x, y + h, x, y + h - r);
+      c.lineTo(x, y + r);
+      c.quadraticCurveTo(x, y, x + r, y);
+      c.closePath();
+    }
+
+    ctx.font = '900 48px "Noto Sans JP", sans-serif';
+    const deptTextW = ctx.measureText(displayDept).width;
+    const destTextW = ctx.measureText(displayDest).width;
+
+    const deptBadgeW = deptZoneInfo ? 36 : 0;
+    const destBadgeW = destZoneInfo ? 36 : 0;
+
+    const deptBlockW = deptBadgeW + deptTextW;
+    const destBlockW = destBadgeW + destTextW;
+
+    ctx.font = '900 32px "Noto Sans JP", sans-serif';
+    const arrowStr = '──→';
+    const arrowW = ctx.measureText(arrowStr).width;
+    const gap = 14;
+
+    const totalStationsWidth = deptBlockW + gap + arrowW + gap + destBlockW;
+    const maxStationsWidth = 512;
+    const stationScale = (totalStationsWidth > maxStationsWidth)
+      ? Math.max(0.45, maxStationsWidth / totalStationsWidth)
+      : 1.0;
+
+    let destCenterX = 320;
+
+    ctx.save();
+    ctx.translate(320, 136);
+    ctx.scale(stationScale, stationScale);
+
+    const startX = -totalStationsWidth / 2;
+    let curX = startX;
+
+    if (deptZoneInfo) {
+      const bX = curX;
+      const bY = -16;
+      drawRoundedRectPath(ctx, bX, bY, 32, 32, 3);
+      if (deptZoneInfo.type === 'city') {
+        ctx.fillStyle = '#111827';
+        ctx.fill();
+        ctx.font = '900 20px "Noto Sans JP", sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(deptZoneInfo.char, bX + 16, 0);
       } else {
-        const textWidth = ctx.measureText(text).width;
-        const boxSize = 26;
-        if (align === 'left') {
-          ctx.strokeStyle = '#0f172a';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(x, y - boxSize / 2, boxSize, boxSize);
-          ctx.font = '800 18px "Noto Sans JP", sans-serif';
-          ctx.fillStyle = '#0f172a';
-          ctx.textAlign = 'center';
-          ctx.fillText(zoneChar, x + boxSize / 2, y);
-
-          ctx.font = '800 34px "Noto Sans JP", sans-serif';
-          ctx.textAlign = 'left';
-          ctx.fillText(text, x + boxSize + 6, y);
-        } else {
-          ctx.fillStyle = '#0f172a';
-          ctx.fillText(text, x, y);
-
-          const boxX = x - textWidth - boxSize - 6;
-          ctx.strokeStyle = '#0f172a';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(boxX, y - boxSize / 2, boxSize, boxSize);
-          ctx.font = '800 18px "Noto Sans JP", sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(zoneChar, boxX + boxSize / 2, y);
-        }
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        ctx.strokeStyle = '#111827';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.font = '900 20px "Noto Sans JP", sans-serif';
+        ctx.fillStyle = '#111827';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(deptZoneInfo.char, bX + 16, 0);
       }
-    };
+      curX += 36;
+    }
 
-    drawStationWithZone(displayDept, fr.deptZoneApplied, 64, 138, 'left');
-    ctx.textAlign = 'center';
-    ctx.font = '700 30px "Noto Sans JP", sans-serif';
-    ctx.fillStyle = '#0f172a';
-    ctx.fillText('→', 320, 138);
-    drawStationWithZone(displayDest, fr.destZoneApplied, 576, 138, 'right');
+    ctx.font = '900 48px "Noto Sans JP", sans-serif';
+    ctx.fillStyle = '#111827';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(displayDept, curX, 0);
+    curX += deptTextW + gap;
 
-    // 5. 小児スタンプ (インクなし・地紋透かし)
+    ctx.font = '900 32px "Noto Sans JP", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(arrowStr, curX, 0);
+    curX += arrowW + gap;
+
+    const destBlockStartX = curX;
+
+    if (destZoneInfo) {
+      const bX = curX;
+      const bY = -16;
+      drawRoundedRectPath(ctx, bX, bY, 32, 32, 3);
+      if (destZoneInfo.type === 'city') {
+        ctx.fillStyle = '#111827';
+        ctx.fill();
+        ctx.font = '900 20px "Noto Sans JP", sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(destZoneInfo.char, bX + 16, 0);
+      } else {
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        ctx.strokeStyle = '#111827';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.font = '900 20px "Noto Sans JP", sans-serif';
+        ctx.fillStyle = '#111827';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(destZoneInfo.char, bX + 16, 0);
+      }
+      curX += 36;
+    }
+
+    ctx.font = '900 48px "Noto Sans JP", sans-serif';
+    ctx.fillStyle = '#111827';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(displayDest, curX, 0);
+
+    destCenterX = 320 + stationScale * (destBlockStartX + destBlockW / 2);
+    ctx.restore();
+
+    // 5. 小児インク抜きスタンプ (2倍解像度オフスクリーン Canvas 84 × 84、論理サイズ 42 × 42)
     if (fareType === 'child') {
       const stampCanvas = document.createElement('canvas');
-      stampCanvas.width = 34;
-      stampCanvas.height = 34;
+      stampCanvas.width = 84;
+      stampCanvas.height = 84;
       const sctx = stampCanvas.getContext('2d');
-      sctx.fillStyle = '#0f172a';
-      sctx.fillRect(0, 0, 34, 34);
+      sctx.scale(2, 2);
+      drawRoundedRectPath(sctx, 0, 0, 42, 42, 4);
+      sctx.fillStyle = '#111827';
+      sctx.fill();
       sctx.globalCompositeOperation = 'destination-out';
-      sctx.font = '900 22px "Noto Sans JP", sans-serif';
+      sctx.font = '900 26px "Noto Sans JP", sans-serif';
       sctx.textAlign = 'center';
       sctx.textBaseline = 'middle';
-      sctx.fillText('小', 17, 17);
-      ctx.drawImage(stampCanvas, 460, 56);
+      sctx.fillText('小', 21, 21);
+      ctx.drawImage(stampCanvas, destCenterX - 21, 64, 42, 42);
     }
 
     // 6. 経由 (x = 50, y = 182)
@@ -5980,7 +6066,7 @@
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.font = '700 17px "Noto Sans JP", sans-serif';
-    ctx.fillStyle = '#0f172a';
+    ctx.fillStyle = '#111827';
     let viaLine = `経由：${marsStr}`;
     if (ctx.measureText(viaLine).width > 540) {
       ctx.font = '700 14px "Noto Sans JP", sans-serif';
@@ -5997,22 +6083,22 @@
     const validDays = fr.validityDays || 1;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillStyle = '#0f172a';
+    ctx.fillStyle = '#111827';
     const baseDateY = 224;
 
     if (fr.isSuburbanOnly || validDays === 1) {
-      let curX = 70;
+      let curXPos = 70;
       ctx.font = '800 28px "Noto Sans JP", sans-serif';
-      ctx.fillText(`${m}`, curX, baseDateY);
-      curX += ctx.measureText(`${m}`).width + 2;
+      ctx.fillText(`${m}`, curXPos, baseDateY);
+      curXPos += ctx.measureText(`${m}`).width + 2;
       ctx.font = '700 20px "Noto Sans JP", sans-serif';
-      ctx.fillText('月', curX, baseDateY);
-      curX += ctx.measureText('月').width + 4;
+      ctx.fillText('月', curXPos, baseDateY);
+      curXPos += ctx.measureText('月').width + 4;
       ctx.font = '800 28px "Noto Sans JP", sans-serif';
-      ctx.fillText(`${d}`, curX, baseDateY);
-      curX += ctx.measureText(`${d}`).width + 2;
+      ctx.fillText(`${d}`, curXPos, baseDateY);
+      curXPos += ctx.measureText(`${d}`).width + 2;
       ctx.font = '700 20px "Noto Sans JP", sans-serif';
-      ctx.fillText('日当日限り有効', curX, baseDateY);
+      ctx.fillText('日当日限り有効', curXPos, baseDateY);
     } else {
       const sDate = new Date(y, m - 1, d);
       const eDate = new Date(sDate);
@@ -6020,40 +6106,44 @@
       const em = eDate.getMonth() + 1;
       const ed = eDate.getDate();
 
-      let curX = 70;
+      let curXPos = 70;
       ctx.font = '800 28px "Noto Sans JP", sans-serif';
-      ctx.fillText(`${m}`, curX, baseDateY);
-      curX += ctx.measureText(`${m}`).width + 2;
+      ctx.fillText(`${m}`, curXPos, baseDateY);
+      curXPos += ctx.measureText(`${m}`).width + 2;
       ctx.font = '700 20px "Noto Sans JP", sans-serif';
-      ctx.fillText('月', curX, baseDateY);
-      curX += ctx.measureText('月').width + 4;
+      ctx.fillText('月', curXPos, baseDateY);
+      curXPos += ctx.measureText('月').width + 4;
       ctx.font = '800 28px "Noto Sans JP", sans-serif';
-      ctx.fillText(`${d}`, curX, baseDateY);
-      curX += ctx.measureText(`${d}`).width + 2;
+      ctx.fillText(`${d}`, curXPos, baseDateY);
+      curXPos += ctx.measureText(`${d}`).width + 2;
       ctx.font = '700 20px "Noto Sans JP", sans-serif';
-      ctx.fillText('日から', curX, baseDateY);
-      curX += ctx.measureText('日から').width + 4;
+      ctx.fillText('日から', curXPos, baseDateY);
+      curXPos += ctx.measureText('日から').width + 4;
       ctx.font = '800 28px "Noto Sans JP", sans-serif';
-      ctx.fillText(`${em}`, curX, baseDateY);
-      curX += ctx.measureText(`${em}`).width + 2;
+      ctx.fillText(`${em}`, curXPos, baseDateY);
+      curXPos += ctx.measureText(`${em}`).width + 2;
       ctx.font = '700 20px "Noto Sans JP", sans-serif';
-      ctx.fillText('月', curX, baseDateY);
-      curX += ctx.measureText('月').width + 4;
+      ctx.fillText('月', curXPos, baseDateY);
+      curXPos += ctx.measureText('月').width + 4;
       ctx.font = '800 28px "Noto Sans JP", sans-serif';
-      ctx.fillText(`${ed}`, curX, baseDateY);
-      curX += ctx.measureText(`${ed}`).width + 2;
+      ctx.fillText(`${ed}`, curXPos, baseDateY);
+      curXPos += ctx.measureText(`${ed}`).width + 2;
       ctx.font = '700 20px "Noto Sans JP", sans-serif';
-      ctx.fillText('日まで有効', curX, baseDateY);
+      ctx.fillText('日まで有効', curXPos, baseDateY);
     }
 
-    // 8. 途中下車文言
+    // 8. 途中下車文言 (x = 70, y = 236, 18px)
     ctx.textBaseline = 'middle';
-    ctx.font = '700 13px "Noto Sans JP", sans-serif';
-    ctx.fillStyle = '#0f172a';
+    ctx.font = '700 18px "Noto Sans JP", sans-serif';
+    ctx.fillStyle = '#111827';
+    let stopoverText = '';
     if (!fr.stopoverAllowed) {
-      ctx.fillText('下車前途無効', 70, 248);
+      stopoverText = '下車前途無効';
     } else if (fr.deptZoneApplied || fr.destZoneApplied) {
-      ctx.fillText('券面表示の都区市内各駅下車前途無効', 70, 248);
+      stopoverText = '券面表示の都区市内各駅下車前途無効';
+    }
+    if (stopoverText) {
+      ctx.fillText(stopoverText, 70, 236);
     }
 
     // 9. 発売額 (右端 604)
@@ -6067,7 +6157,7 @@
 
     ctx.textAlign = 'right';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillStyle = '#0f172a';
+    ctx.fillStyle = '#111827';
     ctx.font = '800 42px "Noto Sans JP", sans-serif';
     const fareStr = displayFare.toLocaleString();
     ctx.fillText(fareStr, 604, 242);
@@ -6075,21 +6165,51 @@
     ctx.font = '700 26px "Noto Sans JP", sans-serif';
     ctx.fillText('￥', 604 - fareWidth - 6, 242);
 
-    // 10. 学割選択かつ100km超
+    // 10. 学割携帯証明ブロック (right = 28 基準・top = 258 付近、左揃え)
     if (fareType === 'student' && isStudentEligible) {
+      const line1Part1 = '証明書 ';
+      const line1Part2 = '学割';
+      const line2Text = 'を携帯してください。';
+
+      ctx.font = '700 18px "Noto Sans JP", sans-serif';
+      const w1 = ctx.measureText(line1Part1).width;
+      const line2W = ctx.measureText(line2Text).width;
+
+      ctx.font = '900 16px "Noto Sans JP", sans-serif';
+      const boxTextW = ctx.measureText(line1Part2).width;
+      const boxW = boxTextW + 8;
+      const boxH = 20;
+
+      const totalCertW = Math.max(w1 + boxW, line2W);
+      const certLeft = (640 - 28) - totalCertW;
+      const certTop = 258;
+
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#0f172a';
-      ctx.font = '700 12px "Noto Sans JP", sans-serif';
-      ctx.fillText('証明書 [学割]', 450, 286);
-      ctx.fillText('を携帯してください。', 450, 306);
+      ctx.font = '700 18px "Noto Sans JP", sans-serif';
+      ctx.fillStyle = '#111827';
+      ctx.fillText(line1Part1, certLeft, certTop + 11);
+
+      const boxX = certLeft + w1;
+      const boxY = certTop;
+      ctx.strokeStyle = '#111827';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+      ctx.textAlign = 'center';
+      ctx.font = '900 16px "Noto Sans JP", sans-serif';
+      ctx.fillText(line1Part2, boxX + boxW / 2, boxY + boxH / 2);
+
+      ctx.textAlign = 'left';
+      ctx.font = '700 18px "Noto Sans JP", sans-serif';
+      ctx.fillText(line2Text, certLeft, certTop + 34);
     }
 
     // 11. 発売日
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.font = '800 17px "Noto Sans JP", sans-serif';
-    ctx.fillStyle = '#0f172a';
+    ctx.fillStyle = '#111827';
     const mStr = m < 10 ? `-${m}` : `${m}`;
     const dStr = d < 10 ? `-${d}` : `${d}`;
     ctx.fillText(`${y}.${mStr}.${dStr}`, 50, 342);
@@ -6165,6 +6285,7 @@
         h.destId === item.destId &&
         JSON.stringify(h.viaIds) === JSON.stringify(item.viaIds) &&
         h.useShinkansen === item.useShinkansen &&
+        JSON.stringify(h.shsegs || []) === JSON.stringify(item.shsegs || []) &&
         h.mode === item.mode
       );
       if (existingIdx >= 0) {
@@ -6254,13 +6375,7 @@
     if (h.viaIds && h.viaIds.length > 0) {
       h.viaIds.forEach(vId => {
         const vSt = STATIONS[vId];
-        if (vSt) {
-          addViaField();
-          const viaInputs = viaContainer ? viaContainer.querySelectorAll('.route-station-input') : [];
-          if (viaInputs.length > 0) {
-            setStationInputValue(viaInputs[viaInputs.length - 1], vSt);
-          }
-        }
+        if (vSt) addViaStationRow(vSt);
       });
     }
 
@@ -6286,9 +6401,10 @@
     if (h.shsegs && Array.isArray(h.shsegs)) {
       h.shsegs.forEach(s => {
         if (s.fromId && s.toId && STATIONS[s.fromId] && STATIONS[s.toId]) {
-          addShinkansenSegment(s.fromId, s.toId);
+          addShinkansenSegment(STATIONS[s.fromId], STATIONS[s.toId]);
         }
       });
+      renderShinkansenSegmentsList();
     }
 
     ROUTE_STATE.currentFareType = h.fareType || 'adult';
@@ -6366,13 +6482,7 @@
       const viaIds = viaParam.split(',').map(s => s.trim()).filter(Boolean);
       viaIds.forEach(vId => {
         const vSt = STATIONS[vId];
-        if (vSt) {
-          addViaField();
-          const viaInputs = viaContainer ? viaContainer.querySelectorAll('.route-station-input') : [];
-          if (viaInputs.length > 0) {
-            setStationInputValue(viaInputs[viaInputs.length - 1], vSt);
-          }
-        }
+        if (vSt) addViaStationRow(vSt);
       });
     }
 
@@ -6406,9 +6516,10 @@
       pairs.forEach(pair => {
         const [fId, tId] = pair.split(':');
         if (fId && tId && STATIONS[fId] && STATIONS[tId]) {
-          addShinkansenSegment(fId, tId);
+          addShinkansenSegment(STATIONS[fId], STATIONS[tId]);
         }
       });
+      renderShinkansenSegmentsList();
     }
 
     const fare = params.get('fare');
@@ -6738,71 +6849,79 @@
     const removeBtn = row.querySelector('.btn-remove-via');
     if (input) attachStationGhostOverlay(input);
 
-    clearBtn.addEventListener('click', () => {
-      clearStationInputValue(input);
-      input.focus();
-      markInputChanged();
-    });
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        clearStationInputValue(input);
+        if (input) input.focus();
+        markInputChanged();
+      });
+    }
 
-    removeBtn.addEventListener('click', () => {
-      container.removeChild(row);
-      updateViaStationNumbers();
-      updateShinkansenCandidateChips();
-      markInputChanged();
-    });
-
-    // キーボード操作: Backspaceで空行削除、Alt+↑/↓で経由駅順序並び替え
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Backspace' && !input.value) {
-        e.preventDefault();
-        const prevRow = row.previousElementSibling;
-        const prevInput = prevRow ? prevRow.querySelector('.route-via-input') : document.getElementById('route-dept-input');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => {
         container.removeChild(row);
         updateViaStationNumbers();
+        updateShinkansenCandidateChips();
         markInputChanged();
-        if (prevInput) {
-          prevInput.focus();
-        }
-      } else if (e.altKey && e.key === 'ArrowUp') {
-        // Alt + ArrowUp: 1つ上の経由駅と順序入れ替え
-        const prevRow = row.previousElementSibling;
-        if (prevRow && prevRow.classList.contains('via-row')) {
+      });
+    }
+
+    // キーボード操作: Backspaceで空行削除、Alt+↑/↓で経由駅順序並び替え
+    if (input) {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !input.value) {
           e.preventDefault();
-          container.insertBefore(row, prevRow);
+          const prevRow = row.previousElementSibling;
+          const prevInput = prevRow ? prevRow.querySelector('.route-via-input') : document.getElementById('route-dept-input');
+          container.removeChild(row);
           updateViaStationNumbers();
           markInputChanged();
-          input.focus();
+          if (prevInput) {
+            prevInput.focus();
+          }
+        } else if (e.altKey && e.key === 'ArrowUp') {
+          // Alt + ArrowUp: 1つ上の経由駅と順序入れ替え
+          const prevRow = row.previousElementSibling;
+          if (prevRow && prevRow.classList.contains('via-row')) {
+            e.preventDefault();
+            container.insertBefore(row, prevRow);
+            updateViaStationNumbers();
+            markInputChanged();
+            input.focus();
+          }
+        } else if (e.altKey && e.key === 'ArrowDown') {
+          // Alt + ArrowDown: 1つ下の経由駅と順序入れ替え
+          const nextRow = row.nextElementSibling;
+          if (nextRow && nextRow.classList.contains('via-row')) {
+            e.preventDefault();
+            container.insertBefore(nextRow, row);
+            updateViaStationNumbers();
+            markInputChanged();
+            input.focus();
+          }
         }
-      } else if (e.altKey && e.key === 'ArrowDown') {
-        // Alt + ArrowDown: 1つ下の経由駅と順序入れ替え
-        const nextRow = row.nextElementSibling;
-        if (nextRow && nextRow.classList.contains('via-row')) {
-          e.preventDefault();
-          container.insertBefore(nextRow, row);
-          updateViaStationNumbers();
-          markInputChanged();
-          input.focus();
-        }
-      }
-    });
+      });
+    }
 
     // ドラッグ＆ドロップ (ドラッグハンドルから開始)
-    handle.addEventListener('dragstart', (e) => {
-      draggedViaRow = row;
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', row.id);
-      setTimeout(() => {
-        row.classList.add('is-dragging');
-      }, 0);
-    });
-
-    handle.addEventListener('dragend', () => {
-      row.classList.remove('is-dragging');
-      container.querySelectorAll('.via-row').forEach(r => {
-        r.classList.remove('drag-over-above', 'drag-over-below', 'is-dragging');
+    if (handle) {
+      handle.addEventListener('dragstart', (e) => {
+        draggedViaRow = row;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', row.id);
+        setTimeout(() => {
+          row.classList.add('is-dragging');
+        }, 0);
       });
-      draggedViaRow = null;
-    });
+
+      handle.addEventListener('dragend', () => {
+        row.classList.remove('is-dragging');
+        container.querySelectorAll('.via-row').forEach(r => {
+          r.classList.remove('drag-over-above', 'drag-over-below', 'is-dragging');
+        });
+        draggedViaRow = null;
+      });
+    }
 
     row.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -6914,8 +7033,8 @@
   function executeRouteSearch() {
     const errorMsg = document.getElementById('route-error-msg');
     const resultContainer = document.getElementById('route-result-container');
-    errorMsg.style.display = 'none';
-    resultContainer.style.display = 'none';
+    if (errorMsg) errorMsg.style.display = 'none';
+    if (resultContainer) resultContainer.style.display = 'none';
 
     const deptInput = document.getElementById('route-dept-input');
     const destInput = document.getElementById('route-dest-input');
