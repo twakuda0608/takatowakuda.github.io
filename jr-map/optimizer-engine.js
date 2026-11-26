@@ -101,15 +101,15 @@
       return {
         isSeparate: true,
         tag: `新幹線経由で近郊区間解除（${pName}・要特急券）`,
-        description: `${pName}新幹線経由（完全別線・新幹線乗車および別途特急券が必要）`,
-        summaryNote: `${fromName} → ${toName} の1区間を新幹線経由にすることで大都市近郊区間の特例が外れ、途中下車可能（有効${validDays}日間）になります。※この区間は並行在来線と完全別線扱いのため、並行在来線での代用はできず、実際に新幹線へ乗車（別途特急券が必要）する必要があります。`
+        description: `${pName} 新幹線経由（要特急券）`,
+        summaryNote: `${pName} 新幹線経由（要特急券）`
       };
     } else {
       return {
         isSeparate: false,
         tag: `新幹線経由で近郊区間解除（${pName}・在来線乗車可）`,
-        description: `${pName}新幹線経由で発券（並行在来線乗車可・特急券不要）`,
-        summaryNote: `${fromName} → ${toName} の1区間を新幹線経由で発券することで大都市近郊区間の特例が外れ、途中下車可能（有効${validDays}日間）になります。この区間は並行在来線と同一線扱いのため、実際に新幹線に乗らず並行在来線で移動しても問題ありません（特急券不要）。新幹線に乗車する場合のみ別途特急券が必要です。`
+        description: `${pName} 新幹線経由（在来線乗車可）`,
+        summaryNote: `${pName} 新幹線経由（在来線乗車可）`
       };
     }
   }
@@ -1016,158 +1016,287 @@
         const fullStops = [deptId, ...order, ...(destId ? [destId] : [])];
         const m = fullStops.length - 1;
 
-        const dp = Array.from({ length: m + 1 }, () => ({ cost: Infinity, tickets: [] }));
-        dp[0] = { cost: 0, tickets: [] };
+        // DPモード: preferStopover === true のときは「最安優先」と「途中下車優先」の2パス
+        const dpModes = preferStopover ? ['cheapest', 'stopover'] : ['cheapest'];
 
-        for (let j = 1; j <= m; j++) {
-          if (checkTimeBudget()) break;
-          for (let i = 0; i < j; i++) {
-            if (dp[i].cost === Infinity) continue;
-            const s_i = fullStops[i];
-            const s_j = fullStops[j];
-            const mid = fullStops.slice(i + 1, j);
+        dpModes.forEach(dpMode => {
+          if (checkTimeBudget()) return;
 
-            if (j === i + 1) {
-              const res = cachedSearch(s_i, [], s_j, { searchMode: 'shortest' });
-              if (res && res.success && res.fareRules) {
-                const fare = getTicketPrice(res.fareRules, fareType);
-                if (dp[i].cost + fare < dp[j].cost) {
-                  dp[j] = {
-                    cost: dp[i].cost + fare,
-                    tickets: [
-                      ...dp[i].tickets,
-                      {
-                        role: 'split',
-                        label: `乗車券（${(stations[s_i] && stations[s_i].name) || s_i} → ${(stations[s_j] && stations[s_j].name) || s_j}）`,
+          // dp[k]: { cost, effectiveCost, stopoverCount, tickets }
+          const dp = Array.from({ length: m + 1 }, () => ({
+            cost: Infinity,
+            effectiveCost: Infinity,
+            stopoverCount: 0,
+            tickets: []
+          }));
+          dp[0] = { cost: 0, effectiveCost: 0, stopoverCount: 0, tickets: [] };
+
+          function isBetter(newEffCost, newStopover, newCost, curDP) {
+            if (curDP.effectiveCost === Infinity) return true;
+            if (dpMode === 'stopover') {
+              // 途中下車優先モード: 途中下車可能切符数が多い方を優先（実質追加コストが許容範囲内なら）
+              if (newStopover > curDP.stopoverCount) {
+                const costDiff = newEffCost - curDP.effectiveCost;
+                if (costDiff <= 1000) return true;
+              }
+              if (newStopover === curDP.stopoverCount) {
+                if (newEffCost < curDP.effectiveCost) return true;
+                if (newEffCost === curDP.effectiveCost && newCost < curDP.cost) return true;
+              }
+              return false;
+            } else {
+              // 最安優先モード: 実質コスト優先、同額なら途中下車数が多い方を優先
+              if (newEffCost < curDP.effectiveCost) return true;
+              if (newEffCost === curDP.effectiveCost && newStopover > curDP.stopoverCount) return true;
+              if (newEffCost === curDP.effectiveCost && newStopover === curDP.stopoverCount && newCost < curDP.cost) return true;
+              return false;
+            }
+          }
+
+          for (let j = 1; j <= m; j++) {
+            if (checkTimeBudget()) break;
+            for (let i = 0; i < j; i++) {
+              if (dp[i].cost === Infinity) continue;
+              const s_i = fullStops[i];
+              const s_j = fullStops[j];
+              const mid = fullStops.slice(i + 1, j);
+              const s_i_name = (stations[s_i] && stations[s_i].name) || s_i;
+              const s_j_name = (stations[s_j] && stations[s_j].name) || s_j;
+
+              // この区間 (i -> j) の切符候補リスト
+              const legCandidates = [];
+
+              if (j === i + 1) {
+                // 単一区間 (j === i + 1)
+                const res = cachedSearch(s_i, [], s_j, { searchMode: 'shortest' });
+                if (res && res.success && res.fareRules) {
+                  const fare = getTicketPrice(res.fareRules, fareType);
+                  const isStopover = !!res.fareRules.stopoverAllowed;
+                  const isSuburban = (res.fareRules.isSuburbanOnly === true);
+
+                  legCandidates.push({
+                    tickets: [{
+                      role: 'split',
+                      label: `乗車券（${s_i_name} → ${s_j_name}）`,
+                      quantity: 1,
+                      unitFare: fare,
+                      subtotalFare: fare,
+                      stopoverStations: [],
+                      extensionDropStation: null,
+                      routeResult: res
+                    }],
+                    cost: fare,
+                    effectiveCost: fare,
+                    stopoverCount: isStopover ? 1 : 0
+                  });
+
+                  // 3-1: 単一区間での近郊区間解除バイパス試行
+                  if (isSuburban && res.totalKm >= 95) {
+                    const bypass = trySuburbanBypassWithShinkansen(s_i, [], s_j, res, stations, cachedSearch, { fareType, checkTimeBudget });
+                    if (bypass && bypass.routeResult && bypass.routeResult.fareRules) {
+                      const bpRes = bypass.routeResult;
+                      const bpFare = getTicketPrice(bpRes.fareRules, fareType);
+                      const isSep = bypass.isSeparate || isSeparateShinkansenBypassPair(bypass.pair.fromId, bypass.pair.toId);
+                      const effBpFare = isSep ? (bpFare + 870) : bpFare;
+                      const bpDetails = getShinkansenBypassDetails(bypass.pair.fromId, bypass.pair.toId, bypass.pair.name, bpRes.fareRules.validityDays, stations);
+
+                      const bpTicket = {
+                        role: 'main',
+                        label: `乗車券（${s_i_name} → ${s_j_name}・新幹線経由途中下車）`,
                         quantity: 1,
-                        unitFare: fare,
-                        subtotalFare: fare,
+                        unitFare: bpFare,
+                        subtotalFare: bpFare,
                         stopoverStations: [],
                         extensionDropStation: null,
-                        routeResult: res
-                      }
-                    ]
-                  };
-                }
+                        shinkansenSegments: bpRes.shinkansenSegments || [],
+                        forceShinkansenOnlyInSegments: !!bpRes.forceShinkansenOnlyInSegments,
+                        viaIds: bpRes.viaIds || [],
+                        routeResult: bpRes,
+                        bypassDetails: bpDetails,
+                        description: bpDetails ? bpDetails.description : ''
+                      };
 
-                // 会社境界駅での2分割チェック
-                if (res.totalKm >= 80 && res.allStationIds && res.allStationIds.length > 2) {
-                  const intermediateIds = res.allStationIds.slice(1, -1);
-                  for (const midId of intermediateIds) {
-                    const midSt = stations[midId];
-                    if (midSt && COMPANY_BORDER_STATION_NAMES.has(midSt.name)) {
-                      const r1 = cachedSearch(s_i, [], midId, { searchMode: 'shortest' });
-                      const r2 = cachedSearch(midId, [], s_j, { searchMode: 'shortest' });
-                      if (r1 && r1.success && r2 && r2.success) {
-                        const f1 = getTicketPrice(r1.fareRules, fareType);
-                        const f2 = getTicketPrice(r2.fareRules, fareType);
-                        const splitTotal = f1 + f2;
-                        if (splitTotal < fare && dp[i].cost + splitTotal < dp[j].cost) {
-                          dp[j] = {
-                            cost: dp[i].cost + splitTotal,
-                            tickets: [
-                              ...dp[i].tickets,
-                              {
-                                role: 'split',
-                                label: `乗車券（${(stations[s_i] && stations[s_i].name) || s_i} → ${midSt.name}）`,
-                                quantity: 1,
-                                unitFare: f1,
-                                subtotalFare: f1,
-                                stopoverStations: [],
-                                extensionDropStation: null,
-                                routeResult: r1
-                              },
-                              {
-                                role: 'split',
-                                label: `乗車券（${midSt.name} → ${(stations[s_j] && stations[s_j].name) || s_j}）`,
-                                quantity: 1,
-                                unitFare: f2,
-                                subtotalFare: f2,
-                                stopoverStations: [],
-                                extensionDropStation: null,
-                                routeResult: r2
-                              }
-                            ]
-                          };
+                      // 特急券不要の同一線扱いで同額以下なら無条件採用候補
+                      const isIdealUpgrade = (!isSep && bpFare <= fare);
+                      // preferStopover時は少額追加（+500以内、または特急券ありでも現実的範囲内）も評価
+                      const isAcceptableUpgrade = preferStopover && (!isSep ? (bpFare - fare <= 500) : (effBpFare - fare <= 1500));
+
+                      if (isIdealUpgrade || isAcceptableUpgrade) {
+                        legCandidates.push({
+                          tickets: [bpTicket],
+                          cost: bpFare,
+                          effectiveCost: effBpFare,
+                          stopoverCount: 1
+                        });
+                      }
+                    }
+
+                    // 1駅先買い延長（findExtensionTargets）
+                    if (preferStopover) {
+                      const extTargets = findExtensionTargets(s_j, stations);
+                      for (const extSt of extTargets) {
+                        const rExt = cachedSearch(s_i, [], extSt.id, { searchMode: 'shortest' });
+                        if (rExt && rExt.success && rExt.fareRules && rExt.fareRules.stopoverAllowed === true) {
+                          const extFare = getTicketPrice(rExt.fareRules, fareType);
+                          if (extFare - fare <= 500) {
+                            const extTicket = {
+                              role: 'extension',
+                              label: `乗車券（${s_i_name} → ${extSt.name}・途中下車）`,
+                              quantity: 1,
+                              unitFare: extFare,
+                              subtotalFare: extFare,
+                              stopoverStations: [],
+                              extensionDropStation: s_j_name,
+                              routeResult: rExt,
+                              description: `${s_j_name}駅で下車（前途放棄）`
+                            };
+                            legCandidates.push({
+                              tickets: [extTicket],
+                              cost: extFare,
+                              effectiveCost: extFare,
+                              stopoverCount: 1
+                            });
+                          }
+                        }
+                      }
+                    }
+                  }
+
+                  // 会社境界駅での2分割チェック
+                  if (res.totalKm >= 80 && res.allStationIds && res.allStationIds.length > 2) {
+                    const intermediateIds = res.allStationIds.slice(1, -1);
+                    for (const midId of intermediateIds) {
+                      const midSt = stations[midId];
+                      if (midSt && COMPANY_BORDER_STATION_NAMES.has(midSt.name)) {
+                        const r1 = cachedSearch(s_i, [], midId, { searchMode: 'shortest' });
+                        const r2 = cachedSearch(midId, [], s_j, { searchMode: 'shortest' });
+                        if (r1 && r1.success && r2 && r2.success) {
+                          const f1 = getTicketPrice(r1.fareRules, fareType);
+                          const f2 = getTicketPrice(r2.fareRules, fareType);
+                          const splitTotal = f1 + f2;
+                          if (splitTotal <= fare) {
+                            const stCount = (r1.fareRules.stopoverAllowed ? 1 : 0) + (r2.fareRules.stopoverAllowed ? 1 : 0);
+                            legCandidates.push({
+                              tickets: [
+                                {
+                                  role: 'split',
+                                  label: `乗車券（${s_i_name} → ${midSt.name}）`,
+                                  quantity: 1,
+                                  unitFare: f1,
+                                  subtotalFare: f1,
+                                  stopoverStations: [],
+                                  extensionDropStation: null,
+                                  routeResult: r1
+                                },
+                                {
+                                  role: 'split',
+                                  label: `乗車券（${midSt.name} → ${s_j_name}）`,
+                                  quantity: 1,
+                                  unitFare: f2,
+                                  subtotalFare: f2,
+                                  stopoverStations: [],
+                                  extensionDropStation: null,
+                                  routeResult: r2
+                                }
+                              ],
+                              cost: splitTotal,
+                              effectiveCost: splitTotal,
+                              stopoverCount: stCount
+                            });
+                          }
                         }
                       }
                     }
                   }
                 }
-              }
-            } else if (j - i === 2 || j - i === 3) {
-              let res = cachedSearch(s_i, mid, s_j, { searchMode: 'oneway' });
-              let isBypassed = false;
-              let bypassDetails = null;
-              if (res && res.success && res.fareRules && res.fareRules.isSuburbanOnly === true && res.totalKm >= 90) {
-                const bypass = trySuburbanBypassWithShinkansen(s_i, mid, s_j, res, stations, cachedSearch, { fareType, checkTimeBudget });
-                if (bypass) {
-                  res = bypass.routeResult;
-                  isBypassed = true;
-                  bypassDetails = getShinkansenBypassDetails(bypass.pair.fromId, bypass.pair.toId, bypass.pair.name, res.fareRules.validityDays, stations);
+              } else if (j - i === 2 || j - i === 3) {
+                // 複数駅まとめ区間 (j - i === 2 || j - i === 3)
+                let res = cachedSearch(s_i, mid, s_j, { searchMode: 'oneway' });
+                let isBypassed = false;
+                let bypassDetails = null;
+                if (res && res.success && res.fareRules && res.fareRules.isSuburbanOnly === true && res.totalKm >= 90) {
+                  const bypass = trySuburbanBypassWithShinkansen(s_i, mid, s_j, res, stations, cachedSearch, { fareType, checkTimeBudget });
+                  if (bypass) {
+                    res = bypass.routeResult;
+                    isBypassed = true;
+                    bypassDetails = getShinkansenBypassDetails(bypass.pair.fromId, bypass.pair.toId, bypass.pair.name, res.fareRules.validityDays, stations);
+                  }
+                }
+                if (res && res.success && res.isOneWayTrip && res.fareRules) {
+                  if (canStopoverAll(res, mid, stations)) {
+                    const fare = getTicketPrice(res.fareRules, fareType);
+                    const isSep = isBypassed && (bypassDetails?.isSeparate || isSeparateShinkansenBypassPair(bypassDetails?.pair?.fromId, bypassDetails?.pair?.toId));
+                    const effFare = isSep ? (fare + 870) : fare;
+                    const stopNames = mid.map(id => (stations[id] && stations[id].name) || id);
+                    const isStopover = !!res.fareRules.stopoverAllowed;
+
+                    const multiTicket = {
+                      role: 'main',
+                      label: isBypassed
+                        ? `乗車券（${s_i_name} → ${s_j_name}・新幹線経由途中下車）`
+                        : `乗車券（${s_i_name} → ${s_j_name}・途中下車）`,
+                      quantity: 1,
+                      unitFare: fare,
+                      subtotalFare: fare,
+                      stopoverStations: stopNames,
+                      extensionDropStation: null,
+                      shinkansenSegments: res.shinkansenSegments || [],
+                      forceShinkansenOnlyInSegments: !!res.forceShinkansenOnlyInSegments,
+                      viaIds: res.viaIds || mid,
+                      routeResult: res,
+                      bypassDetails: bypassDetails,
+                      description: (isBypassed && bypassDetails) ? bypassDetails.description : ''
+                    };
+
+                    legCandidates.push({
+                      tickets: [multiTicket],
+                      cost: fare,
+                      effectiveCost: effFare,
+                      stopoverCount: isStopover ? 1 : 0
+                    });
+                  }
                 }
               }
-              if (res && res.success && res.isOneWayTrip && res.fareRules) {
-                if (canStopoverAll(res, mid, stations)) {
-                  const fare = getTicketPrice(res.fareRules, fareType);
-                  if (dp[i].cost + fare < dp[j].cost) {
-                    const stopNames = mid.map(id => (stations[id] && stations[id].name) || id);
-                    dp[j] = {
-                      cost: dp[i].cost + fare,
-                      tickets: [
-                        ...dp[i].tickets,
-                        {
-                          role: 'main',
-                          label: isBypassed
-                            ? `乗車券（${(stations[s_i] && stations[s_i].name) || s_i} → ${(stations[s_j] && stations[s_j].name) || s_j}・新幹線経由途中下車）`
-                            : `乗車券（${(stations[s_i] && stations[s_i].name) || s_i} → ${(stations[s_j] && stations[s_j].name) || s_j}・途中下車）`,
-                          quantity: 1,
-                          unitFare: fare,
-                          subtotalFare: fare,
-                          stopoverStations: stopNames,
-                          extensionDropStation: null,
-                          shinkansenSegments: res.shinkansenSegments || [],
-                          forceShinkansenOnlyInSegments: !!res.forceShinkansenOnlyInSegments,
-                          viaIds: res.viaIds || mid,
-                          routeResult: res,
-                          bypassDetails: bypassDetails,
-                          description: (isBypassed && bypassDetails) ? bypassDetails.description : ''
-                        }
-                      ]
-                    };
-                  }
+
+              // 遷移候補で dp[j] を更新
+              for (const cand of legCandidates) {
+                const newCost = dp[i].cost + cand.cost;
+                const newEffCost = dp[i].effectiveCost + cand.effectiveCost;
+                const newStopover = dp[i].stopoverCount + cand.stopoverCount;
+                if (isBetter(newEffCost, newStopover, newCost, dp[j])) {
+                  dp[j] = {
+                    cost: newCost,
+                    effectiveCost: newEffCost,
+                    stopoverCount: newStopover,
+                    tickets: [...dp[i].tickets, ...cand.tickets]
+                  };
                 }
               }
             }
           }
-        }
 
-        if (dp[m].cost < Infinity && dp[m].tickets.length > 0) {
-          const totalKm = dp[m].tickets.reduce((sum, t) => sum + (t.routeResult ? t.routeResult.totalKm : 0), 0);
-          const hasStopover = dp[m].tickets.some(t => t.stopoverStations && t.stopoverStations.length > 0);
-          const bypassTicket = dp[m].tickets.find(t => t.bypassDetails);
-          const tags = dp[m].tickets.length === 1 ? ['一筆書き＋途中下車'] : (hasStopover ? ['一筆書き＋途中下車', '分割購入'] : ['最適分割購入']);
-          if (bypassTicket && bypassTicket.bypassDetails) {
-            tags.unshift(bypassTicket.bypassDetails.tag);
-          } else if (dp[m].tickets.some(t => t.shinkansenSegments && t.shinkansenSegments.length > 0)) {
-            tags.unshift('新幹線1区間組み込み（近郊区間脱出）');
+          if (dp[m].cost < Infinity && dp[m].tickets.length > 0) {
+            const totalKm = dp[m].tickets.reduce((sum, t) => sum + (t.routeResult ? t.routeResult.totalKm : 0), 0);
+            const hasStopover = dp[m].tickets.some(t => t.stopoverStations && t.stopoverStations.length > 0);
+            const bypassTicket = dp[m].tickets.find(t => t.bypassDetails);
+            const tags = dp[m].tickets.length === 1 ? ['一筆書き＋途中下車'] : (hasStopover ? ['一筆書き＋途中下車', '分割購入'] : ['最適分割購入']);
+            if (bypassTicket && bypassTicket.bypassDetails) {
+              tags.unshift(bypassTicket.bypassDetails.tag);
+            } else if (dp[m].tickets.some(t => t.shinkansenSegments && t.shinkansenSegments.length > 0)) {
+              tags.unshift('新幹線1区間組み込み（近郊区間脱出）');
+            }
+
+            candidatePlans.push({
+              title: `最適分割購入（${dp[m].tickets.length}枚構成）`,
+              strategyTags: tags,
+              totalFare: dp[m].cost,
+              totalKm: Math.round(totalKm * 10) / 10,
+              ticketCount: dp[m].tickets.length,
+              summaryNote: '',
+              tickets: dp[m].tickets
+            });
           }
-
-          let note = `${dp[m].tickets.length}枚の乗車券に分割して購入する最適な組み合わせです。`;
-          if (bypassTicket && bypassTicket.bypassDetails) {
-            note += ` ${bypassTicket.bypassDetails.summaryNote}`;
-          }
-
-          candidatePlans.push({
-            title: `最適分割購入（${dp[m].tickets.length}枚構成）`,
-            strategyTags: tags,
-            totalFare: dp[m].cost,
-            totalKm: Math.round(totalKm * 10) / 10,
-            ticketCount: dp[m].tickets.length,
-            summaryNote: note,
-            tickets: dp[m].tickets
-          });
-        }
+        });
       });
     }
 
@@ -1423,15 +1552,18 @@
       p.requiresExpressTicket = requiresExpressTicket;
       p.effectiveFare = requiresExpressTicket ? (p.totalFare + 870) : p.totalFare;
 
-      // 途中下車フレンドリー判定
-      // 全チケットで途中下車可能、または途中下車可能チケットを含み訪問駅で途中下車できる
-      const isStopoverFriendly = p.tickets.every(t => {
-        if (!t.routeResult || !t.routeResult.fareRules) return false;
-        // 分岐往復や延長買いでの下車駅などを含めて判定
-        return (t.routeResult.fareRules.stopoverAllowed === true) || (t.role === 'branch-roundtrip' && t.subtotalFare < 500);
-      }) || p.tickets.some(t => t.stopoverStations && t.stopoverStations.length > 0 && t.routeResult && t.routeResult.fareRules && t.routeResult.fareRules.stopoverAllowed);
+      // 途中下車関連の属性算出 (3-3)
+      const isTicketStopoverAllowed = (t) => {
+        if (t.stopoverAllowed !== undefined) return !!t.stopoverAllowed;
+        if (t.routeResult && t.routeResult.fareRules) return !!t.routeResult.fareRules.stopoverAllowed;
+        return false;
+      };
 
-      p.isStopoverFriendly = !!isStopoverFriendly;
+      p.stopoverTicketCount = p.tickets.filter(isTicketStopoverAllowed).length;
+      const mainTickets = p.tickets.filter(t => t.role !== 'branch-roundtrip');
+      p.mainTicketCount = mainTickets.length;
+      p.allMainTicketsStopover = (p.mainTicketCount > 0 && mainTickets.every(isTicketStopoverAllowed));
+      p.isStopoverFriendly = p.allMainTicketsStopover || (p.mainTicketCount === 1 && p.stopoverTicketCount >= 1);
       p.diffFromBaseline = p.totalFare - baselineFare;
 
       // 正規化シグネチャ
@@ -1463,15 +1595,18 @@
       p.isBaseline = !!p.isBaseline;
     });
 
-    // ソート順の制御
+    // ソート順の制御 (3-3)
     let sortedPlans = [];
     if (preferStopover) {
-      // 途中下車優先モード: 現実的な追加運賃（通常最安+35%以内または+￥1,500以内）で途中下車可能なプランを優先上位にソート
+      // 途中下車優先モード
       sortedPlans = allUniquePlans.slice().sort((a, b) => {
         const aReasonable = isReasonableStopoverUpgrade(a, baselineFare);
         const bReasonable = isReasonableStopoverUpgrade(b, baselineFare);
         if (aReasonable !== bReasonable) {
           return aReasonable ? -1 : 1;
+        }
+        if (a.allMainTicketsStopover !== b.allMainTicketsStopover) {
+          return a.allMainTicketsStopover ? -1 : 1;
         }
         if (a.effectiveFare !== b.effectiveFare) {
           return a.effectiveFare - b.effectiveFare;
@@ -1479,8 +1614,8 @@
         if (a.totalFare !== b.totalFare) {
           return a.totalFare - b.totalFare;
         }
-        if (a.isStopoverFriendly !== b.isStopoverFriendly) {
-          return a.isStopoverFriendly ? -1 : 1;
+        if (a.stopoverTicketCount !== b.stopoverTicketCount) {
+          return b.stopoverTicketCount - a.stopoverTicketCount;
         }
         if (a.ticketCount !== b.ticketCount) return a.ticketCount - b.ticketCount;
         return a.totalKm - b.totalKm;
@@ -1508,8 +1643,11 @@
         if (a.totalFare !== b.totalFare) {
           return a.totalFare - b.totalFare;
         }
-        if (a.isStopoverFriendly !== b.isStopoverFriendly) {
-          return a.isStopoverFriendly ? -1 : 1;
+        if (a.allMainTicketsStopover !== b.allMainTicketsStopover) {
+          return a.allMainTicketsStopover ? -1 : 1;
+        }
+        if (a.stopoverTicketCount !== b.stopoverTicketCount) {
+          return b.stopoverTicketCount - a.stopoverTicketCount;
         }
         if (a.ticketCount !== b.ticketCount) return a.ticketCount - b.ticketCount;
         return a.totalKm - b.totalKm;
@@ -1614,6 +1752,11 @@
       // 再集計
       plan.totalKm = Math.round(plan.tickets.reduce((sum, t) => sum + (t.routeResult ? t.routeResult.totalKm : 0), 0) * 10) / 10;
       plan.totalFare = plan.tickets.reduce((sum, t) => sum + (t.subtotalFare || t.unitFare || 0), 0);
+      plan.stopoverTicketCount = plan.tickets.filter(t => t.stopoverAllowed === true).length;
+      const mTickets = plan.tickets.filter(t => t.role !== 'branch-roundtrip');
+      plan.mainTicketCount = mTickets.length;
+      plan.allMainTicketsStopover = (mTickets.length > 0 && mTickets.every(t => t.stopoverAllowed === true));
+      plan.isStopoverFriendly = plan.allMainTicketsStopover || (mTickets.length === 1 && plan.stopoverTicketCount >= 1);
     });
 
     const cheapestIsBaseline = (cheapestFare === baselineFare);

@@ -397,6 +397,7 @@ body.theme-light .view-presets {
   z-index: 1000;
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: 12px;
 }
 
@@ -434,25 +435,23 @@ body.theme-light .view-presets {
   transform: scale(0.96);
 }
 
-.ctrl-btn-wide {
-  width: auto;
-  height: 38px;
-  padding: 0 12px;
+.ctrl-btn-standalone {
+  width: 42px;
+  height: 42px;
   border-radius: var(--radius-md);
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
   box-shadow: var(--shadow-float);
-  font-size: 12px;
-  font-weight: 700;
-  gap: 6px;
   color: var(--text-main);
-  white-space: nowrap;
+  padding: 0;
+  border-bottom: 1px solid var(--panel-border);
 }
-.ctrl-btn-wide:hover {
+.ctrl-btn-standalone:hover {
   background: rgba(13, 148, 136, 0.08);
   border-color: #0d9488;
+  color: #0d9488;
 }
-.ctrl-btn-wide.active {
+.ctrl-btn-standalone.active {
   background: #0d9488;
   color: #ffffff;
   border-color: #0d9488;
@@ -1126,8 +1125,10 @@ body.theme-dark .sheet-header.jr-station-sign {
     right: 10px;
     bottom: auto;
     gap: 6px;
+    align-items: flex-end;
   }
-  .ctrl-btn {
+  .ctrl-btn,
+  .ctrl-btn-standalone {
     width: 36px;
     height: 36px;
     font-size: 15px;
@@ -3462,15 +3463,9 @@ body.theme-light .search-input-wrapper .ghost-pref {
   border-color: rgba(245, 158, 11, 0.25);
 }
 
-/* コツ解説文 */
+/* コツ解説文 (非表示) */
 .cheapest-summary-note {
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.7);
-  padding: 8px 10px;
-  border-radius: 6px;
-  border-left: 3px solid #0d9488;
+  display: none !important;
 }
 
 /* チケットカードリスト */
