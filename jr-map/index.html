@@ -213,6 +213,23 @@
           <div class="route-mode-group" id="route-mode-selector">
             <button type="button" class="route-mode-btn active" data-mode="shortest" id="btn-mode-shortest">最短経路</button>
             <button type="button" class="route-mode-btn" data-mode="oneway" id="btn-mode-oneway">重複区間なし</button>
+            <button type="button" class="route-mode-btn" data-mode="cheapest" id="btn-mode-cheapest">最安きっぷ</button>
+          </div>
+
+          <!-- 最安きっぷモード専用オプション行 -->
+          <div id="cheapest-options-row" class="cheapest-options-row" style="display: none;">
+            <label class="route-checkbox-label">
+              <input type="checkbox" id="chk-cheapest-return" checked>
+              <span>出発駅に戻る（周遊・往復）</span>
+            </label>
+            <label class="route-checkbox-label">
+              <input type="checkbox" id="chk-cheapest-auto-order" checked>
+              <span>訪問順おまかせ</span>
+            </label>
+            <label class="route-checkbox-label">
+              <input type="checkbox" id="chk-cheapest-prefer-stopover">
+              <span>なるべく途中下車可能にする</span>
+            </label>
           </div>
 
           <div class="route-options">
@@ -294,6 +311,33 @@
 
         <!-- 探索結果表示エリア -->
         <div id="route-result-container" class="route-result-container" style="display: none;">
+          <!-- 最安きっぷ結果コンテナ -->
+          <div id="cheapest-plan-container" class="cheapest-plan-container" style="display: none;">
+            <!-- プラン切替タブ（最大3案） -->
+            <div id="cheapest-plan-tabs" class="cheapest-plan-tabs"></div>
+
+            <!-- 最安サマリーカード -->
+            <div id="cheapest-summary-card" class="cheapest-summary-card">
+              <div class="cheapest-fare-row">
+                <div class="cheapest-fare-main">
+                  <span class="cheapest-fare-label">合計運賃</span>
+                  <span id="cheapest-total-fare" class="cheapest-total-fare">￥0</span>
+                </div>
+                <div id="cheapest-savings-badge" class="cheapest-savings-badge">最安</div>
+              </div>
+              <div id="cheapest-tags-container" class="cheapest-tags-container"></div>
+              <div id="cheapest-summary-note" class="cheapest-summary-note"></div>
+            </div>
+
+            <!-- 購入する乗車券リスト（切符カード群） -->
+            <div class="cheapest-tickets-section">
+              <div class="cheapest-tickets-header">
+                <span class="cheapest-tickets-title">購入する乗車券（タップで券面・路線を切替表示）</span>
+              </div>
+              <div id="cheapest-tickets-list" class="cheapest-tickets-list"></div>
+            </div>
+          </div>
+
           <!-- 券面操作バー（運賃種別切替・乗車日） -->
           <div class="ticket-control-bar">
             <div class="fare-type-group" id="fare-type-group">
@@ -473,6 +517,8 @@
   <script src="fare-engine.js"></script>
   <!-- マルス経路探索エンジン -->
   <script src="route-engine.js"></script>
+  <!-- 最安乗車券プラン最適化エンジン -->
+  <script src="optimizer-engine.js"></script>
   <!-- メインロジック -->
   <script src="app.js"></script>
 </body>

@@ -1586,6 +1586,34 @@
         }
       });
 
+      // --- 最安きっぷ サブ切符ハイライトレイヤー (アクティブ切符の下層・切符カラー対応) ---
+      map.addLayer({
+        id: "route-sub-glow",
+        type: "line",
+        source: "route-source",
+        filter: ["==", ["get", "routeType"], "sub-ticket"],
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": ["coalesce", ["get", "ticketColor"], "#059669"],
+          "line-width": 12,
+          "line-blur": 4,
+          "line-opacity": 0.45
+        }
+      });
+
+      map.addLayer({
+        id: "route-sub-core",
+        type: "line",
+        source: "route-source",
+        filter: ["==", ["get", "routeType"], "sub-ticket"],
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": ["coalesce", ["get", "ticketColor"], "#059669"],
+          "line-width": 5.5,
+          "line-opacity": 0.72
+        }
+      });
+
       map.addLayer({
         id: "route-glow",
         type: "line",
@@ -1593,7 +1621,7 @@
         filter: ["==", ["get", "routeType"], "conventional"],
         layout: { "line-cap": "round", "line-join": "round" },
         paint: {
-          "line-color": "#00ffff",
+          "line-color": ["coalesce", ["get", "ticketColor"], "#00ffff"],
           "line-width": 16,
           "line-blur": 6,
           "line-opacity": 0.7
@@ -1607,7 +1635,7 @@
         filter: ["==", ["get", "routeType"], "conventional"],
         layout: { "line-cap": "round", "line-join": "round" },
         paint: {
-          "line-color": "#0284c7",
+          "line-color": ["coalesce", ["get", "ticketColor"], "#0284c7"],
           "line-width": 8,
           "line-opacity": 1.0
         }
@@ -2511,10 +2539,12 @@
     const destId = destInput ? destInput.getAttribute('data-id') : null;
     let feedback = '';
 
+    const isCheapestReturn = (ROUTE_STATE.searchMode === 'cheapest' && ROUTE_STATE.cheapestReturn);
+
     if (!deptId && (!deptInput || !deptInput.value.trim())) {
       setStationInputValue(deptInput, st);
       feedback = `発駅に設定：${st.name}`;
-    } else if (!destId && (!destInput || !destInput.value.trim())) {
+    } else if (!isCheapestReturn && !destId && (!destInput || !destInput.value.trim())) {
       setStationInputValue(destInput, st);
       feedback = `着駅に設定：${st.name}`;
     } else {
@@ -2526,7 +2556,7 @@
       } else {
         setStationInputValue(targetInput, st);
       }
-      feedback = `経由駅に追加：${st.name}`;
+      feedback = (ROUTE_STATE.searchMode === 'cheapest') ? `行きたい駅に追加：${st.name}` : `経由駅に追加：${st.name}`;
     }
 
     markInputChanged();
@@ -3591,6 +3621,12 @@
     activeRouteLayers: [],
     activePinLayers: [],
     lastResult: null,
+    cheapestPlanResult: null, // 最安きっぷ結果オブジェクト
+    activePlanIdx: 0,        // 選択中のプラン案インデックス (0, 1, 2)
+    activeTicketIdx: 0,      // 選択中の切符インデックス
+    cheapestReturn: true,    // 出発駅に戻る (周遊・往復)
+    cheapestAutoOrder: true, // 訪問順おまかせ
+    cheapestPreferStopover: false, // なるべく途中下車可能にする
     selectedSectionIdx: -1, // 選択・強調表示中の路線区間インデックス
     sectionFocusMarkers: [], // 強調表示中の始終点マーカー配列
     currentFareType: 'adult',    // 'adult' | 'child' | 'student'
@@ -4795,18 +4831,47 @@
       addViaBtn.addEventListener('keydown', handleAddVia);
     }
 
-    // 探索モード切り替えボタン (最短経路 / 重複区間なし)
+    // 探索モード切り替えボタン (最短経路 / 重複区間なし / 最安きっぷ)
     // ※クリック時は即時計算せず、モード切り替えのみ行う
     const modeBtns = document.querySelectorAll('.route-mode-btn');
     modeBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        modeBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
         const mode = btn.getAttribute('data-mode') || 'shortest';
-        ROUTE_STATE.searchMode = mode;
-        markInputChanged();
+        updateRouteModeUI(mode);
       });
     });
+
+    // 最安きっぷ専用オプションのイベント
+    const chkCheapestReturn = document.getElementById('chk-cheapest-return');
+    if (chkCheapestReturn) {
+      chkCheapestReturn.addEventListener('change', (e) => {
+        ROUTE_STATE.cheapestReturn = e.target.checked;
+        const destRow = document.querySelector('.route-input-row.dest-row');
+        const swapRow = document.querySelector('.route-swap-row');
+        if (destRow) destRow.style.display = ROUTE_STATE.cheapestReturn ? 'none' : 'flex';
+        if (swapRow) swapRow.style.display = ROUTE_STATE.cheapestReturn ? 'none' : 'flex';
+        markInputChanged();
+      });
+    }
+
+    const chkCheapestAutoOrder = document.getElementById('chk-cheapest-auto-order');
+    if (chkCheapestAutoOrder) {
+      chkCheapestAutoOrder.addEventListener('change', (e) => {
+        ROUTE_STATE.cheapestAutoOrder = e.target.checked;
+        markInputChanged();
+      });
+    }
+
+    const chkCheapestPreferStopover = document.getElementById('chk-cheapest-prefer-stopover');
+    if (chkCheapestPreferStopover) {
+      chkCheapestPreferStopover.addEventListener('change', (e) => {
+        ROUTE_STATE.cheapestPreferStopover = e.target.checked;
+        markInputChanged();
+        if (ROUTE_STATE.searchMode === 'cheapest' && ROUTE_STATE.cheapestPlanResult) {
+          executeRouteSearch();
+        }
+      });
+    }
 
     // 新幹線利用チェックボックス
     const shinkansenChk = document.getElementById('chk-use-shinkansen');
@@ -4953,7 +5018,9 @@
         fareBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         ROUTE_STATE.currentFareType = btn.getAttribute('data-type') || 'adult';
-        if (ROUTE_STATE.lastResult) {
+        if (ROUTE_STATE.searchMode === 'cheapest' && ROUTE_STATE.cheapestPlanResult) {
+          executeRouteSearch();
+        } else if (ROUTE_STATE.lastResult) {
           renderMarsTicket(ROUTE_STATE.lastResult);
           syncRouteToUrl(ROUTE_STATE.lastResult);
         }
@@ -6463,6 +6530,11 @@
     const mode = (result.options && result.options.mode) || ROUTE_STATE.searchMode;
     if (mode && mode !== 'shortest') {
       params.set('mode', mode);
+      if (mode === 'cheapest') {
+        if (!ROUTE_STATE.cheapestReturn) params.set('ret', '0');
+        if (!ROUTE_STATE.cheapestAutoOrder) params.set('auto', '0');
+        if (ROUTE_STATE.cheapestPreferStopover) params.set('stopover', '1');
+      }
     }
     const sh = (result.options && result.options.useShinkansen !== undefined) ? result.options.useShinkansen : ROUTE_STATE.useShinkansen;
     if (sh) {
@@ -6486,11 +6558,14 @@
     const params = new URLSearchParams(window.location.search);
     const fromId = params.get('from');
     const toId = params.get('to');
-    if (!fromId || !toId || typeof STATIONS === 'undefined') return false;
+    const mode = params.get('mode');
+    if (!fromId || typeof STATIONS === 'undefined') return false;
+    if (mode !== 'cheapest' && !toId) return false;
 
     const fromSt = STATIONS[fromId];
-    const toSt = STATIONS[toId];
-    if (!fromSt || !toSt) return false;
+    const toSt = toId ? STATIONS[toId] : null;
+    if (!fromSt) return false;
+    if (mode !== 'cheapest' && !toSt) return false;
 
     const deptInput = document.getElementById('route-dept-input');
     if (deptInput) setStationInputValue(deptInput, fromSt);
@@ -6507,21 +6582,24 @@
     }
 
     const destInput = document.getElementById('route-dest-input');
-    if (destInput) setStationInputValue(destInput, toSt);
+    if (destInput && toSt) setStationInputValue(destInput, toSt);
 
-    const mode = params.get('mode');
-    if (mode === 'oneway') {
+    if (mode === 'cheapest') {
+      ROUTE_STATE.searchMode = 'cheapest';
+      if (params.get('ret') === '0') ROUTE_STATE.cheapestReturn = false;
+      if (params.get('auto') === '0') ROUTE_STATE.cheapestAutoOrder = false;
+      if (params.get('stopover') === '1') {
+        ROUTE_STATE.cheapestPreferStopover = true;
+        const chkStopover = document.getElementById('chk-cheapest-prefer-stopover');
+        if (chkStopover) chkStopover.checked = true;
+      }
+      updateRouteModeUI('cheapest');
+    } else if (mode === 'oneway') {
       ROUTE_STATE.searchMode = 'oneway';
-      const shortestBtn = document.getElementById('btn-mode-shortest');
-      const onewayBtn = document.getElementById('btn-mode-oneway');
-      if (shortestBtn) shortestBtn.classList.remove('active');
-      if (onewayBtn) onewayBtn.classList.add('active');
+      updateRouteModeUI('oneway');
     } else {
       ROUTE_STATE.searchMode = 'shortest';
-      const shortestBtn = document.getElementById('btn-mode-shortest');
-      const onewayBtn = document.getElementById('btn-mode-oneway');
-      if (shortestBtn) shortestBtn.classList.add('active');
-      if (onewayBtn) onewayBtn.classList.remove('active');
+      updateRouteModeUI('shortest');
     }
 
     const sh = params.get('sh');
@@ -6833,16 +6911,72 @@
     });
   }
 
+  function updateRouteModeUI(mode) {
+    ROUTE_STATE.searchMode = mode;
+    const modeBtns = document.querySelectorAll('.route-mode-btn');
+    modeBtns.forEach(b => {
+      if (b.getAttribute('data-mode') === mode) {
+        b.classList.add('active');
+      } else {
+        b.classList.remove('active');
+      }
+    });
+
+    const cheapestOptsRow = document.getElementById('cheapest-options-row');
+    const toggleShinkansenBtn = document.getElementById('btn-toggle-shinkansen-segments');
+    const shinkansenSegsPanel = document.getElementById('shinkansen-segments-panel');
+    const destRow = document.querySelector('.route-input-row.dest-row');
+    const swapRow = document.querySelector('.route-swap-row');
+    const destInput = document.getElementById('route-dest-input');
+    const addViaBtn = document.getElementById('btn-add-via-field');
+    const viaContainer = document.getElementById('route-via-container');
+
+    if (mode === 'cheapest') {
+      if (cheapestOptsRow) cheapestOptsRow.style.display = 'flex';
+      if (toggleShinkansenBtn) toggleShinkansenBtn.style.display = 'none';
+      if (shinkansenSegsPanel) shinkansenSegsPanel.style.display = 'none';
+      if (addViaBtn) addViaBtn.textContent = '＋ 行きたい駅追加';
+
+      const isReturn = ROUTE_STATE.cheapestReturn;
+      if (destRow) destRow.style.display = isReturn ? 'none' : 'flex';
+      if (swapRow) swapRow.style.display = isReturn ? 'none' : 'flex';
+      if (destInput) destInput.placeholder = '着駅名（空欄なら最終訪問駅）';
+
+      // 行きたい駅が0個なら自動で1行追加
+      if (viaContainer && viaContainer.querySelectorAll('.route-input-row.via-row').length === 0) {
+        addViaStationRow();
+      }
+    } else {
+      if (cheapestOptsRow) cheapestOptsRow.style.display = 'none';
+      if (toggleShinkansenBtn) toggleShinkansenBtn.style.display = '';
+      if (addViaBtn) addViaBtn.textContent = '＋ 経由駅追加';
+      if (destRow) destRow.style.display = 'flex';
+      if (swapRow) swapRow.style.display = 'flex';
+      if (destInput) destInput.placeholder = '着駅名 (例: 新宿)';
+
+      const cheapestContainer = document.getElementById('cheapest-plan-container');
+      if (cheapestContainer) cheapestContainer.style.display = 'none';
+    }
+
+    updateViaStationNumbers();
+    markInputChanged();
+  }
+
   let draggedViaRow = null;
 
   function updateViaStationNumbers() {
     const container = document.getElementById('route-via-container');
     if (!container) return;
+    const isCheapest = (ROUTE_STATE.searchMode === 'cheapest');
     const rows = container.querySelectorAll('.route-input-row.via-row');
     rows.forEach((row, idx) => {
       const icon = row.querySelector('.via-icon');
       if (icon) {
-        icon.textContent = rows.length > 1 ? `経${idx + 1}` : '経';
+        icon.textContent = isCheapest ? `行${idx + 1}` : (rows.length > 1 ? `経${idx + 1}` : '経');
+      }
+      const inp = row.querySelector('.route-via-input');
+      if (inp) {
+        inp.placeholder = isCheapest ? '行きたい駅名 (例: 金沢)' : '経由駅名 (例: 熱海)';
       }
     });
   }
@@ -6851,6 +6985,7 @@
     const container = document.getElementById('route-via-container');
     if (!container) return;
 
+    const isCheapest = (ROUTE_STATE.searchMode === 'cheapest');
     const rowId = 'via-row-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
     const row = document.createElement('div');
     row.className = 'route-input-row via-row';
@@ -6858,9 +6993,9 @@
 
     row.innerHTML = `
       <div class="route-drag-handle" title="ドラッグまたは Alt+↑/↓ で並び替え" aria-label="並び替え" draggable="true">⠿</div>
-      <span class="route-node-icon via-icon">経</span>
+      <span class="route-node-icon via-icon">${isCheapest ? '行' : '経'}</span>
       <div class="route-field-wrapper">
-        <input type="text" class="route-station-input route-via-input" placeholder="経由駅名 (例: 熱海)" autocomplete="off">
+        <input type="text" class="route-station-input route-via-input" placeholder="${isCheapest ? '行きたい駅名 (例: 金沢)' : '経由駅名 (例: 熱海)'}" autocomplete="off">
         <button type="button" class="btn-input-clear" aria-label="消去" tabindex="-1">✕</button>
         <div class="route-suggest-dropdown" style="display:none;"></div>
       </div>
@@ -7058,26 +7193,22 @@
   function executeRouteSearch() {
     const errorMsg = document.getElementById('route-error-msg');
     const resultContainer = document.getElementById('route-result-container');
+    const cheapestContainer = document.getElementById('cheapest-plan-container');
     if (errorMsg) errorMsg.style.display = 'none';
     if (resultContainer) resultContainer.style.display = 'none';
+    if (cheapestContainer) cheapestContainer.style.display = 'none';
 
     const deptInput = document.getElementById('route-dept-input');
     const destInput = document.getElementById('route-dest-input');
     const deptSt = resolveStation(deptInput);
-    const destSt = resolveStation(destInput, deptSt);
 
     if (!deptSt) {
       showRouteError('発駅を正しく入力してください。');
       deptInput.focus();
       return;
     }
-    if (!destSt) {
-      showRouteError('着駅を正しく入力してください。');
-      destInput.focus();
-      return;
-    }
 
-    // 経由駅のリストを取得
+    // 経由駅（最安きっぷモードでは「行きたい駅」）のリストを取得
     const viaInputs = document.querySelectorAll('.route-via-input');
     const viaStIds = [];
     for (let i = 0; i < viaInputs.length; i++) {
@@ -7085,11 +7216,102 @@
       if (!vInput.value.trim()) continue;
       const vSt = resolveStation(vInput, deptSt);
       if (!vSt) {
-        showRouteError(`経由駅「${vInput.value}」が見つかりません。`);
+        showRouteError((ROUTE_STATE.searchMode === 'cheapest' ? '行きたい駅「' : '経由駅「') + `${vInput.value}」が見つかりません。`);
         vInput.focus();
         return;
       }
       viaStIds.push(vSt.id);
+    }
+
+    // --- 最安きっぷ (自動最適化) モードの分岐 ---
+    if (ROUTE_STATE.searchMode === 'cheapest') {
+      let destSt = null;
+      if (!ROUTE_STATE.cheapestReturn) {
+        if (destInput && destInput.value.trim()) {
+          destSt = resolveStation(destInput, deptSt);
+          if (!destSt) {
+            showRouteError('到着駅「' + destInput.value.trim() + '」が見つかりません。');
+            destInput.focus();
+            return;
+          }
+        } else {
+          destSt = null;
+        }
+      }
+
+      if (viaStIds.length === 0 && (!destSt || ROUTE_STATE.cheapestReturn)) {
+        showRouteError(ROUTE_STATE.cheapestReturn ? '行きたい駅を1つ以上指定してください。' : '到着駅または行きたい駅を指定してください。');
+        return;
+      }
+      if (!window.JR_OPTIMIZER_ENGINE) {
+        showRouteError('最安乗車券最適化エンジンが読み込まれていません。');
+        return;
+      }
+
+      const optOptions = {
+        returnToStart: ROUTE_STATE.cheapestReturn,
+        destId: ROUTE_STATE.cheapestReturn ? null : (destSt ? destSt.id : null),
+        keepOrder: !ROUTE_STATE.cheapestAutoOrder,
+        preferStopover: ROUTE_STATE.cheapestPreferStopover,
+        useShinkansen: ROUTE_STATE.useShinkansen,
+        fareType: ROUTE_STATE.currentFareType,
+        maxPlans: 3
+      };
+
+      const optimizerResult = window.JR_OPTIMIZER_ENGINE.findCheapestTicketPlan(deptSt.id, viaStIds, optOptions);
+
+      if (!optimizerResult || !optimizerResult.plans || optimizerResult.plans.length === 0) {
+        showRouteError('最安乗車券プランが見つかりませんでした。新幹線利用や訪問駅の設定をご確認ください。');
+        return;
+      }
+
+      ROUTE_STATE.cheapestPlanResult = optimizerResult;
+      ROUTE_STATE.activePlanIdx = 0;
+      ROUTE_STATE.activeTicketIdx = 0;
+
+      // URL同期
+      syncRouteToUrl({
+        deptId: deptSt.id,
+        destId: destSt ? destSt.id : deptSt.id,
+        viaIds: viaStIds,
+        options: { mode: 'cheapest', useShinkansen: ROUTE_STATE.useShinkansen }
+      });
+
+      renderCheapestPlanResult(optimizerResult, 0, 0);
+
+      // スマホ結果表示モード (ボトムシート Half 展開 & サマリーバー更新)
+      const routePanel = document.getElementById('route-panel');
+      if (routePanel) {
+        if (window.innerWidth <= 768) {
+          routePanel.classList.add('has-result');
+          const summaryText = document.getElementById('route-summary-text');
+          if (summaryText) {
+            const viaNames = viaStIds.map(id => STATIONS[id] ? getStationUiName(STATIONS[id]) : '').filter(Boolean);
+            let text = `${getStationUiName(deptSt)} → `;
+            if (viaNames.length > 0) {
+              text += `(${viaNames.join('・')}) → `;
+            }
+            text += ROUTE_STATE.cheapestReturn ? `${getStationUiName(deptSt)} (周遊)` : (destSt ? getStationUiName(destSt) : '');
+            summaryText.textContent = text;
+            summaryText.title = text;
+          }
+          restoreRouteSheetHalfNoFlicker();
+        } else {
+          routePanel.classList.remove('has-result', 'mobile-sheet-half', 'mobile-sheet-full', 'mobile-sheet-mini', 'is-editing');
+          routePanel.style.transform = '';
+          routePanel.style.transition = '';
+        }
+      }
+
+      setSearchButtonEnabled(false);
+      return;
+    }
+
+    const destSt = resolveStation(destInput, deptSt);
+    if (!destSt) {
+      showRouteError('着駅を正しく入力してください。');
+      destInput.focus();
+      return;
     }
 
     // 発駅と着駅が同一の場合 (一周環状ルート等) の検証
@@ -7196,6 +7418,526 @@
     setSearchButtonEnabled(false);
   }
 
+  // 最安きっぷ用の切符固有カラーパレット (乗車券1〜6)
+  const CHEAPEST_TICKET_COLORS = ['#0284c7', '#ea580c', '#9333ea', '#059669', '#db2777', '#ca8a04'];
+
+  // --- 最安乗車券プラン結果のレンダリング ---
+  function renderCheapestPlanResult(optimizerResult, planIdx = 0, ticketIdx = 0) {
+    const container = document.getElementById('cheapest-plan-container');
+    const resultContainer = document.getElementById('route-result-container');
+    if (!container) return;
+    container.style.display = 'block';
+    if (resultContainer) resultContainer.style.display = 'block';
+
+    const plans = optimizerResult.plans;
+    if (!plans || plans.length === 0) return;
+    if (planIdx >= plans.length) planIdx = 0;
+
+    ROUTE_STATE.activePlanIdx = planIdx;
+    ROUTE_STATE.activeTicketIdx = ticketIdx;
+
+    // 1. プラン切替タブ (#cheapest-plan-tabs)
+    const tabsContainer = document.getElementById('cheapest-plan-tabs');
+    if (tabsContainer) {
+      tabsContainer.innerHTML = '';
+      plans.forEach((p, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'cheapest-plan-tab' + (idx === planIdx ? ' active' : '');
+        btn.innerHTML = `
+          <div class="cheapest-plan-tab-title">第${idx + 1}案</div>
+          <div class="cheapest-plan-tab-fare">￥${p.totalFare.toLocaleString()}</div>
+          ${p.savings > 0 ? `<div class="cheapest-plan-tab-savings">▲${p.savings.toLocaleString()}円</div>` : ''}
+        `;
+        btn.addEventListener('click', () => {
+          renderCheapestPlanResult(optimizerResult, idx, 0);
+        });
+        tabsContainer.appendChild(btn);
+      });
+    }
+
+    const curPlan = plans[planIdx];
+
+    // 2. 最安サマリーカード (#cheapest-summary-card)
+    const totalFareEl = document.getElementById('cheapest-total-fare');
+    if (totalFareEl) {
+      totalFareEl.textContent = `￥${curPlan.totalFare.toLocaleString()}`;
+    }
+
+    const badgeEl = document.getElementById('cheapest-savings-badge');
+    if (badgeEl) {
+      badgeEl.style.display = 'inline-flex';
+      const baselineFare = optimizerResult.baselineFare || 0;
+      const tags = curPlan.tags || curPlan.strategyTags || [];
+      const hasUpgradeTags = tags.some(t => t.includes('新幹線') || t.includes('延長') || t.includes('近郊区間脱出') || t.includes('途中下車'));
+
+      if (curPlan.savings > 0) {
+        badgeEl.className = 'cheapest-savings-badge has-savings';
+        badgeEl.textContent = `通常より ￥${curPlan.savings.toLocaleString()} お得！`;
+      } else if (curPlan.savings === 0 && curPlan.isStopoverFriendly && hasUpgradeTags && curPlan.totalFare === baselineFare) {
+        badgeEl.className = 'cheapest-savings-badge stopover-upgrade';
+        badgeEl.textContent = '同額（+￥0）で途中下車可能！';
+      } else if (curPlan.totalFare > baselineFare && curPlan.isStopoverFriendly) {
+        badgeEl.className = 'cheapest-savings-badge stopover-upgrade';
+        badgeEl.textContent = `通常最安 +￥${(curPlan.totalFare - baselineFare).toLocaleString()} で途中下車可能`;
+      } else {
+        badgeEl.className = 'cheapest-savings-badge no-savings';
+        badgeEl.textContent = '最安（通常購入と同額）';
+      }
+    }
+
+    const tagsContainer = document.getElementById('cheapest-tags-container');
+    if (tagsContainer) {
+      tagsContainer.innerHTML = '';
+      const tagsList = curPlan.tags || curPlan.strategyTags || [];
+      if (tagsList.length > 0) {
+        tagsList.forEach(t => {
+          const chip = document.createElement('span');
+          chip.className = 'cheapest-tag';
+          chip.textContent = t;
+          tagsContainer.appendChild(chip);
+        });
+      }
+    }
+
+    const expEl = document.getElementById('cheapest-summary-note');
+    if (expEl) {
+      const noteText = curPlan.explanation || curPlan.summary || curPlan.summaryNote || '';
+      if (noteText.trim()) {
+        expEl.textContent = noteText;
+        expEl.style.display = 'block';
+      } else {
+        expEl.textContent = '';
+        expEl.style.display = 'none';
+      }
+    }
+
+    // 3. チケットカード一覧 (#cheapest-tickets-list)
+    const ticketsList = document.getElementById('cheapest-tickets-list');
+    if (ticketsList) {
+      ticketsList.innerHTML = '';
+
+      // 2枚以上の場合はガイド案内を表示
+      if (curPlan.tickets.length >= 2) {
+        const guideEl = document.createElement('div');
+        guideEl.className = 'cheapest-tickets-guide';
+        guideEl.textContent = '※各切符の色が地図上の路線カラーに対応（クリックで切符を切替）';
+        ticketsList.appendChild(guideEl);
+      }
+
+      curPlan.tickets.forEach((t, tIdx) => {
+        const card = document.createElement('div');
+        card.className = 'cheapest-ticket-card' + (tIdx === ticketIdx ? ' active' : '');
+        card.setAttribute('data-ticket-idx', tIdx);
+
+        const ticketColor = CHEAPEST_TICKET_COLORS[tIdx % CHEAPEST_TICKET_COLORS.length];
+        card.style.borderLeft = `4px solid ${ticketColor}`;
+
+        // 有効期間表示 (1または近郊区間完結は「当日限り」、2以上は「○日間」)
+        const vDays = (t.validDays && t.validDays > 0) ? t.validDays : (t.routeResult?.fareRules?.validityDays || 1);
+        const isSuburban = !!(t.routeResult?.fareRules?.isSuburbanOnly);
+        const validText = (vDays === 1 || isSuburban) ? '当日限り' : `${vDays}日間`;
+
+        // バッジ生成
+        const stopoverBadge = t.stopoverAllowed
+          ? '<span class="cheapest-ticket-badge badge-stopover">途中下車可</span>'
+          : '<span class="cheapest-ticket-badge badge-no-stopover">途中下車不可</span>';
+
+        const isRound = (t.quantity === 2 || t.role === 'branch-roundtrip' || t.role === 'round_trip' || (t.typeName && t.typeName.includes('往復')));
+        const isExt = (t.role === 'extension' || (t.typeName && t.typeName.includes('延長')));
+
+        let typeBadgeHtml = '';
+        if (isRound) {
+          typeBadgeHtml = '<span class="cheapest-ticket-badge badge-roundtrip">往復（片道×2）</span>';
+        } else if (isExt) {
+          typeBadgeHtml = '<span class="cheapest-ticket-badge badge-extension">延長乗車券</span>';
+        } else {
+          typeBadgeHtml = '<span class="cheapest-ticket-badge badge-oneway">片道乗車券</span>';
+        }
+
+        // 途中下車駅一覧
+        let stopoverListHtml = '';
+        if (t.stopoverStations && t.stopoverStations.length > 0) {
+          stopoverListHtml = `<div class="cheapest-ticket-stopover-list">途中下車: ${t.stopoverStations.join('・')}</div>`;
+        }
+
+        // 延長下車注記
+        let extNoticeHtml = '';
+        if (t.extensionDropStation) {
+          extNoticeHtml = `<div class="cheapest-ticket-extension-notice">※${t.extensionDropStation}駅で下車・前途放棄</div>`;
+        }
+
+        card.innerHTML = `
+          <div class="cheapest-ticket-card-header">
+            <div class="cheapest-ticket-title-row">
+              <span class="cheapest-ticket-num" style="background:${ticketColor};">[乗車券${tIdx + 1}]</span>
+              <span class="cheapest-ticket-stations">${t.deptName || ''} → ${t.destName || ''}</span>
+              ${typeBadgeHtml}
+              ${stopoverBadge}
+            </div>
+            <div class="cheapest-ticket-fare">￥${t.fare.toLocaleString()}</div>
+          </div>
+          <div class="cheapest-ticket-meta">
+            <span>営業キロ: <strong>${t.totalKm ? t.totalKm.toFixed(1) : 0} km</strong></span>
+            <span>有効期間: <strong>${validText}</strong></span>
+            ${t.routeResult && t.routeResult.marsString ? `<span>経由: <em>${t.routeResult.marsString}</em></span>` : ''}
+          </div>
+          <div class="cheapest-ticket-subinfo">
+            ${stopoverListHtml}
+            ${extNoticeHtml}
+            ${t.description ? `<div class="cheapest-ticket-desc">${t.description}</div>` : ''}
+          </div>
+        `;
+
+        card.addEventListener('click', () => {
+          selectCheapestTicket(planIdx, tIdx);
+        });
+
+        ticketsList.appendChild(card);
+      });
+    }
+
+    // 4. 初回選択チケットをマルス券面＆地図に反映
+    selectCheapestTicket(planIdx, ticketIdx);
+  }
+
+  // --- 最安プラン内の個別切符選択 ---
+  function selectCheapestTicket(planIdx, ticketIdx) {
+    const optimizerResult = ROUTE_STATE.cheapestPlanResult;
+    if (!optimizerResult || !optimizerResult.plans) return;
+    const plan = optimizerResult.plans[planIdx];
+    if (!plan || !plan.tickets) return;
+    if (ticketIdx >= plan.tickets.length) ticketIdx = 0;
+
+    ROUTE_STATE.activePlanIdx = planIdx;
+    ROUTE_STATE.activeTicketIdx = ticketIdx;
+
+    // カードのアクティブ表示切替
+    const cards = document.querySelectorAll('.cheapest-ticket-card');
+    cards.forEach((c, idx) => {
+      if (idx === ticketIdx) c.classList.add('active');
+      else c.classList.remove('active');
+    });
+
+    const ticket = plan.tickets[ticketIdx];
+    if (!ticket || !ticket.routeResult) return;
+
+    ROUTE_STATE.lastResult = ticket.routeResult;
+
+    // マルス券面を描画
+    renderMarsTicket(ticket.routeResult);
+
+    // 区間一覧を描画
+    const sectionsList = document.getElementById('route-sections-list');
+    if (sectionsList) {
+      sectionsList.innerHTML = '';
+      (ticket.routeResult.sections || []).forEach((sec, secIdx) => {
+        const item = document.createElement('div');
+        const isDup = sec.isDuplicate;
+        item.className = 'route-section-item' + (isDup ? ' is-duplicate' : '');
+        item.title = 'クリックでこの区間を地図上で強調表示';
+
+        item.innerHTML = `
+          <div class="route-section-bar" style="background:${isDup ? '#dc2626' : (sec.lineColor || '#0284c7')};"></div>
+          <div class="route-section-info">
+            <div class="route-section-line-name">
+              <span>${sec.lineName}</span>
+              <span class="mars-pill ${isDup ? 'pill-duplicate' : ''}">${isDup ? '重複' : sec.marsName}</span>
+            </div>
+            <div class="route-section-stations">${getStationUiName(sec.from || sec.deptName)} → ${getStationUiName(sec.to || sec.destName)} (${sec.stationCount}駅)</div>
+          </div>
+          <div class="route-section-kilo" style="${isDup ? 'color:#dc2626;font-weight:800;' : ''}">${sec.km.toFixed(1)} km</div>
+        `;
+
+        item.addEventListener('click', () => {
+          highlightRouteSection(secIdx);
+        });
+        sectionsList.appendChild(item);
+      });
+    }
+
+    fitTicketRowWidth();
+    fitTicketViaWidth(ticket.routeResult.marsString || '(直通)');
+
+    // 地図マルチ切符ハイライト描画
+    drawMultiTicketOnMap(plan, ticketIdx);
+  }
+
+  // --- 最安プラン用の地図マルチ切符描画 (切符ごとの色分け＋選択中強調＋切替駅ピン) ---
+  function drawMultiTicketOnMap(plan, activeTicketIdx) {
+    if (!map) return;
+    clearSectionHighlight();
+    if (!plan || !plan.tickets || plan.tickets.length === 0) return;
+
+    // 全路線を薄くフェードアウト
+    if (map.getLayer('conventional-lines')) {
+      map.setPaintProperty('conventional-lines', 'line-opacity', 0.12);
+    }
+    if (map.getLayer('shinkansen-lines-casing')) {
+      map.setPaintProperty('shinkansen-lines-casing', 'line-opacity', 0.12);
+    }
+    if (map.getLayer('shinkansen-lines-dash')) {
+      map.setPaintProperty('shinkansen-lines-dash', 'line-opacity', 0.12);
+    }
+    if (map.getLayer('line-labels')) {
+      map.setPaintProperty('line-labels', 'text-opacity', 0.25);
+    }
+
+    // 背景通常駅マーカー非表示
+    [...STATION_DOT_LAYERS, ...STATION_COLLIDER_LAYERS].forEach(id => {
+      if (map.getLayer(id)) {
+        map.setLayoutProperty(id, 'visibility', 'none');
+      }
+    });
+
+    const routeFeatures = [];
+    let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
+
+    // 1. まず非アクティブ切符（sub-ticket）のポリラインを追加（下層に描画）
+    plan.tickets.forEach((t, tIdx) => {
+      if (tIdx === activeTicketIdx) return;
+      const res = t.routeResult;
+      if (!res) return;
+
+      const ticketColor = CHEAPEST_TICKET_COLORS[tIdx % CHEAPEST_TICKET_COLORS.length];
+
+      // 境界矩形の更新
+      if (res.geometryLatlngs) {
+        res.geometryLatlngs.forEach(pt => {
+          const lat = pt[0], lng = pt[1];
+          if (lng < minLng) minLng = lng;
+          if (lng > maxLng) maxLng = lng;
+          if (lat < minLat) minLat = lat;
+          if (lat > maxLat) maxLat = lat;
+        });
+      }
+
+      const allChains = res.normalPolylines || (res.geometryLatlngs ? [res.geometryLatlngs] : []);
+      allChains.forEach(chain => {
+        const coords = chain.map(pt => [pt[1], pt[0]]);
+        if (coords.length >= 2) {
+          routeFeatures.push({
+            type: 'Feature',
+            properties: { routeType: 'sub-ticket', ticketColor },
+            geometry: { type: 'LineString', coordinates: coords }
+          });
+        }
+      });
+      if (res.shinkansenPolylines) {
+        res.shinkansenPolylines.forEach(chain => {
+          const coords = chain.map(pt => [pt[1], pt[0]]);
+          if (coords.length >= 2) {
+            routeFeatures.push({
+              type: 'Feature',
+              properties: { routeType: 'sub-ticket', ticketColor },
+              geometry: { type: 'LineString', coordinates: coords }
+            });
+          }
+        });
+      }
+    });
+
+    // 2. 最後に選択中切符（activeTicket）のポリラインを追加（最前面に描画）
+    const activeTicket = plan.tickets[activeTicketIdx];
+    if (activeTicket && activeTicket.routeResult) {
+      const res = activeTicket.routeResult;
+      const activeColor = CHEAPEST_TICKET_COLORS[activeTicketIdx % CHEAPEST_TICKET_COLORS.length];
+
+      if (res.geometryLatlngs) {
+        res.geometryLatlngs.forEach(pt => {
+          const lat = pt[0], lng = pt[1];
+          if (lng < minLng) minLng = lng;
+          if (lng > maxLng) maxLng = lng;
+          if (lat < minLat) minLat = lat;
+          if (lat > maxLat) maxLat = lat;
+        });
+      }
+
+      const normalChains = res.normalPolylines || (res.geometryLatlngs ? [res.geometryLatlngs] : []);
+      normalChains.forEach(chain => {
+        const coords = chain.map(pt => [pt[1], pt[0]]);
+        if (coords.length >= 2) {
+          routeFeatures.push({
+            type: 'Feature',
+            properties: { routeType: 'conventional', ticketColor: activeColor },
+            geometry: { type: 'LineString', coordinates: coords }
+          });
+        }
+      });
+
+      if (res.shinkansenPolylines) {
+        res.shinkansenPolylines.forEach(chain => {
+          const coords = chain.map(pt => [pt[1], pt[0]]);
+          if (coords.length >= 2) {
+            routeFeatures.push({
+              type: 'Feature',
+              properties: { routeType: 'shinkansen', ticketColor: activeColor },
+              geometry: { type: 'LineString', coordinates: coords }
+            });
+          }
+        });
+      }
+
+      if (res.duplicatePolylines) {
+        res.duplicatePolylines.forEach(chain => {
+          const coords = chain.map(pt => [pt[1], pt[0]]);
+          if (coords.length >= 2) {
+            routeFeatures.push({
+              type: 'Feature',
+              properties: { routeType: 'duplicate', ticketColor: activeColor },
+              geometry: { type: 'LineString', coordinates: coords }
+            });
+          }
+        });
+      }
+    }
+
+    const routeSource = map.getSource('route-source');
+    if (routeSource) {
+      routeSource.setData({
+        type: 'FeatureCollection',
+        features: routeFeatures
+      });
+    }
+
+    // 3. ピンの配置 (WebGL レイヤー route-pins-source)
+    const pinFeatures = [];
+    const deptId = ROUTE_STATE.cheapestPlanResult.deptId;
+    const deptSt = STATIONS[deptId];
+    if (deptSt) {
+      pinFeatures.push({
+        type: 'Feature',
+        properties: {
+          pinType: 'dept',
+          label: '発',
+          title: `発駅: ${deptSt.name}`,
+          color: '#16a34a',
+          radius: 13,
+          stationId: deptSt.id
+        },
+        geometry: {
+          type: 'Point',
+          coordinates: [deptSt.lng, deptSt.lat]
+        }
+      });
+    }
+
+    // 行きたい駅ピン
+    const visitIds = ROUTE_STATE.cheapestPlanResult.visitIds || [];
+    visitIds.forEach((vId, idx) => {
+      const vSt = STATIONS[vId];
+      if (!vSt || vId === deptId) return;
+      pinFeatures.push({
+        type: 'Feature',
+        properties: {
+          pinType: 'via',
+          label: (idx + 1).toString(),
+          title: `行きたい駅${idx + 1}: ${vSt.name}`,
+          color: '#0284c7',
+          radius: 12,
+          stationId: vId
+        },
+        geometry: {
+          type: 'Point',
+          coordinates: [vSt.lng, vSt.lat]
+        }
+      });
+    });
+
+    // 複数切符時の切替・分岐駅ピン（例：山科、米原、熱海等）
+    const addedBoundaryStations = new Set();
+    if (plan.tickets.length >= 2) {
+      plan.tickets.forEach(ticket => {
+        const checkIds = [ticket.deptId, ticket.destId].filter(Boolean);
+        checkIds.forEach(stId => {
+          if (stId === deptId || visitIds.includes(stId) || addedBoundaryStations.has(stId)) return;
+          const st = STATIONS[stId];
+          if (!st) return;
+          addedBoundaryStations.add(stId);
+          pinFeatures.push({
+            type: 'Feature',
+            properties: {
+              pinType: 'junction',
+              label: '分',
+              title: `切符切替・途中下車: ${st.name}`,
+              color: '#ea580c',
+              radius: 12,
+              stationId: stId
+            },
+            geometry: {
+              type: 'Point',
+              coordinates: [st.lng, st.lat]
+            }
+          });
+        });
+      });
+    }
+
+    // 延長購入先駅ピン（本来の下車駅と切符終点が異なる場合）
+    plan.tickets.forEach(ticket => {
+      if (ticket.extensionDropStation && ticket.destId) {
+        const destSt = STATIONS[ticket.destId];
+        if (destSt && !addedBoundaryStations.has(ticket.destId) && ticket.destId !== deptId && !visitIds.includes(ticket.destId)) {
+          addedBoundaryStations.add(ticket.destId);
+          pinFeatures.push({
+            type: 'Feature',
+            properties: {
+              pinType: 'extension',
+              label: '延',
+              title: `延長購入先: ${destSt.name}（${ticket.extensionDropStation}で下車）`,
+              color: '#9333ea',
+              radius: 12,
+              stationId: destSt.id
+            },
+            geometry: {
+              type: 'Point',
+              coordinates: [destSt.lng, destSt.lat]
+            }
+          });
+        }
+      }
+    });
+
+    // 別途着駅（非周遊時など）のピン
+    if (activeTicket && activeTicket.destId && activeTicket.destId !== deptId && !visitIds.includes(activeTicket.destId) && !addedBoundaryStations.has(activeTicket.destId)) {
+      const destSt = STATIONS[activeTicket.destId];
+      if (destSt) {
+        pinFeatures.push({
+          type: 'Feature',
+          properties: {
+            pinType: 'dest',
+            label: '着',
+            title: `着駅: ${destSt.name}`,
+            color: '#dc2626',
+            radius: 13,
+            stationId: destSt.id
+          },
+          geometry: {
+            type: 'Point',
+            coordinates: [destSt.lng, destSt.lat]
+          }
+        });
+      }
+    }
+
+    const pinsSource = map.getSource('route-pins-source');
+    if (pinsSource) {
+      pinsSource.setData({
+        type: 'FeatureCollection',
+        features: pinFeatures
+      });
+    }
+
+    // 全経路の自動フィット (FitBounds)
+    if (minLng !== Infinity && maxLng !== -Infinity && minLat !== Infinity && maxLat !== -Infinity) {
+      map.fitBounds([[minLng, minLat], [maxLng, maxLat]], {
+        padding: getVisibleMapPadding(60),
+        maxZoom: 13,
+        duration: 800
+      });
+    }
+  }
+
   function showRouteError(msg) {
     const errorEl = document.getElementById('route-error-msg');
     if (errorEl) {
@@ -7220,12 +7962,33 @@
     const resultContainer = document.getElementById('route-result-container');
     if (resultContainer) resultContainer.style.display = 'none';
 
+    // 最安プランコンテナの非表示＆初期化
+    const cheapestContainer = document.getElementById('cheapest-plan-container');
+    if (cheapestContainer) cheapestContainer.style.display = 'none';
+    const cheapestTabs = document.getElementById('cheapest-plan-tabs');
+    if (cheapestTabs) cheapestTabs.innerHTML = '';
+    const cheapestTickets = document.getElementById('cheapest-tickets-list');
+    if (cheapestTickets) cheapestTickets.innerHTML = '';
+    const cheapestTags = document.getElementById('cheapest-tags-container');
+    if (cheapestTags) cheapestTags.innerHTML = '';
+    const cheapestNote = document.getElementById('cheapest-summary-note');
+    if (cheapestNote) {
+      cheapestNote.textContent = '';
+      cheapestNote.style.display = 'none';
+    }
+
     // 新幹線区間指定と手動入力のリセット
     ROUTE_STATE.useShinkansen = false;
+    ROUTE_STATE.cheapestPreferStopover = false;
+    const chkCheapestPreferStopover = document.getElementById('chk-cheapest-prefer-stopover');
+    if (chkCheapestPreferStopover) chkCheapestPreferStopover.checked = false;
     ROUTE_STATE.searchMode = 'shortest';
     ROUTE_STATE.shinkansenSegments = [];
     ROUTE_STATE.currentFareType = 'adult';
     ROUTE_STATE.lastResult = null;
+    ROUTE_STATE.cheapestPlanResult = null;
+    ROUTE_STATE.activePlanIdx = 0;
+    ROUTE_STATE.activeTicketIdx = 0;
     pairReversedMap.clear();
 
     try {
@@ -7358,8 +8121,12 @@
     const opShine = dimmed ? 0.22 : 0.95;
     const opShinkansenGlow = dimmed ? 0.18 : 0.75;
     const opDuplicateGlow = dimmed ? 0.20 : 0.8;
+    const opSubGlow = dimmed ? 0.12 : 0.45;
+    const opSubCore = dimmed ? 0.18 : 0.72;
 
     const layerMap = [
+      { id: 'route-sub-glow', op: opSubGlow },
+      { id: 'route-sub-core', op: opSubCore },
       { id: 'route-glow', op: opGlow },
       { id: 'route-core', op: opCore },
       { id: 'route-shine', op: opShine },

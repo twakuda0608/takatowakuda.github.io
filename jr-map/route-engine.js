@@ -1602,6 +1602,11 @@
     if (!shinkansenSegs || shinkansenSegs.length === 0 || !stops || stops.length < 2) return stops;
     let result = [...stops];
 
+    function getDist(stA, stB) {
+      if (!stA || !stB || typeof stA.lat !== 'number' || typeof stB.lat !== 'number') return 99999;
+      return calcDistKm(stA, stB);
+    }
+
     for (const seg of shinkansenSegs) {
       const fromSt = resolveStation(seg.fromId, seg.from || seg.fromName, stops, stations);
       const toSt = resolveStation(seg.toId, seg.to || seg.toName, stops, stations);
@@ -1624,21 +1629,55 @@
       const idx2 = result.indexOf(id2);
 
       if (idx1 >= 0 && idx2 === -1) {
-        if (idx1 < result.length - 1) {
-          result.splice(idx1 + 1, 0, id2);
-        } else {
+        // 発駅 (id1) のみ既存：id2 を既存駅の前か後ろの迂回増分が小さい方へ挿入
+        if (idx1 === 0) {
+          result.splice(1, 0, id2);
+        } else if (idx1 === result.length - 1) {
           result.splice(idx1, 0, id2);
+        } else {
+          const prevSt = stations[result[idx1 - 1]];
+          const nextSt = stations[result[idx1 + 1]];
+          const prevDetour = getDist(prevSt, toSt) + getDist(toSt, fromSt) - getDist(prevSt, fromSt);
+          const nextDetour = getDist(fromSt, toSt) + getDist(toSt, nextSt) - getDist(fromSt, nextSt);
+          if (prevDetour < nextDetour) {
+            result.splice(idx1, 0, id2);
+          } else {
+            result.splice(idx1 + 1, 0, id2);
+          }
         }
       } else if (idx2 >= 0 && idx1 === -1) {
-        if (idx2 > 0) {
+        // 着駅 (id2) のみ既存：id1 を既存駅の前か後ろの迂回増分が小さい方へ挿入
+        if (idx2 === 0) {
+          result.splice(1, 0, id1);
+        } else if (idx2 === result.length - 1) {
           result.splice(idx2, 0, id1);
         } else {
-          result.splice(idx2 + 1, 0, id1);
+          const prevSt = stations[result[idx2 - 1]];
+          const nextSt = stations[result[idx2 + 1]];
+          const prevDetour = getDist(prevSt, fromSt) + getDist(fromSt, toSt) - getDist(prevSt, toSt);
+          const nextDetour = getDist(toSt, fromSt) + getDist(fromSt, nextSt) - getDist(toSt, nextSt);
+          if (prevDetour < nextDetour) {
+            result.splice(idx2, 0, id1);
+          } else {
+            result.splice(idx2 + 1, 0, id1);
+          }
         }
       } else if (idx1 === -1 && idx2 === -1) {
-        if (result.length >= 2) {
-          result.splice(1, 0, id1, id2);
+        // 両方とも未含まれ：各区間 k (0 <= k < result.length - 1) について迂回増分を計算し最小の区間へ挿入
+        let bestK = 0;
+        let minDetour = Infinity;
+
+        for (let k = 0; k < result.length - 1; k++) {
+          const uSt = stations[result[k]];
+          const vSt = stations[result[k + 1]];
+          const detour = getDist(uSt, fromSt) + getDist(fromSt, toSt) + getDist(toSt, vSt) - getDist(uSt, vSt);
+          if (detour < minDetour) {
+            minDetour = detour;
+            bestK = k;
+          }
         }
+
+        result.splice(bestK + 1, 0, id1, id2);
       }
     }
 
@@ -2970,6 +3009,9 @@
     const totalDistTenths = fullSegments.reduce((sum, s) => sum + Math.round(s.dist * 10), 0);
     const totalDist = totalDistTenths / 10;
 
+    // 軽量モード: options.skipGeometry === true のときは線路ポリライン抽出およびスパイク除去を完全スキップ
+    const skipGeometry = !!options.skipGeometry;
+
     // 線路ジオメトリの抽出 (連続する通常区間・新幹線区間・重複区間をそれぞれ1本の長い連続Polylineに連結)
     const geometryLatlngs = [];
     const normalPolylines = [];    // 通常通過区間の連続座標群 (青色用)
@@ -2985,7 +3027,7 @@
       else normalPolylines.push(cleaned);
     }
 
-    if (tracks) {
+    if (!skipGeometry && tracks) {
       let currentChain = [];
       let currentType = null;
 
@@ -3023,10 +3065,15 @@
       }
 
       pushPolylineChain(currentType, currentChain);
+    } else if (skipGeometry) {
+      // 軽量モード: セグメント座標を空配列に初期化
+      fullSegments.forEach(seg => {
+        seg.coords = [];
+      });
     }
 
     // フォールバック: tracks がない、またはジオメトリ抽出できなかった場合は駅間座標を連続連結
-    if (geometryLatlngs.length === 0) {
+    if (!skipGeometry && geometryLatlngs.length === 0) {
       allStationIds.forEach(stId => {
         const st = stations[stId];
         if (st) geometryLatlngs.push([st.lat, st.lng]);
@@ -3062,15 +3109,17 @@
     // UI用セクション一覧
     const sections = lineRuns.map(r => {
       const secCoords = [];
-      (r.segments || []).forEach(seg => {
-        if (seg.coords && seg.coords.length > 0) {
-          if (secCoords.length > 0) {
-            secCoords.push(...seg.coords.slice(1));
-          } else {
-            secCoords.push(...seg.coords);
+      if (!skipGeometry) {
+        (r.segments || []).forEach(seg => {
+          if (seg.coords && seg.coords.length > 0) {
+            if (secCoords.length > 0) {
+              secCoords.push(...seg.coords.slice(1));
+            } else {
+              secCoords.push(...seg.coords);
+            }
           }
-        }
-      });
+        });
+      }
       return {
         lineId: r.lineId,
         lineName: r.lineName,
@@ -3084,7 +3133,7 @@
         km: Math.round(r.dist * 10) / 10,
         stationCount: r.stationIds.length,
         stations: r.stationIds,
-        coords: cleanPolylineSpikes(secCoords),
+        coords: skipGeometry ? [] : cleanPolylineSpikes(secCoords),
         isDuplicate: !!r.hasDuplicate,
         isEstimated: !!r.isEstimated
       };
@@ -3404,7 +3453,7 @@
       parallelRuleBadges: parallelRuleBadges,
       sections: sections,
       fullSegments: fullSegments,
-      geometryLatlngs: cleanPolylineSpikes(geometryLatlngs),
+      geometryLatlngs: skipGeometry ? [] : cleanPolylineSpikes(geometryLatlngs),
       normalPolylines: normalPolylines,
       shinkansenPolylines: shinkansenPolylines,
       duplicatePolylines: duplicatePolylines,
