@@ -174,9 +174,16 @@
             </div>
           </div>
 
-          <!-- 発着入れ替えボタン -->
+          <!-- 発着入れ替え / 同一設定ボタン -->
           <div class="route-swap-row">
             <button type="button" id="btn-swap-stations" class="btn-swap-stations" title="発駅と着駅を入れ替え" aria-label="発駅と着駅を入れ替え" tabindex="-1">⇅</button>
+            <button type="button" id="btn-same-stations" class="btn-same-stations" title="発駅と着駅を同じ駅にする（一周ルート）" aria-label="発着同一" tabindex="-1">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12a9 9 0 1 1-3.2-6.9L21 8"/>
+                <path d="M21 3v5h-5"/>
+              </svg>
+              <span>一周</span>
+            </button>
           </div>
 
           <!-- 経由駅リスト (動的・ドラッグ並び替え対応) -->
@@ -298,26 +305,28 @@
                 <span id="ticket-shinkansen-mark" class="ticket-shinkansen-mark">・・・・・・・・・・・・</span>
               </div>
 
-              <!-- 3. 発着駅表示 (y=112〜160, h=48) -->
+              <!-- 3. 発着駅表示 (y=112〜160, h=48, 左右64u余白) -->
               <div class="ticket-stations-row" id="ticket-stations-row">
-                <div class="station-box dept-box">
-                  <span class="station-print-name" id="ticket-dept-name">東京</span>
-                </div>
-                <div class="ticket-arrow-wrapper">
-                  <span class="ticket-arrow-symbol">──→</span>
-                </div>
-                <div class="station-box dest-box">
-                  <!-- 小児インク抜きスタンプ (着駅の直上・SVGマスク透過) -->
-                  <div class="ticket-child-stamp" id="ticket-child-stamp" style="display: none;">
-                    <svg width="100%" height="100%" viewBox="0 0 42 42">
-                      <mask id="child-mask">
-                        <rect width="42" height="42" fill="#ffffff" />
-                        <text x="21" y="32" font-family="'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif" font-weight="900" font-size="28" text-anchor="middle" fill="#000000">小</text>
-                      </mask>
-                      <rect width="42" height="42" fill="#111827" rx="3" mask="url(#child-mask)" />
-                    </svg>
+                <div class="ticket-stations-inner" id="ticket-stations-inner">
+                  <div class="station-box dept-box">
+                    <span class="station-print-name" id="ticket-dept-name">東京</span>
                   </div>
-                  <span class="station-print-name" id="ticket-dest-name">新宿</span>
+                  <div class="ticket-arrow-wrapper">
+                    <span class="ticket-arrow-symbol">──→</span>
+                  </div>
+                  <div class="station-box dest-box">
+                    <!-- 小児インク抜きスタンプ (着駅の直上・SVGマスク透過) -->
+                    <div class="ticket-child-stamp" id="ticket-child-stamp" style="display: none;">
+                      <svg width="100%" height="100%" viewBox="0 0 42 42">
+                        <mask id="child-mask">
+                          <rect width="42" height="42" fill="#ffffff" />
+                          <text x="21" y="32" font-family="'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif" font-weight="900" font-size="28" text-anchor="middle" fill="#000000">小</text>
+                        </mask>
+                        <rect width="42" height="42" fill="#111827" rx="3" mask="url(#child-mask)" />
+                      </svg>
+                    </div>
+                    <span class="station-print-name" id="ticket-dest-name">新宿</span>
+                  </div>
                 </div>
               </div>
 

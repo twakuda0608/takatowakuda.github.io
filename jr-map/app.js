@@ -1760,6 +1760,62 @@
           }
         });
       }
+
+      // --- D-2. 通過路線強調表示の始点・終点駅 (WebGL ネイティブ GeoJSON レイヤー) ---
+      if (!map.getSource("route-section-endpoints-source")) {
+        map.addSource("route-section-endpoints-source", {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: []
+          }
+        });
+
+        // 始終点駅の◯ (オレンジ塗り＋白縁取り、既存駅◯と完全同心円)
+        map.addLayer({
+          id: "route-section-endpoints-dot",
+          type: "circle",
+          source: "route-section-endpoints-source",
+          paint: {
+            "circle-color": "#ea580c",
+            "circle-stroke-color": "#ffffff",
+            "circle-stroke-width": 2.5,
+            "circle-radius": [
+              "interpolate", ["linear"], ["zoom"],
+              4, 5.5,
+              10, 7.0,
+              14, 8.5
+            ],
+            "circle-translate": [0, 0]
+          }
+        });
+
+        // 始終点駅のラベル (白縁取り付き、◯の中心に影響を与えず真上に配置)
+        map.addLayer({
+          id: "route-section-endpoints-label",
+          type: "symbol",
+          source: "route-section-endpoints-source",
+          layout: {
+            "text-field": ["get", "name"],
+            "text-font": ["Noto Sans Regular"],
+            "text-size": [
+              "interpolate", ["linear"], ["zoom"],
+              6, 11.5,
+              10, 13.0,
+              14, 15.0
+            ],
+            "text-offset": [0, -1.3],
+            "text-anchor": "bottom",
+            "text-allow-overlap": true,
+            "text-ignore-placement": true
+          },
+          paint: {
+            "text-color": "#9a3412",
+            "text-halo-color": "#ffffff",
+            "text-halo-width": 2.5
+          }
+        });
+      }
     }
 
     // --- E. 発・経由・着ピン WebGL レイヤーの準備 ---
@@ -4568,6 +4624,61 @@
       });
     }
 
+    // 発着駅同一ボタン (一周)
+    const sameStationsBtn = document.getElementById('btn-same-stations');
+    if (sameStationsBtn && deptInput && destInput) {
+      sameStationsBtn.addEventListener('click', () => {
+        const deptVal = deptInput.value.trim();
+        const deptId = deptInput.getAttribute('data-id');
+        const destVal = destInput.value.trim();
+        const destId = destInput.getAttribute('data-id');
+
+        if (deptId || deptVal) {
+          // 1. 発駅が選択済みなら着駅にコピー
+          destInput.value = deptInput.value;
+          if (deptId) {
+            destInput.setAttribute('data-id', deptId);
+          } else {
+            destInput.removeAttribute('data-id');
+          }
+        } else if (destId || destVal) {
+          // 2. 発駅が空で着駅だけ選択済みなら発駅に着駅をコピー
+          deptInput.value = destInput.value;
+          if (destId) {
+            deptInput.setAttribute('data-id', destId);
+          } else {
+            deptInput.removeAttribute('data-id');
+          }
+        } else {
+          // 3. どちらも空のときは発駅へフォーカス
+          deptInput.focus();
+          return;
+        }
+
+        markInputChanged();
+        updateShinkansenCandidateChips();
+
+        // 4. コピー完了後、もし経由駅がまだ1つも入力されていなければ最初の経由駅入力欄へ focus
+        const viaInputs = document.querySelectorAll('.route-via-input');
+        let focusedVia = false;
+        for (let i = 0; i < viaInputs.length; i++) {
+          if (!viaInputs[i].value.trim()) {
+            viaInputs[i].focus();
+            focusedVia = true;
+            break;
+          }
+        }
+        if (!focusedVia) {
+          if (viaInputs.length === 0) {
+            const addViaBtn = document.getElementById('btn-add-via-field');
+            if (addViaBtn) addViaBtn.click();
+          } else {
+            viaInputs[0].focus();
+          }
+        }
+      });
+    }
+
     // 各入力フィールドのクリアボタン (✕)
     document.querySelectorAll('.btn-input-clear').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -5094,17 +5205,18 @@
     ].filter(Boolean).join('\n');
   }
 
-  // 券面幅安全ガード (発着駅長・経由長が溢れるのを防止)
+  // 券面幅安全ガード (発着駅長・経由長が溢れるのを防止、左右64u余白厳密維持)
   function fitTicketRowWidth() {
     const row = document.getElementById('ticket-stations-row');
-    if (!row) return;
-    row.style.transform = 'none';
-    const clientW = row.clientWidth;
-    const scrollW = row.scrollWidth;
-    if (scrollW > clientW && clientW > 0) {
-      const scale = Math.max(0.55, (clientW - 4) / scrollW);
-      row.style.transform = `scaleX(${scale.toFixed(3)})`;
-      row.style.transformOrigin = 'center center';
+    const inner = document.getElementById('ticket-stations-inner') || row;
+    if (!row || !inner) return;
+    inner.style.transform = '';
+    const available = row.clientWidth;
+    const content = inner.scrollWidth;
+    if (content > available && available > 0) {
+      const scale = Math.max(0.45, available / content);
+      inner.style.transform = `scale(${scale.toFixed(3)})`;
+      inner.style.transformOrigin = 'center center';
     }
   }
 
@@ -5254,8 +5366,6 @@
     if (typeLabel) {
       if (fr && !fr.isAvailable) {
         typeLabel.textContent = '乗車券 (発売不可)';
-      } else if (result.isLoopRoute) {
-        typeLabel.textContent = '乗車券 (一周片道)';
       } else {
         typeLabel.textContent = '乗車券';
       }
@@ -6337,6 +6447,10 @@
     }
 
     // 始終点マーカーをクリア
+    const epSource = map.getSource('route-section-endpoints-source');
+    if (epSource) {
+      epSource.setData({ type: 'FeatureCollection', features: [] });
+    }
     if (ROUTE_STATE.sectionFocusMarkers && ROUTE_STATE.sectionFocusMarkers.length > 0) {
       ROUTE_STATE.sectionFocusMarkers.forEach(m => {
         try { m.remove(); } catch (e) {}
@@ -6414,32 +6528,31 @@
       });
     }
 
-    // 4. 始点駅・終点駅の専用マーカー＋駅名ラベル (オレンジドット＋白枠ピルラベル)
+    // 4. 始点駅・終点駅の専用マーカー＋駅名ラベル (ネイティブ GeoJSON circle & symbol レイヤーで 0px ズレ保証)
     const endpointIds = [sec.from, sec.to].filter(Boolean);
+    const endpointFeatures = [];
     endpointIds.forEach((stId) => {
       const st = STATIONS[stId];
       if (!st) return;
-
-      const el = document.createElement('div');
-      el.className = 'section-endpoint-marker';
-      el.innerHTML = `
-        <div class="section-endpoint-dot"></div>
-        <div class="section-endpoint-pill">${getStationUiName(st)}</div>
-      `;
-
-      try {
-        const marker = new maplibregl.Marker({
-          element: el,
-          anchor: 'bottom'
-        })
-        .setLngLat([st.lng, st.lat])
-        .addTo(map);
-
-        ROUTE_STATE.sectionFocusMarkers.push(marker);
-      } catch (e) {
-        console.warn('Marker creation failed:', e);
-      }
+      endpointFeatures.push({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [st.lng, st.lat]
+        },
+        properties: {
+          name: getStationUiName(st)
+        }
+      });
     });
+
+    const epSource = map.getSource('route-section-endpoints-source');
+    if (epSource) {
+      epSource.setData({
+        type: 'FeatureCollection',
+        features: endpointFeatures
+      });
+    }
 
     // 5. 該当区間のバウンディングボックスへ map.fitBounds でズーム & パン移動
     const fitCoords = coords.length > 0 ? coords : endpointIds.map(id => [STATIONS[id].lng, STATIONS[id].lat]).filter(p => p[0] && p[1]);

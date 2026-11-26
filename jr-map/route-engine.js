@@ -1317,6 +1317,57 @@
     return path.map(i => nodes[i]);
   }
 
+  // 座標列の微小重複および鋭角折り返しトゲ (V字トゲ・スパイク) を除去
+  function cleanPolylineSpikes(pts) {
+    if (!pts || pts.length < 3) return pts ? pts.slice() : [];
+    let result = [pts[0]];
+    for (let i = 1; i < pts.length; i++) {
+      const p = pts[i];
+      const prev = result[result.length - 1];
+      if (Math.hypot(p[0] - prev[0], p[1] - prev[1]) > 0.00003) {
+        result.push(p);
+      }
+    }
+
+    let changed = true;
+    let passes = 0;
+    while (changed && passes < 3 && result.length >= 3) {
+      changed = false;
+      passes++;
+      const filtered = [result[0]];
+      for (let i = 1; i < result.length - 1; i++) {
+        const p0 = filtered[filtered.length - 1];
+        const p1 = result[i];
+        const p2 = result[i + 1];
+
+        const latLen = 111000;
+        const midLat = p1[0];
+        const lngLen = 111000 * Math.cos(midLat * Math.PI / 180);
+
+        const v1x = (p1[1] - p0[1]) * lngLen;
+        const v1y = (p1[0] - p0[0]) * latLen;
+        const v2x = (p2[1] - p1[1]) * lngLen;
+        const v2y = (p2[0] - p1[0]) * latLen;
+
+        const l1 = Math.hypot(v1x, v1y);
+        const l2 = Math.hypot(v2x, v2y);
+
+        if (l1 > 0 && l2 > 0) {
+          const cosAngle = (v1x * v2x + v1y * v2y) / (l1 * l2);
+          // 内積 < -0.3 (約107度以上の鋭角Uターン折り返し) で、かつ局所的なトゲ (片側300m以内) を除去
+          if (cosAngle < -0.3 && (l1 < 300 || l2 < 300)) {
+            changed = true;
+            continue;
+          }
+        }
+        filtered.push(p1);
+      }
+      filtered.push(result[result.length - 1]);
+      result = filtered;
+    }
+    return result;
+  }
+
   // 線路頂点と駅座標の端点接続において、進行方向と逆向きに一旦進む鋭角スパイク（折り返しヒゲ）を除去
   function smoothPathEndpoints(rawPath, st1, st2) {
     if (!rawPath || rawPath.length <= 2) return rawPath;
@@ -1470,38 +1521,33 @@
     if (trimmedPath.length >= 2) {
       // 始点側: st1 から線分 trimmedPath[0]-trimmedPath[1] への射影
       const proj1 = projectPointToSegment(st1, trimmedPath[0], trimmedPath[1]);
-      if (proj1.t > 0.05 && proj1.t < 0.95) {
-        const dP0 = calcDistKm(st1, { lat: trimmedPath[0][0], lng: trimmedPath[0][1] });
-        if (proj1.distMeters / 1000 <= dP0 + 0.02) {
-          trimmedPath[0] = proj1.point;
-        }
+      if (proj1.t >= 0 && proj1.t <= 1) {
+        trimmedPath[0] = proj1.point;
       }
       // 終点側: st2 から線分 trimmedPath[last-1]-trimmedPath[last] への射影
       const last = trimmedPath.length - 1;
       const proj2 = projectPointToSegment(st2, trimmedPath[last - 1], trimmedPath[last]);
-      if (proj2.t > 0.05 && proj2.t < 0.95) {
-        const dPlast = calcDistKm(st2, { lat: trimmedPath[last][0], lng: trimmedPath[last][1] });
-        if (proj2.distMeters / 1000 <= dPlast + 0.02) {
-          trimmedPath[last] = proj2.point;
+      if (proj2.t >= 0 && proj2.t <= 1) {
+        trimmedPath[last] = proj2.point;
+      }
+    }
+
+    // 生駅座標の強制 push/unshift を廃止し、オフセット実線路上の射影点列をそのまま返す
+    // （微小重複頂点および鋭角折り返しトゲをクリーンアップ）
+    const resultCoords = [];
+    for (let k = 0; k < trimmedPath.length; k++) {
+      const p = trimmedPath[k];
+      if (resultCoords.length === 0) {
+        resultCoords.push(p);
+      } else {
+        const prev = resultCoords[resultCoords.length - 1];
+        if (Math.hypot(p[0] - prev[0], p[1] - prev[1]) > 0.00003) {
+          resultCoords.push(p);
         }
       }
     }
 
-    // 端点を st1 と st2 に確実にスナップ接続 (駅マーカーと線路の隙間をゼロに)
-    const resultCoords = [[st1.lat, st1.lng]];
-    for (let k = 0; k < trimmedPath.length; k++) {
-      const p = trimmedPath[k];
-      const prev = resultCoords[resultCoords.length - 1];
-      if (Math.hypot(p[0] - prev[0], p[1] - prev[1]) > 0.00005) {
-        resultCoords.push(p);
-      }
-    }
-    const lastP = resultCoords[resultCoords.length - 1];
-    if (Math.hypot(st2.lat - lastP[0], st2.lng - lastP[1]) > 0.00005) {
-      resultCoords.push([st2.lat, st2.lng]);
-    }
-
-    return resultCoords;
+    return cleanPolylineSpikes(resultCoords);
   }
 
   /**
@@ -2029,6 +2075,17 @@
     }
 
     // 4. 連続する新幹線ランの統合
+    // ※ 東海道新幹線 (shinkansen-tokaido) と東北系新幹線 (shinkansen-tohoku, shinkansen-joetsu, shinkansen-hokuriku 等) の
+    // 東京駅乗換は直通運転しないため統合せず、間に東京を挟んで「新幹線・東京・新幹線」と分離印字
+    function isTokaidoTohokuTokyoTransfer(r1, r2) {
+      if (!r1 || !r2 || !r1.isShinkansen || !r2.isShinkansen) return false;
+      const transSt = stations[r1.to] ? stations[r1.to].name : r1.to;
+      if (transSt !== '東京') return false;
+      const isTokaido = (lid) => lid === 'shinkansen-tokaido';
+      const isTohokuSystem = (lid) => lid && lid.startsWith('shinkansen-') && lid !== 'shinkansen-tokaido' && lid !== 'shinkansen-sanyo' && lid !== 'shinkansen-kyushu' && lid !== 'shinkansen-nishi-kyushu';
+      return (isTokaido(r1.lineId) && isTohokuSystem(r2.lineId)) || (isTohokuSystem(r1.lineId) && isTokaido(r2.lineId));
+    }
+
     const finalMergedRuns = [];
     for (let i = 0; i < filteredRuns.length; i++) {
       const r = filteredRuns[i];
@@ -2036,7 +2093,8 @@
           finalMergedRuns.length > 0 &&
           finalMergedRuns[finalMergedRuns.length - 1].isShinkansen &&
           finalMergedRuns[finalMergedRuns.length - 1].to === r.from &&
-          finalMergedRuns[finalMergedRuns.length - 1].from !== r.to) {
+          finalMergedRuns[finalMergedRuns.length - 1].from !== r.to &&
+          !isTokaidoTohokuTokyoTransfer(finalMergedRuns[finalMergedRuns.length - 1], r)) {
         finalMergedRuns[finalMergedRuns.length - 1].to = r.to;
         finalMergedRuns[finalMergedRuns.length - 1].stationIds.push(...r.stationIds.slice(1));
       } else {
@@ -2048,20 +2106,6 @@
     const deptCenterName = (fareRules && fareRules.deptZone) ? fareRules.deptZone.centerName : ((fareRules && (fareRules.displayDeptName === '東京都区内' || fareRules.displayDeptName === '東京山手線内')) ? '東京' : null);
     const destCenterName = (fareRules && fareRules.destZone) ? fareRules.destZone.centerName : ((fareRules && (fareRules.displayDestName === '東京都区内' || fareRules.displayDestName === '東京山手線内')) ? '東京' : ((fareRules && fareRules.displayDestName === '京都市内') ? '京都' : null));
 
-    // 同一線区並行コリドー判定ヘルパー
-    function isSameLineConventional(prevRun, shinkansenRun) {
-      if (!prevRun || !shinkansenRun || !prevRun.lineId || !shinkansenRun.lineId) return false;
-      // 東北本線 -> 東北新幹線
-      if (prevRun.lineId === 'tohoku-main' && shinkansenRun.lineId.startsWith('shinkansen-tohoku')) return true;
-      // 東海道本線 -> 東海道新幹線
-      if ((prevRun.lineId === 'tokaido' || prevRun.lineId === 'tokai-tokaido' || prevRun.lineId === 'tokaido-west') && shinkansenRun.lineId === 'shinkansen-tokaido') return true;
-      // 山陽本線 -> 山陽新幹線
-      if (prevRun.lineId === 'sanyo-main' && shinkansenRun.lineId === 'shinkansen-sanyo') return true;
-      // 鹿児島本線 -> 九州新幹線
-      if (prevRun.lineId.includes('kagoshima') && shinkansenRun.lineId.includes('kyushu')) return true;
-      return false;
-    }
-
     const marsNamesList = [];
     for (let i = 0; i < finalMergedRuns.length; i++) {
       const r = finalMergedRuns[i];
@@ -2072,18 +2116,13 @@
         const isFirstRun = (i === 0);
         const isLastRun = (i === finalMergedRuns.length - 1);
 
-        // 乗車駅 (deptSt) の印字判定
+        // 乗車駅 (deptSt) の印字判定:
+        // 先頭新幹線であり、かつ実発駅または発側ゾーン中心駅または発側ゾーン内新幹線駅と一致する場合のみ省略
+        // 途中の在来線⇄新幹線乗換駅は対称に省略せず必ず印字
         let omitDeptStation = false;
         if (isFirstRun) {
-          // 先頭が新幹線区間であり、かつ実発駅または発側ゾーン中心駅または発側ゾーン内新幹線駅と一致
           const isDeptInZone = deptZone && isStationInZone(r.from, deptSt, deptZone, stations);
           if (deptSt === deptName || (deptCenterName && deptSt === deptCenterName) || isDeptInZone) {
-            omitDeptStation = true;
-          }
-        } else {
-          // 先頭ではない場合: 直前の在来線と同一線区並行接続であれば省略
-          const prevRun = finalMergedRuns[i - 1];
-          if (isSameLineConventional(prevRun, r)) {
             omitDeptStation = true;
           }
         }
@@ -2097,10 +2136,11 @@
         // 新幹線
         marsNamesList.push('新幹線');
 
-        // 降車駅 (destSt) の印字判定
+        // 降車駅 (destSt) の印字判定:
+        // 末尾新幹線であり、かつ実着駅または着側ゾーン中心駅または着側ゾーン内新幹線駅と一致する場合のみ省略
+        // 途中の在来線⇄新幹線乗換駅は対称に省略せず必ず印字
         let omitDestStation = false;
         if (isLastRun) {
-          // 末尾が新幹線区間であり、かつ実着駅または着側ゾーン中心駅または着側ゾーン内新幹線駅と一致
           const isDestInZone = destZone && isStationInZone(r.to, destSt, destZone, stations);
           if (destSt === destName || (destCenterName && destSt === destCenterName) || isDestInZone) {
             omitDestStation = true;
@@ -2958,9 +2998,11 @@
 
     function pushPolylineChain(type, chain) {
       if (!chain || chain.length === 0) return;
-      if (type === 'duplicate') duplicatePolylines.push(chain);
-      else if (type === 'shinkansen') shinkansenPolylines.push(chain);
-      else normalPolylines.push(chain);
+      const cleaned = cleanPolylineSpikes(chain);
+      if (cleaned.length === 0) return;
+      if (type === 'duplicate') duplicatePolylines.push(cleaned);
+      else if (type === 'shinkansen') shinkansenPolylines.push(cleaned);
+      else normalPolylines.push(cleaned);
     }
 
     if (tracks) {
@@ -3062,7 +3104,7 @@
         km: Math.round(r.dist * 10) / 10,
         stationCount: r.stationIds.length,
         stations: r.stationIds,
-        coords: secCoords,
+        coords: cleanPolylineSpikes(secCoords),
         isDuplicate: !!r.hasDuplicate,
         isEstimated: !!r.isEstimated
       };
@@ -3287,7 +3329,7 @@
       fareRules: fareRules,
       sections: sections,
       fullSegments: fullSegments,
-      geometryLatlngs: geometryLatlngs,
+      geometryLatlngs: cleanPolylineSpikes(geometryLatlngs),
       normalPolylines: normalPolylines,
       shinkansenPolylines: shinkansenPolylines,
       duplicatePolylines: duplicatePolylines,

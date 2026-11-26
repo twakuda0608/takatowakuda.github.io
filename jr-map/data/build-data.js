@@ -483,6 +483,10 @@
       "inagekaigan",
       "chibaminato",
       "soga"
+    ],
+    "branches": [
+      ["ichikawa-shiohama", "nishi-funabashi"],
+      ["nishi-funabashi", "minami-funabashi"]
     ]
   },
   {
@@ -39570,7 +39574,8 @@
     "pref": "千葉県",
     "lines": [
       "musashino",
-      "sobu-main"
+      "sobu-main",
+      "keiyo"
     ]
   },
   "shin-narashino": {

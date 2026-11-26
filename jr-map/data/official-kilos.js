@@ -203,6 +203,16 @@
       "akabane-oku": 5.0,
       "尾久-赤羽": 5.0,
       "赤羽-尾久": 5.0
+    },
+    "keiyo": {
+      "ichikawa-shiohama-nishi-funabashi": 5.9,
+      "nishi-funabashi-ichikawa-shiohama": 5.9,
+      "市川塩浜-西船橋": 5.9,
+      "西船橋-市川塩浜": 5.9,
+      "nishi-funabashi-minami-funabashi": 5.4,
+      "minami-funabashi-nishi-funabashi": 5.4,
+      "西船橋-南船橋": 5.4,
+      "南船橋-西船橋": 5.4
     }
   };
 
