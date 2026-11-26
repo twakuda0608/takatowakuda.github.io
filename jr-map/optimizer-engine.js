@@ -811,11 +811,14 @@
     // 戦略1: 通常都度買い（ベースライン）の計算
     let baselineFare = Infinity;
     let baselineTickets = [];
+    let baselineLegs = [];
+    let baselineOrderNames = [];
 
     visitOrders.forEach(order => {
       const fullStops = [deptId, ...order, ...(destId ? [destId] : [])];
       let orderFare = 0;
       const tickets = [];
+      const legs = [];
       let ok = true;
 
       for (let i = 0; i < fullStops.length - 1; i++) {
@@ -832,9 +835,19 @@
           break;
         }
         orderFare += fare;
+        const fromName = (stations[from] && stations[from].name) || from;
+        const toName = (stations[to] && stations[to].name) || to;
+        legs.push({
+          fromId: from,
+          toId: to,
+          fromName,
+          toName,
+          fare,
+          km: res.totalKm || 0
+        });
         tickets.push({
           role: 'split',
-          label: `乗車券（${(stations[from] && stations[from].name) || from} → ${(stations[to] && stations[to].name) || to}）`,
+          label: `乗車券（${fromName} → ${toName}）`,
           quantity: 1,
           unitFare: fare,
           subtotalFare: fare,
@@ -847,6 +860,8 @@
       if (ok && orderFare < baselineFare) {
         baselineFare = orderFare;
         baselineTickets = tickets;
+        baselineLegs = legs;
+        baselineOrderNames = fullStops.map(id => (stations[id] && stations[id].name) || id);
       }
     });
 
@@ -866,8 +881,9 @@
         totalFare: baselineFare,
         totalKm: Math.round(totalKm * 10) / 10,
         ticketCount: baselineTickets.length,
-        summaryNote: isSingleLeg ? '通常通り1枚の乗車券を購入する標準的な買い方です。' : '各区間を個別に通常購入する標準的な買い方です。',
-        tickets: baselineTickets
+        summaryNote: isSingleLeg ? '途中下車をしない通常の片道乗車券です。' : '各区間を個別に通常購入する標準的な買い方です。',
+        tickets: baselineTickets,
+        isBaseline: true
       });
     }
 
@@ -994,7 +1010,7 @@
 
     // 戦略5: 最適分割購入（区間DP）
     if (cleanVisitIds.length >= 1 && !checkTimeBudget()) {
-      const dpOrders = visitOrders.slice(0, 1);
+      const dpOrders = visitOrders.slice(0, 2);
       dpOrders.forEach(order => {
         if (checkTimeBudget()) return;
         const fullStops = [deptId, ...order, ...(destId ? [destId] : [])];
@@ -1079,7 +1095,7 @@
                   }
                 }
               }
-            } else if (j === i + 2) {
+            } else if (j - i === 2 || j - i === 3) {
               let res = cachedSearch(s_i, mid, s_j, { searchMode: 'oneway' });
               let isBypassed = false;
               let bypassDetails = null;
@@ -1200,6 +1216,12 @@
                 const mainFare = getTicketPrice(resMain.fareRules, fareType);
                 const resBranch = cachedSearch(j.id, [], vId, { searchMode: 'shortest' });
                 if (resBranch && resBranch.success && resBranch.fareRules) {
+                  // 本線との重複チェック: 分岐往復の経由駅（j.id以外）が本線に含まれていればスキップ
+                  const mainStationSet = new Set(resMain.allStationIds || []);
+                  const branchIds = resBranch.allStationIds || [];
+                  const hasRedundantOverlap = branchIds.some(stId => stId !== j.id && mainStationSet.has(stId));
+                  if (hasRedundantOverlap) continue;
+
                   const branchOneWayFare = getTicketPrice(resBranch.fareRules, fareType);
                   const branchRoundFare = branchOneWayFare * 2;
                   const total = mainFare + branchRoundFare;
@@ -1314,6 +1336,12 @@
                   const mainFare = getTicketPrice(curMain.fareRules, fareType);
                   const resBranch = cachedSearch(j.id, [], vId, { searchMode: 'shortest' });
                   if (resBranch && resBranch.success && resBranch.fareRules) {
+                    // 本線との重複チェック: 分岐往復の経由駅（j.id以外）が本線に含まれていればスキップ
+                    const mainStationSet = new Set(curMain.allStationIds || []);
+                    const branchIds = resBranch.allStationIds || [];
+                    const hasRedundantOverlap = branchIds.some(stId => stId !== j.id && mainStationSet.has(stId));
+                    if (hasRedundantOverlap) continue;
+
                     const branchOneWayFare = getTicketPrice(resBranch.fareRules, fareType);
                     const branchRoundFare = branchOneWayFare * 2;
                     const total = mainFare + branchRoundFare;
@@ -1425,6 +1453,16 @@
 
     const allUniquePlans = Array.from(uniquePlansMap.values());
 
+    const cheapestFare = allUniquePlans.length > 0 ? Math.min(...allUniquePlans.map(p => p.totalFare)) : baselineFare;
+    const cheapestEffectiveFare = allUniquePlans.length > 0 ? Math.min(...allUniquePlans.map(p => p.effectiveFare)) : baselineFare;
+
+    allUniquePlans.forEach(p => {
+      p.diffFromBaseline = p.totalFare - baselineFare;
+      p.isCheapest = (p.totalFare === cheapestFare);
+      p.isEffectiveCheapest = (p.effectiveFare === cheapestEffectiveFare);
+      p.isBaseline = !!p.isBaseline;
+    });
+
     // ソート順の制御
     let sortedPlans = [];
     if (preferStopover) {
@@ -1476,6 +1514,17 @@
         if (a.ticketCount !== b.ticketCount) return a.ticketCount - b.ticketCount;
         return a.totalKm - b.totalKm;
       });
+
+      // 絶対最安プランが確実に含まれることを保証
+      const absoluteCheapestPlan = allUniquePlans.slice().sort((a, b) => a.totalFare - b.totalFare)[0];
+      if (absoluteCheapestPlan && sortedPlans.length > 0) {
+        const top3 = sortedPlans.slice(0, maxPlans);
+        if (!top3.some(p => p.totalFare === absoluteCheapestPlan.totalFare)) {
+          if (sortedPlans.length >= maxPlans) {
+            sortedPlans[maxPlans - 1] = absoluteCheapestPlan;
+          }
+        }
+      }
     }
 
     const topPlans = sortedPlans.slice(0, maxPlans);
@@ -1505,13 +1554,41 @@
           if (fullResultCache.has(fullKey)) {
             ticket.routeResult = fullResultCache.get(fullKey);
           } else {
-            const fullRes = RouteEngine.searchMarsRoute(r.deptId, vias, r.destId, {
+            let fullRes = RouteEngine.searchMarsRoute(r.deptId, vias, r.destId, {
               searchMode: r.isOneWayTrip ? 'oneway' : 'shortest',
               useShinkansen: ticketHasSh,
               shinkansenSegments: shSegs,
               forceShinkansenOnlyInSegments: forceSh,
               skipGeometry: false
             });
+
+            // 不自然な多乗換大回りの整理（乗換ペナルティ 2.5km相当 で同額以下・乗換数減少なら置き換え）
+            if (fullRes && fullRes.success && fullRes.sections && fullRes.sections.length >= 3) {
+              const cleanRes = RouteEngine.searchMarsRoute(r.deptId, vias, r.destId, {
+                searchMode: r.isOneWayTrip ? 'oneway' : 'shortest',
+                useShinkansen: ticketHasSh,
+                shinkansenSegments: shSegs,
+                forceShinkansenOnlyInSegments: forceSh,
+                skipGeometry: false,
+                convTransferPenalty: 2.5
+              });
+              if (cleanRes && cleanRes.success && cleanRes.sections) {
+                const isOneWayOk = !r.isOneWayTrip || cleanRes.isOneWayTrip;
+                const origStopover = (r.fareRules && r.fareRules.stopoverAllowed === true);
+                const cleanStopover = (cleanRes.fareRules && cleanRes.fareRules.stopoverAllowed === true);
+                const stopoverOk = !origStopover || (cleanStopover && canStopoverAll(cleanRes, vias, stations));
+                const cleanFare = getTicketPrice(cleanRes.fareRules, fareType);
+                const fareOk = cleanFare <= ticket.unitFare;
+                const transferReduced = cleanRes.sections.length < fullRes.sections.length;
+
+                if (isOneWayOk && stopoverOk && fareOk && transferReduced) {
+                  fullRes = cleanRes;
+                  ticket.unitFare = cleanFare;
+                  ticket.subtotalFare = cleanFare * (ticket.quantity || 1);
+                }
+              }
+            }
+
             fullResultCache.set(fullKey, fullRes);
             ticket.routeResult = fullRes;
           }
@@ -1533,7 +1610,13 @@
         ticket.extensionDropStation = ticket.extensionDropStation || null;
         ticket.stopoverStations = ticket.stopoverStations || [];
       });
+
+      // 再集計
+      plan.totalKm = Math.round(plan.tickets.reduce((sum, t) => sum + (t.routeResult ? t.routeResult.totalKm : 0), 0) * 10) / 10;
+      plan.totalFare = plan.tickets.reduce((sum, t) => sum + (t.subtotalFare || t.unitFare || 0), 0);
     });
+
+    const cheapestIsBaseline = (cheapestFare === baselineFare);
 
     return {
       success: true,
@@ -1544,6 +1627,11 @@
       preferStopover: preferStopover,
       fareType: fareType,
       baselineFare: baselineFare,
+      baselineLegs: baselineLegs,
+      baselineOrderNames: baselineOrderNames,
+      cheapestFare: cheapestFare,
+      cheapestEffectiveFare: cheapestEffectiveFare,
+      cheapestIsBaseline: cheapestIsBaseline,
       plans: topPlans
     };
   }

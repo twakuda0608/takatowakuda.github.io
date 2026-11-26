@@ -2326,6 +2326,62 @@
     }
   }
 
+  // 経路ハイライト中か判定
+  function isRouteHighlighted() {
+    return !!(ROUTE_STATE.lastResult || ROUTE_STATE.cheapestPlanResult);
+  }
+
+  // 経路表示時の背景路線・駅スタイルの適用
+  function applyRouteBackgroundStyle() {
+    if (!map) return;
+    const isDim = (ROUTE_STATE.dimBackground !== false);
+    const lineOpacity = isDim ? 0.12 : 0.95;
+    const shinkansenOpacity = isDim ? 0.12 : 1.0;
+    const labelsOpacity = isDim ? 0.25 : getLineLabelsOpacityExpression();
+    const stationVisibility = isDim ? 'none' : 'visible';
+
+    try {
+      if (map.getLayer('conventional-lines')) {
+        map.setPaintProperty('conventional-lines', 'line-opacity', lineOpacity);
+      }
+      if (map.getLayer('shinkansen-lines-casing')) {
+        map.setPaintProperty('shinkansen-lines-casing', 'line-opacity', shinkansenOpacity);
+      }
+      if (map.getLayer('shinkansen-lines-dash')) {
+        map.setPaintProperty('shinkansen-lines-dash', 'line-opacity', shinkansenOpacity);
+      }
+      if (map.getLayer('line-labels')) {
+        map.setPaintProperty('line-labels', 'text-opacity', labelsOpacity);
+      }
+      STATION_DOT_LAYERS.forEach(id => {
+        if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', stationVisibility);
+      });
+      STATION_COLLIDER_LAYERS.forEach(id => {
+        if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', stationVisibility);
+      });
+    } catch (e) {}
+
+    updateRouteBgButtonUI();
+  }
+
+  function updateRouteBgButtonUI() {
+    const btn = document.getElementById('btn-toggle-route-bg');
+    if (!btn) return;
+    if (isRouteHighlighted()) {
+      btn.style.display = 'inline-flex';
+      const isDim = (ROUTE_STATE.dimBackground !== false);
+      const labelSpan = btn.querySelector('span');
+      if (labelSpan) {
+        labelSpan.textContent = isDim ? '他路線：薄く' : '他路線：表示';
+      } else {
+        btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" fill="currentColor"/></svg><span>${isDim ? '他路線：薄く' : '他路線：表示'}</span>`;
+      }
+      btn.classList.toggle('active', !isDim);
+    } else {
+      btn.style.display = 'none';
+    }
+  }
+
   // =======================================================
   // 6. 路線ハイライト選択
   // =======================================================
@@ -2336,6 +2392,10 @@
 
     if (!lineId) {
       if (banner) banner.style.display = 'none';
+      if (isRouteHighlighted()) {
+        applyRouteBackgroundStyle();
+        return;
+      }
       if (map) {
         if (map.getLayer('conventional-lines')) {
           map.setPaintProperty('conventional-lines', 'line-opacity', 1.0);
@@ -2426,6 +2486,11 @@
   }
 
   function closeLineBanner() {
+    if (!STATE.selectedLineId) {
+      const banner = document.getElementById('line-banner');
+      if (banner) banner.style.display = 'none';
+      return;
+    }
     selectLine(null);
   }
 
@@ -3538,6 +3603,14 @@
     initAreaPresetMenu();
     updateSearchPlaceholder();
 
+    const btnToggleRouteBg = document.getElementById('btn-toggle-route-bg');
+    if (btnToggleRouteBg) {
+      btnToggleRouteBg.addEventListener('click', () => {
+        ROUTE_STATE.dimBackground = !ROUTE_STATE.dimBackground;
+        applyRouteBackgroundStyle();
+      });
+    }
+
     document.getElementById('btn-zoom-in').addEventListener('click', () => {
       map.zoomIn();
     });
@@ -3630,6 +3703,7 @@
     selectedSectionIdx: -1, // 選択・強調表示中の路線区間インデックス
     sectionFocusMarkers: [], // 強調表示中の始終点マーカー配列
     currentFareType: 'adult',    // 'adult' | 'child' | 'student'
+    dimBackground: true,         // 経路ハイライト時に背景路線を薄く・通常駅を非表示
     ticketDate: getLocalISODate()
   };
 
@@ -7486,8 +7560,40 @@
     if (!plans || plans.length === 0) return;
     if (planIdx >= plans.length) planIdx = 0;
 
+    ROUTE_STATE.cheapestPlanResult = optimizerResult;
     ROUTE_STATE.activePlanIdx = planIdx;
     ROUTE_STATE.activeTicketIdx = ticketIdx;
+
+    const baselineFare = optimizerResult.baselineFare || 0;
+    const cheapestFare = optimizerResult.cheapestFare !== undefined ? optimizerResult.cheapestFare : Math.min(...plans.map(p => p.totalFare));
+
+    // 0. 基準運賃＆最安比較バー (#cheapest-baseline-bar)
+    const baselineBar = document.getElementById('cheapest-baseline-bar');
+    if (baselineBar) {
+      const bLegs = optimizerResult.baselineLegs || [];
+      const legsText = bLegs.map(l => `${l.fromName}→${l.toName} ￥${l.fare.toLocaleString()}`).join(' ＋ ');
+      const isCheaper = (cheapestFare < baselineFare);
+      const bestIdx = plans.findIndex(p => p.isCheapest || p.totalFare === cheapestFare);
+      const planNumText = bestIdx !== -1 ? `第${bestIdx + 1}案` : '提案プラン';
+
+      let summaryLine = '';
+      if (isCheaper) {
+        const diff = baselineFare - cheapestFare;
+        summaryLine = `<div class="baseline-summary-row"><span class="badge-cheapest">最安</span> <span>${planNumText} ￥${cheapestFare.toLocaleString()}（通常より -￥${diff.toLocaleString()} お得）</span></div>`;
+      } else {
+        summaryLine = `<div class="baseline-summary-row"><span class="badge-baseline">最安</span> <span>通常購入（途中下車なし）￥${baselineFare.toLocaleString()}（区間ごとに買うのが最安）</span></div>`;
+      }
+
+      baselineBar.innerHTML = `
+        <div class="baseline-row-main">
+          <span class="baseline-title">通常購入（途中下車なし）</span>
+          <span class="baseline-fare">￥${baselineFare.toLocaleString()}</span>
+        </div>
+        ${legsText ? `<div class="baseline-legs-detail">内訳：${legsText}</div>` : ''}
+        ${summaryLine}
+      `;
+      baselineBar.style.display = 'flex';
+    }
 
     // 1. プラン切替タブ (#cheapest-plan-tabs)
     const tabsContainer = document.getElementById('cheapest-plan-tabs');
@@ -7497,10 +7603,29 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'cheapest-plan-tab' + (idx === planIdx ? ' active' : '');
+        const diff = p.diffFromBaseline !== undefined ? p.diffFromBaseline : (p.totalFare - baselineFare);
+        let diffHtml = '';
+        if (diff < 0) {
+          diffHtml = `<span class="tab-diff negative">通常比 -￥${Math.abs(diff).toLocaleString()}</span>`;
+        } else if (diff === 0) {
+          diffHtml = `<span class="tab-diff zero">通常と同額</span>`;
+        } else {
+          diffHtml = `<span class="tab-diff positive">通常比 +￥${diff.toLocaleString()}</span>`;
+        }
+        let badgeHtml = '';
+        if (p.isCheapest || p.totalFare === cheapestFare) {
+          badgeHtml = `<span class="badge-cheapest">最安</span>`;
+        } else if (p.isBaseline) {
+          badgeHtml = `<span class="badge-baseline">通常</span>`;
+        }
+
         btn.innerHTML = `
-          <div class="cheapest-plan-tab-title">第${idx + 1}案</div>
+          <div class="tab-badge-row">
+            <div class="cheapest-plan-tab-title">第${idx + 1}案</div>
+            ${badgeHtml}
+          </div>
           <div class="cheapest-plan-tab-fare">￥${p.totalFare.toLocaleString()}</div>
-          ${p.savings > 0 ? `<div class="cheapest-plan-tab-savings">▲${p.savings.toLocaleString()}円</div>` : ''}
+          ${diffHtml}
         `;
         btn.addEventListener('click', () => {
           renderCheapestPlanResult(optimizerResult, idx, 0);
@@ -7520,29 +7645,29 @@
     const badgeEl = document.getElementById('cheapest-savings-badge');
     if (badgeEl) {
       badgeEl.style.display = 'inline-flex';
-      const baselineFare = optimizerResult.baselineFare || 0;
-      const tags = curPlan.tags || curPlan.strategyTags || [];
-      const hasUpgradeTags = tags.some(t => t.includes('新幹線') || t.includes('延長') || t.includes('近郊区間脱出') || t.includes('途中下車'));
+      const diff = curPlan.diffFromBaseline !== undefined ? curPlan.diffFromBaseline : (curPlan.totalFare - baselineFare);
 
-      if (curPlan.savings > 0) {
+      if (diff < 0) {
         badgeEl.className = 'cheapest-savings-badge has-savings';
-        badgeEl.textContent = `通常より ￥${curPlan.savings.toLocaleString()} お得！`;
-      } else if (curPlan.savings === 0 && curPlan.isStopoverFriendly && hasUpgradeTags && curPlan.totalFare === baselineFare) {
-        badgeEl.className = 'cheapest-savings-badge stopover-upgrade';
-        badgeEl.textContent = '同額（+￥0）で途中下車可能！';
-      } else if (curPlan.totalFare > baselineFare && curPlan.isStopoverFriendly) {
-        badgeEl.className = 'cheapest-savings-badge stopover-upgrade';
-        badgeEl.textContent = `通常最安 +￥${(curPlan.totalFare - baselineFare).toLocaleString()} で途中下車可能`;
+        badgeEl.textContent = `通常購入より -￥${Math.abs(diff).toLocaleString()} お得`;
+      } else if (diff === 0) {
+        badgeEl.className = curPlan.isStopoverFriendly ? 'cheapest-savings-badge stopover-upgrade' : 'cheapest-savings-badge no-savings';
+        badgeEl.textContent = curPlan.isStopoverFriendly ? '通常購入と同額（途中下車可）' : '通常購入と同額（±￥0）';
       } else {
-        badgeEl.className = 'cheapest-savings-badge no-savings';
-        badgeEl.textContent = '最安（通常購入と同額）';
+        badgeEl.className = 'cheapest-savings-badge stopover-upgrade';
+        badgeEl.textContent = `通常購入より +￥${diff.toLocaleString()}（途中下車可）`;
       }
     }
 
     const tagsContainer = document.getElementById('cheapest-tags-container');
     if (tagsContainer) {
       tagsContainer.innerHTML = '';
-      const tagsList = curPlan.tags || curPlan.strategyTags || [];
+      const tagsList = [...(curPlan.tags || curPlan.strategyTags || [])];
+      if (curPlan.isCheapest || curPlan.totalFare === cheapestFare) {
+        if (!tagsList.includes('最安値プラン')) {
+          tagsList.unshift('最安値プラン');
+        }
+      }
       if (tagsList.length > 0) {
         tagsList.forEach(t => {
           const chip = document.createElement('span');
@@ -7722,26 +7847,8 @@
     clearSectionHighlight();
     if (!plan || !plan.tickets || plan.tickets.length === 0) return;
 
-    // 全路線を薄くフェードアウト
-    if (map.getLayer('conventional-lines')) {
-      map.setPaintProperty('conventional-lines', 'line-opacity', 0.12);
-    }
-    if (map.getLayer('shinkansen-lines-casing')) {
-      map.setPaintProperty('shinkansen-lines-casing', 'line-opacity', 0.12);
-    }
-    if (map.getLayer('shinkansen-lines-dash')) {
-      map.setPaintProperty('shinkansen-lines-dash', 'line-opacity', 0.12);
-    }
-    if (map.getLayer('line-labels')) {
-      map.setPaintProperty('line-labels', 'text-opacity', 0.25);
-    }
-
-    // 背景通常駅マーカー非表示
-    [...STATION_DOT_LAYERS, ...STATION_COLLIDER_LAYERS].forEach(id => {
-      if (map.getLayer(id)) {
-        map.setLayoutProperty(id, 'visibility', 'none');
-      }
-    });
+    // 背景路線・駅スタイル適用＆切替ボタン表示
+    applyRouteBackgroundStyle();
 
     const routeFeatures = [];
     let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
@@ -8029,6 +8136,11 @@
       cheapestNote.textContent = '';
       cheapestNote.style.display = 'none';
     }
+    const baselineBar = document.getElementById('cheapest-baseline-bar');
+    if (baselineBar) {
+      baselineBar.innerHTML = '';
+      baselineBar.style.display = 'none';
+    }
 
     // 新幹線区間指定と手動入力のリセット
     ROUTE_STATE.useShinkansen = false;
@@ -8149,6 +8261,7 @@
   function clearRouteMapLayers() {
     clearSectionHighlight();
     ROUTE_STATE.lastResult = null;
+    updateRouteBgButtonUI();
 
     // 経路ハイライト GeoJSON をクリア
     const routeSource = map && map.getSource('route-source');
@@ -8391,26 +8504,8 @@
 
     ROUTE_STATE.lastResult = result;
 
-    // 1. 全路線を薄くフェードアウト
-    if (map.getLayer('conventional-lines')) {
-      map.setPaintProperty('conventional-lines', 'line-opacity', 0.12);
-    }
-    if (map.getLayer('shinkansen-lines-casing')) {
-      map.setPaintProperty('shinkansen-lines-casing', 'line-opacity', 0.12);
-    }
-    if (map.getLayer('shinkansen-lines-dash')) {
-      map.setPaintProperty('shinkansen-lines-dash', 'line-opacity', 0.12);
-    }
-    if (map.getLayer('line-labels')) {
-      map.setPaintProperty('line-labels', 'text-opacity', 0.25);
-    }
-
-    // 背景の通常駅丸印マーカーおよびコライダーを非表示 (ルートピンと駅名ラベルのみ表示)
-    [...STATION_DOT_LAYERS, ...STATION_COLLIDER_LAYERS].forEach(id => {
-      if (map.getLayer(id)) {
-        map.setLayoutProperty(id, 'visibility', 'none');
-      }
-    });
+    // 1. 背景路線・駅スタイル適用＆切替ボタン表示
+    applyRouteBackgroundStyle();
 
     // 2. 経路ポリライン FeatureCollection の構築
     const routeFeatures = [];

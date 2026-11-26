@@ -840,7 +840,8 @@
             transferPenalty = 5.0;
           } else {
             // 同一距離の場合に乗り換えの少ない方を選ぶ微小タイブレーカー (0.01)
-            transferPenalty = 0.01;
+            // options.convTransferPenalty が指定されている場合はそれを優先
+            transferPenalty = (options.convTransferPenalty !== undefined) ? options.convTransferPenalty : 0.01;
           }
         }
 
@@ -2461,6 +2462,7 @@
           forbiddenLines: legForbiddenLines[i],
           forbiddenEdges: legForbiddenEdgesMerged,
           requireOneWay: requireOneWay,
+          convTransferPenalty: options.convTransferPenalty,
           maxCost: (options.maxCost !== undefined) ? options.maxCost : options.maxLegCost
         };
 
@@ -2481,7 +2483,8 @@
             forceShinkansen: legForceShinkansen,
             forbiddenStations: new Set(),
             forbiddenLines: legForbiddenLines[i],
-            forbiddenEdges: legForbiddenEdges[i]
+            forbiddenEdges: legForbiddenEdges[i],
+            convTransferPenalty: options.convTransferPenalty
           });
           if (!leg && legForceShinkansen) {
             leg = findLeg(graph, origin, destination, {
@@ -2489,7 +2492,8 @@
               forceShinkansen: false,
               forbiddenStations: new Set(),
               forbiddenLines: legForbiddenLines[i],
-              forbiddenEdges: legForbiddenEdges[i]
+              forbiddenEdges: legForbiddenEdges[i],
+              convTransferPenalty: options.convTransferPenalty
             });
           }
         }

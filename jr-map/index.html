@@ -67,6 +67,12 @@
 
     <!-- 右側マップ操作コントロール -->
     <div class="map-controls">
+      <!-- 経路背景路線・駅の表示/薄く切替ボタン (経路ハイライト時のみ表示) -->
+      <button type="button" id="btn-toggle-route-bg" class="ctrl-btn ctrl-btn-wide" title="他路線・駅の表示切替" aria-label="他路線・駅の表示切替" style="display: none;">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" fill="currentColor"/></svg>
+        <span>他路線：薄く</span>
+      </button>
+
       <div class="control-group">
         <button type="button" id="btn-zoom-in" class="ctrl-btn" title="拡大" aria-label="拡大">
           <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -313,6 +319,9 @@
         <div id="route-result-container" class="route-result-container" style="display: none;">
           <!-- 最安きっぷ結果コンテナ -->
           <div id="cheapest-plan-container" class="cheapest-plan-container" style="display: none;">
+            <!-- 基準運賃＆最安比較バー -->
+            <div id="cheapest-baseline-bar" class="cheapest-baseline-bar" style="display: none;"></div>
+
             <!-- プラン切替タブ（最大3案） -->
             <div id="cheapest-plan-tabs" class="cheapest-plan-tabs"></div>
 

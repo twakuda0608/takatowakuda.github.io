@@ -434,6 +434,30 @@ body.theme-light .view-presets {
   transform: scale(0.96);
 }
 
+.ctrl-btn-wide {
+  width: auto;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow-float);
+  font-size: 12px;
+  font-weight: 700;
+  gap: 6px;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+.ctrl-btn-wide:hover {
+  background: rgba(13, 148, 136, 0.08);
+  border-color: #0d9488;
+}
+.ctrl-btn-wide.active {
+  background: #0d9488;
+  color: #ffffff;
+  border-color: #0d9488;
+}
+
 /* エリア選択ポップオーバー */
 .area-preset-menu {
   position: absolute;
@@ -3197,18 +3221,66 @@ body.theme-light .search-input-wrapper .ghost-pref {
 }
 
 /* プラン切替タブ */
+/* 基準運賃＆最安比較バー */
+.cheapest-baseline-bar {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #334155;
+}
+
+.baseline-row-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.baseline-title {
+  font-weight: 700;
+  color: #475569;
+}
+
+.baseline-fare {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.baseline-legs-detail {
+  font-size: 11px;
+  color: #64748b;
+  word-break: break-all;
+}
+
+.baseline-summary-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: #0f766e;
+  margin-top: 2px;
+  padding-top: 4px;
+  border-top: 1px dashed #cbd5e1;
+}
+
 .cheapest-plan-tabs {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
   padding-bottom: 4px;
   scrollbar-width: thin;
 }
 
 .cheapest-plan-tab {
-  flex: 1;
-  min-width: 140px;
-  padding: 8px 12px;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 8px 6px;
   background: #ffffff;
   border: 1.5px solid var(--panel-border);
   border-radius: 8px;
@@ -3219,6 +3291,7 @@ body.theme-light .search-input-wrapper .ghost-pref {
   gap: 2px;
   transition: all 0.15s ease;
   font-family: inherit;
+  text-align: center;
 }
 
 .cheapest-plan-tab:hover {
@@ -3233,6 +3306,32 @@ body.theme-light .search-input-wrapper .ghost-pref {
   position: relative;
 }
 
+.tab-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-cheapest {
+  background: #059669;
+  color: #ffffff;
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.badge-baseline {
+  background: #64748b;
+  color: #ffffff;
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
 .cheapest-plan-tab-title {
   font-size: 11px;
   font-weight: 700;
@@ -3244,7 +3343,7 @@ body.theme-light .search-input-wrapper .ghost-pref {
 }
 
 .cheapest-plan-tab-fare {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 800;
   color: var(--text-main);
 }
@@ -3253,10 +3352,22 @@ body.theme-light .search-input-wrapper .ghost-pref {
   color: #0f172a;
 }
 
-.cheapest-plan-tab-savings {
-  font-size: 11px;
+.tab-diff {
+  font-size: 10px;
   font-weight: 700;
+  white-space: nowrap;
+}
+
+.tab-diff.negative {
   color: #059669;
+}
+
+.tab-diff.zero {
+  color: #64748b;
+}
+
+.tab-diff.positive {
+  color: #0284c7;
 }
 
 /* 最安サマリーカード */
