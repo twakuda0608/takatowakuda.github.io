@@ -171,6 +171,7 @@
         <div class="route-inputs" id="route-inputs-container">
           <!-- 発駅 -->
           <div class="route-input-row dept-row">
+            <div class="route-drag-handle" title="ドラッグまたは Alt+↑/↓ で並び替え" aria-label="並び替え" draggable="true">⠿</div>
             <span class="route-node-icon dept-icon">発</span>
             <div class="route-field-wrapper">
               <input type="text" id="route-dept-input" class="route-station-input" placeholder="発駅名 (例: 東京)" autocomplete="off">
@@ -196,19 +197,20 @@
             <!-- 動的経由駅アイテム -->
           </div>
 
+          <!-- 経由駅追加ボタン -->
+          <div class="route-add-via-row">
+            <button type="button" id="btn-add-via-field" class="btn-text-action" tabindex="0">＋ 経由駅追加</button>
+          </div>
+
           <!-- 着駅 -->
           <div class="route-input-row dest-row">
+            <div class="route-drag-handle" title="ドラッグまたは Alt+↑/↓ で並び替え" aria-label="並び替え" draggable="true">⠿</div>
             <span class="route-node-icon dest-icon">着</span>
             <div class="route-field-wrapper">
               <input type="text" id="route-dest-input" class="route-station-input" placeholder="着駅名 (例: 新宿)" autocomplete="off">
               <button type="button" class="btn-input-clear" data-target="route-dest-input" aria-label="消去" tabindex="-1">✕</button>
               <div class="route-suggest-dropdown" id="route-dest-suggest" style="display:none;"></div>
             </div>
-          </div>
-
-          <!-- 経由駅追加ボタン -->
-          <div class="route-add-via-row">
-            <button type="button" id="btn-add-via-field" class="btn-text-action" tabindex="0">＋ 経由駅追加</button>
           </div>
         </div>
 

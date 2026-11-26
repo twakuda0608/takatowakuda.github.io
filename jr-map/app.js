@@ -297,6 +297,7 @@
     if (inputEl._ghostOverlay) {
       inputEl._ghostOverlay.scrollLeft = inputEl.scrollLeft;
     }
+    syncInputClearButton(inputEl);
   }
 
   function clearStationInputValue(inputEl) {
@@ -311,6 +312,7 @@
     if (inputEl._ghostOverlay) {
       inputEl._ghostOverlay.scrollLeft = 0;
     }
+    syncInputClearButton(inputEl);
   }
 
   function swapStationInputs(inputA, inputB) {
@@ -342,6 +344,185 @@
 
     if (inputA._ghostOverlay) inputA._ghostOverlay.scrollLeft = inputA.scrollLeft;
     if (inputB._ghostOverlay) inputB._ghostOverlay.scrollLeft = inputB.scrollLeft;
+
+    syncInputClearButton(inputA);
+    syncInputClearButton(inputB);
+  }
+
+  // 入力欄内の消去ボタン（✕）の表示/非表示同期
+  function syncInputClearButton(inputEl) {
+    if (!inputEl) return;
+    const clearBtn = inputEl.parentElement ? inputEl.parentElement.querySelector('.btn-input-clear') : null;
+    if (clearBtn) {
+      const hasContent = !!(inputEl.value.trim() || inputEl.getAttribute('data-id'));
+      clearBtn.style.display = hasContent ? 'inline-flex' : 'none';
+    }
+  }
+
+  function syncAllInputClearButtons() {
+    document.querySelectorAll('.route-station-input').forEach(syncInputClearButton);
+  }
+
+  // 表示中の全駅行（発駅、経由駅、着駅）を順序通りに取得
+  function getVisibleStationRows() {
+    const deptRow = document.querySelector('.route-input-row.dept-row');
+    const viaContainer = document.getElementById('route-via-container');
+    const viaRows = viaContainer ? Array.from(viaContainer.querySelectorAll('.route-input-row.via-row')) : [];
+    const destRow = document.querySelector('.route-input-row.dest-row');
+    const rows = [];
+    if (deptRow) rows.push(deptRow);
+    viaRows.forEach(r => rows.push(r));
+    if (destRow && destRow.style.display !== 'none') rows.push(destRow);
+    return rows;
+  }
+
+  function getRowStationData(row) {
+    if (!row) return { st: null, val: '', id: '' };
+    const input = row.querySelector('.route-station-input');
+    if (!input) return { st: null, val: '', id: '' };
+    const id = input.getAttribute('data-id');
+    const st = (id && typeof STATIONS !== 'undefined' && STATIONS[id]) ? STATIONS[id] : null;
+    return { st: st, val: input.value || '', id: id || '' };
+  }
+
+  function setRowStationData(row, data) {
+    if (!row) return;
+    const input = row.querySelector('.route-station-input');
+    if (!input) return;
+    if (data.st) {
+      setStationInputValue(input, data.st);
+    } else if (data.id && typeof STATIONS !== 'undefined' && STATIONS[data.id]) {
+      setStationInputValue(input, STATIONS[data.id]);
+    } else if (data.val) {
+      input.value = data.val;
+      input.removeAttribute('data-id');
+      input.classList.remove('is-filled');
+      if (input._ghostMirror) input._ghostMirror.textContent = '';
+      if (input._ghostPref) input._ghostPref.textContent = '';
+    } else {
+      clearStationInputValue(input);
+    }
+    syncInputClearButton(input);
+  }
+
+  function swapRowData(r1, r2) {
+    if (!r1 || !r2) return;
+    const d1 = getRowStationData(r1);
+    const d2 = getRowStationData(r2);
+    setRowStationData(r1, d2);
+    setRowStationData(r2, d1);
+    updateViaStationNumbers();
+    syncAllInputClearButtons();
+    updateShinkansenCandidateChips();
+    markInputChanged();
+  }
+
+  let draggedStationRow = null;
+
+  function setupStationRowDragAndDrop(row) {
+    if (!row || row._dragDropBound) return;
+    row._dragDropBound = true;
+
+    const handle = row.querySelector('.route-drag-handle');
+    if (handle) {
+      handle.draggable = true;
+      handle.addEventListener('dragstart', (e) => {
+        draggedStationRow = row;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', row.id || row.className);
+        setTimeout(() => {
+          row.classList.add('is-dragging');
+        }, 0);
+      });
+
+      handle.addEventListener('dragend', () => {
+        row.classList.remove('is-dragging');
+        document.querySelectorAll('.route-input-row').forEach(r => {
+          r.classList.remove('drag-over-above', 'drag-over-below', 'is-dragging');
+        });
+        draggedStationRow = null;
+      });
+    }
+
+    row.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (!draggedStationRow || draggedStationRow === row) return;
+
+      const rect = row.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      if (e.clientY < midY) {
+        row.classList.add('drag-over-above');
+        row.classList.remove('drag-over-below');
+      } else {
+        row.classList.add('drag-over-below');
+        row.classList.remove('drag-over-above');
+      }
+    });
+
+    row.addEventListener('dragleave', () => {
+      row.classList.remove('drag-over-above', 'drag-over-below');
+    });
+
+    row.addEventListener('drop', (e) => {
+      e.preventDefault();
+      row.classList.remove('drag-over-above', 'drag-over-below');
+      if (!draggedStationRow || draggedStationRow === row) return;
+
+      const rows = getVisibleStationRows();
+      const fromIdx = rows.indexOf(draggedStationRow);
+      const toIdx = rows.indexOf(row);
+      if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return;
+
+      const rect = row.getBoundingClientRect();
+      const isAbove = (e.clientY < rect.top + rect.height / 2);
+
+      const dataList = rows.map(getRowStationData);
+      const movedItem = dataList.splice(fromIdx, 1)[0];
+
+      let targetIdx = toIdx;
+      if (fromIdx < toIdx) {
+        targetIdx = isAbove ? toIdx - 1 : toIdx;
+      } else {
+        targetIdx = isAbove ? toIdx : toIdx + 1;
+      }
+      if (targetIdx < 0) targetIdx = 0;
+      if (targetIdx > dataList.length) targetIdx = dataList.length;
+
+      dataList.splice(targetIdx, 0, movedItem);
+
+      rows.forEach((r, idx) => {
+        setRowStationData(r, dataList[idx]);
+      });
+
+      updateViaStationNumbers();
+      syncAllInputClearButtons();
+      updateShinkansenCandidateChips();
+      markInputChanged();
+    });
+
+    // キーボード操作: Alt+ArrowUp / Alt+ArrowDown
+    const input = row.querySelector('.route-station-input');
+    if (input) {
+      input.addEventListener('keydown', (e) => {
+        if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+          const rows = getVisibleStationRows();
+          const curIdx = rows.indexOf(row);
+          if (curIdx === -1) return;
+          if (e.key === 'ArrowUp' && curIdx > 0) {
+            e.preventDefault();
+            swapRowData(rows[curIdx], rows[curIdx - 1]);
+            const prevInp = rows[curIdx - 1].querySelector('.route-station-input');
+            if (prevInp) prevInp.focus();
+          } else if (e.key === 'ArrowDown' && curIdx < rows.length - 1) {
+            e.preventDefault();
+            swapRowData(rows[curIdx], rows[curIdx + 1]);
+            const nextInp = rows[curIdx + 1].querySelector('.route-station-input');
+            if (nextInp) nextInp.focus();
+          }
+        }
+      });
+    }
   }
 
   // =======================================================
@@ -2845,6 +3026,7 @@
 
     updateStationMarkerSizes();
     updateLabelsVisibility();
+    updateSheetRouteActionButtons();
 
     // 5. カメラを可視領域中央へ移動 (シート位置・可視領域が確定した後に実行)
     if (shouldPan) {
@@ -4792,7 +4974,12 @@
     // 発駅入力サジェスト
     const deptInput = document.getElementById('route-dept-input');
     const deptSuggest = document.getElementById('route-dept-suggest');
-    if (deptInput) attachStationGhostOverlay(deptInput);
+    const deptRow = document.querySelector('.route-input-row.dept-row');
+    if (deptRow) setupStationRowDragAndDrop(deptRow);
+    if (deptInput) {
+      attachStationGhostOverlay(deptInput);
+      deptInput.addEventListener('input', () => syncInputClearButton(deptInput));
+    }
     setupStationSuggest(deptInput, deptSuggest, (st) => {
       setStationInputValue(deptInput, st);
       updateShinkansenCandidateChips();
@@ -4802,12 +4989,19 @@
     // 着駅入力サジェスト (同名駅は発駅からの直線距離を優先)
     const destInput = document.getElementById('route-dest-input');
     const destSuggest = document.getElementById('route-dest-suggest');
-    if (destInput) attachStationGhostOverlay(destInput);
+    const destRow = document.querySelector('.route-input-row.dest-row');
+    if (destRow) setupStationRowDragAndDrop(destRow);
+    if (destInput) {
+      attachStationGhostOverlay(destInput);
+      destInput.addEventListener('input', () => syncInputClearButton(destInput));
+    }
     setupStationSuggest(destInput, destSuggest, (st) => {
       setStationInputValue(destInput, st);
       updateShinkansenCandidateChips();
       markInputChanged();
     }, () => getDeptStation());
+
+    syncAllInputClearButtons();
 
     // 発着駅入れ替えボタン (⇅)
     const swapStationsBtn = document.getElementById('btn-swap-stations');
@@ -4937,12 +5131,88 @@
         const destRow = document.querySelector('.route-input-row.dest-row');
         const swapRow = document.querySelector('.route-swap-row');
         const destInput = document.getElementById('route-dest-input');
-        if (destRow) destRow.style.display = ROUTE_STATE.cheapestReturn ? 'none' : 'flex';
-        if (swapRow) swapRow.style.display = ROUTE_STATE.cheapestReturn ? 'none' : 'flex';
-        if (ROUTE_STATE.cheapestReturn && destInput) {
-          clearStationInputValue(destInput);
+        const viaContainer = document.getElementById('route-via-container');
+
+        if (ROUTE_STATE.cheapestReturn) {
+          // OFF -> ON: 着駅を行きたい駅へ自動移動（重複防止）
+          if (destInput) {
+            const destId = destInput.getAttribute('data-id');
+            const destVal = destInput.value.trim();
+            const destSt = (destId && typeof STATIONS !== 'undefined' && STATIONS[destId])
+              ? STATIONS[destId]
+              : (destVal && typeof STATIONS !== 'undefined' ? Object.values(STATIONS).find(s => s.name === destVal) : null);
+
+            if (destSt || destVal) {
+              const currentViaRows = viaContainer ? Array.from(viaContainer.querySelectorAll('.route-input-row.via-row')) : [];
+              const alreadyExists = currentViaRows.some(r => {
+                const inp = r.querySelector('.route-station-input');
+                if (!inp) return false;
+                if (destSt && inp.getAttribute('data-id') === destSt.id) return true;
+                if (inp.value.trim() === destVal) return true;
+                return false;
+              });
+
+              if (!alreadyExists) {
+                let emptyRow = currentViaRows.find(r => {
+                  const inp = r.querySelector('.route-station-input');
+                  return inp && !inp.getAttribute('data-id') && !inp.value.trim();
+                });
+                if (emptyRow) {
+                  const targetInp = emptyRow.querySelector('.route-station-input');
+                  if (destSt) setStationInputValue(targetInp, destSt);
+                  else targetInp.value = destVal;
+                } else {
+                  addViaStationRow(destSt || destVal);
+                }
+              }
+            }
+            clearStationInputValue(destInput);
+          }
+
+          if (destRow) destRow.style.display = 'none';
+          if (swapRow) swapRow.style.display = 'none';
+
+          // 行きたい駅行が0行の場合は必ず1行追加
+          if (viaContainer && viaContainer.querySelectorAll('.route-input-row.via-row').length === 0) {
+            addViaStationRow();
+          }
+        } else {
+          // ON -> OFF: 着駅行を表示し、行きたい駅の最初を入力済み駅を着駅へ移動
+          if (destRow) destRow.style.display = 'flex';
+          if (swapRow) swapRow.style.display = 'flex';
+
+          const currentViaRows = viaContainer ? Array.from(viaContainer.querySelectorAll('.route-input-row.via-row')) : [];
+          const firstFilledRow = currentViaRows.find(r => {
+            const inp = r.querySelector('.route-station-input');
+            return inp && (inp.getAttribute('data-id') || inp.value.trim());
+          });
+
+          if (firstFilledRow && destInput) {
+            const inp = firstFilledRow.querySelector('.route-station-input');
+            const fId = inp.getAttribute('data-id');
+            const fVal = inp.value.trim();
+            const fSt = (fId && typeof STATIONS !== 'undefined' && STATIONS[fId])
+              ? STATIONS[fId]
+              : (fVal && typeof STATIONS !== 'undefined' ? Object.values(STATIONS).find(s => s.name === fVal) : null);
+            if (fSt) {
+              setStationInputValue(destInput, fSt);
+            } else {
+              destInput.value = fVal;
+              destInput.removeAttribute('data-id');
+            }
+            viaContainer.removeChild(firstFilledRow);
+          } else {
+            if (destInput) clearStationInputValue(destInput);
+          }
         }
+
+        updateViaStationNumbers();
+        syncAllInputClearButtons();
+        updateShinkansenCandidateChips();
         markInputChanged();
+
+        // 駅詳細シートの着駅ボタン連動
+        updateSheetRouteActionButtons();
       });
     }
 
@@ -6437,36 +6707,76 @@
     if (!result || !result.success) return;
     try {
       const history = loadRouteHistory();
-      const deptMars = getStationMarsName(result.deptId || result.deptName);
-      const destMars = getStationMarsName(result.destId || result.destName);
-      const viaMarsList = (result.viaIds || []).map(id => getStationMarsName(id));
-      const fr = result.fareRules || {};
-      const fare = fr.adultFare || fr.baseFare || 0;
+      const isCheapest = (ROUTE_STATE.searchMode === 'cheapest');
+      let item;
 
-      const item = {
-        deptId: result.deptId,
-        destId: result.destId,
-        viaIds: result.viaIds || [],
-        deptName: deptMars,
-        destName: destMars,
-        viaNames: viaMarsList,
-        mode: ROUTE_STATE.searchMode,
-        useShinkansen: ROUTE_STATE.useShinkansen,
-        shsegs: (ROUTE_STATE.shinkansenSegments || []).map(s => ({ fromId: s.fromId, toId: s.toId })),
-        fareType: ROUTE_STATE.currentFareType || 'adult',
-        fare: fare,
-        km: result.totalKm,
-        timestamp: Date.now()
-      };
+      if (isCheapest) {
+        const bestPlan = result.plans && result.plans[0];
+        const deptMars = getStationMarsName(result.deptId || result.deptName);
+        const destMars = result.destId ? getStationMarsName(result.destId || result.destName) : (ROUTE_STATE.cheapestReturn ? deptMars : '');
+        const viaMarsList = (result.viaIds || []).map(id => getStationMarsName(id));
+        const fare = bestPlan ? (bestPlan.totalFare || 0) : 0;
+        const km = bestPlan ? (bestPlan.totalKm || 0) : 0;
 
-      const existingIdx = history.findIndex(h =>
-        h.deptId === item.deptId &&
-        h.destId === item.destId &&
-        JSON.stringify(h.viaIds) === JSON.stringify(item.viaIds) &&
-        h.useShinkansen === item.useShinkansen &&
-        JSON.stringify(h.shsegs || []) === JSON.stringify(item.shsegs || []) &&
-        h.mode === item.mode
-      );
+        item = {
+          deptId: result.deptId,
+          destId: ROUTE_STATE.cheapestReturn ? null : result.destId,
+          viaIds: result.viaIds || [],
+          deptName: deptMars,
+          destName: destMars,
+          viaNames: viaMarsList,
+          mode: 'cheapest',
+          returnToStart: !!ROUTE_STATE.cheapestReturn,
+          autoOrder: !!ROUTE_STATE.cheapestAutoOrder,
+          preferStopover: !!ROUTE_STATE.cheapestPreferStopover,
+          useShinkansen: !!ROUTE_STATE.useShinkansen,
+          shsegs: [],
+          fareType: ROUTE_STATE.currentFareType || 'adult',
+          fare: fare,
+          km: km,
+          timestamp: Date.now()
+        };
+      } else {
+        const deptMars = getStationMarsName(result.deptId || result.deptName);
+        const destMars = getStationMarsName(result.destId || result.destName);
+        const viaMarsList = (result.viaIds || []).map(id => getStationMarsName(id));
+        const fr = result.fareRules || {};
+        const fare = fr.adultFare || fr.baseFare || 0;
+
+        item = {
+          deptId: result.deptId,
+          destId: result.destId,
+          viaIds: result.viaIds || [],
+          deptName: deptMars,
+          destName: destMars,
+          viaNames: viaMarsList,
+          mode: ROUTE_STATE.searchMode,
+          useShinkansen: ROUTE_STATE.useShinkansen,
+          shsegs: (ROUTE_STATE.shinkansenSegments || []).map(s => ({ fromId: s.fromId, toId: s.toId })),
+          fareType: ROUTE_STATE.currentFareType || 'adult',
+          fare: fare,
+          km: result.totalKm,
+          timestamp: Date.now()
+        };
+      }
+
+      const existingIdx = history.findIndex(h => {
+        if (h.mode !== item.mode) return false;
+        if (h.mode === 'cheapest') {
+          return h.deptId === item.deptId &&
+            h.destId === item.destId &&
+            JSON.stringify(h.viaIds || []) === JSON.stringify(item.viaIds || []) &&
+            !!h.returnToStart === !!item.returnToStart &&
+            !!h.autoOrder === !!item.autoOrder &&
+            !!h.preferStopover === !!item.preferStopover &&
+            h.useShinkansen === item.useShinkansen;
+        }
+        return h.deptId === item.deptId &&
+          h.destId === item.destId &&
+          JSON.stringify(h.viaIds) === JSON.stringify(item.viaIds) &&
+          h.useShinkansen === item.useShinkansen &&
+          JSON.stringify(h.shsegs || []) === JSON.stringify(item.shsegs || []);
+      });
       if (existingIdx >= 0) {
         history.splice(existingIdx, 1);
       }
@@ -6504,19 +6814,38 @@
 
       const titleEl = document.createElement('div');
       titleEl.className = 'route-history-title';
-      let titleText = `${h.deptName} → ${h.destName}`;
-      if (h.viaNames && h.viaNames.length > 0) {
-        titleText = `${h.deptName} → (${h.viaNames.join('・')}) → ${h.destName}`;
+      let titleText = '';
+      if (h.mode === 'cheapest') {
+        const viaList = (h.viaNames && h.viaNames.length > 0) ? `(${h.viaNames.join('・')})` : '';
+        if (h.returnToStart) {
+          titleText = viaList ? `${h.deptName} 発 周遊 ${viaList}` : `${h.deptName} 発 周遊`;
+        } else {
+          titleText = viaList ? `${h.deptName} → ${viaList} → ${h.destName || '（経由のみ）'}` : `${h.deptName} → ${h.destName}`;
+        }
+      } else {
+        titleText = `${h.deptName} → ${h.destName}`;
+        if (h.viaNames && h.viaNames.length > 0) {
+          titleText = `${h.deptName} → (${h.viaNames.join('・')}) → ${h.destName}`;
+        }
       }
       titleEl.textContent = titleText;
 
       const subEl = document.createElement('div');
       subEl.className = 'route-history-sub';
-      const modeStr = h.mode === 'oneway' ? '重複なし' : '最短';
-      const shStr = h.useShinkansen ? '新幹線ON' : '在来線';
-      const kmStr = h.km !== undefined ? `${h.km.toFixed(1)}km` : '';
+      const kmStr = (h.km !== undefined && h.km > 0) ? `${h.km.toFixed(1)}km` : '';
       const fareStr = h.fare ? `￥${h.fare.toLocaleString()}` : '';
-      subEl.textContent = [modeStr, shStr, kmStr, fareStr].filter(Boolean).join(' · ');
+
+      if (h.mode === 'cheapest') {
+        const tripStr = h.returnToStart ? '周遊' : '片道';
+        const orderStr = h.autoOrder ? '順序自動' : '順序固定';
+        const stopoverStr = h.preferStopover ? '途中下車優先' : '';
+        const shStr = h.useShinkansen ? '新幹線ON' : '';
+        subEl.textContent = ['最安きっぷ', tripStr, orderStr, stopoverStr, shStr, kmStr, fareStr].filter(Boolean).join(' · ');
+      } else {
+        const modeStr = h.mode === 'oneway' ? '重複なし' : '最短';
+        const shStr = h.useShinkansen ? '新幹線ON' : '在来線';
+        subEl.textContent = [modeStr, shStr, kmStr, fareStr].filter(Boolean).join(' · ');
+      }
 
       mainEl.appendChild(titleEl);
       mainEl.appendChild(subEl);
@@ -6543,34 +6872,72 @@
   function applyHistoryItem(h) {
     if (!h || typeof STATIONS === 'undefined') return;
     const fromSt = STATIONS[h.deptId];
-    const toSt = STATIONS[h.destId];
-    if (!fromSt || !toSt) return;
+    if (!fromSt) return;
 
     const deptInput = document.getElementById('route-dept-input');
     if (deptInput) setStationInputValue(deptInput, fromSt);
 
-    const viaContainer = document.getElementById('route-via-container');
-    if (viaContainer) viaContainer.innerHTML = '';
-    if (h.viaIds && h.viaIds.length > 0) {
-      h.viaIds.forEach(vId => {
-        const vSt = STATIONS[vId];
-        if (vSt) addViaStationRow(vSt);
-      });
-    }
+    const mode = h.mode || 'shortest';
+    ROUTE_STATE.searchMode = mode;
 
-    const destInput = document.getElementById('route-dest-input');
-    if (destInput) setStationInputValue(destInput, toSt);
+    if (mode === 'cheapest') {
+      ROUTE_STATE.cheapestReturn = (h.returnToStart !== undefined) ? !!h.returnToStart : true;
+      ROUTE_STATE.cheapestAutoOrder = (h.autoOrder !== undefined) ? !!h.autoOrder : true;
+      ROUTE_STATE.cheapestPreferStopover = (h.preferStopover !== undefined) ? !!h.preferStopover : true;
 
-    ROUTE_STATE.searchMode = h.mode || 'shortest';
-    const shortestBtn = document.getElementById('btn-mode-shortest');
-    const onewayBtn = document.getElementById('btn-mode-oneway');
-    if (ROUTE_STATE.searchMode === 'oneway') {
-      if (shortestBtn) shortestBtn.classList.remove('active');
-      if (onewayBtn) onewayBtn.classList.add('active');
+      const chkReturn = document.getElementById('chk-cheapest-return');
+      if (chkReturn) chkReturn.checked = ROUTE_STATE.cheapestReturn;
+      const chkAutoOrder = document.getElementById('chk-cheapest-auto-order');
+      if (chkAutoOrder) chkAutoOrder.checked = ROUTE_STATE.cheapestAutoOrder;
+      const chkPrefer = document.getElementById('chk-cheapest-prefer-stopover');
+      if (chkPrefer) chkPrefer.checked = ROUTE_STATE.cheapestPreferStopover;
+
+      updateRouteModeUI('cheapest');
+
+      // 行きたい駅の設定
+      const viaContainer = document.getElementById('route-via-container');
+      if (viaContainer) viaContainer.innerHTML = '';
+      if (h.viaIds && h.viaIds.length > 0) {
+        h.viaIds.forEach(vId => {
+          const vSt = STATIONS[vId];
+          if (vSt) addViaStationRow(vSt);
+        });
+      } else if (ROUTE_STATE.cheapestReturn) {
+        addViaStationRow();
+      }
+
+      // 着駅（片道時のみ）
+      const destInput = document.getElementById('route-dest-input');
+      if (destInput) {
+        if (!ROUTE_STATE.cheapestReturn && h.destId && STATIONS[h.destId]) {
+          setStationInputValue(destInput, STATIONS[h.destId]);
+        } else {
+          clearStationInputValue(destInput);
+        }
+      }
     } else {
-      if (shortestBtn) shortestBtn.classList.add('active');
-      if (onewayBtn) onewayBtn.classList.remove('active');
+      const toSt = STATIONS[h.destId];
+      if (!toSt) return;
+
+      updateRouteModeUI(mode);
+
+      const viaContainer = document.getElementById('route-via-container');
+      if (viaContainer) viaContainer.innerHTML = '';
+      if (h.viaIds && h.viaIds.length > 0) {
+        h.viaIds.forEach(vId => {
+          const vSt = STATIONS[vId];
+          if (vSt) addViaStationRow(vSt);
+        });
+      }
+
+      const destInput = document.getElementById('route-dest-input');
+      if (destInput) setStationInputValue(destInput, toSt);
     }
+
+    document.querySelectorAll('.route-mode-btn').forEach(b => {
+      if (b.getAttribute('data-mode') === mode) b.classList.add('active');
+      else b.classList.remove('active');
+    });
 
     ROUTE_STATE.useShinkansen = !!h.useShinkansen;
     const shChk = document.getElementById('chk-use-shinkansen');
@@ -6593,6 +6960,8 @@
       else b.classList.remove('active');
     });
 
+    updateViaStationNumbers();
+    syncAllInputClearButtons();
     executeRouteSearch();
   }
 
@@ -7043,6 +7412,19 @@
     });
   }
 
+  function updateSheetRouteActionButtons() {
+    const isCheapest = (ROUTE_STATE.searchMode === 'cheapest');
+    const isReturn = (isCheapest && ROUTE_STATE.cheapestReturn);
+    const sheetSetDest = document.getElementById('btn-set-dest');
+    const sheetAddVia = document.getElementById('btn-add-via');
+    if (sheetAddVia) {
+      sheetAddVia.textContent = isCheapest ? '行きたい駅追加' : '経由追加';
+    }
+    if (sheetSetDest) {
+      sheetSetDest.style.display = isReturn ? 'none' : '';
+    }
+  }
+
   function updateRouteModeUI(mode) {
     ROUTE_STATE.searchMode = mode;
     const modeBtns = document.querySelectorAll('.route-mode-btn');
@@ -7062,6 +7444,15 @@
     const destInput = document.getElementById('route-dest-input');
     const addViaBtn = document.getElementById('btn-add-via-field');
     const viaContainer = document.getElementById('route-via-container');
+    const sameStationsBtn = document.getElementById('btn-same-stations');
+
+    // 一周ボタンの表示制御（最安きっぷモードでは非表示・周遊チェックに一本化）
+    if (sameStationsBtn) {
+      sameStationsBtn.style.display = (mode === 'cheapest') ? 'none' : '';
+    }
+
+    // 駅詳細シートのアクションボタン連動
+    updateSheetRouteActionButtons();
 
     if (mode === 'cheapest') {
       if (cheapestOptsRow) cheapestOptsRow.style.display = 'flex';
@@ -7091,16 +7482,17 @@
     }
 
     updateViaStationNumbers();
+    syncAllInputClearButtons();
     markInputChanged();
   }
-
-  let draggedViaRow = null;
 
   function updateViaStationNumbers() {
     const container = document.getElementById('route-via-container');
     if (!container) return;
     const isCheapest = (ROUTE_STATE.searchMode === 'cheapest');
     const rows = container.querySelectorAll('.route-input-row.via-row');
+    const lockLastVia = (isCheapest && ROUTE_STATE.cheapestReturn && rows.length <= 1);
+
     rows.forEach((row, idx) => {
       const icon = row.querySelector('.via-icon');
       if (icon) {
@@ -7109,6 +7501,18 @@
       const inp = row.querySelector('.route-via-input');
       if (inp) {
         inp.placeholder = isCheapest ? '行きたい駅名 (例: 金沢)' : '経由駅名 (例: 熱海)';
+      }
+      const removeBtn = row.querySelector('.btn-remove-via');
+      if (removeBtn) {
+        if (lockLastVia) {
+          removeBtn.disabled = true;
+          removeBtn.classList.add('is-disabled');
+          removeBtn.title = '周遊モードでは行きたい駅を1行以上指定してください';
+        } else {
+          removeBtn.disabled = false;
+          removeBtn.classList.remove('is-disabled');
+          removeBtn.title = 'この行を削除';
+        }
       }
     });
   }
@@ -7131,10 +7535,11 @@
         <button type="button" class="btn-input-clear" aria-label="消去" tabindex="-1">✕</button>
         <div class="route-suggest-dropdown" style="display:none;"></div>
       </div>
-      <button type="button" class="btn-remove-via" title="経由駅削除" aria-label="削除" tabindex="-1">✕</button>
+      <button type="button" class="btn-remove-via" title="この行を削除" aria-label="この行を削除" tabindex="-1">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
+      </button>
     `;
 
-    const handle = row.querySelector('.route-drag-handle');
     const input = row.querySelector('.route-via-input');
     const dropdown = row.querySelector('.route-suggest-dropdown');
     const clearBtn = row.querySelector('.btn-input-clear');
@@ -7149,8 +7554,16 @@
       });
     }
 
+    if (input) {
+      input.addEventListener('input', () => syncInputClearButton(input));
+    }
+
     if (removeBtn) {
       removeBtn.addEventListener('click', () => {
+        const rows = container.querySelectorAll('.route-input-row.via-row');
+        if (ROUTE_STATE.searchMode === 'cheapest' && ROUTE_STATE.cheapestReturn && rows.length <= 1) {
+          return;
+        }
         container.removeChild(row);
         updateViaStationNumbers();
         updateShinkansenCandidateChips();
@@ -7158,99 +7571,30 @@
       });
     }
 
-    // キーボード操作: Backspaceで空行削除、Alt+↑/↓で経由駅順序並び替え
+    // キーボード操作: Backspaceで空行削除
     if (input) {
       input.addEventListener('keydown', (e) => {
         if (e.key === 'Backspace' && !input.value) {
           e.preventDefault();
+          const rows = container.querySelectorAll('.route-input-row.via-row');
           const prevRow = row.previousElementSibling;
-          const prevInput = prevRow ? prevRow.querySelector('.route-via-input') : document.getElementById('route-dept-input');
+          const prevInput = prevRow ? prevRow.querySelector('.route-station-input') : document.getElementById('route-dept-input');
+          if (ROUTE_STATE.searchMode === 'cheapest' && ROUTE_STATE.cheapestReturn && rows.length <= 1) {
+            if (prevInput) prevInput.focus();
+            return;
+          }
           container.removeChild(row);
           updateViaStationNumbers();
           markInputChanged();
           if (prevInput) {
             prevInput.focus();
           }
-        } else if (e.altKey && e.key === 'ArrowUp') {
-          // Alt + ArrowUp: 1つ上の経由駅と順序入れ替え
-          const prevRow = row.previousElementSibling;
-          if (prevRow && prevRow.classList.contains('via-row')) {
-            e.preventDefault();
-            container.insertBefore(row, prevRow);
-            updateViaStationNumbers();
-            markInputChanged();
-            input.focus();
-          }
-        } else if (e.altKey && e.key === 'ArrowDown') {
-          // Alt + ArrowDown: 1つ下の経由駅と順序入れ替え
-          const nextRow = row.nextElementSibling;
-          if (nextRow && nextRow.classList.contains('via-row')) {
-            e.preventDefault();
-            container.insertBefore(nextRow, row);
-            updateViaStationNumbers();
-            markInputChanged();
-            input.focus();
-          }
         }
       });
     }
 
-    // ドラッグ＆ドロップ (ドラッグハンドルから開始)
-    if (handle) {
-      handle.addEventListener('dragstart', (e) => {
-        draggedViaRow = row;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', row.id);
-        setTimeout(() => {
-          row.classList.add('is-dragging');
-        }, 0);
-      });
-
-      handle.addEventListener('dragend', () => {
-        row.classList.remove('is-dragging');
-        container.querySelectorAll('.via-row').forEach(r => {
-          r.classList.remove('drag-over-above', 'drag-over-below', 'is-dragging');
-        });
-        draggedViaRow = null;
-      });
-    }
-
-    row.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      if (!draggedViaRow || draggedViaRow === row) return;
-
-      const rect = row.getBoundingClientRect();
-      const midY = rect.top + rect.height / 2;
-      if (e.clientY < midY) {
-        row.classList.add('drag-over-above');
-        row.classList.remove('drag-over-below');
-      } else {
-        row.classList.add('drag-over-below');
-        row.classList.remove('drag-over-above');
-      }
-    });
-
-    row.addEventListener('dragleave', () => {
-      row.classList.remove('drag-over-above', 'drag-over-below');
-    });
-
-    row.addEventListener('drop', (e) => {
-      e.preventDefault();
-      row.classList.remove('drag-over-above', 'drag-over-below');
-      if (!draggedViaRow || draggedViaRow === row) return;
-
-      const rect = row.getBoundingClientRect();
-      const midY = rect.top + rect.height / 2;
-      if (e.clientY < midY) {
-        container.insertBefore(draggedViaRow, row);
-      } else {
-        container.insertBefore(draggedViaRow, row.nextSibling);
-      }
-
-      updateViaStationNumbers();
-      markInputChanged();
-    });
+    // 全行共通のドラッグ＆ドロップおよび Alt+↑/↓ 並び替え
+    setupStationRowDragAndDrop(row);
 
     setupStationSuggest(input, dropdown, (st) => {
       setStationInputValue(input, st);
@@ -7258,12 +7602,15 @@
       markInputChanged();
     }, () => getDeptStation());
 
-    if (initialStation) {
+    if (typeof initialStation === 'string') {
+      input.value = initialStation;
+    } else if (initialStation) {
       setStationInputValue(input, initialStation);
     }
 
     container.appendChild(row);
     updateViaStationNumbers();
+    syncInputClearButton(input);
 
     if (!initialStation) {
       input.focus();
@@ -7380,63 +7727,88 @@
         return;
       }
 
-      const optOptions = {
-        returnToStart: ROUTE_STATE.cheapestReturn,
-        destId: ROUTE_STATE.cheapestReturn ? null : (destSt ? destSt.id : null),
-        keepOrder: !ROUTE_STATE.cheapestAutoOrder,
-        preferStopover: ROUTE_STATE.cheapestPreferStopover,
-        useShinkansen: ROUTE_STATE.useShinkansen,
-        fareType: ROUTE_STATE.currentFareType,
-        maxPlans: 3
-      };
-
-      const optimizerResult = window.JR_OPTIMIZER_ENGINE.findCheapestTicketPlan(deptSt.id, viaStIds, optOptions);
-
-      if (!optimizerResult || !optimizerResult.plans || optimizerResult.plans.length === 0) {
-        showRouteError('最安乗車券プランが見つかりませんでした。新幹線利用や訪問駅の設定をご確認ください。');
-        return;
+      const searchBtn = document.getElementById('btn-search-route');
+      const originalBtnText = searchBtn ? searchBtn.textContent : '経路探索';
+      if (searchBtn) {
+        searchBtn.disabled = true;
+        searchBtn.textContent = '計算中...';
       }
 
-      ROUTE_STATE.cheapestPlanResult = optimizerResult;
-      ROUTE_STATE.activePlanIdx = 0;
-      ROUTE_STATE.activeTicketIdx = 0;
+      setTimeout(() => {
+        try {
+          const optOptions = {
+            returnToStart: ROUTE_STATE.cheapestReturn,
+            destId: ROUTE_STATE.cheapestReturn ? null : (destSt ? destSt.id : null),
+            keepOrder: !ROUTE_STATE.cheapestAutoOrder,
+            preferStopover: ROUTE_STATE.cheapestPreferStopover,
+            useShinkansen: ROUTE_STATE.useShinkansen,
+            fareType: ROUTE_STATE.currentFareType,
+            maxPlans: 3
+          };
 
-      // URL同期
-      syncRouteToUrl({
-        success: true,
-        deptId: deptSt.id,
-        destId: destSt ? destSt.id : deptSt.id,
-        viaIds: viaStIds,
-        options: { mode: 'cheapest', useShinkansen: ROUTE_STATE.useShinkansen }
-      });
+          const optimizerResult = window.JR_OPTIMIZER_ENGINE.findCheapestTicketPlan(deptSt.id, viaStIds, optOptions);
 
-      renderCheapestPlanResult(optimizerResult, 0, 0);
-
-      // スマホ結果表示モード (ボトムシート Half 展開 & サマリーバー更新)
-      const routePanel = document.getElementById('route-panel');
-      if (routePanel) {
-        if (window.innerWidth <= 768) {
-          routePanel.classList.add('has-result');
-          const summaryText = document.getElementById('route-summary-text');
-          if (summaryText) {
-            const viaNames = viaStIds.map(id => STATIONS[id] ? getStationUiName(STATIONS[id]) : '').filter(Boolean);
-            let text = `${getStationUiName(deptSt)} → `;
-            if (viaNames.length > 0) {
-              text += `(${viaNames.join('・')}) → `;
-            }
-            text += ROUTE_STATE.cheapestReturn ? `${getStationUiName(deptSt)} (周遊)` : (destSt ? getStationUiName(destSt) : '');
-            summaryText.textContent = text;
-            summaryText.title = text;
+          if (!optimizerResult || !optimizerResult.plans || optimizerResult.plans.length === 0) {
+            showRouteError('最安乗車券プランが見つかりませんでした。新幹線利用や訪問駅の設定をご確認ください。');
+            return;
           }
-          restoreRouteSheetHalfNoFlicker();
-        } else {
-          routePanel.classList.remove('has-result', 'mobile-sheet-half', 'mobile-sheet-full', 'mobile-sheet-mini', 'is-editing');
-          routePanel.style.transform = '';
-          routePanel.style.transition = '';
-        }
-      }
 
-      setSearchButtonEnabled(false);
+          ROUTE_STATE.cheapestPlanResult = optimizerResult;
+          ROUTE_STATE.activePlanIdx = 0;
+          ROUTE_STATE.activeTicketIdx = 0;
+
+          // URL同期 & 探索履歴保存
+          syncRouteToUrl({
+            success: true,
+            deptId: deptSt.id,
+            destId: destSt ? destSt.id : deptSt.id,
+            viaIds: viaStIds,
+            options: { mode: 'cheapest', useShinkansen: ROUTE_STATE.useShinkansen }
+          });
+          saveRouteHistory({
+            success: true,
+            deptId: deptSt.id,
+            destId: destSt ? destSt.id : null,
+            viaIds: viaStIds,
+            plans: optimizerResult.plans
+          });
+
+          renderCheapestPlanResult(optimizerResult, 0, 0);
+
+          // スマホ結果表示モード (ボトムシート Half 展開 & サマリーバー更新)
+          const routePanel = document.getElementById('route-panel');
+          if (routePanel) {
+            if (window.innerWidth <= 768) {
+              routePanel.classList.add('has-result');
+              const summaryText = document.getElementById('route-summary-text');
+              if (summaryText) {
+                const viaNames = viaStIds.map(id => STATIONS[id] ? getStationUiName(STATIONS[id]) : '').filter(Boolean);
+                let text = `${getStationUiName(deptSt)} → `;
+                if (viaNames.length > 0) {
+                  text += `(${viaNames.join('・')}) → `;
+                }
+                text += ROUTE_STATE.cheapestReturn ? `${getStationUiName(deptSt)} (周遊)` : (destSt ? getStationUiName(destSt) : '');
+                summaryText.textContent = text;
+                summaryText.title = text;
+              }
+              restoreRouteSheetHalfNoFlicker();
+            } else {
+              routePanel.classList.remove('has-result', 'mobile-sheet-half', 'mobile-sheet-full', 'mobile-sheet-mini', 'is-editing');
+              routePanel.style.transform = '';
+              routePanel.style.transition = '';
+            }
+          }
+        } catch (err) {
+          console.error('Cheapest ticket plan calculation error:', err);
+          showRouteError('計算中にエラーが発生しました。');
+        } finally {
+          if (searchBtn) {
+            searchBtn.textContent = originalBtnText;
+            setSearchButtonEnabled(false);
+          }
+        }
+      }, 20);
+
       return;
     }
 
@@ -8108,6 +8480,8 @@
   }
 
   function clearRouteEngineUI() {
+    const currentMode = ROUTE_STATE.searchMode || 'shortest';
+
     const deptInput = document.getElementById('route-dept-input');
     const destInput = document.getElementById('route-dest-input');
     if (deptInput) clearStationInputValue(deptInput);
@@ -8142,18 +8516,8 @@
       baselineBar.style.display = 'none';
     }
 
-    // 新幹線区間指定と手動入力のリセット
+    // 新幹線区間指定と手動入力のリセット（モードや最安オプション設定は維持）
     ROUTE_STATE.useShinkansen = false;
-    ROUTE_STATE.cheapestPreferStopover = false;
-    ROUTE_STATE.cheapestReturn = true;
-    ROUTE_STATE.cheapestAutoOrder = true;
-    const chkCheapestPreferStopover = document.getElementById('chk-cheapest-prefer-stopover');
-    if (chkCheapestPreferStopover) chkCheapestPreferStopover.checked = false;
-    const chkCheapestReturn = document.getElementById('chk-cheapest-return');
-    if (chkCheapestReturn) chkCheapestReturn.checked = true;
-    const chkCheapestAutoOrder = document.getElementById('chk-cheapest-auto-order');
-    if (chkCheapestAutoOrder) chkCheapestAutoOrder.checked = true;
-    ROUTE_STATE.searchMode = 'shortest';
     ROUTE_STATE.shinkansenSegments = [];
     ROUTE_STATE.currentFareType = 'adult';
     ROUTE_STATE.lastResult = null;
@@ -8214,8 +8578,9 @@
     renderShinkansenSegmentsList();
     updateShinkansenCandidateChips();
 
+    // モードボタンのアクティブ状態を維持
     document.querySelectorAll('.route-mode-btn').forEach(b => {
-      if (b.getAttribute('data-mode') === 'shortest') {
+      if (b.getAttribute('data-mode') === currentMode) {
         b.classList.add('active');
       } else {
         b.classList.remove('active');
@@ -8234,6 +8599,10 @@
     if (summaryFare) summaryFare.textContent = '';
 
     clearRouteMapLayers();
+
+    // モードUIと整合性を再適用（周遊時の1行追加、着駅行の表示/非表示など）
+    updateRouteModeUI(currentMode);
+
     setSearchButtonEnabled(true);
   }
 

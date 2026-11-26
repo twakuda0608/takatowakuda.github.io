@@ -1348,13 +1348,25 @@ body.theme-dark .sheet-header.jr-station-sign {
   font-size: 14px;
   color: #94a3b8;
   cursor: pointer;
-  padding: 4px 6px;
+  padding: 4px;
   border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.15s ease;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
 }
 .btn-remove-via:hover {
   background: #fee2e2;
   color: #dc2626;
+}
+.btn-remove-via:disabled,
+.btn-remove-via.is-disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* ドラッグハンドル & 並び替えスタイル */
@@ -1380,21 +1392,26 @@ body.theme-dark .sheet-header.jr-station-sign {
   cursor: grabbing;
 }
 
-.route-input-row.via-row {
+.route-input-row {
   transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
   border-radius: 8px;
   position: relative;
 }
 
-.route-input-row.via-row.is-dragging {
+.route-input-row.dept-row,
+.route-input-row.dest-row {
+  padding-right: 28px;
+}
+
+.route-input-row.is-dragging {
   opacity: 0.35;
   background: #e2e8f0;
 }
 
-.route-input-row.via-row.drag-over-above {
+.route-input-row.drag-over-above {
   box-shadow: 0 -3px 0 0 #0284c7;
 }
-.route-input-row.via-row.drag-over-below {
+.route-input-row.drag-over-below {
   box-shadow: 0 3px 0 0 #0284c7;
 }
 
@@ -1464,7 +1481,8 @@ body.theme-dark .sheet-header.jr-station-sign {
 .route-add-via-row {
   display: flex;
   justify-content: flex-start;
-  padding-left: 32px;
+  padding-left: 58px;
+  margin: 2px 0 4px 0;
 }
 
 .btn-text-action {
